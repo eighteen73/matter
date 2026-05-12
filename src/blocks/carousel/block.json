@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "eighteen73-blocks/carousel",
+	"version": "0.1.0",
+	"title": "Carousel",
+	"category": "design",
+	"description": "Carousel",
+	"allowedBlocks": [
+		"eighteen73-blocks/carousel-viewport",
+		"eighteen73-blocks/carousel-dots",
+		"eighteen73-blocks/carousel-progress",
+		"eighteen73-blocks/carousel-previous-button",
+		"eighteen73-blocks/carousel-next-button",
+		"core/group"
+	],
+	"attributes": {},
+	"supports": {
+		"html": false
+	},
+	"textdomain": "eighteen73-blocks",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php",
+	"viewScript": "file:./view.js"
+}
