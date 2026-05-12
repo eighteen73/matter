@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "eighteen73-blocks/carousel-dots",
+	"version": "0.1.0",
+	"title": "Carousel Dots",
+	"category": "design",
+	"icon": "ellipsis",
+	"description": "Carousel Dots",
+	"ancestor": [
+		"eighteen73-blocks/carousel"
+	],
+	"attributes": {},
+	"supports": {
+		"html": false
+	},
+	"textdomain": "eighteen73-blocks",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}

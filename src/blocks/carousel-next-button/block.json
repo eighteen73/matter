@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "eighteen73-blocks/carousel-next-button",
+	"version": "0.1.0",
+	"title": "Carousel Next Button",
+	"category": "design",
+	"icon": "arrow-right-alt",
+	"description": "Carousel Next Button",
+	"ancestor": [
+		"eighteen73-blocks/carousel"
+	],
+	"attributes": {},
+	"supports": {
+		"html": false
+	},
+	"textdomain": "eighteen73-blocks",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}
