@@ -1,0 +1,33 @@
+{
+	"name": "eighteen73/eighteen73-blocks",
+	"description": "Eighteen73 Blocks",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"minimum-stability": "dev",
+	"authors": [
+		{
+			"name": "eighteen73",
+			"email": "hello@eighteen73.co.uk"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"Eighteen73\\Blocks\\": "includes/classes/"
+		}
+	},
+	"require": {
+		"php": ">=7.4"
+	},
+	"require-dev": {
+		"eighteen73/wordpress-coding-standards": "^2.0.0"
+	},
+	"scripts": {
+		"lint": "./vendor/bin/phpcs",
+		"format": "./vendor/bin/phpcbf"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
+}
