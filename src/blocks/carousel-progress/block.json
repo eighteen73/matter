@@ -1,19 +1,21 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "eighteen73-blocks/carousel-dots",
+	"name": "eighteen73-blocks/carousel-progress",
 	"version": "0.1.0",
-	"title": "Carousel Dots",
+	"title": "Carousel Progress",
 	"category": "design",
-	"icon": "ellipsis",
-	"description": "Carousel Dots",
+	"icon": "minus",
+	"description": "Carousel Progress",
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
-	"attributes": {},
-	"supports": {
-		"html": false
-	},
+	"attributes": {
+		"indicateCurrentPosition": {
+			"type": "boolean",
+			"default": false
+		}
+  	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",

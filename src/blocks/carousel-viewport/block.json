@@ -10,9 +10,10 @@
 	"parent": [
 		"eighteen73-blocks/carousel"
 	],
-	"attributes": {},
-	"supports": {
-		"html": false
+	"attributes": {
+		"allowedBlocks": {
+			"type": "array"
+		}
 	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",

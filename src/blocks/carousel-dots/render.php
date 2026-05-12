@@ -10,8 +10,4 @@
 
 ?>
 
-<div
-	<?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>
->
-	<?php esc_html_e( 'Hello from Carousel Dots', 'eighteen73-blocks' ); ?>
-</div>
+<div <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'embla__dots' ] ) ); ?>></div>

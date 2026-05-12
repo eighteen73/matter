@@ -8,10 +8,20 @@
  * @package Eighteen73Blocks\\CarouselProgress
  */
 
+$indicate_current_position = isset( $attributes['indicateCurrentPosition'] ) && $attributes['indicateCurrentPosition'] ? 'true' : 'false';
 ?>
 
 <div
-	<?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>
+<?php
+echo wp_kses_data(
+	get_block_wrapper_attributes(
+		[
+			'class'                          => 'embla__progress',
+			'data-indicate-current-position' => $indicate_current_position,
+		]
+	)
+);
+?>
 >
-	<?php esc_html_e( 'Hello from Carousel Progress', 'eighteen73-blocks' ); ?>
+	<div class="embla__progress__bar"></div>
 </div>

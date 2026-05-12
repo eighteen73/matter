@@ -13,5 +13,9 @@
 <div
 	<?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>
 >
-	<?php esc_html_e( 'Hello from Carousel Next Button', 'eighteen73-blocks' ); ?>
+	<button class="embla__button embla__button--next">
+		<span class="embla__button-label">
+			<?php esc_html_e( 'Next slide', 'eighteen73-blocks' ); ?>
+		</span>
+	</button>
 </div>
