@@ -1,15 +1,37 @@
-import { useBlockProps } from '@wordpress/block-editor';
+import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
+import { ToggleControl, PanelBody } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-/**
- * @return {Element} Element to render.
- */
-export default function Edit() {
-	const blockProps = useBlockProps();
+export default function Edit({ attributes, setAttributes }) {
+	const { indicateCurrentPosition } = attributes;
+	const blockProps = useBlockProps({
+		className: 'embla__progress',
+	});
 
 	return (
-		<div {...blockProps}>
-            {__('Hello from Carousel Dots', 'eighteen73-blocks')}
-		</div>
+		<>
+			<InspectorControls>
+				<PanelBody
+					title={__('Settings', 'eighteen73-blocks')}
+					initialOpen={true}
+				>
+					<ToggleControl
+						label={__(
+							'Indicate current position',
+							'eighteen73-blocks'
+						)}
+						checked={indicateCurrentPosition}
+						onChange={() =>
+							setAttributes({
+								indicateCurrentPosition:
+									!indicateCurrentPosition,
+							})
+						}
+					/>
+				</PanelBody>
+			</InspectorControls>
+
+			<div {...blockProps}></div>
+		</>
 	);
 }

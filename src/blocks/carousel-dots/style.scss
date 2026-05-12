@@ -1,3 +1,39 @@
 .wp-block-eighteen73-blocks-carousel-dots {
-	border: 1px solid #000;
+	// stylelint-disable custom-property-pattern -- backwards compatibility
+	--eighteen73-blocks--carousel--dot--size: var(--carousel-dot-size, 12px);
+	--eighteen73-blocks--carousel--dot--gap: var(--carousel-dot-gap, var(--wp--preset--spacing--xs, 8px));
+	--eighteen73-blocks--carousel--dot--color: var(--carousel-dot-color, var(--wp--custom--color--surface--invert, currentcolor));
+	--eighteen73-blocks--carousel--dot--color-active: var(--carousel-dot-color-active, var(--wp--custom--color--surface--primary, #7378cc));
+	--eighteen73-blocks--carousel--dot--border-radius: var(--carousel-dot-border-radius, 50%);
+	// stylelint-enable custom-property-pattern
+
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--eighteen73-blocks--carousel--dot--gap);
+	justify-content: center;
+	margin-top: var(--eighteen73-blocks--carousel--dot--gap);
+
+	.embla__dot {
+		align-items: center;
+		appearance: none;
+		background-color: transparent;
+		background-color: var(--eighteen73-blocks--carousel--dot--color);
+		border: 0;
+		border-radius: var(--eighteen73-blocks--carousel--dot--border-radius);
+		cursor: pointer;
+		display: inline-flex;
+		display: flex;
+		height: var(--eighteen73-blocks--carousel--dot--size);
+		justify-content: center;
+		margin: 0;
+		padding: 0;
+		text-decoration: none;
+		touch-action: manipulation;
+		width: var(--eighteen73-blocks--carousel--dot--size);
+	}
+
+	.embla__dot--selected {
+		background-color: var(--eighteen73-blocks--carousel--dot--color-active);
+	}
 }

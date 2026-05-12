@@ -9,7 +9,14 @@ export default function Edit() {
 
 	return (
 		<div {...blockProps}>
-            {__('Hello from Carousel Dots', 'eighteen73-blocks')}
+			<button
+				className="embla__button embla__button--previous"
+				data-wp-on--click="actions.scrollPrev"
+			>
+				<span className="embla__button-label">
+					{__('Previous slide', 'eighteen73-blocks')}
+				</span>
+			</button>
 		</div>
 	);
 }

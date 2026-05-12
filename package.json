@@ -28,8 +28,8 @@
 	},
 	"scripts": {
 		"postinstall": "composer install -o",
-		"start": "wp-scripts start --webpack-copy-php --blocks-manifest",
-		"build": "wp-scripts build --webpack-copy-php --blocks-manifest",
+		"start": "wp-scripts start --webpack-copy-php --blocks-manifest --experimental-modules",
+		"build": "wp-scripts build --webpack-copy-php --blocks-manifest --experimental-modules",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
 		"format": "npm run format:css && npm run format:js && npm run format:php",
@@ -45,5 +45,13 @@
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip",
 		"pot": "wp i18n make-pot . languages/eighteen73-blocks.pot --domain=eighteen73-blocks --exclude=node_modules,vendor,.git"
+	},
+	"dependencies": {
+		"embla-carousel": "^8.6.0",
+		"embla-carousel-auto-scroll": "^8.6.0",
+		"embla-carousel-autoplay": "^8.6.0",
+		"embla-carousel-class-names": "^8.6.0",
+		"embla-carousel-fade": "^8.6.0",
+		"embla-carousel-react": "^8.6.0"
 	}
 }

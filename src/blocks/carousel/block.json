@@ -5,6 +5,7 @@
 	"version": "0.1.0",
 	"title": "Carousel",
 	"category": "design",
+	"icon": "images-alt",
 	"description": "Carousel",
 	"allowedBlocks": [
 		"eighteen73-blocks/carousel-viewport",
@@ -14,13 +15,36 @@
 		"eighteen73-blocks/carousel-next-button",
 		"core/group"
 	],
-	"attributes": {},
+	"attributes": {
+		"options": {
+			"type": "object",
+			"default": {
+				"loop": false,
+				"axis": "x",
+				"slidesToScroll": 1
+			}
+		},
+		"autoplay": {
+			"type": "boolean",
+			"default": false
+		},
+		"advancedCarouselConfig": {
+			"type": "object",
+			"default": {}
+		},
+		"advancedCarouselConfigMerge": {
+			"type": "boolean",
+			"default": false
+		}
+	},
 	"supports": {
-		"html": false
+		"inserter": true,
+		"align": ["wide", "full"],
+		"interactivity": true
 	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
 	"render": "file:./render.php",
-	"viewScript": "file:./view.js"
+	"viewScriptModule": "file:./view.js"
 }

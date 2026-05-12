@@ -10,10 +10,6 @@
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
-	"attributes": {},
-	"supports": {
-		"html": false
-	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
