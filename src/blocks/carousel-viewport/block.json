@@ -10,6 +10,9 @@
 	"parent": [
 		"eighteen73-blocks/carousel"
 	],
+	"supports": {
+		"lock": false
+	},
 	"attributes": {
 		"allowedBlocks": {
 			"type": "array"

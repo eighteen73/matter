@@ -1,10 +1,11 @@
 import { store, getElement, getContext } from '@wordpress/interactivity';
 
 import EmblaCarousel from 'embla-carousel';
-import ClassNames from 'embla-carousel-class-names';
-import Autoplay from 'embla-carousel-autoplay';
 
-import { buildMergedEmblaOptions } from '../../utils/embla-carousel-options';
+import {
+	buildEmblaPlugins,
+	prepareEmblaBlockState,
+} from '../../utils/embla-block-config';
 import {
 	addPrevNextBtnsClickHandlers,
 	addDotBtnsAndClickHandlers,
@@ -26,28 +27,19 @@ store(STORE_NAMESPACE, {
 				return;
 			}
 
-			const plugins = [ClassNames()];
-
-			plugins.push(
-				Autoplay({
-					active: context.autoplay ?? false,
-					speed: 1,
-				})
-			);
-
-			const merged = buildMergedEmblaOptions({
-				baseOptions: context.options ?? {},
-				advancedOptions: context.advancedCarouselConfig ?? {},
-				mergeWithBase: context.advancedCarouselConfigMerge === true,
+			const { emblaOptions, pluginState } = prepareEmblaBlockState({
+				emblaConfig: context.emblaConfig,
+				advancedEmblaConfig: context.advancedEmblaConfig,
+				advancedEmblaConfigMerge: context.advancedEmblaConfigMerge,
 			});
 
 			const emblaApi = EmblaCarousel(
 				viewportNode,
 				{
-					...merged,
+					...emblaOptions,
 					container: containerNode,
 				},
-				plugins
+				buildEmblaPlugins(pluginState)
 			);
 
 			context.emblaApi = emblaApi;

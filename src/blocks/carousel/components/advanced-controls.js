@@ -8,27 +8,27 @@ import {
 } from '@wordpress/components';
 
 export default function AdvancedControls({
-	advancedCarouselConfig,
-	advancedCarouselConfigMerge,
+	advancedEmblaConfig,
+	advancedEmblaConfigMerge,
 	setAttributes,
 }) {
-	const mergeWithUi = advancedCarouselConfigMerge === true;
+	const mergeWithUi = advancedEmblaConfigMerge === true;
 
 	const [advancedJsonDraft, setAdvancedJsonDraft] = useState(() =>
-		JSON.stringify(advancedCarouselConfig ?? {}, null, 2)
+		JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
 	);
 	const [advancedJsonError, setAdvancedJsonError] = useState('');
 
 	useEffect(() => {
-		const next = JSON.stringify(advancedCarouselConfig ?? {}, null, 2);
+		const next = JSON.stringify(advancedEmblaConfig ?? {}, null, 2);
 		setAdvancedJsonDraft((prev) => (prev === next ? prev : next));
-	}, [advancedCarouselConfig]);
+	}, [advancedEmblaConfig]);
 
 	const handleAdvancedJsonBlur = () => {
 		const trimmed = advancedJsonDraft.trim();
 		if (!trimmed) {
 			setAdvancedJsonError('');
-			setAttributes({ advancedCarouselConfig: {} });
+			setAttributes({ advancedEmblaConfig: {} });
 			setAdvancedJsonDraft('{}');
 			return;
 		}
@@ -43,17 +43,17 @@ export default function AdvancedControls({
 					__('Value must be a JSON object.', 'eighteen73-blocks')
 				);
 				setAdvancedJsonDraft(
-					JSON.stringify(advancedCarouselConfig ?? {}, null, 2)
+					JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
 				);
 				return;
 			}
 			setAdvancedJsonError('');
-			setAttributes({ advancedCarouselConfig: parsed });
+			setAttributes({ advancedEmblaConfig: parsed });
 			setAdvancedJsonDraft(JSON.stringify(parsed, null, 2));
 		} catch {
 			setAdvancedJsonError(__('Invalid JSON.', 'eighteen73-blocks'));
 			setAdvancedJsonDraft(
-				JSON.stringify(advancedCarouselConfig ?? {}, null, 2)
+				JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
 			);
 		}
 	};
@@ -68,7 +68,7 @@ export default function AdvancedControls({
 
 			<TextareaControl
 				help={__(
-					'Enter a JSON object to override the carousel settings.',
+					'Enter a JSON object to override the carousel settings. Use the same shape as the block config: nest core options under "options" and plugin options under "plugins" (for example, {"options":{"loop":true},"plugins":{"autoplay":{"active":true,"type":"scroll"}}}).',
 					'eighteen73-blocks'
 				)}
 				label={__('Advanced Carousel Config', 'eighteen73-blocks')}
@@ -93,7 +93,7 @@ export default function AdvancedControls({
 				checked={mergeWithUi}
 				onChange={(value) =>
 					setAttributes({
-						advancedCarouselConfigMerge: value,
+						advancedEmblaConfigMerge: value,
 					})
 				}
 			/>
