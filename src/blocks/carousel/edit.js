@@ -1,80 +1,95 @@
+/**
+ * WordPress dependencies
+ */
 import {
 	useBlockProps,
 	useInnerBlocksProps,
 	InspectorControls,
 } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
-import { useEffect, useMemo } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
-import useEmblaCarousel from 'embla-carousel-react';
-import SingleBlockTypeAppender from '../../components/single-block-type-appender';
 import {
 	PanelBody,
 	RangeControl,
 	SelectControl,
 	ToggleControl,
 } from '@wordpress/components';
+import { useSelect } from '@wordpress/data';
+import { useEffect, useMemo } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 
+/**
+ * External dependencies
+ */
+import useEmblaCarousel from 'embla-carousel-react';
+
+/**
+ * Internal dependencies
+ */
+import SingleBlockTypeAppender from '../../components/single-block-type-appender';
 import {
 	addDotBtnsAndClickHandlers,
 	addPrevNextBtnsClickHandlers,
 } from '../../utils/embla';
-import { buildMergedEmblaOptions } from '../../utils/embla-carousel-options';
+import {
+	DEFAULT_EMBLA_CONFIG,
+	buildEmblaPlugins,
+	normalizeEmblaConfig,
+	prepareEmblaBlockState,
+} from '../../utils/embla-block-config';
 import AdvancedControls from './components/advanced-controls';
-
-//import './editor.scss';
-
-const DEFAULT_CAROUSEL_OPTIONS = {
-	loop: false,
-	axis: 'x',
-	slidesToScroll: 1,
-};
 
 export default function Edit({
 	clientId,
-	attributes: {
-		options,
-		autoplay,
-		advancedCarouselConfig,
-		advancedCarouselConfigMerge,
-	},
+	attributes: { emblaConfig, advancedEmblaConfig, advancedEmblaConfigMerge },
 	setAttributes,
 	isSelected,
 }) {
-	const resolvedOptions = {
-		...DEFAULT_CAROUSEL_OPTIONS,
-		...(options && typeof options === 'object' ? options : {}),
-	};
+	const resolvedConfig = useMemo(
+		() => normalizeEmblaConfig(emblaConfig),
+		[emblaConfig]
+	);
 
-	const mergeWithUi = advancedCarouselConfigMerge === true;
-
-	const finalEmblaOptions = useMemo(
+	const { emblaOptions, pluginState } = useMemo(
 		() =>
-			buildMergedEmblaOptions({
-				baseOptions: resolvedOptions,
-				advancedOptions:
-					advancedCarouselConfig &&
-					typeof advancedCarouselConfig === 'object'
-						? advancedCarouselConfig
-						: {},
-				mergeWithBase: mergeWithUi,
+			prepareEmblaBlockState({
+				emblaConfig: resolvedConfig,
+				advancedEmblaConfig,
+				advancedEmblaConfigMerge,
 			}),
-		[resolvedOptions, advancedCarouselConfig, mergeWithUi]
+		[resolvedConfig, advancedEmblaConfig, advancedEmblaConfigMerge]
 	);
 
 	const setOption = (key, value) => {
 		setAttributes({
-			options: {
-				...resolvedOptions,
-				[key]: value,
+			emblaConfig: {
+				...resolvedConfig,
+				options: {
+					...resolvedConfig.options,
+					[key]: value,
+				},
 			},
 		});
 	};
+
+	const setAutoplay = (key, value) => {
+		setAttributes({
+			emblaConfig: {
+				...resolvedConfig,
+				plugins: {
+					...resolvedConfig.plugins,
+					autoplay: {
+						...resolvedConfig.plugins.autoplay,
+						[key]: value,
+					},
+				},
+			},
+		});
+	};
+
 	const blockProps = useBlockProps({ className: 'embla' });
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		orientation: 'vertical',
 		template: [
-			['eighteen73-blocks/carousel-viewport'],
+			['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
 			['eighteen73-blocks/carousel-progress'],
 			['eighteen73-blocks/carousel-previous-button'],
 			['eighteen73-blocks/carousel-next-button'],
@@ -122,11 +137,19 @@ export default function Edit({
 		return '.embla__container';
 	};
 
-	const [emblaRef, emblaApi] = useEmblaCarousel({
-		...finalEmblaOptions,
-		container: getContainer(),
-		slides: ':scope > :not(.block-list-appender)',
-	});
+	const emblaPlugins = useMemo(
+		() => buildEmblaPlugins(pluginState, { forceInactive: true }),
+		[pluginState]
+	);
+
+	const [emblaRef, emblaApi] = useEmblaCarousel(
+		{
+			...emblaOptions,
+			container: getContainer(),
+			slides: ':scope > :not(.block-list-appender)',
+		},
+		emblaPlugins
+	);
 
 	useEffect(() => {
 		if (!emblaApi) return;
@@ -161,15 +184,12 @@ export default function Edit({
 		};
 	}, [clientId, emblaApi, innerBlocks, setAttributes]);
 
-	useEffect(() => {
-		if (!emblaApi) return;
-
-		setAttributes({ emblaApi });
-	}, [emblaApi, setAttributes]);
-
 	const isInnerBlockSelected = useSelect((select) =>
 		select('core/block-editor').hasSelectedInnerBlock(clientId, true)
 	);
+
+	const uiOptions = resolvedConfig.options;
+	const uiAutoplay = resolvedConfig.plugins.autoplay;
 
 	return (
 		<>
@@ -177,13 +197,13 @@ export default function Edit({
 				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
 					<ToggleControl
 						label={__('Loop', 'eighteen73-blocks')}
-						checked={resolvedOptions.loop}
+						checked={uiOptions.loop}
 						onChange={(value) => setOption('loop', value)}
 					/>
 
 					<SelectControl
 						label={__('Axis', 'eighteen73-blocks')}
-						value={resolvedOptions.axis}
+						value={uiOptions.axis}
 						options={[
 							{
 								label: __('Horizontal', 'eighteen73-blocks'),
@@ -199,12 +219,13 @@ export default function Edit({
 
 					<RangeControl
 						label={__('Slides to scroll', 'eighteen73-blocks')}
-						value={resolvedOptions.slidesToScroll}
+						value={uiOptions.slidesToScroll}
 						onChange={(value) =>
 							setOption(
 								'slidesToScroll',
 								value === undefined
-									? DEFAULT_CAROUSEL_OPTIONS.slidesToScroll
+									? DEFAULT_EMBLA_CONFIG.options
+											.slidesToScroll
 									: value
 							)
 						}
@@ -215,16 +236,34 @@ export default function Edit({
 
 					<ToggleControl
 						label={__('Autoplay', 'eighteen73-blocks')}
-						checked={autoplay}
-						onChange={(value) => setAttributes({ autoplay: value })}
+						checked={uiAutoplay.active}
+						onChange={(value) => setAutoplay('active', value)}
 					/>
+
+					{uiAutoplay.active && (
+						<SelectControl
+							label={__('Autoplay Type', 'eighteen73-blocks')}
+							value={uiAutoplay.type}
+							options={[
+								{
+									label: __('Normal', 'eighteen73-blocks'),
+									value: 'normal',
+								},
+								{
+									label: __('Scroll', 'eighteen73-blocks'),
+									value: 'scroll',
+								},
+							]}
+							onChange={(value) => setAutoplay('type', value)}
+						/>
+					)}
 				</PanelBody>
 			</InspectorControls>
 
 			<InspectorControls group="advanced">
 				<AdvancedControls
-					advancedCarouselConfig={advancedCarouselConfig}
-					advancedCarouselConfigMerge={advancedCarouselConfigMerge}
+					advancedEmblaConfig={advancedEmblaConfig}
+					advancedEmblaConfigMerge={advancedEmblaConfigMerge}
 					setAttributes={setAttributes}
 				/>
 			</InspectorControls>

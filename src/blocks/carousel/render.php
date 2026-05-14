@@ -8,30 +8,80 @@
  * @package Eighteen73Blocks\\Carousel
  */
 
-$defaults = [
-	'loop'           => false,
-	'axis'           => 'x',
-	'slidesToScroll' => 1,
+$default_embla_config = [
+	'options' => [
+		'loop'           => false,
+		'axis'           => 'x',
+		'slidesToScroll' => 1,
+	],
+	'plugins' => [
+		'autoplay' => [
+			'active' => false,
+			'type'   => 'normal',
+			'speed'  => 1,
+		],
+	],
 ];
 
-$raw_options = isset( $attributes['options'] ) && is_array( $attributes['options'] ) ? $attributes['options'] : [];
+/**
+ * Determine whether the given array is an associative map (rather than a
+ * sequential list). Used by the deep merge below to keep list values atomic
+ * while merging maps recursively.
+ *
+ * @param array $arr
+ * @return bool
+ */
+$is_assoc_array = static function ( array $arr ) {
+	if ( empty( $arr ) ) {
+		return true;
+	}
+	return array_keys( $arr ) !== range( 0, count( $arr ) - 1 );
+};
 
-$axis = isset( $raw_options['axis'] ) && in_array( $raw_options['axis'], [ 'x', 'y' ], true )
-	? $raw_options['axis']
-	: $defaults['axis'];
+/**
+ * Deep-merge two associative arrays. Scalar/list values from $override replace
+ * those in $base; nested associative arrays are merged recursively.
+ *
+ * @param array $base
+ * @param array $override
+ * @return array
+ */
+$deep_merge = static function ( array $base, array $override ) use ( &$deep_merge, $is_assoc_array ) {
+	foreach ( $override as $key => $value ) {
+		if (
+			isset( $base[ $key ] )
+			&& is_array( $base[ $key ] )
+			&& is_array( $value )
+			&& $is_assoc_array( $base[ $key ] )
+			&& $is_assoc_array( $value )
+		) {
+			$base[ $key ] = $deep_merge( $base[ $key ], $value );
+		} else {
+			$base[ $key ] = $value;
+		}
+	}
+	return $base;
+};
 
-$slides_to_scroll = isset( $raw_options['slidesToScroll'] ) ? (int) $raw_options['slidesToScroll'] : $defaults['slidesToScroll'];
-if ( $slides_to_scroll < 1 ) {
-	$slides_to_scroll = $defaults['slidesToScroll'];
+$raw_embla_config = isset( $attributes['emblaConfig'] ) && is_array( $attributes['emblaConfig'] )
+	? $attributes['emblaConfig']
+	: [];
+
+$embla_config = $deep_merge( $default_embla_config, $raw_embla_config );
+
+// Sanitize the core option keys we expose via UI; anything else passes through
+// untouched so advanced JSON can introduce additional Embla options.
+$options = $embla_config['options'];
+if ( isset( $options['axis'] ) && ! in_array( $options['axis'], [ 'x', 'y' ], true ) ) {
+	$options['axis'] = 'x';
 }
-
-$options = [
-	'loop'           => isset( $raw_options['loop'] ) ? (bool) $raw_options['loop'] : $defaults['loop'],
-	'axis'           => $axis,
-	'slidesToScroll' => $slides_to_scroll,
-];
-
-$autoplay = isset( $attributes['autoplay'] ) ? $attributes['autoplay'] : false;
+if ( isset( $options['slidesToScroll'] ) ) {
+	$options['slidesToScroll'] = max( 1, (int) $options['slidesToScroll'] );
+}
+if ( isset( $options['loop'] ) ) {
+	$options['loop'] = (bool) $options['loop'];
+}
+$embla_config['options'] = $options;
 
 $advanced_carousel_config = isset( $attributes['advancedCarouselConfig'] ) && is_array( $attributes['advancedCarouselConfig'] )
 	? $attributes['advancedCarouselConfig']
@@ -42,8 +92,7 @@ $advanced_carousel_config_merge = isset( $attributes['advancedCarouselConfigMerg
 	: false;
 
 $carousel_context = [
-	'options'                     => $options,
-	'autoplay'                    => $autoplay,
+	'emblaConfig'                 => $embla_config,
 	'advancedCarouselConfig'      => $advanced_carousel_config,
 	'advancedCarouselConfigMerge' => $advanced_carousel_config_merge,
 ];

@@ -16,23 +16,28 @@
 		"core/group"
 	],
 	"attributes": {
-		"options": {
+		"emblaConfig": {
 			"type": "object",
 			"default": {
-				"loop": false,
-				"axis": "x",
-				"slidesToScroll": 1
+				"options": {
+					"loop": false,
+					"axis": "x",
+					"slidesToScroll": 1
+				},
+				"plugins": {
+					"autoplay": {
+						"active": false,
+						"type": "normal",
+						"speed": 1
+					}
+				}
 			}
 		},
-		"autoplay": {
-			"type": "boolean",
-			"default": false
-		},
-		"advancedCarouselConfig": {
+		"advancedEmblaConfig": {
 			"type": "object",
 			"default": {}
 		},
-		"advancedCarouselConfigMerge": {
+		"advancedEmblaConfigMerge": {
 			"type": "boolean",
 			"default": false
 		}
