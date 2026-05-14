@@ -9,18 +9,19 @@
  */
 
 $default_embla_config = [
-	'options' => [
+	'options'          => [
 		'loop'           => false,
 		'axis'           => 'x',
 		'slidesToScroll' => 1,
 	],
-	'plugins' => [
+	'plugins'          => [
 		'autoplay' => [
 			'active' => false,
 			'type'   => 'normal',
 			'speed'  => 1,
 		],
 	],
+	'breakpointLayers' => [],
 ];
 
 /**
@@ -83,18 +84,18 @@ if ( isset( $options['loop'] ) ) {
 }
 $embla_config['options'] = $options;
 
-$advanced_carousel_config = isset( $attributes['advancedCarouselConfig'] ) && is_array( $attributes['advancedCarouselConfig'] )
-	? $attributes['advancedCarouselConfig']
+$advanced_embla_config = isset( $attributes['advancedEmblaConfig'] ) && is_array( $attributes['advancedEmblaConfig'] )
+	? $attributes['advancedEmblaConfig']
 	: [];
 
-$advanced_carousel_config_merge = isset( $attributes['advancedCarouselConfigMerge'] )
-	? (bool) $attributes['advancedCarouselConfigMerge']
+$advanced_embla_config_merge = isset( $attributes['advancedEmblaConfigMerge'] )
+	? (bool) $attributes['advancedEmblaConfigMerge']
 	: false;
 
 $carousel_context = [
-	'emblaConfig'                 => $embla_config,
-	'advancedCarouselConfig'      => $advanced_carousel_config,
-	'advancedCarouselConfigMerge' => $advanced_carousel_config_merge,
+	'emblaConfig'              => $embla_config,
+	'advancedEmblaConfig'      => $advanced_embla_config,
+	'advancedEmblaConfigMerge' => $advanced_embla_config_merge,
 ];
 ?>
 
