@@ -6,12 +6,7 @@ import {
 	useInnerBlocksProps,
 	InspectorControls,
 } from '@wordpress/block-editor';
-import {
-	PanelBody,
-	RangeControl,
-	SelectControl,
-	ToggleControl,
-} from '@wordpress/components';
+import { PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -30,12 +25,12 @@ import {
 	addPrevNextBtnsClickHandlers,
 } from '../../utils/embla';
 import {
-	DEFAULT_EMBLA_CONFIG,
 	buildEmblaPlugins,
 	normalizeEmblaConfig,
 	prepareEmblaBlockState,
 } from '../../utils/embla-block-config';
 import AdvancedControls from './components/advanced-controls';
+import BreakpointControls from './components/breakpoint-controls';
 
 export default function Edit({
 	clientId,
@@ -81,6 +76,64 @@ export default function Edit({
 						[key]: value,
 					},
 				},
+			},
+		});
+	};
+
+	const setLayerOption = (token, key, value) => {
+		const layers = resolvedConfig.breakpointLayers || {};
+		const layer = layers[token] || {};
+		setAttributes({
+			emblaConfig: {
+				...resolvedConfig,
+				breakpointLayers: {
+					...layers,
+					[token]: {
+						...layer,
+						options: {
+							...(layer.options || {}),
+							[key]: value,
+						},
+					},
+				},
+			},
+		});
+	};
+
+	const setLayerAutoplay = (token, key, value) => {
+		const layers = resolvedConfig.breakpointLayers || {};
+		const layer = layers[token] || {};
+		const layerPlugins = layer.plugins || {};
+		setAttributes({
+			emblaConfig: {
+				...resolvedConfig,
+				breakpointLayers: {
+					...layers,
+					[token]: {
+						...layer,
+						plugins: {
+							...layerPlugins,
+							autoplay: {
+								...(layerPlugins.autoplay || {}),
+								[key]: value,
+							},
+						},
+					},
+				},
+			},
+		});
+	};
+
+	const resetLayer = (token) => {
+		const layers = resolvedConfig.breakpointLayers || {};
+		if (!layers[token]) {
+			return;
+		}
+		const { [token]: _removed, ...rest } = layers;
+		setAttributes({
+			emblaConfig: {
+				...resolvedConfig,
+				breakpointLayers: rest,
 			},
 		});
 	};
@@ -195,68 +248,16 @@ export default function Edit({
 		<>
 			<InspectorControls group="settings">
 				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
-					<ToggleControl
-						label={__('Loop', 'eighteen73-blocks')}
-						checked={uiOptions.loop}
-						onChange={(value) => setOption('loop', value)}
+					<BreakpointControls
+						baseOptions={uiOptions}
+						baseAutoplay={uiAutoplay}
+						breakpointLayers={resolvedConfig.breakpointLayers}
+						onChangeBaseOption={setOption}
+						onChangeBaseAutoplay={setAutoplay}
+						onChangeLayerOption={setLayerOption}
+						onChangeLayerAutoplay={setLayerAutoplay}
+						onResetLayer={resetLayer}
 					/>
-
-					<SelectControl
-						label={__('Axis', 'eighteen73-blocks')}
-						value={uiOptions.axis}
-						options={[
-							{
-								label: __('Horizontal', 'eighteen73-blocks'),
-								value: 'x',
-							},
-							{
-								label: __('Vertical', 'eighteen73-blocks'),
-								value: 'y',
-							},
-						]}
-						onChange={(value) => setOption('axis', value)}
-					/>
-
-					<RangeControl
-						label={__('Slides to scroll', 'eighteen73-blocks')}
-						value={uiOptions.slidesToScroll}
-						onChange={(value) =>
-							setOption(
-								'slidesToScroll',
-								value === undefined
-									? DEFAULT_EMBLA_CONFIG.options
-											.slidesToScroll
-									: value
-							)
-						}
-						min={1}
-						max={10}
-						step={1}
-					/>
-
-					<ToggleControl
-						label={__('Autoplay', 'eighteen73-blocks')}
-						checked={uiAutoplay.active}
-						onChange={(value) => setAutoplay('active', value)}
-					/>
-
-					{uiAutoplay.active && (
-						<SelectControl
-							label={__('Autoplay Type', 'eighteen73-blocks')}
-							value={uiAutoplay.type}
-							options={[
-								{
-									label: __('Normal', 'eighteen73-blocks'),
-									value: 'normal',
-								},
-								{
-									label: __('Scroll', 'eighteen73-blocks'),
-									value: 'scroll',
-								},
-							]}
-							onChange={(value) => setAutoplay('type', value)}
-						/>
-					)}
 				</PanelBody>
 			</InspectorControls>
 
