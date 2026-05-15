@@ -1,9 +1,5 @@
-// Pure breakpoint data — kept free of `@wordpress/i18n` so this module can be
-// imported from script-module entry points (e.g. block `viewScriptModule`)
-// without webpack rejecting the chained dependency. Editor-only translated
-// help text lives in `./help.js`.
-//
-// Keep the `px` values in sync with `./_index.scss` so SCSS media queries
+// Pure breakpoint data — no `@wordpress/i18n` so script-module bundles can import this.
+// Keep `px` in sync with `./_index.scss` so SCSS media queries
 // and the JS-driven Embla `(min-width: …)` breakpoints match exactly.
 const breakpoints = {
 	xs: { label: 'XS', px: 480 },
