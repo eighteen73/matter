@@ -10,6 +10,35 @@
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
+	"attributes": {
+		"dotColor": {
+			"type": "string"
+		},
+		"customDotColor": {
+			"type": "string"
+		},
+		"dotActiveColor": {
+			"type": "string"
+		},
+		"customDotActiveColor": {
+			"type": "string"
+		}
+	},
+	"supports": {
+		"color": {
+			"text": false,
+			"background": true,
+			"gradients": false,
+			"link": false
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"__experimentalBorder": {
+			"radius": true
+		}
+	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",

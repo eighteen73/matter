@@ -10,6 +10,29 @@
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
+	"attributes": {
+		"arrowColor": {
+			"type": "string"
+		},
+		"customArrowColor": {
+			"type": "string"
+		}
+	},
+	"supports": {
+		"color": {
+			"text": false,
+			"background": true,
+			"gradients": false,
+			"link": false
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"__experimentalBorder": {
+			"radius": true
+		}
+	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
 	"render": "file:./render.php"

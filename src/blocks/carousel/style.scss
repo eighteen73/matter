@@ -41,6 +41,10 @@
 		--eighteen73-blocks--carousel--button--border-radius: var(--carousel-button-border-radius, 50%);
 		// stylelint-enable custom-property-pattern
 
+		&:where(.has-background) .embla__button {
+			background-color: var(--wp--style--color--background);
+		}
+
 		.embla__button {
 			align-items: center;
 			appearance: none;
