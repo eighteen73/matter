@@ -14,8 +14,25 @@
 		"indicateCurrentPosition": {
 			"type": "boolean",
 			"default": false
+		},
+		"barColor": {
+			"type": "string"
+		},
+		"customBarColor": {
+			"type": "string"
 		}
-  	},
+	},
+	"supports": {
+		"color": {
+			"text": false,
+			"background": true,
+			"gradients": false,
+			"link": false
+		},
+		"__experimentalBorder": {
+			"radius": true
+		}
+	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",

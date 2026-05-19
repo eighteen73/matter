@@ -8,6 +8,10 @@
 
 	background-color: var(--eighteen73-blocks--carousel--progress--background);
 	border-radius: var(--eighteen73-blocks--carousel--progress--border-radius);
+
+	&.has-background {
+		background-color: var(--wp--style--color--background);
+	}
 	height: var(--eighteen73-blocks--carousel--progress--height);
 	overflow: hidden;
 	position: relative;
