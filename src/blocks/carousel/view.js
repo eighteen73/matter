@@ -26,6 +26,10 @@ store(STORE_NAMESPACE, {
 				return;
 			}
 
+			window.eighteen73Blocks = window.eighteen73Blocks || {};
+			window.eighteen73Blocks.carousels =
+				window.eighteen73Blocks.carousels || new Map();
+
 			const context = getContext(STORE_NAMESPACE);
 
 			const queryLoop =
@@ -50,6 +54,7 @@ store(STORE_NAMESPACE, {
 			);
 
 			context.emblaApi = emblaApi;
+			window.eighteen73Blocks.carousels.set(context.carouselId, emblaApi);
 
 			const prevButtonNode = ref.querySelector(
 				'.embla__button--previous'

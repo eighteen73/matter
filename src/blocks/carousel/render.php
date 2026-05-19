@@ -20,10 +20,13 @@ $advanced_embla_config_merge = isset( $attributes['advancedEmblaConfigMerge'] )
 	? (bool) $attributes['advancedEmblaConfigMerge']
 	: false;
 
+$carousel_id = wp_unique_id( 'eighteen73-blocks-carousel-' );
+
 $carousel_context = [
 	'emblaConfig'              => $embla_config,
 	'advancedEmblaConfig'      => $advanced_embla_config,
 	'advancedEmblaConfigMerge' => $advanced_embla_config_merge,
+	'carouselId'               => $carousel_id,
 ];
 ?>
 
@@ -32,6 +35,7 @@ $carousel_context = [
 	echo wp_kses_data(
 		get_block_wrapper_attributes(
 			[
+				'id'                  => $carousel_id,
 				'data-wp-interactive' => 'eighteen73-blocks/carousel',
 				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
 			]
