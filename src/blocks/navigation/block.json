@@ -15,6 +15,13 @@
 			"type": "string",
 			"default": "simple",
 			"enum": [ "simple", "accordion", "drill-down" ]
+		},
+		"layout": {
+			"type": "object",
+			"default": {
+				"type": "flex",
+				"orientation": "vertical"
+			}
 		}
 	},
 	"supports": {
@@ -28,7 +35,7 @@
 			},
 			"allowSwitching": false,
 			"allowInheriting": false,
-			"allowVerticalAlignment": false,
+			"allowVerticalAlignment": true,
 			"allowSizingOnChildren": true
 		},
 		"color": {
@@ -42,6 +49,7 @@
 			}
 		},
 		"typography": {
+			"textAlign": true,
 			"fontSize": true,
 			"__experimentalDefaultControls": {
 				"fontSize": false

@@ -1,17 +1,21 @@
 .wp-block-eighteen73-navigation {
 	.wp-block-eighteen73-navigation__container {
+		align-items: inherit;
+		display: flex;
+		flex-direction: inherit;
+		flex-wrap: inherit;
+		gap: inherit;
+		justify-content: inherit;
 		list-style: none;
 		margin: 0;
-		padding: 0;
+		padding-left: 0;
 	}
 
 	.wp-block-navigation-item {
 		list-style: none;
 	}
 
-	&.is-layout-flex > .wp-block-eighteen73-navigation__container {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--wp--style--block-gap);
+	&.is-content-justification-space-between > .wp-block-eighteen73-navigation__container {
+		flex-grow: 1;
 	}
 }

@@ -1,5 +1,4 @@
 import {
-	InnerBlocks,
 	InspectorControls,
 	useBlockProps,
 	useInnerBlocksProps,
@@ -26,16 +25,23 @@ function getMenuTitle(menu) {
 	);
 }
 
-function EditableNavigationEntityBlocks() {
+/**
+ * Renders the navigation menu inside the entity provider.
+ *
+ * Layout classes from useInnerBlocksProps (including wp-container-*) are applied
+ * to <nav> so editor layout CSS matches the frontend wrapper.
+ */
+function NavigationMenu() {
+	const blockProps = useBlockProps();
 	const [blocks, onInput, onChange] = useEntityBlockEditor(
 		'postType',
 		'wp_navigation'
 	);
 
+	// Do not pass className here — WordPress merges layout classes into this object.
+	// We move them onto <nav> below and keep a fixed class on <ul> only.
 	const innerBlocksProps = useInnerBlocksProps(
-		{
-			className: 'wp-block-eighteen73-navigation__container',
-		},
+		{},
 		{
 			value: blocks,
 			onInput,
@@ -44,7 +50,26 @@ function EditableNavigationEntityBlocks() {
 		}
 	);
 
-	return <ul {...innerBlocksProps} />;
+	const {
+		children,
+		className: layoutClassName,
+		...innerBlocksBindings
+	} = innerBlocksProps;
+
+	const navClassName = [blockProps.className, layoutClassName]
+		.filter(Boolean)
+		.join(' ');
+
+	return (
+		<nav {...blockProps} className={navClassName || undefined}>
+			<ul
+				className="wp-block-eighteen73-navigation__container"
+				{...innerBlocksBindings}
+			>
+				{children}
+			</ul>
+		</nav>
+	);
 }
 
 export default function Edit({ attributes, setAttributes }) {
@@ -110,38 +135,26 @@ export default function Edit({ attributes, setAttributes }) {
 				</PanelBody>
 			</InspectorControls>
 
-			<nav {...blockProps} disabled>
-				{!ref && (
+			{!ref && (
+				<nav {...blockProps}>
 					<p className="wp-block-eighteen73-navigation__empty">
 						{__(
 							'Select a menu from the block settings.',
 							'eighteen73-blocks'
 						)}
 					</p>
-				)}
-				{!!ref && !hasResolved && <Spinner />}
-				{!!ref && hasResolved && (
-					<>
-						{!ref && (
-							<p className="wp-block-eighteen73-navigation__empty">
-								{__(
-									'The selected menu could not be loaded.',
-									'eighteen73-blocks'
-								)}
-							</p>
-						)}
-						{!!ref && (
-							<EntityProvider
-								kind="postType"
-								type="wp_navigation"
-								id={ref}
-							>
-								<EditableNavigationEntityBlocks />
-							</EntityProvider>
-						)}
-					</>
-				)}
-			</nav>
+				</nav>
+			)}
+			{!!ref && !hasResolved && (
+				<nav {...blockProps}>
+					<Spinner />
+				</nav>
+			)}
+			{!!ref && hasResolved && (
+				<EntityProvider kind="postType" type="wp_navigation" id={ref}>
+					<NavigationMenu />
+				</EntityProvider>
+			)}
 		</>
 	);
 }
