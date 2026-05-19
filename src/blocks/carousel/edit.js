@@ -30,7 +30,7 @@ import {
 	prepareEmblaBlockState,
 } from '../../utils/embla-block-config';
 import AdvancedControls from './components/advanced-controls';
-import BreakpointControls from './components/breakpoint-controls';
+import CarouselControls from './components/carousel-controls';
 
 export default function Edit({
 	clientId,
@@ -248,7 +248,8 @@ export default function Edit({
 		<>
 			<InspectorControls group="settings">
 				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
-					<BreakpointControls
+					<CarouselControls
+						setAttributes={setAttributes}
 						baseOptions={uiOptions}
 						baseAutoplay={uiAutoplay}
 						breakpointLayers={resolvedConfig.breakpointLayers}

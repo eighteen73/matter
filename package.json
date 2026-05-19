@@ -50,6 +50,7 @@
 		"pot": "wp i18n make-pot . languages/eighteen73-blocks.pot --domain=eighteen73-blocks --exclude=node_modules,vendor,.git"
 	},
 	"dependencies": {
+		"@wordpress/icons": "^13.1.0",
 		"embla-carousel": "^8.6.0",
 		"embla-carousel-auto-scroll": "^8.6.0",
 		"embla-carousel-autoplay": "^8.6.0",

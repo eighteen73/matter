@@ -22,12 +22,13 @@
 				"options": {
 					"loop": false,
 					"axis": "x",
-					"slidesToScroll": 1
+					"slidesToScroll": 1,
+					"active": true
 				},
 				"plugins": {
 					"autoplay": {
 						"active": false,
-						"type": "normal",
+						"type": "slide",
 						"speed": 1
 					}
 				},

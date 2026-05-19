@@ -5,18 +5,19 @@ import AutoScroll from 'embla-carousel-auto-scroll';
 import breakpoints, {
 	breakpointTokens,
 	emblaMinWidthQuery,
-} from '../constants/breakpoints';
+} from '../constants/breakpoints/data';
 
 export const DEFAULT_EMBLA_CONFIG = {
 	options: {
 		loop: false,
 		axis: 'x',
 		slidesToScroll: 1,
+		active: true,
 	},
 	plugins: {
 		autoplay: {
 			active: false,
-			type: 'normal',
+			type: 'slide',
 			speed: 1,
 		},
 	},
@@ -64,7 +65,9 @@ const applyBreakpointLayers = (resolved, layers) => {
 		? { ...options.breakpoints }
 		: {};
 
-	let autoplay = isPlainObject(plugins.autoplay) ? { ...plugins.autoplay } : {};
+	let autoplay = isPlainObject(plugins.autoplay)
+		? { ...plugins.autoplay }
+		: {};
 	const autoplayBreakpoints = isPlainObject(autoplay.breakpoints)
 		? { ...autoplay.breakpoints }
 		: {};
@@ -79,22 +82,14 @@ const applyBreakpointLayers = (resolved, layers) => {
 
 		const query = emblaMinWidthQuery(px);
 
-		if (
-			isPlainObject(layer.options) &&
-			Object.keys(layer.options).length
-		) {
-			optionBreakpoints[query] = isPlainObject(
-				optionBreakpoints[query]
-			)
+		if (isPlainObject(layer.options) && Object.keys(layer.options).length) {
+			optionBreakpoints[query] = isPlainObject(optionBreakpoints[query])
 				? deepMerge(optionBreakpoints[query], layer.options)
 				: { ...layer.options };
 		}
 
 		const autoplayLayer = layer.plugins?.autoplay;
-		if (
-			isPlainObject(autoplayLayer) &&
-			Object.keys(autoplayLayer).length
-		) {
+		if (isPlainObject(autoplayLayer) && Object.keys(autoplayLayer).length) {
 			autoplayBreakpoints[query] = isPlainObject(
 				autoplayBreakpoints[query]
 			)
@@ -153,14 +148,17 @@ export const prepareEmblaBlockState = ({
  * Register ClassNames plus Autoplay and AutoScroll (mutually exclusive via
  * `active` / per-breakpoint `type`) so responsive autoplay type can switch.
  */
-export const buildEmblaPlugins = (pluginState, { forceInactive = false } = {}) => {
+export const buildEmblaPlugins = (
+	pluginState,
+	{ forceInactive = false } = {}
+) => {
 	const plugins = [ClassNames()];
 	const autoplay = isPlainObject(pluginState?.autoplay)
 		? pluginState.autoplay
 		: {};
 	const {
 		active: baseActive = false,
-		type: baseType = 'normal',
+		type: baseType = 'slide',
 		breakpoints: rawBreakpoints,
 		...rest
 	} = autoplay;
@@ -183,9 +181,7 @@ export const buildEmblaPlugins = (pluginState, { forceInactive = false } = {}) =
 				...layerRest
 			} = rawLayer;
 			const effectiveActive =
-				layerActiveRaw !== undefined
-					? !!layerActiveRaw
-					: !!baseActive;
+				layerActiveRaw !== undefined ? !!layerActiveRaw : !!baseActive;
 			const effectiveType =
 				layerTypeRaw !== undefined ? layerTypeRaw : baseType;
 			const wantLayerActive = !forceInactive && effectiveActive;
