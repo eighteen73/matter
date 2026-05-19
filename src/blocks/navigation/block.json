@@ -25,6 +25,7 @@
 		}
 	},
 	"supports": {
+		"interactivity": true,
 		"html": false,
 		"anchor": true,
 		"align": [ "wide", "full" ],
@@ -68,6 +69,7 @@
 	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
+	"viewScriptModule": "file:./view.js",
 	"style": "file:./style-index.css",
 	"editorStyle": "file:./index.css",
 	"render": "file:./render.php"
