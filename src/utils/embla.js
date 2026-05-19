@@ -86,6 +86,11 @@ export const addDotBtnsAndClickHandlers = (emblaApi, dotsNode) => {
 		.on('reInit', toggleDotBtnsActive)
 		.on('select', toggleDotBtnsActive);
 
+	if (emblaApi.scrollSnapList().length > 0) {
+		addDotBtnsWithClickHandlers();
+		toggleDotBtnsActive();
+	}
+
 	return () => {
 		dotsNode.innerHTML = '';
 	};
