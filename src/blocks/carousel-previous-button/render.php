@@ -15,7 +15,7 @@ $icon_style = BlockColour::build_custom_color_style_string(
 	BlockColour::get_button_icon_color_definitions()
 );
 
-$wrapper_attributes = array();
+$wrapper_attributes = [];
 
 if ( $icon_style ) {
 	$wrapper_attributes['style'] = $icon_style;

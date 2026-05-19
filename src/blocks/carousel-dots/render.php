@@ -15,9 +15,9 @@ $dot_style = BlockColour::build_custom_color_style_string(
 	BlockColour::get_dot_color_definitions()
 );
 
-$wrapper_attributes = array(
+$wrapper_attributes = [
 	'class' => 'embla__dots',
-);
+];
 
 if ( $dot_style ) {
 	$wrapper_attributes['style'] = $dot_style;

@@ -17,10 +17,10 @@ $bar_style = BlockColour::build_custom_color_style_string(
 	BlockColour::get_progress_bar_color_definitions()
 );
 
-$wrapper_attributes = array(
+$wrapper_attributes = [
 	'class'                          => 'embla__progress',
 	'data-indicate-current-position' => $indicate_current_position,
-);
+];
 
 if ( $bar_style ) {
 	$wrapper_attributes['style'] = $bar_style;
