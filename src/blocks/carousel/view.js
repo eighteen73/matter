@@ -27,6 +27,12 @@ store(STORE_NAMESPACE, {
 				return;
 			}
 
+			const queryLoop =
+				containerNode.querySelector('.wp-block-post-template') ||
+				containerNode.querySelector(
+					'.wp-block-woocommerce-product-template'
+				);
+
 			const { emblaOptions, pluginState } = prepareEmblaBlockState({
 				emblaConfig: context.emblaConfig,
 				advancedEmblaConfig: context.advancedEmblaConfig,
@@ -37,7 +43,7 @@ store(STORE_NAMESPACE, {
 				viewportNode,
 				{
 					...emblaOptions,
-					container: containerNode,
+					container: queryLoop ? queryLoop : containerNode,
 				},
 				buildEmblaPlugins(pluginState)
 			);
