@@ -1,10 +1,16 @@
 export const addTogglePrevNextBtnsActive = (emblaApi, prevBtn, nextBtn) => {
 	const togglePrevNextBtnsState = () => {
-		if (emblaApi.canScrollPrev()) prevBtn.removeAttribute('disabled');
-		else prevBtn.setAttribute('disabled', 'disabled');
+		if (emblaApi.canScrollPrev()) {
+			prevBtn.removeAttribute('disabled');
+		} else {
+			prevBtn.setAttribute('disabled', 'disabled');
+		}
 
-		if (emblaApi.canScrollNext()) nextBtn.removeAttribute('disabled');
-		else nextBtn.setAttribute('disabled', 'disabled');
+		if (emblaApi.canScrollNext()) {
+			nextBtn.removeAttribute('disabled');
+		} else {
+			nextBtn.setAttribute('disabled', 'disabled');
+		}
 	};
 
 	emblaApi

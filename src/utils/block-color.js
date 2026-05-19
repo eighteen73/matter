@@ -3,16 +3,16 @@
  *
  * @param {string|undefined} attribute       Preset colour slug.
  * @param {string|undefined} customAttribute Custom hex colour.
- * @param {string}           varName          CSS custom property name.
+ * @param {string}           varName         CSS custom property name.
  * @return {Object} Style object fragment.
  */
-export function getColorCSSVar( attribute, customAttribute, varName ) {
-	if ( attribute ) {
-		return { [ varName ]: `var(--wp--preset--color--${ attribute })` };
+export function getColorCSSVar(attribute, customAttribute, varName) {
+	if (attribute) {
+		return { [varName]: `var(--wp--preset--color--${attribute})` };
 	}
 
-	if ( customAttribute ) {
-		return { [ varName ]: customAttribute };
+	if (customAttribute) {
+		return { [varName]: customAttribute };
 	}
 
 	return {};
@@ -32,12 +32,12 @@ export const PROGRESS_BAR_COLOR_VAR =
  * @param {string|undefined} attrSlug   Attribute preset slug.
  * @param {string|undefined} attrCustom Attribute custom hex.
  * @param {Object|undefined} colorObj   withColors colour object.
- * @return {{ slug: string|undefined, custom: string|undefined }}
+ * @return {{ slug: string|undefined, custom: string|undefined }} Color pair object.
  */
-export function resolveColorPair( attrSlug, attrCustom, colorObj ) {
+export function resolveColorPair(attrSlug, attrCustom, colorObj) {
 	const slug = attrSlug ?? colorObj?.slug;
 
-	if ( slug ) {
+	if (slug) {
 		return { slug, custom: undefined };
 	}
 
@@ -53,21 +53,21 @@ export function resolveColorPair( attrSlug, attrCustom, colorObj ) {
  * @param {Array<{ slug: string|undefined, custom: string|undefined, cssVar: string }>} configs Colour configs.
  * @return {Object} Style properties for useBlockProps.
  */
-export function buildCustomColorStyles( configs ) {
-	return configs.reduce( ( styles, { slug, custom, cssVar } ) => {
+export function buildCustomColorStyles(configs) {
+	return configs.reduce((styles, { slug, custom, cssVar }) => {
 		return {
 			...styles,
-			...getColorCSSVar( slug, custom, cssVar ),
+			...getColorCSSVar(slug, custom, cssVar),
 		};
-	}, {} );
+	}, {});
 }
 
 /**
  * Builds inline style properties from attribute definitions.
  *
- * @param {Object}      attributes Block attributes.
- * @param {Array<Object>} definitions Definition objects.
- * @param {Object}      [colorObjects] Optional withColors objects keyed by definition key.
+ * @param {Object}        attributes     Block attributes.
+ * @param {Array<Object>} definitions    Definition objects.
+ * @param {Object}        [colorObjects] Optional withColors objects keyed by definition key.
  * @return {Object} Style properties for useBlockProps.
  */
 export function buildCustomColorStylesFromAttributes(
@@ -76,11 +76,11 @@ export function buildCustomColorStylesFromAttributes(
 	colorObjects = {}
 ) {
 	const configs = definitions.map(
-		( { slugAttr, customAttr, cssVar, colorKey } ) => {
-			const colorObj = colorKey ? colorObjects[ colorKey ] : null;
+		({ slugAttr, customAttr, cssVar, colorKey }) => {
+			const colorObj = colorKey ? colorObjects[colorKey] : null;
 			const resolved = resolveColorPair(
-				attributes[ slugAttr ],
-				attributes[ customAttr ],
+				attributes[slugAttr],
+				attributes[customAttr],
 				colorObj
 			);
 
@@ -92,28 +92,28 @@ export function buildCustomColorStylesFromAttributes(
 		}
 	);
 
-	return buildCustomColorStyles( configs );
+	return buildCustomColorStyles(configs);
 }
 
 /**
  * Builds a semicolon-separated inline style string from attribute definitions.
  *
- * @param {Object}        attributes   Block attributes.
- * @param {Array<Object>} definitions  Definition objects.
+ * @param {Object}        attributes  Block attributes.
+ * @param {Array<Object>} definitions Definition objects.
  * @return {string} Inline style string (may be empty).
  */
-export function buildCustomColorStyleString( attributes, definitions ) {
+export function buildCustomColorStyleString(attributes, definitions) {
 	const styles = buildCustomColorStylesFromAttributes(
 		attributes,
 		definitions
 	);
 
-	const style = Object.entries( styles )
-		.map( ( [ key, value ] ) => `${ key }: ${ value }` )
-		.join( '; ' );
+	const style = Object.entries(styles)
+		.map(([key, value]) => `${key}: ${value}`)
+		.join('; ');
 
 	// Trailing semicolon when merged with other inline style strings.
-	return style ? `${ style };` : '';
+	return style ? `${style};` : '';
 }
 
 const DOT_COLOR_DEFINITIONS = [
@@ -157,7 +157,7 @@ const PROGRESS_BAR_COLOR_DEFINITIONS = [
  * @param {Object|null} dotActiveColor withColors active dot object.
  * @return {Object} Style properties for useBlockProps.
  */
-export function getDotColorStyles( attributes, dotColor, dotActiveColor ) {
+export function getDotColorStyles(attributes, dotColor, dotActiveColor) {
 	return buildCustomColorStylesFromAttributes(
 		attributes,
 		DOT_COLOR_DEFINITIONS,
@@ -172,7 +172,7 @@ export function getDotColorStyles( attributes, dotColor, dotActiveColor ) {
  * @param {Object|null} arrowColor withColors arrow colour object.
  * @return {Object} Style properties for useBlockProps.
  */
-export function getButtonIconColorStyles( attributes, arrowColor ) {
+export function getButtonIconColorStyles(attributes, arrowColor) {
 	return buildCustomColorStylesFromAttributes(
 		attributes,
 		BUTTON_ICON_COLOR_DEFINITIONS,
@@ -187,7 +187,7 @@ export function getButtonIconColorStyles( attributes, arrowColor ) {
  * @param {Object|null} barColor   withColors bar colour object.
  * @return {Object} Style properties for useBlockProps.
  */
-export function getProgressBarColorStyles( attributes, barColor ) {
+export function getProgressBarColorStyles(attributes, barColor) {
 	return buildCustomColorStylesFromAttributes(
 		attributes,
 		PROGRESS_BAR_COLOR_DEFINITIONS,
@@ -201,8 +201,8 @@ export function getProgressBarColorStyles( attributes, barColor ) {
  * @param {Object} attributes Block attributes.
  * @return {string} Inline style string (may be empty).
  */
-export function getDotColorStyleString( attributes ) {
-	return buildCustomColorStyleString( attributes, DOT_COLOR_DEFINITIONS );
+export function getDotColorStyleString(attributes) {
+	return buildCustomColorStyleString(attributes, DOT_COLOR_DEFINITIONS);
 }
 
 /**
@@ -211,7 +211,7 @@ export function getDotColorStyleString( attributes ) {
  * @param {Object} attributes Block attributes.
  * @return {string} Inline style string (may be empty).
  */
-export function getButtonIconColorStyleString( attributes ) {
+export function getButtonIconColorStyleString(attributes) {
 	return buildCustomColorStyleString(
 		attributes,
 		BUTTON_ICON_COLOR_DEFINITIONS
@@ -224,7 +224,7 @@ export function getButtonIconColorStyleString( attributes ) {
  * @param {Object} attributes Block attributes.
  * @return {string} Inline style string (may be empty).
  */
-export function getProgressBarColorStyleString( attributes ) {
+export function getProgressBarColorStyleString(attributes) {
 	return buildCustomColorStyleString(
 		attributes,
 		PROGRESS_BAR_COLOR_DEFINITIONS

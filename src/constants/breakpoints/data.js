@@ -21,7 +21,7 @@ export const breakpointTokens = Object.keys(breakpoints);
  * breakpoint key on both core options and plugin options.
  *
  * @param {number} px
- * @return {string}
+ * @return {string} The media query string.
  */
 export const emblaMinWidthQuery = (px) => `(min-width: ${px}px)`;
 

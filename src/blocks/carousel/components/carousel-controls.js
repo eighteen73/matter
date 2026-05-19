@@ -2,8 +2,11 @@ import {
 	Button,
 	RangeControl,
 	TabPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToggleGroupControl as ToggleGroupControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToggleGroupControlOptionIcon as ToggleGroupControlOptionIcon,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
@@ -33,6 +36,11 @@ const buildTabs = () => [
  * tab (writing directly to `emblaConfig.options` / `emblaConfig.plugins.autoplay`)
  * and for each per-breakpoint tab (writing to a layer partial). The parent
  * decides which setter to wire in via `onChangeOption` / `onChangeAutoplay`.
+ * @param {Object}   options                  - The options.
+ * @param {Object}   options.options          - The options.
+ * @param {Object}   options.autoplay         - The autoplay.
+ * @param {Function} options.onChangeOption   - The onChangeOption function.
+ * @param {Function} options.onChangeAutoplay - The onChangeAutoplay function.
  */
 function CarouselFields({
 	options,
@@ -152,6 +160,15 @@ function CarouselFields({
  *
  * Per-breakpoint fields show the effective value (layer override falling
  * back to base) but writes go to the layer so only changed keys persist.
+ * @param {Object}   baseOptions                       - The base options.
+ * @param {Object}   baseOptions.baseOptions           - The base options.
+ * @param {Object}   baseOptions.baseAutoplay          - The base autoplay.
+ * @param {Object}   baseOptions.breakpointLayers      - The breakpoint layers.
+ * @param {Function} baseOptions.onChangeBaseOption    - The onChangeBaseOption function.
+ * @param {Function} baseOptions.onChangeBaseAutoplay  - The onChangeBaseAutoplay function.
+ * @param {Function} baseOptions.onChangeLayerOption   - The onChangeLayerOption function.
+ * @param {Function} baseOptions.onChangeLayerAutoplay - The onChangeLayerAutoplay function.
+ * @param {Function} baseOptions.onResetLayer          - The onResetLayer function.
  */
 export default function CarouselControls({
 	baseOptions,

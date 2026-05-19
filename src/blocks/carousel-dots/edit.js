@@ -5,6 +5,7 @@ import {
 	InspectorControls,
 	useBlockProps,
 	withColors,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseMultipleOriginColorsAndGradients as useMultipleOriginColorsAndGradients,
 } from '@wordpress/block-editor';
 import { useMemo } from '@wordpress/element';
@@ -16,7 +17,7 @@ import { __ } from '@wordpress/i18n';
 import SingleColorControl from '../../components/single-color-control';
 import { getDotColorStyles } from '../../utils/block-color';
 
-function Edit( {
+function Edit({
 	attributes,
 	setAttributes,
 	dotColor,
@@ -25,69 +26,60 @@ function Edit( {
 	setDotActiveColor,
 	style,
 	clientId,
-} ) {
+}) {
 	const colorGradientSettings = useMultipleOriginColorsAndGradients();
 
 	const dotColorStyles = useMemo(
-		() => getDotColorStyles( attributes, dotColor, dotActiveColor ),
-		[
-			attributes.dotColor,
-			attributes.customDotColor,
-			attributes.dotActiveColor,
-			attributes.customDotActiveColor,
-			dotColor?.slug,
-			dotColor?.color,
-			dotActiveColor?.slug,
-			dotActiveColor?.color,
-		]
+		() => getDotColorStyles(attributes, dotColor, dotActiveColor),
+		[attributes, dotColor, dotActiveColor]
 	);
 
-	const blockProps = useBlockProps( {
+	const blockProps = useBlockProps({
 		className: 'embla__dots',
 		style: {
 			...style,
 			...dotColorStyles,
 		},
-	} );
+	});
 
 	function resetAllDotColors() {
-		setDotColor( undefined );
-		setDotActiveColor( undefined );
-		setAttributes( {
+		setDotColor(undefined);
+		setDotActiveColor(undefined);
+		setAttributes({
 			dotColor: undefined,
 			customDotColor: undefined,
 			dotActiveColor: undefined,
 			customDotActiveColor: undefined,
-		} );
+		});
 	}
 
 	return (
 		<>
 			<InspectorControls group="color">
 				<SingleColorControl
-					label={ __( 'Dot colour', 'eighteen73-blocks' ) }
-					colorValue={ dotColor }
-					setValue={ setDotColor }
-					clientId={ clientId }
-					colorGradientSettings={ colorGradientSettings }
-					resetAllFilter={ resetAllDotColors }
+					label={__('Dot colour', 'eighteen73-blocks')}
+					colorValue={dotColor}
+					setValue={setDotColor}
+					clientId={clientId}
+					colorGradientSettings={colorGradientSettings}
+					resetAllFilter={resetAllDotColors}
 				/>
 				<SingleColorControl
-					label={ __( 'Dot active colour', 'eighteen73-blocks' ) }
-					colorValue={ dotActiveColor }
-					setValue={ setDotActiveColor }
-					clientId={ clientId }
-					colorGradientSettings={ colorGradientSettings }
-					resetAllFilter={ resetAllDotColors }
+					label={__('Dot active colour', 'eighteen73-blocks')}
+					colorValue={dotActiveColor}
+					setValue={setDotActiveColor}
+					clientId={clientId}
+					colorGradientSettings={colorGradientSettings}
+					resetAllFilter={resetAllDotColors}
 				/>
 			</InspectorControls>
 
-			<div { ...blockProps } />
+			<div {...blockProps} />
 		</>
 	);
 }
 
-export default withColors( {
+export default withColors({
 	dotColor: 'dot-color',
 	dotActiveColor: 'dot-active-color',
-} )( Edit );
+})(Edit);

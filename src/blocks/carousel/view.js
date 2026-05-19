@@ -18,7 +18,6 @@ store(STORE_NAMESPACE, {
 	callbacks: {
 		loadEmblaCarousel: () => {
 			const { ref } = getElement();
-			const context = getContext(STORE_NAMESPACE);
 
 			const viewportNode = ref.querySelector('.embla__viewport');
 			const containerNode = ref.querySelector('.embla__container');
@@ -26,6 +25,8 @@ store(STORE_NAMESPACE, {
 			if (!viewportNode || !containerNode) {
 				return;
 			}
+
+			const context = getContext(STORE_NAMESPACE);
 
 			const queryLoop =
 				containerNode.querySelector('.wp-block-post-template') ||

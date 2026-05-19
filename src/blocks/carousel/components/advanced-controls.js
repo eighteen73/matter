@@ -1,11 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import {
-	Notice,
-	PanelBody,
-	TextareaControl,
-	ToggleControl,
-} from '@wordpress/components';
+import { Notice, TextareaControl, ToggleControl } from '@wordpress/components';
 
 export default function AdvancedControls({
 	advancedEmblaConfig,
