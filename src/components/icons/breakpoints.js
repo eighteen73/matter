@@ -1,4 +1,4 @@
-import { SVG, Path, Polygon, G, Rect, Line } from '@wordpress/components';
+import { SVG, Path, G, Rect, Line } from '@wordpress/components';
 
 export const mobile = (
 	<SVG

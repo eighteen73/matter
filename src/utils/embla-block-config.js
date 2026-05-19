@@ -50,6 +50,8 @@ export const normalizeEmblaConfig = (input) =>
 /**
  * Compile UI `breakpointLayers` into Embla `options.breakpoints` and
  * `plugins.autoplay.breakpoints` (ascending min-width).
+ * @param {Object} resolved - The resolved Embla config.
+ * @param {Object} layers   - The breakpoint layers.
  */
 const applyBreakpointLayers = (resolved, layers) => {
 	const safeResolved = isPlainObject(resolved) ? resolved : {};
@@ -147,6 +149,8 @@ export const prepareEmblaBlockState = ({
 /**
  * Register ClassNames plus Autoplay and AutoScroll (mutually exclusive via
  * `active` / per-breakpoint `type`) so responsive autoplay type can switch.
+ * @param {Object}  pluginState                 - The plugin state.
+ * @param {boolean} [pluginState.forceInactive] - The force inactive flag.
  */
 export const buildEmblaPlugins = (
 	pluginState,

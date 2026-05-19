@@ -205,13 +205,17 @@ export default function Edit({
 	);
 
 	useEffect(() => {
-		if (!emblaApi) return;
+		if (!emblaApi) {
+			return;
+		}
 
 		setAttributes({ emblaApi });
 	}, [emblaApi, setAttributes]);
 
 	useEffect(() => {
-		if (!emblaApi) return;
+		if (!emblaApi) {
+			return;
+		}
 
 		setAttributes({ emblaApi });
 
@@ -219,7 +223,9 @@ export default function Edit({
 		const buttons = block?.querySelectorAll('.embla__button');
 		const dotsNode = block?.querySelector('.embla__dots');
 
-		if (!buttons || buttons.length < 2 || !dotsNode) return;
+		if (!buttons || buttons.length < 2 || !dotsNode) {
+			return;
+		}
 
 		const removePrevNextBtnsClickHandlers = addPrevNextBtnsClickHandlers(
 			emblaApi,
