@@ -1,22 +1,30 @@
 import {
 	Button,
 	RangeControl,
-	SelectControl,
 	TabPanel,
-	ToggleControl,
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	__experimentalToggleGroupControlOptionIcon as ToggleGroupControlOptionIcon,
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
+import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { settings, arrowDown, arrowRight } from '@wordpress/icons';
 
 import breakpoints from '../../../constants/breakpoints';
 import { DEFAULT_EMBLA_CONFIG } from '../../../utils/embla-block-config';
 
 const BASE_TAB = 'base';
 
-const TABS = [
-	{ name: BASE_TAB, title: __('Default', 'eighteen73-blocks') },
+const buildTabs = () => [
+	{
+		name: BASE_TAB,
+		title: __('Default', 'eighteen73-blocks'),
+		icon: settings,
+	},
 	...Object.entries(breakpoints).map(([name, bp]) => ({
 		name,
 		title: bp.label,
+		icon: bp.icon,
 	})),
 ];
 
@@ -33,29 +41,7 @@ function CarouselFields({
 	onChangeAutoplay,
 }) {
 	return (
-		<>
-			<ToggleControl
-				label={__('Loop', 'eighteen73-blocks')}
-				checked={!!options.loop}
-				onChange={(value) => onChangeOption('loop', value)}
-			/>
-
-			<SelectControl
-				label={__('Axis', 'eighteen73-blocks')}
-				value={options.axis}
-				options={[
-					{
-						label: __('Horizontal', 'eighteen73-blocks'),
-						value: 'x',
-					},
-					{
-						label: __('Vertical', 'eighteen73-blocks'),
-						value: 'y',
-					},
-				]}
-				onChange={(value) => onChangeOption('axis', value)}
-			/>
-
+		<div style={{ marginTop: '16px' }}>
 			<RangeControl
 				label={__('Slides to scroll', 'eighteen73-blocks')}
 				value={options.slidesToScroll}
@@ -72,30 +58,90 @@ function CarouselFields({
 				step={1}
 			/>
 
-			<ToggleControl
+			<ToggleGroupControl
+				label={__('Enable Looping', 'eighteen73-blocks')}
+				value={!!options.loop}
+				onChange={(value) => onChangeOption('loop', value)}
+				isBlock
+			>
+				<ToggleGroupControlOption
+					value={false}
+					label={__('No', 'eighteen73-blocks')}
+				/>
+				<ToggleGroupControlOption
+					value={true}
+					label={__('Yes', 'eighteen73-blocks')}
+				/>
+			</ToggleGroupControl>
+
+			<ToggleGroupControl
+				label={__('Axis', 'eighteen73-blocks')}
+				value={options.axis}
+				onChange={(value) => onChangeOption('axis', value)}
+				isBlock
+			>
+				<ToggleGroupControlOptionIcon
+					value="x"
+					label={__('Horizontal', 'eighteen73-blocks')}
+					icon={arrowRight}
+				/>
+				<ToggleGroupControlOptionIcon
+					value="y"
+					label={__('Vertical', 'eighteen73-blocks')}
+					icon={arrowDown}
+				/>
+			</ToggleGroupControl>
+
+			<ToggleGroupControl
 				label={__('Autoplay', 'eighteen73-blocks')}
-				checked={!!autoplay.active}
+				value={!!autoplay.active}
 				onChange={(value) => onChangeAutoplay('active', value)}
-			/>
+				isBlock
+			>
+				<ToggleGroupControlOption
+					value={false}
+					label={__('No', 'eighteen73-blocks')}
+				/>
+				<ToggleGroupControlOption
+					value={true}
+					label={__('Yes', 'eighteen73-blocks')}
+				/>
+			</ToggleGroupControl>
 
 			{autoplay.active && (
-				<SelectControl
+				<ToggleGroupControl
 					label={__('Autoplay Type', 'eighteen73-blocks')}
 					value={autoplay.type}
-					options={[
-						{
-							label: __('Normal', 'eighteen73-blocks'),
-							value: 'normal',
-						},
-						{
-							label: __('Scroll', 'eighteen73-blocks'),
-							value: 'scroll',
-						},
-					]}
 					onChange={(value) => onChangeAutoplay('type', value)}
-				/>
+					isBlock
+				>
+					<ToggleGroupControlOption
+						value="slide"
+						label={__('Slide', 'eighteen73-blocks')}
+					/>
+					<ToggleGroupControlOption
+						value="scroll"
+						label={__('Scroll', 'eighteen73-blocks')}
+					/>
+				</ToggleGroupControl>
 			)}
-		</>
+
+			<ToggleGroupControl
+				label={__('Disable Carousel', 'eighteen73-blocks')}
+				value={!!options.active}
+				onChange={(value) => onChangeOption('active', value)}
+				isBlock
+			>
+				<ToggleGroupControlOption
+					value={true}
+					label={__('No', 'eighteen73-blocks')}
+				/>
+				<ToggleGroupControlOption
+					value={false}
+					label={__('Yes', 'eighteen73-blocks')}
+				/>
+			</ToggleGroupControl>
+		</div>
 	);
 }
 
@@ -107,7 +153,7 @@ function CarouselFields({
  * Per-breakpoint fields show the effective value (layer override falling
  * back to base) but writes go to the layer so only changed keys persist.
  */
-export default function BreakpointControls({
+export default function CarouselControls({
 	baseOptions,
 	baseAutoplay,
 	breakpointLayers,
@@ -117,23 +163,15 @@ export default function BreakpointControls({
 	onChangeLayerAutoplay,
 	onResetLayer,
 }) {
+	const tabs = useMemo(() => buildTabs(), []);
+
 	return (
 		<TabPanel
 			className="eighteen73-blocks-carousel__settings-tabs"
-			tabs={TABS}
+			initialTabName={BASE_TAB}
+			tabs={tabs}
 		>
 			{(tab) => {
-				if (tab.name === BASE_TAB) {
-					return (
-						<CarouselFields
-							options={baseOptions}
-							autoplay={baseAutoplay}
-							onChangeOption={onChangeBaseOption}
-							onChangeAutoplay={onChangeBaseAutoplay}
-						/>
-					);
-				}
-
 				const layer = breakpointLayers?.[tab.name] || {};
 				const layerOptions = layer.options || {};
 				const layerAutoplay = layer.plugins?.autoplay || {};
@@ -145,11 +183,23 @@ export default function BreakpointControls({
 					slidesToScroll:
 						layerOptions.slidesToScroll ??
 						baseOptions.slidesToScroll,
+					active: layerOptions.active ?? baseOptions.active,
 				};
 				const effectiveAutoplay = {
 					active: layerAutoplay.active ?? baseAutoplay.active,
 					type: layerAutoplay.type ?? baseAutoplay.type,
 				};
+
+				if (tab.name === BASE_TAB) {
+					return (
+						<CarouselFields
+							options={baseOptions}
+							autoplay={baseAutoplay}
+							onChangeOption={onChangeBaseOption}
+							onChangeAutoplay={onChangeBaseAutoplay}
+						/>
+					);
+				}
 
 				return (
 					<>
@@ -170,10 +220,7 @@ export default function BreakpointControls({
 							disabled={!hasLayer}
 							onClick={() => onResetLayer(tab.name)}
 						>
-							{__(
-								'Reset breakpoint',
-								'eighteen73-blocks'
-							)}
+							{__('Reset breakpoint', 'eighteen73-blocks')}
 						</Button>
 					</>
 				);
