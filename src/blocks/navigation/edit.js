@@ -26,16 +26,6 @@ function getMenuTitle(menu) {
 	);
 }
 
-const ALLOWED_BLOCKS = [
-	'core/navigation-link',
-	'core/navigation-submenu',
-	'core/page-list',
-	'core/search',
-	'core/social-links',
-	'core/spacer',
-	'core/buttons',
-];
-
 function EditableNavigationEntityBlocks() {
 	const [blocks, onInput, onChange] = useEntityBlockEditor(
 		'postType',
@@ -50,12 +40,11 @@ function EditableNavigationEntityBlocks() {
 			value: blocks,
 			onInput,
 			onChange,
-			allowedBlocks: ALLOWED_BLOCKS,
-			renderAppender: InnerBlocks.ButtonBlockAppender,
+			renderAppender: false,
 		}
 	);
 
-	return <div {...innerBlocksProps} />;
+	return <ul {...innerBlocksProps} />;
 }
 
 export default function Edit({ attributes, setAttributes }) {
@@ -121,7 +110,7 @@ export default function Edit({ attributes, setAttributes }) {
 				</PanelBody>
 			</InspectorControls>
 
-			<div {...blockProps}>
+			<nav {...blockProps} disabled>
 				{!ref && (
 					<p className="wp-block-eighteen73-navigation__empty">
 						{__(
@@ -152,7 +141,7 @@ export default function Edit({ attributes, setAttributes }) {
 						)}
 					</>
 				)}
-			</div>
+			</nav>
 		</>
 	);
 }

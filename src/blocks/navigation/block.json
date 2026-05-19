@@ -20,6 +20,8 @@
 	"supports": {
 		"html": false,
 		"anchor": true,
+		"align": [ "wide", "full" ],
+		"lock": false,
 		"layout": {
 			"default": {
 				"type": "flex"
@@ -33,14 +35,24 @@
 			"text": true,
 			"background": true,
 			"gradients": false,
-			"link": false
+			"link": false,
+			"__experimentalDefaultControls": {
+				"text": false,
+				"background": false
+			}
+		},
+		"typography": {
+			"fontSize": true,
+			"__experimentalDefaultControls": {
+				"fontSize": false
+			}
 		},
 		"spacing": {
 			"blockGap": true,
 			"margin": true,
 			"padding": true,
 			"__experimentalDefaultControls": {
-				"blockGap": true,
+				"blockGap": false,
 				"margin": false,
 				"padding": false
 			}
