@@ -36,18 +36,23 @@ const buildTabs = () => [
  * tab (writing directly to `emblaConfig.options` / `emblaConfig.plugins.autoplay`)
  * and for each per-breakpoint tab (writing to a layer partial). The parent
  * decides which setter to wire in via `onChangeOption` / `onChangeAutoplay`.
- * @param {Object}   options                  - The options.
- * @param {Object}   options.options          - The options.
- * @param {Object}   options.autoplay         - The autoplay.
- * @param {Function} options.onChangeOption   - The onChangeOption function.
- * @param {Function} options.onChangeAutoplay - The onChangeAutoplay function.
+ * @param {Object}   root0                  - The root object.
+ * @param {Object}   root0.attributes       - The attributes.
+ * @param {Function} root0.setAttributes    - The setAttributes function.
+ * @param {Object}   root0.options          - The options.
+ * @param {Object}   root0.autoplay         - The autoplay.
+ * @param {Function} root0.onChangeOption   - The onChangeOption function.
+ * @param {Function} root0.onChangeAutoplay - The onChangeAutoplay function.
  */
 function CarouselFields({
+	attributes,
+	setAttributes,
 	options,
 	autoplay,
 	onChangeOption,
 	onChangeAutoplay,
 }) {
+	const { slidesToShow } = attributes;
 	return (
 		<div style={{ marginTop: '16px' }}>
 			<RangeControl
@@ -61,6 +66,15 @@ function CarouselFields({
 							: value
 					)
 				}
+				min={1}
+				max={10}
+				step={1}
+			/>
+
+			<RangeControl
+				label={__('Slides to show', 'eighteen73-blocks')}
+				value={slidesToShow}
+				onChange={(value) => setAttributes({ slidesToShow: value })}
 				min={1}
 				max={10}
 				step={1}
@@ -160,17 +174,21 @@ function CarouselFields({
  *
  * Per-breakpoint fields show the effective value (layer override falling
  * back to base) but writes go to the layer so only changed keys persist.
- * @param {Object}   baseOptions                       - The base options.
- * @param {Object}   baseOptions.baseOptions           - The base options.
- * @param {Object}   baseOptions.baseAutoplay          - The base autoplay.
- * @param {Object}   baseOptions.breakpointLayers      - The breakpoint layers.
- * @param {Function} baseOptions.onChangeBaseOption    - The onChangeBaseOption function.
- * @param {Function} baseOptions.onChangeBaseAutoplay  - The onChangeBaseAutoplay function.
- * @param {Function} baseOptions.onChangeLayerOption   - The onChangeLayerOption function.
- * @param {Function} baseOptions.onChangeLayerAutoplay - The onChangeLayerAutoplay function.
- * @param {Function} baseOptions.onResetLayer          - The onResetLayer function.
+ * @param {Object}   root0                       - The root object.
+ * @param {Object}   root0.attributes            - The attributes.
+ * @param {Function} root0.setAttributes         - The setAttributes function.
+ * @param {Object}   root0.baseOptions           - The base options.
+ * @param {Object}   root0.baseAutoplay          - The base autoplay.
+ * @param {Object}   root0.breakpointLayers      - The breakpoint layers.
+ * @param {Function} root0.onChangeBaseOption    - The onChangeBaseOption function.
+ * @param {Function} root0.onChangeBaseAutoplay  - The onChangeBaseAutoplay function.
+ * @param {Function} root0.onChangeLayerOption   - The onChangeLayerOption function.
+ * @param {Function} root0.onChangeLayerAutoplay - The onChangeLayerAutoplay function.
+ * @param {Function} root0.onResetLayer          - The onResetLayer function.
  */
 export default function CarouselControls({
+	attributes,
+	setAttributes,
 	baseOptions,
 	baseAutoplay,
 	breakpointLayers,
@@ -210,6 +228,8 @@ export default function CarouselControls({
 				if (tab.name === BASE_TAB) {
 					return (
 						<CarouselFields
+							attributes={attributes}
+							setAttributes={setAttributes}
 							options={baseOptions}
 							autoplay={baseAutoplay}
 							onChangeOption={onChangeBaseOption}
@@ -221,6 +241,8 @@ export default function CarouselControls({
 				return (
 					<>
 						<CarouselFields
+							attributes={attributes}
+							setAttributes={setAttributes}
 							options={effectiveOptions}
 							autoplay={effectiveAutoplay}
 							onChangeOption={(key, value) =>
