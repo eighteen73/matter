@@ -16,6 +16,10 @@
 			"default": "simple",
 			"enum": [ "simple", "accordion", "drill-down" ]
 		},
+		"submenuOpensOnClick": {
+			"type": "boolean",
+			"default": false
+		},
 		"layout": {
 			"type": "object",
 			"default": {

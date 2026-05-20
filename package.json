@@ -17,6 +17,9 @@
 	"bugs": {
 		"url": "https://github.com/eighteen73/eighteen73-blocks/issues"
 	},
+	"dependencies": {
+		"focus-trap": "^7.6.4"
+	},
 	"devDependencies": {
 		"@eighteen73/eslint-config-wordpress": "latest",
 		"@eighteen73/stylelint-config-wordpress": "latest",
@@ -28,8 +31,8 @@
 	},
 	"scripts": {
 		"postinstall": "composer install -o",
-		"start": "wp-scripts start --webpack-copy-php --blocks-manifest",
-		"build": "wp-scripts build --webpack-copy-php --blocks-manifest",
+		"start": "wp-scripts start --webpack-copy-php --blocks-manifest --experimental-modules",
+		"build": "wp-scripts build --webpack-copy-php --blocks-manifest --experimental-modules",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
 		"format": "npm run format:css && npm run format:js && npm run format:php",
