@@ -35,6 +35,10 @@
 			"type": "string",
 			"default": ""
 		},
+		"submenuIconColor": {
+			"type": "string",
+			"default": ""
+		},
 		"backTextColor": {
 			"type": "string",
 			"default": ""
@@ -43,7 +47,7 @@
 			"type": "string",
 			"default": ""
 		},
-		"iconColor": {
+		"backIconColor": {
 			"type": "string",
 			"default": ""
 		}

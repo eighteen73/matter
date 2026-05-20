@@ -99,7 +99,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		submenuBackgroundColor,
 		backTextColor,
 		backBackgroundColor,
-		iconColor,
+		submenuIconColor,
+		backIconColor,
 	} = attributes;
 	const blockProps = useBlockProps();
 	const editorNavClassName = [
@@ -209,8 +210,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Icon', 'eighteen73-blocks')}
-					value={iconColor}
+					label={__('Submenu icon', 'eighteen73-blocks')}
+					value={submenuIconColor}
 					onChange={(value, slug) =>
 						setAttributes({ iconColor: slug })
 					}
@@ -227,10 +228,19 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Back tackground', 'eighteen73-blocks')}
+					label={__('Back background', 'eighteen73-blocks')}
 					value={backBackgroundColor}
 					onChange={(value, slug) =>
 						setAttributes({ backBackgroundColor: slug })
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Back icon', 'eighteen73-blocks')}
+					value={backIconColor}
+					onChange={(value, slug) =>
+						setAttributes({ backIconColor: slug })
 					}
 					panelId={clientId}
 				/>
