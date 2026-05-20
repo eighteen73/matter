@@ -16,6 +16,8 @@ import {
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 
+import ColorControl from '../../components/color-control';
+
 function getMenuTitle(menu) {
 	const renderedTitle = menu?.title?.rendered;
 
@@ -88,8 +90,17 @@ function NavigationMenu(props) {
 	);
 }
 
-export default function Edit({ attributes, setAttributes }) {
-	const { ref, type = 'simple', submenuOpensOnClick = false } = attributes;
+export default function Edit({ attributes, setAttributes, clientId }) {
+	const {
+		ref,
+		type = 'simple',
+		submenuOpensOnClick,
+		submenuTextColor,
+		submenuBackgroundColor,
+		backTextColor,
+		backBackgroundColor,
+		iconColor,
+	} = attributes;
 	const blockProps = useBlockProps();
 	const editorNavClassName = [
 		blockProps.className,
@@ -177,6 +188,52 @@ export default function Edit({ attributes, setAttributes }) {
 						/>
 					)}
 				</PanelBody>
+			</InspectorControls>
+
+			<InspectorControls group="color">
+				<ColorControl
+					label={__('Submenu text', 'eighteen73-blocks')}
+					value={submenuTextColor}
+					onChange={(value, slug) =>
+						setAttributes({ submenuTextColor: slug })
+					}
+					panelId={clientId}
+				/>
+				<ColorControl
+					label={__('Submenu background', 'eighteen73-blocks')}
+					value={submenuBackgroundColor}
+					onChange={(value, slug) =>
+						setAttributes({ submenuBackgroundColor: slug })
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Icon', 'eighteen73-blocks')}
+					value={iconColor}
+					onChange={(value, slug) =>
+						setAttributes({ iconColor: slug })
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Back text', 'eighteen73-blocks')}
+					value={backTextColor}
+					onChange={(value, slug) =>
+						setAttributes({ backTextColor: slug })
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Back tackground', 'eighteen73-blocks')}
+					value={backBackgroundColor}
+					onChange={(value, slug) =>
+						setAttributes({ backBackgroundColor: slug })
+					}
+					panelId={clientId}
+				/>
 			</InspectorControls>
 
 			{!ref && (
