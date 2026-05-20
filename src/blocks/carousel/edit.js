@@ -34,10 +34,12 @@ import CarouselControls from './components/carousel-controls';
 
 export default function Edit({
 	clientId,
-	attributes: { emblaConfig, advancedEmblaConfig, advancedEmblaConfigMerge },
+	attributes,
 	setAttributes,
 	isSelected,
 }) {
+	const { emblaConfig, advancedEmblaConfig, advancedEmblaConfigMerge } =
+		attributes;
 	const resolvedConfig = useMemo(
 		() => normalizeEmblaConfig(emblaConfig),
 		[emblaConfig]
@@ -255,6 +257,7 @@ export default function Edit({
 			<InspectorControls group="settings">
 				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
 					<CarouselControls
+						attributes={attributes}
 						setAttributes={setAttributes}
 						baseOptions={uiOptions}
 						baseAutoplay={uiAutoplay}

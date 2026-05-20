@@ -42,6 +42,10 @@
 		"advancedEmblaConfigMerge": {
 			"type": "boolean",
 			"default": false
+		},
+		"slidesToShow": {
+			"type": "number",
+			"default": 1
 		}
 	},
 	"supports": {
