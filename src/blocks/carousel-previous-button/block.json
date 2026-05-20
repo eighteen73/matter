@@ -12,10 +12,8 @@
 	],
 	"attributes": {
 		"arrowColor": {
-			"type": "string"
-		},
-		"customArrowColor": {
-			"type": "string"
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

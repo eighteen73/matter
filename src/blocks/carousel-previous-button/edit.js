@@ -1,3 +1,3 @@
-import createNavButtonEdit from '../carousel-shared/nav-button-edit';
+import createNavButtonEdit from '../../components/carousel/nav-button-edit';
 
 export default createNavButtonEdit('previous');

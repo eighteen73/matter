@@ -5,8 +5,6 @@ import {
 	InspectorControls,
 	useBlockProps,
 	withColors,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalUseMultipleOriginColorsAndGradients as useMultipleOriginColorsAndGradients,
 } from '@wordpress/block-editor';
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
@@ -15,19 +13,11 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import SingleColorControl from '../../components/single-color-control';
 import { getProgressBarColorStyles } from '../../utils/block-color';
+import ColorControl from '../../components/color-control';
 
-function Edit({
-	attributes,
-	setAttributes,
-	barColor,
-	setBarColor,
-	style,
-	clientId,
-}) {
-	const { indicateCurrentPosition } = attributes;
-	const colorGradientSettings = useMultipleOriginColorsAndGradients();
+function Edit({ attributes, setAttributes, style, clientId }) {
+	const { indicateCurrentPosition, barColor } = attributes;
 
 	const barColorStyles = useMemo(
 		() => getProgressBarColorStyles(attributes, barColor),
@@ -41,14 +31,6 @@ function Edit({
 			...barColorStyles,
 		},
 	});
-
-	function resetBarColor() {
-		setBarColor(undefined);
-		setAttributes({
-			barColor: undefined,
-			customBarColor: undefined,
-		});
-	}
 
 	return (
 		<>
@@ -74,13 +56,13 @@ function Edit({
 			</InspectorControls>
 
 			<InspectorControls group="color">
-				<SingleColorControl
+				<ColorControl
 					label={__('Bar colour', 'eighteen73-blocks')}
-					colorValue={barColor}
-					setValue={setBarColor}
-					clientId={clientId}
-					colorGradientSettings={colorGradientSettings}
-					resetAllFilter={resetBarColor}
+					value={barColor}
+					onChange={(value, slug) =>
+						setAttributes({ barColor: slug })
+					}
+					panelId={clientId}
 				/>
 			</InspectorControls>
 
