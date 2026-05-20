@@ -12,16 +12,12 @@
 	],
 	"attributes": {
 		"dotColor": {
-			"type": "string"
-		},
-		"customDotColor": {
-			"type": "string"
+			"type": "string",
+			"default": ""
 		},
 		"dotActiveColor": {
-			"type": "string"
-		},
-		"customDotActiveColor": {
-			"type": "string"
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

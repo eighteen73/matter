@@ -5,8 +5,6 @@ import {
 	InspectorControls,
 	useBlockProps,
 	withColors,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalUseMultipleOriginColorsAndGradients as useMultipleOriginColorsAndGradients,
 } from '@wordpress/block-editor';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -14,19 +12,17 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import SingleColorControl from '../../components/single-color-control';
 import { getButtonIconColorStyles } from '../../utils/block-color';
+import ColorControl from '../color-control';
 
 function NavButtonEdit({
 	attributes,
 	setAttributes,
-	arrowColor,
-	setArrowColor,
 	style,
 	clientId,
 	direction,
 }) {
-	const colorGradientSettings = useMultipleOriginColorsAndGradients();
+	const { arrowColor } = attributes;
 	const isNext = direction === 'next';
 
 	const iconColorStyles = useMemo(
@@ -41,24 +37,16 @@ function NavButtonEdit({
 		},
 	});
 
-	function resetArrowColor() {
-		setArrowColor(undefined);
-		setAttributes({
-			arrowColor: undefined,
-			customArrowColor: undefined,
-		});
-	}
-
 	return (
 		<>
 			<InspectorControls group="color">
-				<SingleColorControl
+				<ColorControl
 					label={__('Arrow colour', 'eighteen73-blocks')}
-					colorValue={arrowColor}
-					setValue={setArrowColor}
-					clientId={clientId}
-					colorGradientSettings={colorGradientSettings}
-					resetAllFilter={resetArrowColor}
+					value={arrowColor}
+					onChange={(value, slug) =>
+						setAttributes({ arrowColor: slug })
+					}
+					panelId={clientId}
 				/>
 			</InspectorControls>
 

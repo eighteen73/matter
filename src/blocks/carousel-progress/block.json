@@ -16,10 +16,8 @@
 			"default": false
 		},
 		"barColor": {
-			"type": "string"
-		},
-		"customBarColor": {
-			"type": "string"
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

@@ -1,33 +1,18 @@
 /**
  * WordPress dependencies
  */
-import {
-	InspectorControls,
-	useBlockProps,
-	withColors,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalUseMultipleOriginColorsAndGradients as useMultipleOriginColorsAndGradients,
-} from '@wordpress/block-editor';
+import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import SingleColorControl from '../../components/single-color-control';
 import { getDotColorStyles } from '../../utils/block-color';
+import ColorControl from '../../components/color-control';
 
-function Edit({
-	attributes,
-	setAttributes,
-	dotColor,
-	setDotColor,
-	dotActiveColor,
-	setDotActiveColor,
-	style,
-	clientId,
-}) {
-	const colorGradientSettings = useMultipleOriginColorsAndGradients();
+export default function Edit({ attributes, setAttributes, style, clientId }) {
+	const { dotColor, dotActiveColor } = attributes;
 
 	const dotColorStyles = useMemo(
 		() => getDotColorStyles(attributes, dotColor, dotActiveColor),
@@ -42,35 +27,25 @@ function Edit({
 		},
 	});
 
-	function resetAllDotColors() {
-		setDotColor(undefined);
-		setDotActiveColor(undefined);
-		setAttributes({
-			dotColor: undefined,
-			customDotColor: undefined,
-			dotActiveColor: undefined,
-			customDotActiveColor: undefined,
-		});
-	}
-
 	return (
 		<>
 			<InspectorControls group="color">
-				<SingleColorControl
+				<ColorControl
 					label={__('Dot colour', 'eighteen73-blocks')}
-					colorValue={dotColor}
-					setValue={setDotColor}
-					clientId={clientId}
-					colorGradientSettings={colorGradientSettings}
-					resetAllFilter={resetAllDotColors}
+					value={dotColor}
+					onChange={(value, slug) =>
+						setAttributes({ dotColor: slug })
+					}
+					panelId={clientId}
 				/>
-				<SingleColorControl
+
+				<ColorControl
 					label={__('Dot active colour', 'eighteen73-blocks')}
-					colorValue={dotActiveColor}
-					setValue={setDotActiveColor}
-					clientId={clientId}
-					colorGradientSettings={colorGradientSettings}
-					resetAllFilter={resetAllDotColors}
+					value={dotActiveColor}
+					onChange={(value, slug) =>
+						setAttributes({ dotActiveColor: slug })
+					}
+					panelId={clientId}
 				/>
 			</InspectorControls>
 
@@ -78,8 +53,3 @@ function Edit({
 		</>
 	);
 }
-
-export default withColors({
-	dotColor: 'dot-color',
-	dotActiveColor: 'dot-active-color',
-})(Edit);
