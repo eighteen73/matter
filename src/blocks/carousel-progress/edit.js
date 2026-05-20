@@ -1,11 +1,7 @@
 /**
  * WordPress dependencies
  */
-import {
-	InspectorControls,
-	useBlockProps,
-	withColors,
-} from '@wordpress/block-editor';
+import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -16,7 +12,7 @@ import { __ } from '@wordpress/i18n';
 import { getProgressBarColorStyles } from '../../utils/block-color';
 import ColorControl from '../../components/color-control';
 
-function Edit({ attributes, setAttributes, style, clientId }) {
+export default function Edit({ attributes, setAttributes, style, clientId }) {
 	const { indicateCurrentPosition, barColor } = attributes;
 
 	const barColorStyles = useMemo(
@@ -72,7 +68,3 @@ function Edit({ attributes, setAttributes, style, clientId }) {
 		</>
 	);
 }
-
-export default withColors({
-	barColor: 'bar-color',
-})(Edit);

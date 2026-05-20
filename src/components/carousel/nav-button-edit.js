@@ -1,11 +1,7 @@
 /**
  * WordPress dependencies
  */
-import {
-	InspectorControls,
-	useBlockProps,
-	withColors,
-} from '@wordpress/block-editor';
+import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
@@ -72,12 +68,8 @@ function NavButtonEdit({
 	);
 }
 
-const NavButtonEditWithColors = withColors({
-	arrowColor: 'arrow-color',
-})(NavButtonEdit);
-
 export default function createNavButtonEdit(direction) {
 	return function Edit(props) {
-		return <NavButtonEditWithColors {...props} direction={direction} />;
+		return <NavButtonEdit {...props} direction={direction} />;
 	};
 }
