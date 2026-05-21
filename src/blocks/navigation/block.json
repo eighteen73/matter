@@ -15,18 +15,56 @@
 			"type": "string",
 			"default": "simple",
 			"enum": [ "simple", "accordion", "drill-down" ]
+		},
+		"submenuOpensOnClick": {
+			"type": "boolean",
+			"default": false
+		},
+		"layout": {
+			"type": "object",
+			"default": {
+				"type": "flex",
+				"orientation": "vertical"
+			}
+		},
+		"submenuTextColor": {
+			"type": "string",
+			"default": ""
+		},
+		"submenuBackgroundColor": {
+			"type": "string",
+			"default": ""
+		},
+		"submenuIconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"backTextColor": {
+			"type": "string",
+			"default": ""
+		},
+		"backBackgroundColor": {
+			"type": "string",
+			"default": ""
+		},
+		"backIconColor": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {
+		"interactivity": true,
 		"html": false,
 		"anchor": true,
+		"align": [ "wide", "full" ],
+		"lock": false,
 		"layout": {
 			"default": {
 				"type": "flex"
 			},
 			"allowSwitching": false,
 			"allowInheriting": false,
-			"allowVerticalAlignment": false,
+			"allowVerticalAlignment": true,
 			"allowSizingOnChildren": true
 		},
 		"color": {
@@ -35,12 +73,19 @@
 			"gradients": false,
 			"link": false
 		},
+		"typography": {
+			"textAlign": true,
+			"fontSize": true,
+			"__experimentalDefaultControls": {
+				"fontSize": false
+			}
+		},
 		"spacing": {
 			"blockGap": true,
 			"margin": true,
 			"padding": true,
 			"__experimentalDefaultControls": {
-				"blockGap": true,
+				"blockGap": false,
 				"margin": false,
 				"padding": false
 			}
@@ -48,6 +93,7 @@
 	},
 	"textdomain": "eighteen73-blocks",
 	"editorScript": "file:./index.js",
+	"viewScriptModule": "file:./view.js",
 	"style": "file:./style-index.css",
 	"editorStyle": "file:./index.css",
 	"render": "file:./render.php"

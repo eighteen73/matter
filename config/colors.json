@@ -1,0 +1,11 @@
+{
+	"navigation": {
+		"submenuTextColor": "--wp--custom--eighteen73-navigation--submenu-color",
+		"submenuBackgroundColor": "--wp--custom--eighteen73-navigation--submenu-background-color",
+		"submenuIconColor": "--wp--custom--eighteen73-navigation--submenu-icon-color",
+		"backTextColor": "--wp--custom--eighteen73-navigation--back-color",
+		"backBackgroundColor": "--wp--custom--eighteen73-navigation--back-background-color",
+		"backIconColor": "--wp--custom--eighteen73-navigation--back-icon-color"
+	},
+	"carousel": {}
+}
