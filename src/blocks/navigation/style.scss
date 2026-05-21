@@ -48,6 +48,8 @@
 }
 
 .wp-block-eighteen73-navigation__submenu {
+	background-color: var(--wp--custom--eighteen73-navigation--submenu-background-color, inherit);
+	color: var(--wp--custom--eighteen73-navigation--submenu-color, inherit);
 	display: none;
 }
 
@@ -64,7 +66,7 @@
 // Simple menu type
 .is-menu-type-simple {
 	.wp-block-eighteen73-navigation__submenu {
-		background: inherit;
+		background: var(--wp--custom--eighteen73-navigation--submenu-background-color, inherit);
 		left: 0;
 		position: absolute;
 		top: 100%;
@@ -132,7 +134,7 @@
 		justify-content: center;
 
 		&::after {
-			background-color: currentcolor;
+			background-color: var(--wp--custom--eighteen73-navigation--submenu-icon-color, currentcolor);
 			content: "";
 			display: inline-block;
 			height: 0.5em;
@@ -175,7 +177,7 @@
 
 	.wp-block-eighteen73-navigation__submenu-toggle {
 		&::after {
-			background-color: currentcolor;
+			background-color: var(--wp--custom--eighteen73-navigation--submenu-icon-color, currentcolor);
 			content: "";
 			display: inline-block;
 			height: 0.5em;
@@ -246,7 +248,7 @@
 	}
 
 	.wp-block-eighteen73-navigation__submenu {
-		background-color: #fff;
+		background-color: var(--wp--custom--eighteen73-navigation--submenu-background-color, #fff);
 		display: block;
 		height: 100%;
 		inset: 0;
@@ -261,7 +263,7 @@
 
 	.wp-block-eighteen73-navigation__submenu-toggle {
 		&::after {
-			background-color: currentcolor;
+			background-color: var(--wp--custom--eighteen73-navigation--submenu-icon-color, currentcolor);
 			content: "";
 			display: inline-block;
 			height: 0.5em;
@@ -281,9 +283,9 @@
 
 	.wp-block-eighteen73-navigation__back {
 		align-items: center;
-		background-color: unset;
+		background-color: var(--wp--custom--eighteen73-navigation--back-background-color, unset);
 		border: unset;
-		color: inherit;
+		color: var(--wp--custom--eighteen73-navigation--back-color, inherit);
 		display: flex;
 		flex: 1 1 0;
 		font: inherit;
@@ -293,7 +295,7 @@
 		width: 100%;
 
 		&::before {
-			background-color: currentcolor;
+			background-color: var(--wp--custom--eighteen73-navigation--back-icon-color, currentcolor);
 			content: "";
 			display: inline-block;
 			height: 0.5em;

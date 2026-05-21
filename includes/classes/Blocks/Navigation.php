@@ -5,7 +5,10 @@
  * @package Eighteen73\Blocks
  */
 
-namespace Eighteen73\Blocks;
+namespace Eighteen73\Blocks\Blocks;
+
+use Eighteen73\Blocks\Color\Styles;
+use Eighteen73\Blocks\Config;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -18,13 +21,12 @@ class Navigation {
 	 * Build navigation markup for block attributes.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param \WP_Block|null       $block      Block instance from render callback.
 	 * @return string
 	 */
-	public static function render( array $attributes, ?\WP_Block $block = null ): string {
-		$menu_id = isset( $attributes['ref'] ) ? absint( $attributes['ref'] ) : 0;
-		$type    = isset( $attributes['type'] ) ? (string) $attributes['type'] : 'simple';
-		$type    = in_array( $type, [ 'simple', 'accordion', 'drill-down' ], true ) ? $type : 'simple';
+	public static function render( array $attributes ): string {
+		$menu_id                = isset( $attributes['ref'] ) ? absint( $attributes['ref'] ) : 0;
+		$type                   = isset( $attributes['type'] ) ? (string) $attributes['type'] : 'simple';
+		$type                   = in_array( $type, [ 'simple', 'accordion', 'drill-down' ], true ) ? $type : 'simple';
 		$submenu_opens_on_click = ! empty( $attributes['submenuOpensOnClick'] );
 
 		if ( ! $menu_id ) {
@@ -71,8 +73,8 @@ class Navigation {
 			get_block_wrapper_attributes(
 				[
 					'class' => implode( ' ', $nav_classes ),
+					'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'navigation' ) ),
 				],
-				$block
 			),
 			$data_wp_context,
 			$items
@@ -83,6 +85,9 @@ class Navigation {
 	 * Render navigation items recursively.
 	 *
 	 * @param array<int, array<string, mixed>> $parsed_blocks Parsed navigation blocks.
+	 * @param string                           $type Menu type.
+	 * @param bool                             $submenu_opens_on_click Whether submenus open on click.
+	 * @param int                              &$submenu_index Submenu index.
 	 * @return string
 	 */
 	private static function render_items(
@@ -131,7 +136,7 @@ class Navigation {
 					$label = __( 'Untitled menu item', 'eighteen73-blocks' );
 				}
 
-				$submenu_index++;
+				++$submenu_index;
 				$submenu_id      = $submenu_index;
 				$submenu_dom_id  = 'eighteen73-navigation-submenu-' . $submenu_id;
 				$show_hover_mode = 'simple' === $type && ! $submenu_opens_on_click;

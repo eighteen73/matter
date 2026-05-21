@@ -7,6 +7,8 @@
 
 namespace Eighteen73\Blocks;
 
+use Eighteen73\Blocks\Blocks\Registry;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -25,7 +27,7 @@ class Plugin {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
-		add_action( 'init', [ $this, 'register_blocks' ] );
+		Registry::instance()->setup();
 	}
 
 	/**
@@ -68,16 +70,4 @@ class Plugin {
 	 * @return void
 	 */
 	public function enqueue_admin_scripts(): void {}
-
-	/**
-	 * Register blocks.
-	 *
-	 * @return void
-	 */
-	public function register_blocks(): void {
-		wp_register_block_types_from_metadata_collection(
-			EIGHTEEN73_BLOCKS_PATH . 'build/blocks',
-			EIGHTEEN73_BLOCKS_PATH . 'build/blocks-manifest.php',
-		);
-	}
 }

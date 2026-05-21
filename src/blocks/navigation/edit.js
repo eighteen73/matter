@@ -17,6 +17,7 @@ import {
 import { __, sprintf } from '@wordpress/i18n';
 
 import ColorControl from '../../components/color-control';
+import { getColorStyles, storeColorValue } from '../../utils/colors';
 
 function getMenuTitle(menu) {
 	const renderedTitle = menu?.title?.rendered;
@@ -42,8 +43,8 @@ function getMenuTitle(menu) {
  * @return {JSX.Element} Navigation menu markup.
  */
 function NavigationMenu(props) {
-	const { type, submenuOpensOnClick } = props;
-	const blockProps = useBlockProps();
+	const { colorStyles, type, submenuOpensOnClick } = props;
+	const blockProps = useBlockProps({ style: colorStyles });
 	const [blocks, onInput, onChange] = useEntityBlockEditor(
 		'postType',
 		'wp_navigation'
@@ -102,7 +103,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		submenuIconColor,
 		backIconColor,
 	} = attributes;
-	const blockProps = useBlockProps();
+	const colorStyles = getColorStyles(attributes, 'navigation');
+	const blockProps = useBlockProps({ style: colorStyles });
 	const editorNavClassName = [
 		blockProps.className,
 		`is-menu-type-${type}`,
@@ -196,7 +198,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					label={__('Submenu text', 'eighteen73-blocks')}
 					value={submenuTextColor}
 					onChange={(value, slug) =>
-						setAttributes({ submenuTextColor: slug })
+						setAttributes({
+							submenuTextColor: storeColorValue(slug, value),
+						})
 					}
 					panelId={clientId}
 				/>
@@ -204,7 +208,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					label={__('Submenu background', 'eighteen73-blocks')}
 					value={submenuBackgroundColor}
 					onChange={(value, slug) =>
-						setAttributes({ submenuBackgroundColor: slug })
+						setAttributes({
+							submenuBackgroundColor: storeColorValue(
+								slug,
+								value
+							),
+						})
 					}
 					panelId={clientId}
 				/>
@@ -213,37 +222,52 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					label={__('Submenu icon', 'eighteen73-blocks')}
 					value={submenuIconColor}
 					onChange={(value, slug) =>
-						setAttributes({ iconColor: slug })
+						setAttributes({
+							submenuIconColor: storeColorValue(slug, value),
+						})
 					}
 					panelId={clientId}
 				/>
 
-				<ColorControl
-					label={__('Back text', 'eighteen73-blocks')}
-					value={backTextColor}
-					onChange={(value, slug) =>
-						setAttributes({ backTextColor: slug })
-					}
-					panelId={clientId}
-				/>
+				{type === 'drill-down' && (
+					<>
+						<ColorControl
+							label={__('Back text', 'eighteen73-blocks')}
+							value={backTextColor}
+							onChange={(value, slug) =>
+								setAttributes({
+									backTextColor: storeColorValue(slug, value),
+								})
+							}
+							panelId={clientId}
+						/>
 
-				<ColorControl
-					label={__('Back background', 'eighteen73-blocks')}
-					value={backBackgroundColor}
-					onChange={(value, slug) =>
-						setAttributes({ backBackgroundColor: slug })
-					}
-					panelId={clientId}
-				/>
+						<ColorControl
+							label={__('Back background', 'eighteen73-blocks')}
+							value={backBackgroundColor}
+							onChange={(value, slug) =>
+								setAttributes({
+									backBackgroundColor: storeColorValue(
+										slug,
+										value
+									),
+								})
+							}
+							panelId={clientId}
+						/>
 
-				<ColorControl
-					label={__('Back icon', 'eighteen73-blocks')}
-					value={backIconColor}
-					onChange={(value, slug) =>
-						setAttributes({ backIconColor: slug })
-					}
-					panelId={clientId}
-				/>
+						<ColorControl
+							label={__('Back icon', 'eighteen73-blocks')}
+							value={backIconColor}
+							onChange={(value, slug) =>
+								setAttributes({
+									backIconColor: storeColorValue(slug, value),
+								})
+							}
+							panelId={clientId}
+						/>
+					</>
+				)}
 			</InspectorControls>
 
 			{!ref && (
@@ -270,6 +294,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			{!!ref && hasResolved && (
 				<EntityProvider kind="postType" type="wp_navigation" id={ref}>
 					<NavigationMenu
+						colorStyles={colorStyles}
 						type={type}
 						submenuOpensOnClick={submenuOpensOnClick}
 					/>
