@@ -17,9 +17,6 @@
 	"bugs": {
 		"url": "https://github.com/eighteen73/eighteen73-blocks/issues"
 	},
-	"dependencies": {
-		"focus-trap": "^7.6.4"
-	},
 	"devDependencies": {
 		"@eighteen73/eslint-config-wordpress": "latest",
 		"@eighteen73/stylelint-config-wordpress": "latest",
@@ -56,6 +53,7 @@
 		"embla-carousel-autoplay": "^8.6.0",
 		"embla-carousel-class-names": "^8.6.0",
 		"embla-carousel-fade": "^8.6.0",
-		"embla-carousel-react": "^8.6.0"
+		"embla-carousel-react": "^8.6.0",
+		"focus-trap": "^7.6.4"
 	}
 }
