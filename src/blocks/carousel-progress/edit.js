@@ -3,29 +3,22 @@
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { PanelBody, ToggleControl } from '@wordpress/components';
-import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import { getProgressBarColorStyles } from '../../utils/block-color';
 import ColorControl from '../../components/color-control';
+import { getColorStyles, storeColorValue } from '../../utils/colors';
 
-export default function Edit({ attributes, setAttributes, style, clientId }) {
+export default function Edit({ attributes, setAttributes, clientId }) {
 	const { indicateCurrentPosition, barColor } = attributes;
 
-	const barColorStyles = useMemo(
-		() => getProgressBarColorStyles(attributes, barColor),
-		[attributes, barColor]
-	);
+	const colorStyles = getColorStyles(attributes, 'carousel');
 
 	const blockProps = useBlockProps({
 		className: 'embla__progress',
-		style: {
-			...style,
-			...barColorStyles,
-		},
+		style: colorStyles,
 	});
 
 	return (
@@ -56,7 +49,9 @@ export default function Edit({ attributes, setAttributes, style, clientId }) {
 					label={__('Bar colour', 'eighteen73-blocks')}
 					value={barColor}
 					onChange={(value, slug) =>
-						setAttributes({ barColor: slug })
+						setAttributes({
+							barColor: storeColorValue(slug, value),
+						})
 					}
 					panelId={clientId}
 				/>

@@ -8,18 +8,14 @@
  * @package Eighteen73Blocks\\CarouselNextButton
  */
 
-use Eighteen73\Blocks\BlockColour;
+use Eighteen73\Blocks\Color\Styles;
+use Eighteen73\Blocks\Config;
 
-$icon_style = BlockColour::build_custom_color_style_string(
-	$attributes,
-	BlockColour::get_button_icon_color_definitions()
-);
+defined( 'ABSPATH' ) || exit;
 
-$wrapper_attributes = [];
-
-if ( $icon_style ) {
-	$wrapper_attributes['style'] = $icon_style;
-}
+$wrapper_attributes = [
+	'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
+];
 
 ?>
 

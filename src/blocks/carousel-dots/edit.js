@@ -2,29 +2,22 @@
  * WordPress dependencies
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import { getDotColorStyles } from '../../utils/block-color';
 import ColorControl from '../../components/color-control';
+import { getColorStyles, storeColorValue } from '../../utils/colors';
 
-export default function Edit({ attributes, setAttributes, style, clientId }) {
+export default function Edit({ attributes, setAttributes, clientId }) {
 	const { dotColor, dotActiveColor } = attributes;
 
-	const dotColorStyles = useMemo(
-		() => getDotColorStyles(attributes, dotColor, dotActiveColor),
-		[attributes, dotColor, dotActiveColor]
-	);
+	const colorStyles = getColorStyles(attributes, 'carousel');
 
 	const blockProps = useBlockProps({
 		className: 'embla__dots',
-		style: {
-			...style,
-			...dotColorStyles,
-		},
+		style: colorStyles,
 	});
 
 	return (
@@ -34,7 +27,9 @@ export default function Edit({ attributes, setAttributes, style, clientId }) {
 					label={__('Dot colour', 'eighteen73-blocks')}
 					value={dotColor}
 					onChange={(value, slug) =>
-						setAttributes({ dotColor: slug })
+						setAttributes({
+							dotColor: storeColorValue(slug, value),
+						})
 					}
 					panelId={clientId}
 				/>
@@ -43,7 +38,9 @@ export default function Edit({ attributes, setAttributes, style, clientId }) {
 					label={__('Dot active colour', 'eighteen73-blocks')}
 					value={dotActiveColor}
 					onChange={(value, slug) =>
-						setAttributes({ dotActiveColor: slug })
+						setAttributes({
+							dotActiveColor: storeColorValue(slug, value),
+						})
 					}
 					panelId={clientId}
 				/>

@@ -2,35 +2,23 @@
  * WordPress dependencies
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import { getButtonIconColorStyles } from '../../utils/block-color';
 import ColorControl from '../color-control';
+import { getColorStyles, storeColorValue } from '../../utils/colors';
 
-function NavButtonEdit({
-	attributes,
-	setAttributes,
-	style,
-	clientId,
-	direction,
-}) {
+function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 	const { arrowColor } = attributes;
+
+	const colorStyles = getColorStyles(attributes, 'carousel');
+
 	const isNext = direction === 'next';
 
-	const iconColorStyles = useMemo(
-		() => getButtonIconColorStyles(attributes, arrowColor),
-		[attributes, arrowColor]
-	);
-
 	const blockProps = useBlockProps({
-		style: {
-			...style,
-			...iconColorStyles,
-		},
+		style: colorStyles,
 	});
 
 	return (
@@ -40,7 +28,9 @@ function NavButtonEdit({
 					label={__('Arrow colour', 'eighteen73-blocks')}
 					value={arrowColor}
 					onChange={(value, slug) =>
-						setAttributes({ arrowColor: slug })
+						setAttributes({
+							arrowColor: storeColorValue(slug, value),
+						})
 					}
 					panelId={clientId}
 				/>

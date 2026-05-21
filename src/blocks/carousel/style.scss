@@ -1,6 +1,6 @@
 .wp-block-eighteen73-blocks-carousel {
-	--eighteen73-blocks--carousel--slide--gap: var(--carousel-slide-gap, 0); // stylelint-disable-line custom-property-pattern -- backwards compatibility
-	--eighteen73-blocks--carousel--slide--width: var(--carousel-slide-width, 100%); // stylelint-disable-line custom-property-pattern -- backwards compatibility
+	--wp--custom--eighteen73-carousel--slide--gap: var(--carousel-slide-gap, 0); // stylelint-disable-line custom-property-pattern -- backwards compatibility
+	--wp--custom--eighteen73-carousel--slide--width: var(--carousel-slide-width, 100%); // stylelint-disable-line custom-property-pattern -- backwards compatibility
 
 	.embla {
 		overflow: hidden;
@@ -11,7 +11,7 @@
 		}
 
 		.embla__container {
-			margin-left: calc(var(--eighteen73-blocks--carousel--slide--gap) * -1);
+			margin-left: calc(var(--wp--custom--eighteen73-carousel--slide--gap) * -1);
 		}
 
 		.embla__container:has(> *:not(.wp-block-query, .wp-block-woocommerce-product-collection)),
@@ -21,10 +21,10 @@
 			touch-action: pan-y pinch-zoom;
 
 			> * {
-				flex: 0 0 var(--eighteen73-blocks--carousel--slide--width);
+				flex: 0 0 var(--wp--custom--eighteen73-carousel--slide--width);
 				margin: 0;
 				min-width: 0;
-				padding-left: var(--eighteen73-blocks--carousel--slide--gap);
+				padding-left: var(--wp--custom--eighteen73-carousel--slide--gap);
 				transform: translate3d(0, 0, 0);
 			}
 		}
@@ -33,12 +33,12 @@
 	.wp-block-eighteen73-blocks-carousel-next-button,
 	.wp-block-eighteen73-blocks-carousel-previous-button {
 		// stylelint-disable custom-property-pattern -- backwards compatibility
-		--eighteen73-blocks--carousel--button--size: var(--carousel-button-size, 32px);
-		--eighteen73-blocks--carousel--button--icon-size: var(--carousel-button-icon-size, 12px);
-		--eighteen73-blocks--carousel--button--gap: var(--carousel-button-gap, var(--wp--preset--spacing--md, 12px));
-		--eighteen73-blocks--carousel--button--background-color: var(--carousel-button-background-color, transparent);
-		--eighteen73-blocks--carousel--button--icon-color: var(--carousel-button-icon-color, currentcolor);
-		--eighteen73-blocks--carousel--button--border-radius: var(--carousel-button-border-radius, 50%);
+		--wp--custom--eighteen73-carousel--button--size: var(--carousel-button-size, 32px);
+		--wp--custom--eighteen73-carousel--button--icon-size: var(--carousel-button-icon-size, 12px);
+		--wp--custom--eighteen73-carousel--button--gap: var(--carousel-button-gap, var(--wp--preset--spacing--md, 12px));
+		--wp--custom--eighteen73-carousel--button--background-color: var(--carousel-button-background-color, transparent);
+		--wp--custom--eighteen73-carousel--button--arrow-color: var(--carousel-button-icon-color, currentcolor);
+		--wp--custom--eighteen73-carousel--button--border-radius: var(--carousel-button-border-radius, 50%);
 		// stylelint-enable custom-property-pattern
 
 		&:where(.has-background) .embla__button {
@@ -48,19 +48,19 @@
 		.embla__button {
 			align-items: center;
 			appearance: none;
-			background-color: var(--eighteen73-blocks--carousel--button--background-color);
+			background-color: var(--wp--custom--eighteen73-carousel--button--background-color);
 			border: 0;
-			border-radius: var(--eighteen73-blocks--carousel--button--border-radius);
+			border-radius: var(--wp--custom--eighteen73-carousel--button--border-radius);
 			cursor: pointer;
 			display: inline-flex;
-			height: var(--eighteen73-blocks--carousel--button--size);
+			height: var(--wp--custom--eighteen73-carousel--button--size);
 			justify-content: center;
 			margin: 0;
 			padding: 0;
 			position: relative;
 			text-decoration: none;
 			touch-action: manipulation;
-			width: var(--eighteen73-blocks--carousel--button--size);
+			width: var(--wp--custom--eighteen73-carousel--button--size);
 
 			&:disabled {
 				opacity: 0.3;
@@ -70,13 +70,13 @@
 				text-indent: -9999px;
 
 				&::after {
-					background-color: var(--eighteen73-blocks--carousel--button--icon-color);
+					background-color: var(--wp--custom--eighteen73-carousel--button--arrow-color);
 					border-radius: inherit;
 					content: "";
 					inset: 0;
 					mask-position: center;
 					mask-repeat: no-repeat;
-					mask-size: var(--eighteen73-blocks--carousel--button--icon-size);
+					mask-size: var(--wp--custom--eighteen73-carousel--button--icon-size);
 					position: absolute;
 				}
 			}

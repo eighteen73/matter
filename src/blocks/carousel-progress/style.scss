@@ -1,25 +1,25 @@
 .wp-block-eighteen73-blocks-carousel-progress {
 	// stylelint-disable custom-property-pattern -- backwards compatibility
-	--eighteen73-blocks--carousel--progress--background: var(--carousel-progress-background, var(--wp--custom--color--surface--inactive));
-	--eighteen73-blocks--carousel--progress--bar: var(--carousel-progress-bar, var(--wp--custom--color--secondary--200));
-	--eighteen73-blocks--carousel--progress--border-radius: var(--carousel-progress-border-radius, var(--wp--custom--border-radius--xl));
-	--eighteen73-blocks--carousel--progress--height: var(--carousel-progress-height, 10px);
+	--wp--custom--eighteen73-carousel--progress--background: var(--carousel-progress-background, var(--wp--custom--color--surface--inactive));
+	--wp--custom--eighteen73-carousel--progress--bar: var(--carousel-progress-bar, var(--wp--custom--color--secondary--200));
+	--wp--custom--eighteen73-carousel--progress--border-radius: var(--carousel-progress-border-radius, var(--wp--custom--border-radius--xl));
+	--wp--custom--eighteen73-carousel--progress--height: var(--carousel-progress-height, 10px);
 	// stylelint-enable custom-property-pattern
 
-	background-color: var(--eighteen73-blocks--carousel--progress--background);
-	border-radius: var(--eighteen73-blocks--carousel--progress--border-radius);
-
-	&.has-background {
-		background-color: var(--wp--style--color--background);
-	}
-	height: var(--eighteen73-blocks--carousel--progress--height);
+	background-color: var(--wp--custom--eighteen73-carousel--progress--background);
+	border-radius: var(--wp--custom--eighteen73-carousel--progress--border-radius);
+	height: var(--wp--custom--eighteen73-carousel--progress--height);
 	overflow: hidden;
 	position: relative;
 	width: 100%;
 
+	&.has-background {
+		background-color: var(--wp--style--color--background);
+	}
+
 	.embla__progress__bar {
-		background-color: var(--eighteen73-blocks--carousel--progress--bar);
-		border-radius: var(--eighteen73-blocks--carousel--progress--border-radius);
+		background-color: var(--wp--custom--eighteen73-carousel--progress--bar);
+		border-radius: var(--wp--custom--eighteen73-carousel--progress--border-radius);
 		bottom: 0;
 		left: -100%;
 		position: absolute;

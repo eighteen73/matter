@@ -8,21 +8,15 @@
  * @package Eighteen73Blocks\\CarouselDots
  */
 
-use Eighteen73\Blocks\BlockColour;
+use Eighteen73\Blocks\Color\Styles;
+use Eighteen73\Blocks\Config;
 
-$dot_style = BlockColour::build_custom_color_style_string(
-	$attributes,
-	BlockColour::get_dot_color_definitions()
-);
+defined( 'ABSPATH' ) || exit;
 
 $wrapper_attributes = [
 	'class' => 'embla__dots',
+	'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
 ];
-
-if ( $dot_style ) {
-	$wrapper_attributes['style'] = $dot_style;
-}
-
 ?>
 
 <div <?php echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) ); ?>></div>
