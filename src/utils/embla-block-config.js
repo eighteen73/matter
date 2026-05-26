@@ -4,7 +4,7 @@ import AutoScroll from 'embla-carousel-auto-scroll';
 
 import breakpoints, {
 	breakpointTokens,
-	emblaMinWidthQuery,
+	minWidthQuery,
 } from '../constants/breakpoints/data';
 
 export const DEFAULT_EMBLA_CONFIG = {
@@ -82,7 +82,7 @@ const applyBreakpointLayers = (resolved, layers) => {
 			continue;
 		}
 
-		const query = emblaMinWidthQuery(px);
+		const query = minWidthQuery(px);
 
 		if (isPlainObject(layer.options) && Object.keys(layer.options).length) {
 			optionBreakpoints[query] = isPlainObject(optionBreakpoints[query])

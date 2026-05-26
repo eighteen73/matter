@@ -6,9 +6,9 @@ import {
 	desktop,
 } from '../../components/icons/breakpoints';
 
-import breakpointsData, { breakpointTokens, emblaMinWidthQuery } from './data';
+import breakpointsData, { breakpointTokens, minWidthQuery } from './data';
 
-export { breakpointTokens, emblaMinWidthQuery };
+export { breakpointTokens, minWidthQuery };
 
 const breakpoints = {
 	xs: { ...breakpointsData.xs, icon: mobile },

@@ -1,6 +1,6 @@
 /// Map of breakpoints.
-/// Keep these values in sync with `./index.js` so SCSS media queries and the
-/// JS-driven Embla `(min-width: …)` breakpoints match exactly.
+/// Keep these values in sync with `../../../config/breakpoints.json` so SCSS
+/// media queries and JS/PHP consumers use the same breakpoint values.
 $breakpoints: (
 	xs: 480px,
 	sm: 640px,
