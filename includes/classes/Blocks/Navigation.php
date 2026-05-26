@@ -69,7 +69,7 @@ class Navigation {
 			: 'data-wp-context="' . esc_attr( wp_json_encode( $context_data ) ) . '"';
 
 		return sprintf(
-			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-init---touch="callbacks.isTouchEnabled" data-wp-watch---touch="callbacks.isTouchEnabled" data-wp-class--is-touch-enabled="callbacks.isTouchEnabled" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__container">%3$s</ul></nav>',
+			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-init---touch="callbacks.isTouchEnabled" data-wp-watch---touch="callbacks.isTouchEnabled" data-wp-class--is-touch-enabled="callbacks.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__container">%3$s</ul></nav>',
 			get_block_wrapper_attributes(
 				[
 					'class' => implode( ' ', $nav_classes ),
@@ -150,7 +150,7 @@ class Navigation {
 					: 'data-wp-context="' . esc_attr( wp_json_encode( $item_context_data ) ) . '"';
 
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="callbacks.isSubmenuOpen" data-wp-on--keydown="actions.handleKeydown" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="callbacks.isAriaExpanded" aria-controls="%7$s" aria-haspopup="true" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu" data-wp-bind--aria-hidden="!callbacks.isSubmenuOpen">%10$s<ul class="wp-block-navigation__submenu-container">%11$s</ul></div></li>',
+					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="callbacks.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="callbacks.isAriaExpanded" aria-controls="%7$s" aria-haspopup="true" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu" data-wp-bind--aria-hidden="!callbacks.isSubmenuOpen">%10$s<ul class="wp-block-navigation__submenu-container">%11$s</ul></div></li>',
 					$item_context,
 					$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
 					'' !== $url ? $url : '#',
