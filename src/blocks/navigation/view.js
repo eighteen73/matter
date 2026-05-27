@@ -1,11 +1,10 @@
-/* global requestAnimationFrame */
+/* global Element */
 import {
 	store,
 	getContext,
 	getElement,
 	withSyncEvent,
 } from '@wordpress/interactivity';
-import { createFocusTrap } from 'focus-trap';
 
 const SELECTORS = {
 	navigation: '.wp-block-eighteen73-navigation',
@@ -17,58 +16,13 @@ const SELECTORS = {
 		'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__back, .wp-block-eighteen73-navigation__submenu-toggle',
 };
 
-const KEYBOARD_OPEN_MODE = 'keyboard';
 const CLICK_OPEN_MODE = 'click';
 const HOVER_OPEN_MODE = 'hover';
+const NEXT_KEYS = ['ArrowDown', 'ArrowRight'];
+const PREV_KEYS = ['ArrowUp', 'ArrowLeft'];
 
-const isElementReady = (element) => {
-	if (!element) {
-		return false;
-	}
-
-	const style = window.getComputedStyle(element);
-
-	return (
-		style.display !== 'none' &&
-		style.visibility !== 'hidden' &&
-		style.opacity !== '0'
-	);
-};
-
-const activateWhenReady = (element, trap, onActivated) => {
-	if (isElementReady(element)) {
-		trap.activate();
-		onActivated?.();
-		return;
-	}
-
-	requestAnimationFrame(() => activateWhenReady(element, trap, onActivated));
-};
-
-const ensureSubmenuFocus = (submenuElement) => {
-	const tryFocus = () => {
-		if (!isElementReady(submenuElement)) {
-			requestAnimationFrame(tryFocus);
-			return;
-		}
-
-		const firstItem =
-			submenuElement.querySelector(
-				'.wp-block-navigation-item__content'
-			) ||
-			submenuElement.querySelector(
-				'.wp-block-eighteen73-navigation__back'
-			);
-		const focusedInSubmenu =
-			!!firstItem && submenuElement.contains(document.activeElement);
-
-		if (firstItem && !focusedInSubmenu) {
-			firstItem.focus();
-		}
-	};
-
-	requestAnimationFrame(tryFocus);
-};
+const isNextKey = (key) => NEXT_KEYS.includes(key);
+const isPrevKey = (key) => PREV_KEYS.includes(key);
 
 const ensureContextCollections = (context) => {
 	if (!Array.isArray(context.openSubmenus)) {
@@ -77,10 +31,6 @@ const ensureContextCollections = (context) => {
 
 	if (!context.openModes || typeof context.openModes !== 'object') {
 		context.openModes = {};
-	}
-
-	if (!context.submenuTraps || typeof context.submenuTraps !== 'object') {
-		context.submenuTraps = {};
 	}
 };
 
@@ -102,9 +52,6 @@ const isVisibleElement = (element) => {
 	return element.getClientRects().length > 0;
 };
 
-const getMenuItemFromElement = (element) =>
-	element?.closest(SELECTORS.menuItemWithChild) || null;
-
 const getSubmenuElement = (menuItem) =>
 	menuItem?.querySelector(SELECTORS.submenu) || null;
 
@@ -113,9 +60,6 @@ const getToggleElement = (menuItem) =>
 
 const getNavigationElement = (element) =>
 	element?.closest(SELECTORS.navigation) || null;
-
-const isSimpleMenuVertical = (element) =>
-	getNavigationElement(element)?.classList.contains('is-vertical') || false;
 
 const getTopLevelLink = (item) =>
 	[...item.children].find(
@@ -254,54 +198,9 @@ const removeSubmenu = (context, submenuId) => {
 	}
 };
 
-const deactivateTrap = (context, submenuId) => {
-	if (!context.submenuTraps?.[submenuId]) {
-		return;
-	}
-
-	context.submenuTraps[submenuId].deactivate();
-	delete context.submenuTraps[submenuId];
-};
-
 const closeSubmenu = (context, submenuId) => {
-	deactivateTrap(context, submenuId);
 	removeSubmenu(context, submenuId);
 	delete context.openModes[submenuId];
-};
-
-const activateSubmenuTrap = (context, submenuId, submenuElement) => {
-	if (!submenuElement) {
-		return;
-	}
-
-	if (!context.submenuTraps[submenuId]) {
-		context.submenuTraps[submenuId] = createFocusTrap(submenuElement, {
-			allowOutsideClick: true,
-			escapeDeactivates: true,
-			returnFocusOnDeactivate: true,
-			initialFocus:
-				submenuElement.querySelector(
-					'.wp-block-navigation-item__content'
-				) ||
-				submenuElement.querySelector(
-					'.wp-block-eighteen73-navigation__back'
-				) ||
-				submenuElement,
-			fallbackFocus: submenuElement,
-			onDeactivate: () => {
-				if (context.openModes[submenuId] === CLICK_OPEN_MODE) {
-					removeSubmenu(context, submenuId);
-					delete context.openModes[submenuId];
-				}
-
-				delete context.submenuTraps[submenuId];
-			},
-		});
-	}
-
-	activateWhenReady(submenuElement, context.submenuTraps[submenuId], () => {
-		ensureSubmenuFocus(submenuElement);
-	});
 };
 
 const getSubmenuIdFromMenuItem = (menuItem) => {
@@ -332,7 +231,6 @@ const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
 	ensureContextCollections(context);
 
 	const key = event.key;
-	const isVertical = isSimpleMenuVertical(navigationElement);
 	const topLevelControls = getTopLevelControls(navigationElement);
 	const currentTopLevelControl = getCurrentTopLevelControl(
 		eventTarget,
@@ -350,15 +248,6 @@ const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
 	const activeMenuItem = isInSubmenu
 		? parentMenuItemForSubmenu
 		: eventTarget.closest(SELECTORS.menuItemWithChild);
-	const toggle = activeMenuItem ? getToggleElement(activeMenuItem) : null;
-	const submenuId = activeMenuItem
-		? getSubmenuIdFromMenuItem(activeMenuItem)
-		: null;
-	const submenuOpen =
-		submenuId !== null && context.openSubmenus.includes(submenuId);
-	const isOnToggle =
-		!!activeMenuItem && isFocusOnToggle(eventTarget, activeMenuItem);
-	const hasSubmenu = !!activeMenuItem && !!getSubmenuElement(activeMenuItem);
 	const isOnTopLevel =
 		!!currentTopLevelControl &&
 		topLevelControls.includes(currentTopLevelControl);
@@ -369,33 +258,6 @@ const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
 		}
 
 		return moveFocusInList(topLevelControls, currentTopLevelControl, step);
-	};
-
-	const openSubmenuFromToggle = () => {
-		if (
-			!hasSubmenu ||
-			!isOnToggle ||
-			!activeMenuItem ||
-			submenuId === null
-		) {
-			return false;
-		}
-
-		const submenuElement = getSubmenuElement(activeMenuItem);
-
-		if (!submenuElement) {
-			return false;
-		}
-
-		event.preventDefault();
-
-		if (!submenuOpen) {
-			openSubmenu(context, submenuId, KEYBOARD_OPEN_MODE);
-		}
-
-		ensureSubmenuFocus(submenuElement);
-
-		return true;
 	};
 
 	if (isInSubmenu && activeMenuItem) {
@@ -414,65 +276,49 @@ const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
 			);
 		};
 
-		if (key === 'ArrowLeft' && isVertical) {
+		if (isNextKey(key)) {
 			event.preventDefault();
-			closeSubmenu(context, submenuId);
-			toggle?.focus();
-		} else if (key === 'ArrowDown') {
-			if (moveSubmenuFocus(1)) {
+			moveSubmenuFocus(1);
+		} else if (isPrevKey(key)) {
+			event.preventDefault();
+			moveSubmenuFocus(-1);
+		} else if (key === 'Home') {
+			if (focusableSubmenuItems.length) {
 				event.preventDefault();
+				focusableSubmenuItems[0]?.focus();
 			}
-		} else if (key === 'ArrowUp') {
-			event.preventDefault();
-
-			if (!moveSubmenuFocus(-1)) {
-				deactivateTrap(context, submenuId);
-				toggle?.focus();
-			}
-		}
-
-		return;
-	}
-
-	if (key === 'ArrowRight') {
-		if (isVertical && openSubmenuFromToggle()) {
-			return;
-		}
-
-		if (!isVertical && isOnTopLevel && moveTopLevelFocus(1)) {
-			event.preventDefault();
-		}
-
-		return;
-	}
-
-	if (key === 'ArrowLeft') {
-		if (!isVertical && isOnTopLevel && moveTopLevelFocus(-1)) {
-			event.preventDefault();
-		}
-
-		return;
-	}
-
-	if (key === 'ArrowDown') {
-		if (isVertical) {
-			if (isOnTopLevel && moveTopLevelFocus(1)) {
+		} else if (key === 'End') {
+			if (focusableSubmenuItems.length) {
 				event.preventDefault();
+				focusableSubmenuItems[
+					focusableSubmenuItems.length - 1
+				]?.focus();
 			}
-
-			return;
-		}
-
-		if (openSubmenuFromToggle()) {
-			return;
 		}
 
 		return;
 	}
 
-	if (key === 'ArrowUp') {
-		if (isVertical && isOnTopLevel && moveTopLevelFocus(-1)) {
+	if (isOnTopLevel) {
+		if (isNextKey(key) && moveTopLevelFocus(1)) {
 			event.preventDefault();
+			return;
+		}
+
+		if (isPrevKey(key) && moveTopLevelFocus(-1)) {
+			event.preventDefault();
+			return;
+		}
+
+		if (key === 'Home' && topLevelControls.length) {
+			event.preventDefault();
+			topLevelControls[0]?.focus();
+			return;
+		}
+
+		if (key === 'End' && topLevelControls.length) {
+			event.preventDefault();
+			topLevelControls[topLevelControls.length - 1]?.focus();
 		}
 	}
 };
@@ -532,16 +378,6 @@ store('eighteen73/navigation', {
 			}
 
 			openSubmenu(context, submenuId, CLICK_OPEN_MODE);
-
-			const { ref } = getElement();
-			const menuItem = getMenuItemFromElement(ref);
-			const submenuElement = getSubmenuElement(menuItem);
-
-			if (!submenuElement) {
-				return;
-			}
-
-			activateSubmenuTrap(context, submenuId, submenuElement);
 		},
 		closeSubmenuOnClick: () => {
 			const context = getContext();
@@ -550,8 +386,6 @@ store('eighteen73/navigation', {
 			closeSubmenu(context, context.submenuId);
 		},
 		handleNavKeydown: withSyncEvent((event) => {
-			const context = getContext();
-			const { ref } = getElement();
 			const eventTarget =
 				event.target instanceof Element ? event.target : null;
 			const key = event.key;
@@ -564,10 +398,14 @@ store('eighteen73/navigation', {
 					'ArrowDown',
 					'ArrowLeft',
 					'ArrowRight',
+					'Home',
+					'End',
 				].includes(key)
 			) {
 				return;
 			}
+
+			const context = getContext();
 
 			if (context.menuType !== 'simple') {
 				return;
@@ -576,9 +414,23 @@ store('eighteen73/navigation', {
 			ensureContextCollections(context);
 
 			if (key === 'Escape') {
-				const menuItem = eventTarget.closest(
-					SELECTORS.menuItemWithChild
-				);
+				const navigationElement = getNavigationElement(eventTarget);
+				const containingMenuItems = navigationElement
+					? [
+							...navigationElement.querySelectorAll(
+								SELECTORS.menuItemWithChild
+							),
+						].filter((item) => item.contains(eventTarget))
+					: [];
+				const menuItem =
+					[...containingMenuItems].reverse().find((item) => {
+						const itemSubmenuId = getSubmenuIdFromMenuItem(item);
+
+						return (
+							itemSubmenuId !== null &&
+							context.openSubmenus.includes(itemSubmenuId)
+						);
+					}) || eventTarget.closest(SELECTORS.menuItemWithChild);
 
 				if (!menuItem) {
 					return;
@@ -599,6 +451,7 @@ store('eighteen73/navigation', {
 				return;
 			}
 
+			const { ref } = getElement();
 			handleSimpleMenuKeyboard(event, context, ref);
 		}),
 		handleNavFocusOut: (event) => {
