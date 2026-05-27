@@ -12,6 +12,7 @@ export const DEFAULT_EMBLA_CONFIG = {
 		loop: false,
 		axis: 'x',
 		slidesToScroll: 1,
+		slidesToShow: 1,
 		active: true,
 	},
 	plugins: {

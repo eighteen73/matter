@@ -23,7 +23,8 @@
 					"loop": false,
 					"axis": "x",
 					"slidesToScroll": 1,
-					"active": true
+					"active": true,
+					"slidesToShow": 1
 				},
 				"plugins": {
 					"autoplay": {
@@ -42,10 +43,6 @@
 		"advancedEmblaConfigMerge": {
 			"type": "boolean",
 			"default": false
-		},
-		"slidesToShow": {
-			"type": "number",
-			"default": 1
 		}
 	},
 	"supports": {

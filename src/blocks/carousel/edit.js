@@ -31,6 +31,7 @@ import {
 } from '../../utils/embla-block-config';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
+import breakpoints from '../../constants/breakpoints';
 
 export default function Edit({
 	clientId,
@@ -140,7 +141,25 @@ export default function Edit({
 		});
 	};
 
-	const blockProps = useBlockProps({ className: 'embla' });
+	// Generate CSS variables for slidesToShow
+	const slidesToShowCssVars = {
+		...Object.keys(breakpoints).reduce((acc, breakpoint) => {
+			acc[
+				`--wp--custom--eighteen73-carousel--slides-to-show-${breakpoint}`
+			] =
+				resolvedConfig.breakpointLayers?.[breakpoint]?.options
+					?.slidesToShow ?? resolvedConfig.options.slidesToShow;
+			return acc;
+		}, {}),
+		'--wp--custom--eighteen73-carousel--slides-to-show-base':
+			resolvedConfig.options.slidesToShow,
+	};
+
+	const blockProps = useBlockProps({
+		className: 'embla',
+		style: slidesToShowCssVars,
+	});
+
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		orientation: 'vertical',
 		template: [
@@ -206,6 +225,25 @@ export default function Edit({
 		emblaPlugins
 	);
 
+	// Embla measures slide sizes on init; changing CSS vars that affect widths
+	// needs a reInit to reflect immediately in the editor.
+	const slidesToShowSignature = useMemo(() => {
+		const base = resolvedConfig.options.slidesToShow;
+		const layers = resolvedConfig.breakpointLayers || {};
+		const perBp = Object.keys(breakpoints).map((token) => [
+			token,
+			layers?.[token]?.options?.slidesToShow,
+		]);
+		return JSON.stringify({ base, perBp });
+	}, [resolvedConfig.options.slidesToShow, resolvedConfig.breakpointLayers]);
+
+	useEffect(() => {
+		if (!emblaApi) {
+			return;
+		}
+		emblaApi.reInit();
+	}, [emblaApi, slidesToShowSignature]);
+
 	useEffect(() => {
 		if (!emblaApi) {
 			return;
@@ -257,8 +295,6 @@ export default function Edit({
 			<InspectorControls group="settings">
 				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
 					<CarouselControls
-						attributes={attributes}
-						setAttributes={setAttributes}
 						baseOptions={uiOptions}
 						baseAutoplay={uiAutoplay}
 						breakpointLayers={resolvedConfig.breakpointLayers}

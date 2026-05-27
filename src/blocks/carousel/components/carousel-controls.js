@@ -37,22 +37,17 @@ const buildTabs = () => [
  * and for each per-breakpoint tab (writing to a layer partial). The parent
  * decides which setter to wire in via `onChangeOption` / `onChangeAutoplay`.
  * @param {Object}   root0                  - The root object.
- * @param {Object}   root0.attributes       - The attributes.
- * @param {Function} root0.setAttributes    - The setAttributes function.
  * @param {Object}   root0.options          - The options.
  * @param {Object}   root0.autoplay         - The autoplay.
  * @param {Function} root0.onChangeOption   - The onChangeOption function.
  * @param {Function} root0.onChangeAutoplay - The onChangeAutoplay function.
  */
 function CarouselFields({
-	attributes,
-	setAttributes,
 	options,
 	autoplay,
 	onChangeOption,
 	onChangeAutoplay,
 }) {
-	const { slidesToShow } = attributes;
 	return (
 		<div style={{ marginTop: '16px' }}>
 			<RangeControl
@@ -73,8 +68,15 @@ function CarouselFields({
 
 			<RangeControl
 				label={__('Slides to show', 'eighteen73-blocks')}
-				value={slidesToShow}
-				onChange={(value) => setAttributes({ slidesToShow: value })}
+				value={options.slidesToShow}
+				onChange={(value) =>
+					onChangeOption(
+						'slidesToShow',
+						value === undefined
+							? DEFAULT_EMBLA_CONFIG.options.slidesToShow
+							: value
+					)
+				}
 				min={1}
 				max={10}
 				step={1}
@@ -175,8 +177,6 @@ function CarouselFields({
  * Per-breakpoint fields show the effective value (layer override falling
  * back to base) but writes go to the layer so only changed keys persist.
  * @param {Object}   root0                       - The root object.
- * @param {Object}   root0.attributes            - The attributes.
- * @param {Function} root0.setAttributes         - The setAttributes function.
  * @param {Object}   root0.baseOptions           - The base options.
  * @param {Object}   root0.baseAutoplay          - The base autoplay.
  * @param {Object}   root0.breakpointLayers      - The breakpoint layers.
@@ -187,8 +187,6 @@ function CarouselFields({
  * @param {Function} root0.onResetLayer          - The onResetLayer function.
  */
 export default function CarouselControls({
-	attributes,
-	setAttributes,
 	baseOptions,
 	baseAutoplay,
 	breakpointLayers,
@@ -218,6 +216,8 @@ export default function CarouselControls({
 					slidesToScroll:
 						layerOptions.slidesToScroll ??
 						baseOptions.slidesToScroll,
+					slidesToShow:
+						layerOptions.slidesToShow ?? baseOptions.slidesToShow,
 					active: layerOptions.active ?? baseOptions.active,
 				};
 				const effectiveAutoplay = {
@@ -228,8 +228,6 @@ export default function CarouselControls({
 				if (tab.name === BASE_TAB) {
 					return (
 						<CarouselFields
-							attributes={attributes}
-							setAttributes={setAttributes}
 							options={baseOptions}
 							autoplay={baseAutoplay}
 							onChangeOption={onChangeBaseOption}
@@ -241,8 +239,6 @@ export default function CarouselControls({
 				return (
 					<>
 						<CarouselFields
-							attributes={attributes}
-							setAttributes={setAttributes}
 							options={effectiveOptions}
 							autoplay={effectiveAutoplay}
 							onChangeOption={(key, value) =>

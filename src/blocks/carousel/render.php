@@ -28,6 +28,20 @@ $carousel_context = [
 	'advancedEmblaConfigMerge' => $advanced_embla_config_merge,
 	'carouselId'               => $carousel_id,
 ];
+
+// Generate CSS variables for slidesToShow
+$slides_to_show = [];
+foreach ( $embla_config['breakpointLayers'] as $breakpoint => $layer ) {
+	$slides_to_show[ $breakpoint ] = $layer['options']['slidesToShow'] ?? $embla_config['options']['slidesToShow'] ?? 1;
+}
+$slides_to_show['base'] = $embla_config['options']['slidesToShow'] ?? 1;
+
+$slides_to_show_css_variables = [];
+foreach ( $slides_to_show as $breakpoint => $value ) {
+	$slides_to_show_css_variables[] = "--wp--custom--eighteen73-carousel--slides-to-show-{$breakpoint}: {$value}";
+}
+
+$slides_to_show_css_variables = implode( '; ', $slides_to_show_css_variables );
 ?>
 
 <div
@@ -38,6 +52,7 @@ $carousel_context = [
 				'id'                  => $carousel_id,
 				'data-wp-interactive' => 'eighteen73-blocks/carousel',
 				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
+				'style'               => $slides_to_show_css_variables,
 			]
 		)
 		. ' '
