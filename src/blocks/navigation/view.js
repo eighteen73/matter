@@ -5,6 +5,7 @@ import {
 	getElement,
 	withSyncEvent,
 } from '@wordpress/interactivity';
+import { createFocusTrap } from 'focus-trap';
 
 const SELECTORS = {
 	navigation: '.wp-block-eighteen73-navigation',
@@ -31,6 +32,10 @@ const ensureContextCollections = (context) => {
 
 	if (!context.openModes || typeof context.openModes !== 'object') {
 		context.openModes = {};
+	}
+
+	if (!context.submenuTraps || typeof context.submenuTraps !== 'object') {
+		context.submenuTraps = {};
 	}
 };
 
@@ -198,9 +203,64 @@ const removeSubmenu = (context, submenuId) => {
 	}
 };
 
+const waitForElementVisible = (element) =>
+	new Promise((resolve) => {
+		const checkElementVisibility = () => {
+			if (isVisibleElement(element)) {
+				resolve();
+				return;
+			}
+
+			window.requestAnimationFrame(checkElementVisibility);
+		};
+
+		checkElementVisibility();
+	});
+
+const deactivateTrap = (context, submenuId) => {
+	if (!context.submenuTraps?.[submenuId]) {
+		return;
+	}
+
+	context.submenuTraps[submenuId].deactivate();
+	delete context.submenuTraps[submenuId];
+};
+
 const closeSubmenu = (context, submenuId) => {
+	deactivateTrap(context, submenuId);
 	removeSubmenu(context, submenuId);
 	delete context.openModes[submenuId];
+};
+
+const activateDrillDownSubmenuTrap = (context, submenuId, menuItem) => {
+	const submenuElement = getSubmenuElement(menuItem);
+
+	if (!submenuElement) {
+		return;
+	}
+
+	if (!submenuElement.hasAttribute('tabindex')) {
+		submenuElement.setAttribute('tabindex', '-1');
+	}
+
+	if (!context.submenuTraps[submenuId]) {
+		context.submenuTraps[submenuId] = createFocusTrap(submenuElement, {
+			allowOutsideClick: true,
+			escapeDeactivates: false,
+			returnFocusOnDeactivate: true,
+			initialFocus: () =>
+				getFocusableSubmenuItems(menuItem)[0] || submenuElement,
+			fallbackFocus: submenuElement,
+			checkCanFocusTrap: () => waitForElementVisible(submenuElement),
+			onDeactivate: () => {
+				removeSubmenu(context, submenuId);
+				delete context.openModes[submenuId];
+				delete context.submenuTraps[submenuId];
+			},
+		});
+	}
+
+	context.submenuTraps[submenuId].activate();
 };
 
 const getSubmenuIdFromMenuItem = (menuItem) => {
@@ -406,6 +466,11 @@ store('eighteen73/navigation', {
 		toggleSubmenuOnClick: () => {
 			const context = getContext();
 			const submenuId = context.submenuId;
+			const { ref } = getElement();
+			const menuItem =
+				ref instanceof Element
+					? ref.closest(SELECTORS.menuItemWithChild)
+					: null;
 
 			ensureContextCollections(context);
 
@@ -415,6 +480,10 @@ store('eighteen73/navigation', {
 			}
 
 			openSubmenu(context, submenuId, CLICK_OPEN_MODE);
+
+			if ('drill-down' === context.menuType && menuItem) {
+				activateDrillDownSubmenuTrap(context, submenuId, menuItem);
+			}
 		},
 		closeSubmenuOnClick: () => {
 			const context = getContext();
