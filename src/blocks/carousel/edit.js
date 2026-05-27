@@ -206,6 +206,13 @@ export default function Edit({
 			block.name === 'woocommerce/product-collection'
 	);
 
+	const viewportAllowedBlock =
+		viewportBlock?.attributes?.allowedBlocks?.[0] ?? null;
+
+	const isQueryOnlyViewport =
+		viewportAllowedBlock === 'core/query' ||
+		viewportAllowedBlock === 'woocommerce/product-collection';
+
 	const getContainer = () => {
 		if (!hasQueryLoop) {
 			return '.embla__container';
@@ -338,6 +345,8 @@ export default function Edit({
 
 				{viewportBlock &&
 					viewportBlock?.attributes?.allowedBlocks?.length === 1 &&
+					!isQueryOnlyViewport &&
+					!hasQueryLoop &&
 					(isSelected || isInnerBlockSelected) && (
 						<SingleBlockTypeAppender
 							onClickAfter={() => {}}
