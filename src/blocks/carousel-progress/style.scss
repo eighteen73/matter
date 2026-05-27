@@ -1,13 +1,9 @@
 .wp-block-eighteen73-blocks-carousel-progress {
-	// stylelint-disable custom-property-pattern -- backwards compatibility
-	--wp--custom--eighteen73-carousel--progress--background: var(--carousel-progress-background, var(--wp--custom--color--surface--inactive));
-	--wp--custom--eighteen73-carousel--progress--bar: var(--carousel-progress-bar, var(--wp--custom--color--secondary--200));
-	--wp--custom--eighteen73-carousel--progress--border-radius: var(--carousel-progress-border-radius, var(--wp--custom--border-radius--xl));
-	--wp--custom--eighteen73-carousel--progress--height: var(--carousel-progress-height, 10px);
-	// stylelint-enable custom-property-pattern
+	--wp--custom--eighteen73-carousel--progress--background: var(--wp--preset--color--accent-primary, currentcolor);
+	--wp--custom--eighteen73-carousel--progress--bar: var(--wp--preset--color--accent-secondary, #7378cc);
+	--wp--custom--eighteen73-carousel--progress--height: 10px;
 
 	background-color: var(--wp--custom--eighteen73-carousel--progress--background);
-	border-radius: var(--wp--custom--eighteen73-carousel--progress--border-radius);
 	height: var(--wp--custom--eighteen73-carousel--progress--height);
 	overflow: hidden;
 	position: relative;
@@ -19,7 +15,6 @@
 
 	.embla__progress__bar {
 		background-color: var(--wp--custom--eighteen73-carousel--progress--bar);
-		border-radius: var(--wp--custom--eighteen73-carousel--progress--border-radius);
 		bottom: 0;
 		left: -100%;
 		position: absolute;

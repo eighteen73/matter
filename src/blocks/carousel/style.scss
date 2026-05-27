@@ -42,14 +42,12 @@
 
 	.wp-block-eighteen73-blocks-carousel-next-button,
 	.wp-block-eighteen73-blocks-carousel-previous-button {
-		// stylelint-disable custom-property-pattern -- backwards compatibility
-		--wp--custom--eighteen73-carousel--button--size: var(--carousel-button-size, 32px);
-		--wp--custom--eighteen73-carousel--button--icon-size: var(--carousel-button-icon-size, 12px);
-		--wp--custom--eighteen73-carousel--button--gap: var(--carousel-button-gap, var(--wp--preset--spacing--md, 12px));
-		--wp--custom--eighteen73-carousel--button--background-color: var(--carousel-button-background-color, transparent);
-		--wp--custom--eighteen73-carousel--button--arrow-color: var(--carousel-button-icon-color, currentcolor);
-		--wp--custom--eighteen73-carousel--button--border-radius: var(--carousel-button-border-radius, 50%);
-		// stylelint-enable custom-property-pattern
+		--wp--custom--eighteen73-carousel--button--size: 32px;
+		--wp--custom--eighteen73-carousel--button--icon-size: 12px;
+		--wp--custom--eighteen73-carousel--button--gap: var(--wp--preset--spacing--md, 12px);
+		--wp--custom--eighteen73-carousel--button--background-color: transparent;
+		--wp--custom--eighteen73-carousel--button--arrow-color: currentcolor;
+		--wp--custom--eighteen73-carousel--button--border-radius: 50%;
 
 		&:where(.has-background) .embla__button {
 			background-color: var(--wp--style--color--background);

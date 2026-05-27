@@ -1,11 +1,9 @@
 .wp-block-eighteen73-blocks-carousel-dots {
-	// stylelint-disable custom-property-pattern -- backwards compatibility
-	--wp--custom--eighteen73-carousel--dot--size: var(--carousel-dot-size, 12px);
-	--wp--custom--eighteen73-carousel--dot--gap: var(--carousel-dot-gap, var(--wp--preset--spacing--xs, 8px));
-	--wp--custom--eighteen73-carousel--dot--color: var(--carousel-dot-color, var(--wp--custom--color--surface--invert, currentcolor));
-	--wp--custom--eighteen73-carousel--dot--color-active: var(--carousel-dot-color-active, var(--wp--custom--color--surface--primary, #7378cc));
-	--wp--custom--eighteen73-carousel--dot--border-radius: var(--carousel-dot-border-radius, 50%);
-	// stylelint-enable custom-property-pattern
+	--wp--custom--eighteen73-carousel--dot--size: 12px;
+	--wp--custom--eighteen73-carousel--dot--gap: var(--wp--preset--spacing--xs, 8px);
+	--wp--custom--eighteen73-carousel--dot--color: var(--wp--preset--color--accent-primary, currentcolor);
+	--wp--custom--eighteen73-carousel--dot--color-active: var(--wp--preset--color--accent-secondary, #7378cc);
+	--wp--custom--eighteen73-carousel--dot--border-radius: 50%;
 
 	align-items: center;
 	display: flex;
