@@ -9,7 +9,7 @@
  */
 
 use Eighteen73\Blocks\Config;
-use Eighteen73\Blocks\Spacing\Styles as SpacingStyles;
+use Eighteen73\Blocks\Blocks\Carousel;
 
 $embla_config = isset( $attributes['emblaConfig'] ) && is_array( $attributes['emblaConfig'] )
 	? $attributes['emblaConfig']
@@ -41,30 +41,9 @@ $base_options      = isset( $embla_config['options'] ) && is_array( $embla_confi
 	: [];
 $content           = isset( $content ) && is_string( $content ) ? $content : '';
 
-// Generate CSS variables for slidesToShow
-$slides_to_show = [
-	'base' => $base_options['slidesToShow'] ?? 1,
-];
-foreach ( $breakpoint_tokens as $breakpoint ) {
-	$slides_to_show[ $breakpoint ] = $breakpoint_layers[ $breakpoint ]['options']['slidesToShow'] ?? $slides_to_show['base'];
-}
+$style_variables = Carousel::generate_css_variables( $base_options, $breakpoint_layers, $breakpoint_tokens );
 
-$slides_to_show_css_variables = [];
-foreach ( $slides_to_show as $breakpoint => $value ) {
-	$slides_to_show_css_variables[] = "--wp--custom--eighteen73-carousel--slides-to-show-{$breakpoint}: {$value}";
-}
-
-$slide_gap_css_variables = SpacingStyles::get_responsive_css_vars(
-	'--wp--custom--eighteen73-carousel--slide--gap',
-	isset( $base_options['slideGap'] ) && is_string( $base_options['slideGap'] ) ? $base_options['slideGap'] : '',
-	$breakpoint_layers,
-	$breakpoint_tokens
-);
-
-$styles = implode( '; ', $slides_to_show_css_variables );
-if ( '' !== $slide_gap_css_variables ) {
-	$styles .= '; ' . $slide_gap_css_variables;
-}
+$styles = implode( '; ', array_filter( $style_variables ) );
 ?>
 
 <div

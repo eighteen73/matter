@@ -3,7 +3,9 @@ import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
 export default function Edit({ attributes }) {
 	const { allowedBlocks } = attributes;
 
-	const blockProps = useBlockProps();
+	const blockProps = useBlockProps({
+		className: 'embla__viewport',
+	});
 	const isSingleInserterEnabled = allowedBlocks && allowedBlocks.length === 1;
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {

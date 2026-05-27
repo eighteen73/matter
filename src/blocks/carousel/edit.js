@@ -29,7 +29,7 @@ import {
 	normalizeEmblaConfig,
 	prepareEmblaBlockState,
 } from './utils/embla-block-config';
-import { buildResponsiveSpacingCssVars } from '../../utils/spacing';
+import { buildCarouselStyleVars } from './utils/styles';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
@@ -142,32 +142,15 @@ export default function Edit({
 		});
 	};
 
-	// Generate CSS variables for slidesToShow
-	const slidesToShowCssVars = {
-		...Object.keys(breakpoints).reduce((acc, breakpoint) => {
-			acc[
-				`--wp--custom--eighteen73-carousel--slides-to-show-${breakpoint}`
-			] =
-				resolvedConfig.breakpointLayers?.[breakpoint]?.options
-					?.slidesToShow ?? resolvedConfig.options.slidesToShow;
-			return acc;
-		}, {}),
-		'--wp--custom--eighteen73-carousel--slides-to-show-base':
-			resolvedConfig.options.slidesToShow,
-	};
-	const slideGapCssVars = buildResponsiveSpacingCssVars({
-		prefix: '--wp--custom--eighteen73-carousel--slide--gap',
-		baseValue: resolvedConfig.options.slideGap,
+	const carouselStyleVars = buildCarouselStyleVars({
+		baseOptions: resolvedConfig.options,
 		breakpointLayers: resolvedConfig.breakpointLayers,
 		breakpointTokens: Object.keys(breakpoints),
 	});
 
 	const blockProps = useBlockProps({
 		className: 'embla',
-		style: {
-			...slidesToShowCssVars,
-			...slideGapCssVars,
-		},
+		style: carouselStyleVars,
 	});
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
