@@ -221,6 +221,43 @@ const isFocusOnToggle = (eventTarget, menuItem) => {
 	);
 };
 
+const handleSubmenuEscapeKey = (event, context, navigationElement) => {
+	const eventTarget = event.target instanceof Element ? event.target : null;
+
+	if (!eventTarget || !navigationElement) {
+		return false;
+	}
+
+	const containingMenuItems = [
+		...navigationElement.querySelectorAll(SELECTORS.menuItemWithChild),
+	].filter((item) => item.contains(eventTarget));
+	const menuItem =
+		[...containingMenuItems].reverse().find((item) => {
+			const itemSubmenuId = getSubmenuIdFromMenuItem(item);
+
+			return (
+				itemSubmenuId !== null &&
+				context.openSubmenus.includes(itemSubmenuId)
+			);
+		}) || eventTarget.closest(SELECTORS.menuItemWithChild);
+
+	if (!menuItem) {
+		return false;
+	}
+
+	const submenuId = getSubmenuIdFromMenuItem(menuItem);
+
+	if (submenuId === null || !context.openSubmenus.includes(submenuId)) {
+		return false;
+	}
+
+	event.preventDefault();
+	closeSubmenu(context, submenuId);
+	getToggleElement(menuItem)?.focus();
+
+	return true;
+};
+
 const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
 	const eventTarget = event.target instanceof Element ? event.target : null;
 
@@ -407,47 +444,18 @@ store('eighteen73/navigation', {
 
 			const context = getContext();
 
-			if (context.menuType !== 'simple') {
-				return;
-			}
-
 			ensureContextCollections(context);
 
 			if (key === 'Escape') {
-				const navigationElement = getNavigationElement(eventTarget);
-				const containingMenuItems = navigationElement
-					? [
-							...navigationElement.querySelectorAll(
-								SELECTORS.menuItemWithChild
-							),
-						].filter((item) => item.contains(eventTarget))
-					: [];
-				const menuItem =
-					[...containingMenuItems].reverse().find((item) => {
-						const itemSubmenuId = getSubmenuIdFromMenuItem(item);
+				handleSubmenuEscapeKey(
+					event,
+					context,
+					getNavigationElement(eventTarget)
+				);
+				return;
+			}
 
-						return (
-							itemSubmenuId !== null &&
-							context.openSubmenus.includes(itemSubmenuId)
-						);
-					}) || eventTarget.closest(SELECTORS.menuItemWithChild);
-
-				if (!menuItem) {
-					return;
-				}
-
-				const submenuId = getSubmenuIdFromMenuItem(menuItem);
-
-				if (
-					submenuId === null ||
-					!context.openSubmenus.includes(submenuId)
-				) {
-					return;
-				}
-
-				event.preventDefault();
-				closeSubmenu(context, submenuId);
-				getToggleElement(menuItem)?.focus();
+			if (context.menuType !== 'simple') {
 				return;
 			}
 
