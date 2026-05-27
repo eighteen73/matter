@@ -15,7 +15,7 @@ import { settings, arrowDown, arrowRight } from '@wordpress/icons';
 
 import breakpoints from '../../../constants/breakpoints';
 import SpacingControl from '../../../components/spacing-control';
-import { DEFAULT_EMBLA_CONFIG } from '../../../utils/embla-block-config';
+import { DEFAULT_EMBLA_CONFIG } from '../utils/embla-block-config';
 
 const BASE_TAB = 'base';
 

@@ -7,8 +7,8 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import ColorControl from '../color-control';
-import { getColorStyles, storeColorValue } from '../../utils/colors';
+import ColorControl from '../../../components/color-control';
+import { getColorStyles, storeColorValue } from '../../../utils/colors';
 
 function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 	const { arrowColor } = attributes;

@@ -5,12 +5,12 @@ import EmblaCarousel from 'embla-carousel';
 import {
 	buildEmblaPlugins,
 	prepareEmblaBlockState,
-} from '../../utils/embla-block-config';
+} from './utils/embla-block-config';
 import {
 	addPrevNextBtnsClickHandlers,
 	addDotBtnsAndClickHandlers,
 	setupProgressBar,
-} from '../../utils/embla';
+} from './utils/embla';
 
 const STORE_NAMESPACE = 'eighteen73-blocks/carousel';
 

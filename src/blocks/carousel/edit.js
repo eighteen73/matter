@@ -23,12 +23,12 @@ import SingleBlockTypeAppender from '../../components/single-block-type-appender
 import {
 	addDotBtnsAndClickHandlers,
 	addPrevNextBtnsClickHandlers,
-} from '../../utils/embla';
+} from './utils/embla';
 import {
 	buildEmblaPlugins,
 	normalizeEmblaConfig,
 	prepareEmblaBlockState,
-} from '../../utils/embla-block-config';
+} from './utils/embla-block-config';
 import { buildResponsiveSpacingCssVars } from '../../utils/spacing';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';

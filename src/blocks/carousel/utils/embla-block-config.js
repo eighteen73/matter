@@ -5,7 +5,7 @@ import AutoScroll from 'embla-carousel-auto-scroll';
 import breakpoints, {
 	breakpointTokens,
 	minWidthQuery,
-} from '../constants/breakpoints/data';
+} from '../../../constants/breakpoints/data';
 
 export const DEFAULT_EMBLA_CONFIG = {
 	options: {
