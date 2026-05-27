@@ -1,4 +1,3 @@
-/* global Element */
 import {
 	store,
 	getContext,
@@ -15,42 +14,47 @@ const SELECTORS = {
 	submenu: '.wp-block-eighteen73-navigation__submenu',
 	focusableSubmenuItems:
 		'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__back, .wp-block-eighteen73-navigation__submenu-toggle',
+	directSubmenuFocusableItems:
+		':scope > .wp-block-eighteen73-navigation__back, :scope > .wp-block-navigation__submenu-container > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-container > .wp-block-navigation-item > .wp-block-eighteen73-navigation__submenu-toggle',
 };
 
 const CLICK_OPEN_MODE = 'click';
 const HOVER_OPEN_MODE = 'hover';
 const NEXT_KEYS = ['ArrowDown', 'ArrowRight'];
 const PREV_KEYS = ['ArrowUp', 'ArrowLeft'];
+const NAV_KEYS = new Set([
+	'Escape',
+	'ArrowUp',
+	'ArrowDown',
+	'ArrowLeft',
+	'ArrowRight',
+	'Home',
+	'End',
+]);
+const hasTouchSupport =
+	'ontouchstart' in window ||
+	window.navigator.maxTouchPoints > 0 ||
+	window.navigator.msMaxTouchPoints > 0;
+const submenuTrapMap = new WeakMap();
+const submenuTrapOwners = new Map();
 
 const isNextKey = (key) => NEXT_KEYS.includes(key);
 const isPrevKey = (key) => PREV_KEYS.includes(key);
-
-const ensureContextCollections = (context) => {
-	if (!Array.isArray(context.openSubmenus)) {
-		context.openSubmenus = [];
-	}
-
-	if (!context.openModes || typeof context.openModes !== 'object') {
-		context.openModes = {};
-	}
-
-	if (!context.submenuTraps || typeof context.submenuTraps !== 'object') {
-		context.submenuTraps = {};
-	}
-};
 
 const isVisibleElement = (element) => {
 	if (!element) {
 		return false;
 	}
 
-	const style = window.getComputedStyle(element);
+	if (typeof element.checkVisibility === 'function') {
+		return element.checkVisibility({
+			checkVisibilityCSS: true,
+			checkOpacity: false,
+		});
+	}
 
-	if (
-		style.display === 'none' ||
-		style.visibility === 'hidden' ||
-		style.opacity === '0'
-	) {
+	const style = window.getComputedStyle(element);
+	if (style.display === 'none' || style.visibility === 'hidden') {
 		return false;
 	}
 
@@ -66,10 +70,13 @@ const getToggleElement = (menuItem) =>
 const getNavigationElement = (element) =>
 	element?.closest(SELECTORS.navigation) || null;
 
+const getEventTargetElement = (event) =>
+	event?.target && event.target.nodeType === 1 ? event.target : null;
+
 const getTopLevelLink = (item) =>
 	[...item.children].find(
 		(child) =>
-			child instanceof Element &&
+			child.nodeType === 1 &&
 			child.classList.contains('wp-block-navigation-item__content')
 	) || null;
 
@@ -116,13 +123,9 @@ const getTopLevelControls = (element) => {
 		return [];
 	}
 
-	return [...topLevelContainer.children].flatMap((item) => {
-		if (!(item instanceof Element)) {
-			return [];
-		}
-
-		return getTopLevelControlsForItem(item);
-	});
+	return [...topLevelContainer.children].flatMap((item) =>
+		getTopLevelControlsForItem(item)
+	);
 };
 
 const getMenuItemForSubmenuId = (navigationElement, submenuId) => {
@@ -157,7 +160,9 @@ const getFocusableSubmenuItems = (menuItem) => {
 	}
 
 	return [
-		...submenuElement.querySelectorAll(SELECTORS.focusableSubmenuItems),
+		...submenuElement.querySelectorAll(
+			SELECTORS.directSubmenuFocusableItems
+		),
 	].filter(isVisibleElement);
 };
 
@@ -183,8 +188,6 @@ const moveFocusInList = (elements, currentElement, step) => {
 };
 
 const openSubmenu = (context, submenuId, openMode) => {
-	ensureContextCollections(context);
-
 	if (!context.openSubmenus.includes(submenuId)) {
 		context.openSubmenus = [...context.openSubmenus, submenuId];
 	}
@@ -193,21 +196,30 @@ const openSubmenu = (context, submenuId, openMode) => {
 };
 
 const removeSubmenu = (context, submenuId) => {
-	const openIndex = context.openSubmenus.indexOf(submenuId);
-
-	if (openIndex !== -1) {
-		context.openSubmenus = [
-			...context.openSubmenus.slice(0, openIndex),
-			...context.openSubmenus.slice(openIndex + 1),
-		];
-	}
+	context.openSubmenus = context.openSubmenus.filter(
+		(id) => id !== submenuId
+	);
 };
 
 const waitForElementVisible = (element) =>
-	new Promise((resolve) => {
+	new Promise((resolve, reject) => {
+		const timeoutAt = window.performance.now() + 1000;
+
 		const checkElementVisibility = () => {
+			if (!element.isConnected) {
+				reject(
+					new Error('Element disconnected before visibility check')
+				);
+				return;
+			}
+
 			if (isVisibleElement(element)) {
 				resolve();
+				return;
+			}
+
+			if (window.performance.now() >= timeoutAt) {
+				reject(new Error('Timed out waiting for submenu visibility'));
 				return;
 			}
 
@@ -217,17 +229,27 @@ const waitForElementVisible = (element) =>
 		checkElementVisibility();
 	});
 
-const deactivateTrap = (context, submenuId) => {
-	if (!context.submenuTraps?.[submenuId]) {
+const deactivateTrap = (submenuId) => {
+	const menuItem = submenuTrapOwners.get(submenuId);
+
+	if (!menuItem) {
 		return;
 	}
 
-	context.submenuTraps[submenuId].deactivate();
-	delete context.submenuTraps[submenuId];
+	const trap = submenuTrapMap.get(menuItem);
+
+	if (!trap) {
+		submenuTrapOwners.delete(submenuId);
+		return;
+	}
+
+	trap.deactivate();
+	submenuTrapMap.delete(menuItem);
+	submenuTrapOwners.delete(submenuId);
 };
 
 const closeSubmenu = (context, submenuId) => {
-	deactivateTrap(context, submenuId);
+	deactivateTrap(submenuId);
 	removeSubmenu(context, submenuId);
 	delete context.openModes[submenuId];
 };
@@ -239,12 +261,10 @@ const activateDrillDownSubmenuTrap = (context, submenuId, menuItem) => {
 		return;
 	}
 
-	if (!submenuElement.hasAttribute('tabindex')) {
-		submenuElement.setAttribute('tabindex', '-1');
-	}
+	let trap = submenuTrapMap.get(menuItem);
 
-	if (!context.submenuTraps[submenuId]) {
-		context.submenuTraps[submenuId] = createFocusTrap(submenuElement, {
+	if (!trap) {
+		trap = createFocusTrap(submenuElement, {
 			allowOutsideClick: true,
 			escapeDeactivates: false,
 			returnFocusOnDeactivate: true,
@@ -255,12 +275,16 @@ const activateDrillDownSubmenuTrap = (context, submenuId, menuItem) => {
 			onDeactivate: () => {
 				removeSubmenu(context, submenuId);
 				delete context.openModes[submenuId];
-				delete context.submenuTraps[submenuId];
+				submenuTrapMap.delete(menuItem);
+				submenuTrapOwners.delete(submenuId);
 			},
 		});
+
+		submenuTrapMap.set(menuItem, trap);
+		submenuTrapOwners.set(submenuId, menuItem);
 	}
 
-	context.submenuTraps[submenuId].activate();
+	trap.activate();
 };
 
 const getSubmenuIdFromMenuItem = (menuItem) => {
@@ -282,7 +306,7 @@ const isFocusOnToggle = (eventTarget, menuItem) => {
 };
 
 const handleSubmenuEscapeKey = (event, context, navigationElement) => {
-	const eventTarget = event.target instanceof Element ? event.target : null;
+	const eventTarget = getEventTargetElement(event);
 
 	if (!eventTarget || !navigationElement) {
 		return false;
@@ -311,21 +335,21 @@ const handleSubmenuEscapeKey = (event, context, navigationElement) => {
 		return false;
 	}
 
+	// Close the innermost open submenu first for nested structures.
 	event.preventDefault();
+	event.stopPropagation();
 	closeSubmenu(context, submenuId);
 	getToggleElement(menuItem)?.focus();
 
 	return true;
 };
 
-const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
-	const eventTarget = event.target instanceof Element ? event.target : null;
+const handleArrowKeyboard = (event, context, navigationElement) => {
+	const eventTarget = getEventTargetElement(event);
 
 	if (!eventTarget) {
 		return;
 	}
-
-	ensureContextCollections(context);
 
 	const key = event.key;
 	const topLevelControls = getTopLevelControls(navigationElement);
@@ -420,159 +444,116 @@ const handleSimpleMenuKeyboard = (event, context, navigationElement) => {
 	}
 };
 
-store('eighteen73/navigation', {
-	state: {
-		isTouchEnabled: false,
-	},
-	actions: {
-		openSubmenuOnHover: () => {
-			const { state } = store('eighteen73/navigation');
-			const context = getContext();
+const { state } = store(
+	'eighteen73/navigation',
+	{
+		state: {
+			get isTouchEnabled() {
+				return hasTouchSupport;
+			},
+			get isSubmenuOpen() {
+				const context = getContext();
 
-			if (
-				context.menuType !== 'simple' ||
-				context.submenuOpensOnClick ||
-				state.isTouchEnabled
-			) {
-				return;
-			}
-
-			ensureContextCollections(context);
-			const submenuId = context.submenuId;
-
-			openSubmenu(context, submenuId, HOVER_OPEN_MODE);
+				return context.openSubmenus.includes(context.submenuId);
+			},
 		},
-		closeSubmenuOnHover: () => {
-			const { state } = store('eighteen73/navigation');
-			const context = getContext();
-			const submenuId = context.submenuId;
+		actions: {
+			openSubmenuOnHover: () => {
+				const context = getContext();
 
-			if (
-				context.menuType !== 'simple' ||
-				context.submenuOpensOnClick ||
-				state.isTouchEnabled
-			) {
-				return;
-			}
+				if (
+					context.menuType !== 'simple' ||
+					context.submenuOpensOnClick ||
+					state.isTouchEnabled
+				) {
+					return;
+				}
 
-			ensureContextCollections(context);
+				const submenuId = context.submenuId;
 
-			if (context.openModes[submenuId] !== HOVER_OPEN_MODE) {
-				return;
-			}
+				openSubmenu(context, submenuId, HOVER_OPEN_MODE);
+			},
+			closeSubmenuOnHover: () => {
+				const context = getContext();
+				const submenuId = context.submenuId;
 
-			closeSubmenu(context, submenuId);
-		},
-		toggleSubmenuOnClick: () => {
-			const context = getContext();
-			const submenuId = context.submenuId;
-			const { ref } = getElement();
-			const menuItem =
-				ref instanceof Element
-					? ref.closest(SELECTORS.menuItemWithChild)
-					: null;
+				if (
+					context.menuType !== 'simple' ||
+					context.submenuOpensOnClick ||
+					state.isTouchEnabled
+				) {
+					return;
+				}
 
-			ensureContextCollections(context);
+				if (context.openModes[submenuId] !== HOVER_OPEN_MODE) {
+					return;
+				}
 
-			if (context.openSubmenus.includes(submenuId)) {
 				closeSubmenu(context, submenuId);
-				return;
-			}
+			},
+			toggleSubmenuOnClick: () => {
+				const context = getContext();
+				const submenuId = context.submenuId;
+				const { ref } = getElement();
+				const menuItem =
+					ref?.nodeType === 1
+						? ref.closest(SELECTORS.menuItemWithChild)
+						: null;
 
-			openSubmenu(context, submenuId, CLICK_OPEN_MODE);
+				if (context.openSubmenus.includes(submenuId)) {
+					closeSubmenu(context, submenuId);
+					return;
+				}
 
-			if ('drill-down' === context.menuType && menuItem) {
-				activateDrillDownSubmenuTrap(context, submenuId, menuItem);
-			}
-		},
-		closeSubmenuOnClick: () => {
-			const context = getContext();
+				openSubmenu(context, submenuId, CLICK_OPEN_MODE);
 
-			ensureContextCollections(context);
-			closeSubmenu(context, context.submenuId);
-		},
-		handleNavKeydown: withSyncEvent((event) => {
-			const eventTarget =
-				event.target instanceof Element ? event.target : null;
-			const key = event.key;
+				if ('drill-down' === context.menuType && menuItem) {
+					activateDrillDownSubmenuTrap(context, submenuId, menuItem);
+				}
+			},
+			closeSubmenuOnClick: () => {
+				const context = getContext();
 
-			if (
-				!eventTarget ||
-				![
-					'Escape',
-					'ArrowUp',
-					'ArrowDown',
-					'ArrowLeft',
-					'ArrowRight',
-					'Home',
-					'End',
-				].includes(key)
-			) {
-				return;
-			}
+				closeSubmenu(context, context.submenuId);
+			},
+			handleNavKeydown: withSyncEvent((event) => {
+				const eventTarget = getEventTargetElement(event);
+				const key = event.key;
 
-			const context = getContext();
+				if (!eventTarget || !NAV_KEYS.has(key)) {
+					return;
+				}
 
-			ensureContextCollections(context);
+				const context = getContext();
 
-			if (key === 'Escape') {
-				handleSubmenuEscapeKey(
-					event,
-					context,
-					getNavigationElement(eventTarget)
-				);
-				return;
-			}
+				if (key === 'Escape') {
+					handleSubmenuEscapeKey(
+						event,
+						context,
+						getNavigationElement(eventTarget)
+					);
+					return;
+				}
 
-			if (context.menuType !== 'simple') {
-				return;
-			}
+				const { ref } = getElement();
+				handleArrowKeyboard(event, context, ref);
+			}),
+			handleNavFocusOut: (event) => {
+				const context = getContext();
 
-			const { ref } = getElement();
-			handleSimpleMenuKeyboard(event, context, ref);
-		}),
-		handleNavFocusOut: (event) => {
-			const context = getContext();
+				if (context.menuType !== 'simple') {
+					return;
+				}
 
-			if (context.menuType !== 'simple') {
-				return;
-			}
+				const { ref } = getElement();
+				const nextFocusedElement = event.relatedTarget;
 
-			const { ref } = getElement();
-			const nextFocusedElement = event.relatedTarget;
-
-			ensureContextCollections(context);
-
-			closeSubmenusWithoutFocus(context, ref, nextFocusedElement);
+				closeSubmenusWithoutFocus(context, ref, nextFocusedElement);
+			},
 		},
 	},
-	callbacks: {
-		isTouchEnabled: () => {
-			const { state } = store('eighteen73/navigation');
-			const hasTouchSupport =
-				'ontouchstart' in window ||
-				window.navigator.maxTouchPoints > 0 ||
-				window.navigator.msMaxTouchPoints > 0;
+	{ lock: true }
+);
 
-			state.isTouchEnabled = hasTouchSupport;
-
-			return hasTouchSupport;
-		},
-		isSubmenuOpen: () => {
-			const context = getContext();
-
-			return (
-				Array.isArray(context.openSubmenus) &&
-				context.openSubmenus.includes(context.submenuId)
-			);
-		},
-		isAriaExpanded: () => {
-			const context = getContext();
-
-			return (
-				Array.isArray(context.openSubmenus) &&
-				context.openSubmenus.includes(context.submenuId)
-			);
-		},
-	},
-});
+// Safari iOS/iPadOS requires a document click listener for reliable focusout.
+document.addEventListener('click', () => {});
