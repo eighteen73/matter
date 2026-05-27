@@ -1,13 +1,14 @@
 @use "../../constants/breakpoints" as bp;
 
 .wp-block-eighteen73-blocks-carousel {
-	--wp--custom--eighteen73-carousel--slide--gap: 0;
+	--wp--custom--eighteen73-carousel--slide--gap: var(--wp--custom--eighteen73-carousel--slide--gap-base, 0);
 	--wp--custom--eighteen73-carousel--slides-to-show: var(--wp--custom--eighteen73-carousel--slides-to-show-base, 1);
 	--wp--custom--eighteen73-carousel--slide--width: calc(100% / var(--wp--custom--eighteen73-carousel--slides-to-show));
 
 	@each $name, $size in bp.$breakpoints {
 		@media (--#{$name}) {
 			--wp--custom--eighteen73-carousel--slides-to-show: var(--wp--custom--eighteen73-carousel--slides-to-show-#{$name}, var(--wp--custom--eighteen73-carousel--slides-to-show-base));
+			--wp--custom--eighteen73-carousel--slide--gap: var(--wp--custom--eighteen73-carousel--slide--gap-#{$name}, var(--wp--custom--eighteen73-carousel--slide--gap-base, 0));
 		}
 	}
 

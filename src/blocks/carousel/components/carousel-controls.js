@@ -14,6 +14,7 @@ import { __ } from '@wordpress/i18n';
 import { settings, arrowDown, arrowRight } from '@wordpress/icons';
 
 import breakpoints from '../../../constants/breakpoints';
+import SpacingControl from '../../../components/spacing-control';
 import { DEFAULT_EMBLA_CONFIG } from '../../../utils/embla-block-config';
 
 const BASE_TAB = 'base';
@@ -80,6 +81,19 @@ function CarouselFields({
 				min={1}
 				max={10}
 				step={1}
+			/>
+
+			<SpacingControl
+				label={__('Slide gap', 'eighteen73-blocks')}
+				value={options.slideGap}
+				onChange={(value) =>
+					onChangeOption(
+						'slideGap',
+						value === undefined
+							? DEFAULT_EMBLA_CONFIG.options.slideGap
+							: value
+					)
+				}
 			/>
 
 			<ToggleGroupControl
@@ -218,6 +232,7 @@ export default function CarouselControls({
 						baseOptions.slidesToScroll,
 					slidesToShow:
 						layerOptions.slidesToShow ?? baseOptions.slidesToShow,
+					slideGap: layerOptions.slideGap ?? baseOptions.slideGap,
 					active: layerOptions.active ?? baseOptions.active,
 				};
 				const effectiveAutoplay = {

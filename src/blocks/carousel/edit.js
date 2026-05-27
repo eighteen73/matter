@@ -29,6 +29,7 @@ import {
 	normalizeEmblaConfig,
 	prepareEmblaBlockState,
 } from '../../utils/embla-block-config';
+import { buildResponsiveSpacingCssVars } from '../../utils/spacing';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
@@ -154,10 +155,19 @@ export default function Edit({
 		'--wp--custom--eighteen73-carousel--slides-to-show-base':
 			resolvedConfig.options.slidesToShow,
 	};
+	const slideGapCssVars = buildResponsiveSpacingCssVars({
+		prefix: '--wp--custom--eighteen73-carousel--slide--gap',
+		baseValue: resolvedConfig.options.slideGap,
+		breakpointLayers: resolvedConfig.breakpointLayers,
+		breakpointTokens: Object.keys(breakpoints),
+	});
 
 	const blockProps = useBlockProps({
 		className: 'embla',
-		style: slidesToShowCssVars,
+		style: {
+			...slidesToShowCssVars,
+			...slideGapCssVars,
+		},
 	});
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
@@ -229,13 +239,19 @@ export default function Edit({
 	// needs a reInit to reflect immediately in the editor.
 	const slidesToShowSignature = useMemo(() => {
 		const base = resolvedConfig.options.slidesToShow;
+		const baseSlideGap = resolvedConfig.options.slideGap;
 		const layers = resolvedConfig.breakpointLayers || {};
 		const perBp = Object.keys(breakpoints).map((token) => [
 			token,
 			layers?.[token]?.options?.slidesToShow,
+			layers?.[token]?.options?.slideGap,
 		]);
-		return JSON.stringify({ base, perBp });
-	}, [resolvedConfig.options.slidesToShow, resolvedConfig.breakpointLayers]);
+		return JSON.stringify({ base, baseSlideGap, perBp });
+	}, [
+		resolvedConfig.options.slidesToShow,
+		resolvedConfig.options.slideGap,
+		resolvedConfig.breakpointLayers,
+	]);
 
 	useEffect(() => {
 		if (!emblaApi) {

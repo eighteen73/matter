@@ -13,6 +13,7 @@ export const DEFAULT_EMBLA_CONFIG = {
 		axis: 'x',
 		slidesToScroll: 1,
 		slidesToShow: 1,
+		slideGap: '',
 		active: true,
 	},
 	plugins: {

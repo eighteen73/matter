@@ -8,6 +8,9 @@
  * @package Eighteen73Blocks\\Carousel
  */
 
+use Eighteen73\Blocks\Config;
+use Eighteen73\Blocks\Spacing\Styles as SpacingStyles;
+
 $embla_config = isset( $attributes['emblaConfig'] ) && is_array( $attributes['emblaConfig'] )
 	? $attributes['emblaConfig']
 	: [];
@@ -29,19 +32,39 @@ $carousel_context = [
 	'carouselId'               => $carousel_id,
 ];
 
+$breakpoint_tokens = array_keys( Config::file( 'breakpoints' ) );
+$breakpoint_layers = isset( $embla_config['breakpointLayers'] ) && is_array( $embla_config['breakpointLayers'] )
+	? $embla_config['breakpointLayers']
+	: [];
+$base_options      = isset( $embla_config['options'] ) && is_array( $embla_config['options'] )
+	? $embla_config['options']
+	: [];
+$content           = isset( $content ) && is_string( $content ) ? $content : '';
+
 // Generate CSS variables for slidesToShow
-$slides_to_show = [];
-foreach ( $embla_config['breakpointLayers'] as $breakpoint => $layer ) {
-	$slides_to_show[ $breakpoint ] = $layer['options']['slidesToShow'] ?? $embla_config['options']['slidesToShow'] ?? 1;
+$slides_to_show = [
+	'base' => $base_options['slidesToShow'] ?? 1,
+];
+foreach ( $breakpoint_tokens as $breakpoint ) {
+	$slides_to_show[ $breakpoint ] = $breakpoint_layers[ $breakpoint ]['options']['slidesToShow'] ?? $slides_to_show['base'];
 }
-$slides_to_show['base'] = $embla_config['options']['slidesToShow'] ?? 1;
 
 $slides_to_show_css_variables = [];
 foreach ( $slides_to_show as $breakpoint => $value ) {
 	$slides_to_show_css_variables[] = "--wp--custom--eighteen73-carousel--slides-to-show-{$breakpoint}: {$value}";
 }
 
-$slides_to_show_css_variables = implode( '; ', $slides_to_show_css_variables );
+$slide_gap_css_variables = SpacingStyles::get_responsive_css_vars(
+	'--wp--custom--eighteen73-carousel--slide--gap',
+	isset( $base_options['slideGap'] ) && is_string( $base_options['slideGap'] ) ? $base_options['slideGap'] : '',
+	$breakpoint_layers,
+	$breakpoint_tokens
+);
+
+$styles = implode( '; ', $slides_to_show_css_variables );
+if ( '' !== $slide_gap_css_variables ) {
+	$styles .= '; ' . $slide_gap_css_variables;
+}
 ?>
 
 <div
@@ -52,7 +75,7 @@ $slides_to_show_css_variables = implode( '; ', $slides_to_show_css_variables );
 				'id'                  => $carousel_id,
 				'data-wp-interactive' => 'eighteen73-blocks/carousel',
 				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
-				'style'               => $slides_to_show_css_variables,
+				'style'               => $styles,
 			]
 		)
 		. ' '
