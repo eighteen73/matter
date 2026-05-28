@@ -20,10 +20,11 @@ class Navigation {
 	/**
 	 * Build navigation markup for block attributes.
 	 *
-	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array<string, mixed> $attributes              Block attributes.
+	 * @param bool                 $include_block_wrapper   When false, returns only the menu list markup for editor preview (wrapper comes from useBlockProps).
 	 * @return string
 	 */
-	public static function render( array $attributes ): string {
+	public static function render( array $attributes, bool $include_block_wrapper = true ): string {
 		$menu_id                = isset( $attributes['ref'] ) ? absint( $attributes['ref'] ) : 0;
 		$type                   = isset( $attributes['type'] ) ? (string) $attributes['type'] : 'simple';
 		$type                   = in_array( $type, [ 'simple', 'accordion', 'drill-down' ], true ) ? $type : 'simple';
@@ -63,6 +64,17 @@ class Navigation {
 			'openModes'           => (object) [],
 		];
 
+		$color_style = Styles::get_styles( $attributes, Config::get( 'colors', 'navigation' ) );
+
+		if ( ! $include_block_wrapper ) {
+			// Wrap the list so core layout support classes attach here, not on the ul.
+			// The editor extracts only the ul for the useBlockProps nav wrapper.
+			return sprintf(
+				'<div class="eighteen73-navigation-editor-chrome"><ul class="wp-block-eighteen73-navigation__container">%1$s</ul></div>',
+				$items
+			);
+		}
+
 		$data_wp_context = function_exists( 'wp_interactivity_data_wp_context' )
 			? wp_interactivity_data_wp_context( $context_data )
 			: 'data-wp-context="' . esc_attr( wp_json_encode( $context_data ) ) . '"';
@@ -72,7 +84,7 @@ class Navigation {
 			get_block_wrapper_attributes(
 				[
 					'class' => implode( ' ', $nav_classes ),
-					'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'navigation' ) ),
+					'style' => $color_style,
 				],
 			),
 			$data_wp_context,

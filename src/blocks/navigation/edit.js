@@ -1,6 +1,7 @@
 import {
 	BlockControls,
 	InspectorControls,
+	useBlockEditContext,
 	useBlockProps,
 } from '@wordpress/block-editor';
 import { useEntityRecords } from '@wordpress/core-data';
@@ -22,7 +23,28 @@ import { useServerSideRender } from '@wordpress/server-side-render';
 import { __, sprintf } from '@wordpress/i18n';
 
 import ColorControl from '../../components/color-control';
-import { storeColorValue } from '../../utils/colors';
+import { getColorStyles, storeColorValue } from '../../utils/colors';
+
+/**
+ * Extract menu list markup from the editor SSR response.
+ *
+ * Core layout support adds classes to the first tag in rendered block HTML.
+ * We wrap the list in a throwaway div server-side so layout classes stay off the ul.
+ *
+ * @param {string} html Server-rendered block HTML.
+ * @return {string} List markup for the nav wrapper.
+ */
+function extractNavigationListMarkup(html) {
+	if (!html) {
+		return '';
+	}
+
+	const match = html.match(
+		/<ul\s+class="wp-block-eighteen73-navigation__container"[^>]*>[\s\S]*<\/ul>/
+	);
+
+	return match ? match[0] : html;
+}
 
 function getMenuTitle(menu) {
 	const renderedTitle = menu?.title?.rendered;
@@ -217,10 +239,19 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		submenuIconColor,
 		backIconColor,
 	} = attributes;
+	const { __unstableLayoutClassNames = '' } = useBlockEditContext();
 	const previewRef = useRef(null);
-	const blockProps = useBlockProps({ ref: previewRef });
+	const customColorStyles = useMemo(
+		() => getColorStyles(attributes, 'navigation'),
+		[attributes]
+	);
+	const blockProps = useBlockProps({
+		ref: previewRef,
+		style: customColorStyles,
+	});
 	const editorNavClassName = [
 		blockProps.className,
+		__unstableLayoutClassNames,
 		`is-menu-type-${type}`,
 		submenuOpensOnClick
 			? 'is-submenu-opens-on-click'
@@ -258,17 +289,33 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		{ value: 'accordion', label: __('Accordion', 'eighteen73-blocks') },
 		{ value: 'drill-down', label: __('Drill-down', 'eighteen73-blocks') },
 	];
+	const serverSideAttributes = useMemo(
+		() => ({
+			ref: attributes.ref,
+			type: attributes.type,
+			submenuOpensOnClick: attributes.submenuOpensOnClick,
+		}),
+		[attributes.ref, attributes.type, attributes.submenuOpensOnClick]
+	);
 	const { content: serverRenderedPreview = '', status: serverRenderStatus } =
 		useServerSideRender({
 			block: 'eighteen73/navigation',
-			attributes,
+			attributes: serverSideAttributes,
+			skipBlockSupportAttributes: true,
 		});
+	const menuListMarkup = useMemo(
+		() => extractNavigationListMarkup(serverRenderedPreview),
+		[serverRenderedPreview]
+	);
 	const hasServerRenderedPreview =
-		typeof serverRenderedPreview === 'string' &&
-		serverRenderedPreview.length > 0;
+		typeof menuListMarkup === 'string' && menuListMarkup.length > 0;
 	const previewSignature = useMemo(
-		() => JSON.stringify({ attributes, serverRenderedPreview }),
-		[attributes, serverRenderedPreview]
+		() =>
+			JSON.stringify({
+				serverSideAttributes,
+				serverRenderedPreview,
+			}),
+		[serverSideAttributes, serverRenderedPreview]
 	);
 
 	useEditorPreviewInteractions(previewRef, {
@@ -506,10 +553,11 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				serverRenderStatus !== 'loading' &&
 				serverRenderStatus !== 'error' &&
 				hasServerRenderedPreview && (
-					<div
+					<nav
 						{...blockProps}
+						className={editorNavClassName || undefined}
 						dangerouslySetInnerHTML={{
-							__html: serverRenderedPreview,
+							__html: menuListMarkup,
 						}}
 					/>
 				)}
