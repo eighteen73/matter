@@ -14,16 +14,28 @@ import {
  * A reusable color control that handles color palettes and custom colors.
  * can be used as a drop-in replacement for standard color controls.
  *
- * @param {Object}   props          Component properties.
- * @param {string}   props.label    Label for the color control.
- * @param {string}   props.value    Current color value (slug or hex).
- * @param {Function} props.onChange Callback when color changes. Receives (colorValue, colorSlug).
- * @param {string}   props.panelId  ID for the dropdown panel.
- * @param {Object}   props.props    Additional props to pass to ColorGradientSettingsDropdown.
+ * @param {Object}   props                Component properties.
+ * @param {string}   props.label          Label for the color control.
+ * @param {string}   props.value          Current color value (slug or hex).
+ * @param {Function} props.onChange       Callback when color changes. Receives (colorValue, colorSlug).
+ * @param {string}   props.panelId        ID for the dropdown panel.
+ * @param {string}   props.attributeName  Block attribute cleared by reset actions.
+ * @param {Function} props.resetAllFilter Optional ToolsPanel reset-all filter.
+ * @param {boolean}  props.clearable      Show per-control reset button when set.
+ * @param {Object}   props.props          Additional props to pass to ColorGradientSettingsDropdown.
  *
  * @return {JSX.Element} The ColorControl component.
  */
-const ColorControl = ({ label, value, onChange, panelId, ...props }) => {
+const ColorControl = ({
+	label,
+	value,
+	onChange,
+	panelId,
+	attributeName,
+	resetAllFilter,
+	clearable = true,
+	...props
+}) => {
 	const colorGradientSettings = useMultipleOriginColorsAndGradients();
 
 	// Helper function to find color slug from color value
@@ -83,18 +95,36 @@ const ColorControl = ({ label, value, onChange, panelId, ...props }) => {
 		return colorValue;
 	};
 
+	const resolvedColorValue = getResolvedColor(value);
+
+	const settingResetAllFilter =
+		resetAllFilter ||
+		(attributeName
+			? () => ({
+					[attributeName]: '',
+				})
+			: undefined);
+
 	return (
 		<ColorGradientSettingsDropdown
 			settings={[
 				{
 					label,
-					colorValue: getResolvedColor(value),
+					clearable,
+					colorValue: resolvedColorValue,
 					onColorChange: (newColor) => {
-						const slug = getColorSlug(newColor);
-						if (onChange) {
-							onChange(newColor, slug);
+						if (!onChange) {
+							return;
 						}
+
+						if (newColor === undefined) {
+							onChange(undefined, undefined);
+							return;
+						}
+
+						onChange(newColor, getColorSlug(newColor));
 					},
+					resetAllFilter: settingResetAllFilter,
 				},
 			]}
 			panelId={panelId}

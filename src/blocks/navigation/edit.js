@@ -416,6 +416,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<ColorControl
 					label={__('Submenu text', 'eighteen73-blocks')}
 					value={submenuTextColor}
+					attributeName="submenuTextColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							submenuTextColor: storeColorValue(slug, value),
@@ -426,6 +427,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<ColorControl
 					label={__('Submenu background', 'eighteen73-blocks')}
 					value={submenuBackgroundColor}
+					attributeName="submenuBackgroundColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							submenuBackgroundColor: storeColorValue(
@@ -440,6 +442,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<ColorControl
 					label={__('Submenu icon', 'eighteen73-blocks')}
 					value={submenuIconColor}
+					attributeName="submenuIconColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							submenuIconColor: storeColorValue(slug, value),
@@ -453,6 +456,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						<ColorControl
 							label={__('Back text', 'eighteen73-blocks')}
 							value={backTextColor}
+							attributeName="backTextColor"
 							onChange={(value, slug) =>
 								setAttributes({
 									backTextColor: storeColorValue(slug, value),
@@ -464,6 +468,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						<ColorControl
 							label={__('Back background', 'eighteen73-blocks')}
 							value={backBackgroundColor}
+							attributeName="backBackgroundColor"
 							onChange={(value, slug) =>
 								setAttributes({
 									backBackgroundColor: storeColorValue(
@@ -478,6 +483,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						<ColorControl
 							label={__('Back icon', 'eighteen73-blocks')}
 							value={backIconColor}
+							attributeName="backIconColor"
 							onChange={(value, slug) =>
 								setAttributes({
 									backIconColor: storeColorValue(slug, value),
