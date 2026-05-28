@@ -3,7 +3,7 @@ import {
 	InspectorControls,
 	useBlockProps,
 } from '@wordpress/block-editor';
-import { useEntityRecord, useEntityRecords } from '@wordpress/core-data';
+import { useEntityRecords } from '@wordpress/core-data';
 import {
 	ExternalLink,
 	SelectControl,
@@ -12,17 +12,17 @@ import {
 	ToggleControl,
 	ToolbarButton,
 } from '@wordpress/components';
-import { parse } from '@wordpress/blocks';
 import {
 	createInterpolateElement,
 	useEffect,
 	useMemo,
-	useState,
+	useRef,
 } from '@wordpress/element';
+import { useServerSideRender } from '@wordpress/server-side-render';
 import { __, sprintf } from '@wordpress/i18n';
 
 import ColorControl from '../../components/color-control';
-import { getColorStyles, storeColorValue } from '../../utils/colors';
+import { storeColorValue } from '../../utils/colors';
 
 function getMenuTitle(menu) {
 	const renderedTitle = menu?.title?.rendered;
@@ -38,261 +38,171 @@ function getMenuTitle(menu) {
 	);
 }
 
-/**
- * Build link attributes for preview links.
- *
- * @param {Object} attributes Navigation item attributes.
- * @return {Object} Link display and attribute values.
- */
-function getPreviewLinkAttributes(attributes = {}) {
-	const label =
-		typeof attributes.label === 'string' && attributes.label.length
-			? attributes.label
-			: __('Untitled menu item', 'eighteen73-blocks');
-	const url =
-		typeof attributes.url === 'string' && attributes.url.length
-			? attributes.url
-			: '#';
-	const target = attributes.opensInNewTab ? '_blank' : undefined;
-	let rel = typeof attributes.rel === 'string' ? attributes.rel.trim() : '';
-
-	if (attributes.opensInNewTab) {
-		rel = `${rel} noopener noreferrer`.trim();
-	}
-
-	return {
-		label,
-		url,
-		target,
-		rel: rel || undefined,
-	};
-}
-
-/**
- * Parse serialized navigation content to blocks.
- *
- * @param {Object} menu Selected navigation menu entity.
- * @return {Array} Parsed blocks.
- */
-function getParsedNavigationBlocks(menu) {
-	const content = menu?.content?.raw || '';
-
-	if (typeof content !== 'string' || !content.length) {
-		return [];
-	}
-
-	try {
-		return parse(content);
-	} catch (error) {
-		return [];
-	}
-}
-
-/**
- * Render preview item markup recursively.
- *
- * @param {Object} props Component props.
- * @return {JSX.Element|null} Preview items.
- */
-function NavigationPreviewItems(props) {
-	const {
-		blocks,
-		type,
-		submenuOpensOnClick,
-		openSubmenus,
-		setOpenSubmenus,
-		pathPrefix = '',
-	} = props;
-
-	return blocks.map((parsedBlock, index) => {
-		const blockName = parsedBlock?.name || parsedBlock?.blockName || '';
-		const attributes = parsedBlock?.attributes || parsedBlock?.attrs || {};
-		const itemPath = `${pathPrefix}${index}`;
-
-		if (blockName === 'core/navigation-link') {
-			const { label, url, target, rel } =
-				getPreviewLinkAttributes(attributes);
-
-			return (
-				<li key={itemPath} className="wp-block-navigation-item">
-					<a
-						className="wp-block-navigation-item__content"
-						href={url}
-						target={target}
-						rel={rel}
-						onClick={(event) => event.preventDefault()}
-					>
-						{label}
-					</a>
-				</li>
-			);
-		}
-
-		if (blockName !== 'core/navigation-submenu') {
-			return null;
-		}
-
-		const children = Array.isArray(parsedBlock?.innerBlocks)
-			? parsedBlock.innerBlocks
-			: [];
-		const { label, url, target, rel } =
-			getPreviewLinkAttributes(attributes);
-		const hasChildren = children.length > 0;
-		const submenuId = `preview-submenu-${itemPath}`;
-		const isOpen = openSubmenus.includes(itemPath);
-		const showHoverMode = type === 'simple' && !submenuOpensOnClick;
-		const liClassName = [
-			'wp-block-navigation-item',
-			'has-child',
-			isOpen ? 'has-open-submenu' : '',
-		]
-			.filter(Boolean)
-			.join(' ');
-
-		const toggleSubmenu = () => {
-			setOpenSubmenus((currentOpenSubmenus) => {
-				if (currentOpenSubmenus.includes(itemPath)) {
-					return currentOpenSubmenus.filter((id) => id !== itemPath);
-				}
-
-				return [...currentOpenSubmenus, itemPath];
-			});
-		};
-
-		const closeSubmenu = () => {
-			setOpenSubmenus((currentOpenSubmenus) =>
-				currentOpenSubmenus.filter((id) => id !== itemPath)
-			);
-		};
-
-		if (!hasChildren) {
-			return (
-				<li key={itemPath} className="wp-block-navigation-item">
-					<a
-						className="wp-block-navigation-item__content"
-						href={url}
-						target={target}
-						rel={rel}
-						onClick={(event) => event.preventDefault()}
-					>
-						{label}
-					</a>
-				</li>
-			);
-		}
-
-		return (
-			<li
-				key={itemPath}
-				className={liClassName}
-				{...(showHoverMode
-					? {
-							onMouseEnter: toggleSubmenu,
-							onMouseLeave: closeSubmenu,
-						}
-					: {})}
-			>
-				<a
-					className="wp-block-navigation-item__content"
-					href={url}
-					target={target}
-					rel={rel}
-					onClick={(event) => event.preventDefault()}
-				>
-					{label}
-				</a>
-				<button
-					type="button"
-					className="wp-block-eighteen73-navigation__submenu-toggle"
-					onClick={toggleSubmenu}
-					aria-expanded={isOpen}
-					aria-controls={submenuId}
-					aria-label={sprintf(
-						/* translators: %s: menu item label. */
-						__('Toggle submenu for %s', 'eighteen73-blocks'),
-						label
-					)}
-				>
-					<span className="wp-block-eighteen73-navigation__submenu-toggle-text">
-						{label}
-					</span>
-				</button>
-				<div
-					id={submenuId}
-					className="wp-block-eighteen73-navigation__submenu"
-					aria-hidden={!isOpen}
-					{...(type === 'drill-down' ? { tabIndex: -1 } : {})}
-				>
-					{type === 'drill-down' && (
-						<button
-							type="button"
-							className="wp-block-eighteen73-navigation__back"
-							onClick={closeSubmenu}
-						>
-							{__('Back', 'eighteen73-blocks')}
-						</button>
-					)}
-					<ul className="wp-block-navigation__submenu-container">
-						<NavigationPreviewItems
-							blocks={children}
-							type={type}
-							submenuOpensOnClick={submenuOpensOnClick}
-							openSubmenus={openSubmenus}
-							setOpenSubmenus={setOpenSubmenus}
-							pathPrefix={`${itemPath}-`}
-						/>
-					</ul>
-				</div>
-			</li>
-		);
-	});
-}
-
-/**
- * Render read-only navigation preview.
- *
- * @param {Object} props Component props.
- * @return {JSX.Element} Navigation preview markup.
- */
-function NavigationPreview(props) {
-	const { menu, colorStyles, type, submenuOpensOnClick } = props;
-	const [openSubmenus, setOpenSubmenus] = useState([]);
-	const blocks = useMemo(() => getParsedNavigationBlocks(menu), [menu]);
-	const navClassName = [`is-menu-type-${type}`];
-
-	navClassName.push(
-		submenuOpensOnClick
-			? 'is-submenu-opens-on-click'
-			: 'is-submenu-opens-on-hover'
-	);
+function useEditorPreviewInteractions(containerRef, options) {
+	const { type, submenuOpensOnClick, previewSignature } = options;
 
 	useEffect(() => {
-		setOpenSubmenus([]);
-	}, [menu?.id, type, submenuOpensOnClick]);
+		const container = containerRef.current;
 
-	if (!blocks.length) {
-		return (
-			<nav style={colorStyles} className={navClassName.join(' ')}>
-				<p className="wp-block-eighteen73-navigation__empty">
-					{__('This menu has no items yet.', 'eighteen73-blocks')}
-				</p>
-			</nav>
-		);
-	}
+		if (!container) {
+			return undefined;
+		}
 
-	return (
-		<nav style={colorStyles} className={navClassName.join(' ')}>
-			<ul className="wp-block-eighteen73-navigation__container">
-				<NavigationPreviewItems
-					blocks={blocks}
-					type={type}
-					submenuOpensOnClick={submenuOpensOnClick}
-					openSubmenus={openSubmenus}
-					setOpenSubmenus={setOpenSubmenus}
-				/>
-			</ul>
-		</nav>
-	);
+		const setSubmenuOpen = (menuItem, isOpen) => {
+			if (!menuItem) {
+				return;
+			}
+
+			menuItem.classList.toggle('has-open-submenu', isOpen);
+
+			const toggle = menuItem.querySelector(
+				'.wp-block-eighteen73-navigation__submenu-toggle'
+			);
+			const submenu = menuItem.querySelector(
+				'.wp-block-eighteen73-navigation__submenu'
+			);
+
+			if (toggle) {
+				toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+			}
+
+			if (submenu) {
+				submenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+			}
+		};
+
+		const closeAllSubmenus = () => {
+			container
+				.querySelectorAll('.wp-block-navigation-item.has-child')
+				.forEach((menuItem) => {
+					setSubmenuOpen(menuItem, false);
+				});
+		};
+
+		closeAllSubmenus();
+
+		const handleClick = (event) => {
+			const target = event.target;
+
+			if (!target || target.nodeType !== 1) {
+				return;
+			}
+
+			const link = target.closest('.wp-block-navigation-item__content');
+			if (link) {
+				event.preventDefault();
+			}
+
+			const toggle = target.closest(
+				'.wp-block-eighteen73-navigation__submenu-toggle'
+			);
+			if (toggle) {
+				event.preventDefault();
+				const menuItem = toggle.closest(
+					'.wp-block-navigation-item.has-child'
+				);
+
+				if (!menuItem) {
+					return;
+				}
+
+				setSubmenuOpen(
+					menuItem,
+					!menuItem.classList.contains('has-open-submenu')
+				);
+				return;
+			}
+
+			const backButton = target.closest(
+				'.wp-block-eighteen73-navigation__back'
+			);
+			if (!backButton) {
+				return;
+			}
+
+			event.preventDefault();
+			const submenu = backButton.closest(
+				'.wp-block-eighteen73-navigation__submenu'
+			);
+
+			if (!submenu) {
+				return;
+			}
+
+			const menuItem = submenu.closest(
+				'.wp-block-navigation-item.has-child'
+			);
+			setSubmenuOpen(menuItem, false);
+		};
+
+		const shouldUseHover = type === 'simple' && !submenuOpensOnClick;
+
+		const handleMouseOver = (event) => {
+			if (
+				!shouldUseHover ||
+				!event.target ||
+				event.target.nodeType !== 1
+			) {
+				return;
+			}
+
+			const menuItem = event.target.closest(
+				'.wp-block-navigation-item.has-child'
+			);
+
+			if (!menuItem || !container.contains(menuItem)) {
+				return;
+			}
+
+			if (
+				event.relatedTarget &&
+				event.relatedTarget.nodeType === 1 &&
+				menuItem.contains(event.relatedTarget)
+			) {
+				return;
+			}
+
+			setSubmenuOpen(menuItem, true);
+		};
+
+		const handleMouseOut = (event) => {
+			if (
+				!shouldUseHover ||
+				!event.target ||
+				event.target.nodeType !== 1
+			) {
+				return;
+			}
+
+			const menuItem = event.target.closest(
+				'.wp-block-navigation-item.has-child'
+			);
+
+			if (!menuItem || !container.contains(menuItem)) {
+				return;
+			}
+
+			if (
+				event.relatedTarget &&
+				event.relatedTarget.nodeType === 1 &&
+				menuItem.contains(event.relatedTarget)
+			) {
+				return;
+			}
+
+			setSubmenuOpen(menuItem, false);
+		};
+
+		container.addEventListener('click', handleClick);
+		container.addEventListener('mouseover', handleMouseOver);
+		container.addEventListener('mouseout', handleMouseOut);
+
+		return () => {
+			container.removeEventListener('click', handleClick);
+			container.removeEventListener('mouseover', handleMouseOver);
+			container.removeEventListener('mouseout', handleMouseOut);
+		};
+	}, [containerRef, previewSignature, submenuOpensOnClick, type]);
 }
 
 export default function Edit({ attributes, setAttributes, clientId }) {
@@ -307,8 +217,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		submenuIconColor,
 		backIconColor,
 	} = attributes;
-	const colorStyles = getColorStyles(attributes, 'navigation');
-	const blockProps = useBlockProps({ style: colorStyles });
+	const previewRef = useRef(null);
+	const blockProps = useBlockProps({ ref: previewRef });
 	const editorNavClassName = [
 		blockProps.className,
 		`is-menu-type-${type}`,
@@ -329,31 +239,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			status: ['publish', 'draft'],
 		}
 	);
-	const { records: selectedMenuRecords } = useEntityRecords(
-		'postType',
-		'wp_navigation',
-		{
-			per_page: 1,
-			include: ref ? [ref] : [],
-			context: 'edit',
-			status: ['publish', 'draft'],
-		}
-	);
-	const { record: selectedMenu, isResolving: isResolvingSelectedMenu } =
-		useEntityRecord('postType', 'wp_navigation', ref || 0, {
-			context: 'edit',
-		});
 	const navigationEditorUrl = ref
 		? `site-editor.php?postType=wp_navigation&postId=${ref}`
 		: 'site-editor.php?postType=wp_navigation';
-	const selectedMenuFromList = Array.isArray(menus)
-		? menus.find((menu) => menu.id === ref) || null
-		: null;
-	const selectedMenuFromInclude = Array.isArray(selectedMenuRecords)
-		? selectedMenuRecords[0] || null
-		: null;
-	const effectiveSelectedMenu =
-		selectedMenu || selectedMenuFromInclude || selectedMenuFromList || null;
 
 	const menuOptions = [
 		{
@@ -370,6 +258,24 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		{ value: 'accordion', label: __('Accordion', 'eighteen73-blocks') },
 		{ value: 'drill-down', label: __('Drill-down', 'eighteen73-blocks') },
 	];
+	const { content: serverRenderedPreview = '', status: serverRenderStatus } =
+		useServerSideRender({
+			block: 'eighteen73/navigation',
+			attributes,
+		});
+	const hasServerRenderedPreview =
+		typeof serverRenderedPreview === 'string' &&
+		serverRenderedPreview.length > 0;
+	const previewSignature = useMemo(
+		() => JSON.stringify({ attributes, serverRenderedPreview }),
+		[attributes, serverRenderedPreview]
+	);
+
+	useEditorPreviewInteractions(previewRef, {
+		type,
+		submenuOpensOnClick,
+		previewSignature,
+	});
 
 	return (
 		<>
@@ -557,7 +463,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					<Spinner />
 				</nav>
 			)}
-			{!!ref && hasResolved && isResolvingSelectedMenu && (
+			{!!ref && hasResolved && serverRenderStatus === 'loading' && (
 				<nav
 					{...blockProps}
 					className={editorNavClassName || undefined}
@@ -565,17 +471,31 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					<Spinner />
 				</nav>
 			)}
+			{!!ref && hasResolved && serverRenderStatus === 'error' && (
+				<nav
+					{...blockProps}
+					className={editorNavClassName || undefined}
+				>
+					<p className="wp-block-eighteen73-navigation__empty">
+						{__(
+							'The selected menu could not be loaded. Please reselect it from block settings.',
+							'eighteen73-blocks'
+						)}
+					</p>
+				</nav>
+			)}
 			{!!ref &&
 				hasResolved &&
-				!isResolvingSelectedMenu &&
-				!effectiveSelectedMenu && (
+				serverRenderStatus !== 'loading' &&
+				serverRenderStatus !== 'error' &&
+				!hasServerRenderedPreview && (
 					<nav
 						{...blockProps}
 						className={editorNavClassName || undefined}
 					>
 						<p className="wp-block-eighteen73-navigation__empty">
 							{__(
-								'The selected menu could not be loaded. Please reselect it from block settings.',
+								'This menu has no items yet.',
 								'eighteen73-blocks'
 							)}
 						</p>
@@ -583,16 +503,15 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				)}
 			{!!ref &&
 				hasResolved &&
-				!isResolvingSelectedMenu &&
-				!!effectiveSelectedMenu && (
-					<div {...blockProps}>
-						<NavigationPreview
-							menu={effectiveSelectedMenu}
-							colorStyles={colorStyles}
-							type={type}
-							submenuOpensOnClick={submenuOpensOnClick}
-						/>
-					</div>
+				serverRenderStatus !== 'loading' &&
+				serverRenderStatus !== 'error' &&
+				hasServerRenderedPreview && (
+					<div
+						{...blockProps}
+						dangerouslySetInnerHTML={{
+							__html: serverRenderedPreview,
+						}}
+					/>
 				)}
 		</>
 	);
