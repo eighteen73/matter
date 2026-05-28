@@ -13,10 +13,10 @@
 	list-style: none;
 	margin: 0;
 	padding-left: 0;
-}
 
-&.is-content-justification-space-between > .wp-block-eighteen73-navigation__container {
-	flex-grow: 1;
+	.is-content-justification-space-between > & {
+		flex-grow: 1;
+	}
 }
 
 // Navigation item
