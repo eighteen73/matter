@@ -14,20 +14,7 @@ const variations = [
 					allowedBlocks: ['core/image'],
 					lock: { remove: true },
 				},
-				[
-					['core/image'],
-					['core/image'],
-					['core/image'],
-					['core/image'],
-					['core/image'],
-					['core/image'],
-				],
-			],
-			[
-				'eighteen73-blocks/carousel-progress',
-				{
-					indicateCurrentPosition: true,
-				},
+				[['core/image'], ['core/image'], ['core/image']],
 			],
 			[
 				'core/group',
