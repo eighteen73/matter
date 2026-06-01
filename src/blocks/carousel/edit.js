@@ -157,9 +157,22 @@ export default function Edit({
 		orientation: 'vertical',
 		template: [
 			['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
-			['eighteen73-blocks/carousel-progress'],
-			['eighteen73-blocks/carousel-previous-button'],
-			['eighteen73-blocks/carousel-next-button'],
+			[
+				'core/group',
+				{
+					layout: {
+						type: 'flex',
+						justifyContent: 'space-between',
+						flexWrap: 'nowrap',
+						verticalAlignment: 'center',
+					},
+				},
+				[
+					['eighteen73-blocks/carousel-previous-button'],
+					['eighteen73-blocks/carousel-dots'],
+					['eighteen73-blocks/carousel-next-button'],
+				],
+			],
 		],
 		templateLock: false,
 	});
