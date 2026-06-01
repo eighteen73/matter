@@ -3,7 +3,7 @@
 	"apiVersion": 3,
 	"name": "eighteen73-blocks/carousel-previous-button",
 	"version": "0.1.0",
-	"title": "Carousel Previous Button",
+	"title": "Previous Button",
 	"category": "design",
 	"icon": "arrow-left-alt",
 	"description": "Carousel Previous Button",
