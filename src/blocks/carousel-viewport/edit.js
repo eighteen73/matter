@@ -33,7 +33,10 @@ export default function Edit({ attributes, clientId }) {
 		QUERY_ALLOWED_BLOCKS.includes(allowedBlocks[0]);
 
 	const showAppender =
-		isSelected && !hasSelectedInnerBlock && !isQueryOnlyViewport;
+		isSelected &&
+		!hasSelectedInnerBlock &&
+		!isQueryOnlyViewport &&
+		!isSingleInserterEnabled;
 
 	const innerBlocksOptions = {
 		orientation: 'horizontal',
