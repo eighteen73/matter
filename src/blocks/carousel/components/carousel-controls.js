@@ -264,14 +264,15 @@ export default function CarouselControls({
 							}
 						/>
 
-						<Button
-							variant="secondary"
-							isDestructive
-							disabled={!hasLayer}
-							onClick={() => onResetLayer(tab.name)}
-						>
-							{__('Reset breakpoint', 'eighteen73-blocks')}
-						</Button>
+						{hasLayer && (
+							<Button
+								variant="secondary"
+								isDestructive
+								onClick={() => onResetLayer(tab.name)}
+							>
+								{__('Reset breakpoint', 'eighteen73-blocks')}
+							</Button>
+						)}
 					</>
 				);
 			}}
