@@ -62,15 +62,22 @@ const variations = [
 							},
 							lock: { remove: true },
 						},
-						[['core/post-template', {}, [['core/post-title']]]],
+						[
+							[
+								'core/post-template',
+								{ lock: { remove: true, move: true } },
+								[
+									[
+										'core/post-featured-image',
+										{ isLink: true, aspectRatio: '16/9' },
+									],
+									['core/post-title'],
+									['core/post-excerpt'],
+								],
+							],
+						],
 					],
 				],
-			],
-			[
-				'eighteen73-blocks/carousel-progress',
-				{
-					indicateCurrentPosition: true,
-				},
 			],
 			[
 				'core/group',
