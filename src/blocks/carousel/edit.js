@@ -5,6 +5,7 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	InspectorControls,
+	InnerBlocks,
 } from '@wordpress/block-editor';
 import { PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
@@ -33,6 +34,8 @@ import { buildCarouselStyleVars } from './utils/styles';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
+
+import './editor.scss';
 
 export default function Edit({
 	clientId,
@@ -151,30 +154,6 @@ export default function Edit({
 	const blockProps = useBlockProps({
 		className: 'embla',
 		style: carouselStyleVars,
-	});
-
-	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
-		orientation: 'vertical',
-		template: [
-			['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
-			[
-				'core/group',
-				{
-					layout: {
-						type: 'flex',
-						justifyContent: 'space-between',
-						flexWrap: 'nowrap',
-						verticalAlignment: 'center',
-					},
-				},
-				[
-					['eighteen73-blocks/carousel-previous-button'],
-					['eighteen73-blocks/carousel-dots'],
-					['eighteen73-blocks/carousel-next-button'],
-				],
-			],
-		],
-		templateLock: false,
 	});
 
 	const innerBlocks = useSelect((select) =>
@@ -308,6 +287,34 @@ export default function Edit({
 
 	const uiOptions = resolvedConfig.options;
 	const uiAutoplay = resolvedConfig.plugins.autoplay;
+
+	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
+		orientation: 'vertical',
+		template: [
+			['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
+			[
+				'core/group',
+				{
+					layout: {
+						type: 'flex',
+						justifyContent: 'space-between',
+						flexWrap: 'nowrap',
+						verticalAlignment: 'center',
+					},
+				},
+				[
+					['eighteen73-blocks/carousel-previous-button'],
+					['eighteen73-blocks/carousel-dots'],
+					['eighteen73-blocks/carousel-next-button'],
+				],
+			],
+		],
+		templateLock: false,
+		renderAppender:
+			isSelected && !isInnerBlockSelected
+				? InnerBlocks.ButtonBlockAppender
+				: false,
+	});
 
 	return (
 		<>
