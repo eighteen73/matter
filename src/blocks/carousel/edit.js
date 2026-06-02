@@ -269,6 +269,14 @@ export default function Edit({
 			return;
 		}
 
+		emblaApi.reInit();
+	}, [emblaApi, viewportInnerBlocks.length]);
+
+	useEffect(() => {
+		if (!emblaApi) {
+			return;
+		}
+
 		setAttributes({ emblaApi });
 	}, [emblaApi, setAttributes]);
 
@@ -279,9 +287,12 @@ export default function Edit({
 
 		setAttributes({ emblaApi });
 
-		const block = document.querySelector(`[data-block="${clientId}"]`);
-		const buttons = block?.querySelectorAll('.embla__button');
-		const dotsNode = block?.querySelector('.embla__dots');
+		const emblaRootNode = emblaApi.rootNode?.();
+		const block =
+			emblaRootNode?.closest?.(`[data-block="${clientId}"]`) || null;
+		const controlsScope = block || emblaRootNode || null;
+		const buttons = controlsScope?.querySelectorAll('.embla__button');
+		const dotsNode = controlsScope?.querySelector('.embla__dots');
 
 		if (!buttons || buttons.length < 2 || !dotsNode) {
 			return;
@@ -301,7 +312,7 @@ export default function Edit({
 			removePrevNextBtnsClickHandlers();
 			removeDotBtnsAndClickHandlers();
 		};
-	}, [clientId, emblaApi, innerBlocks, setAttributes]);
+	}, [clientId, emblaApi, innerBlocks, viewportInnerBlocks, setAttributes]);
 
 	const isInnerBlockSelected = useSelect((select) =>
 		select('core/block-editor').hasSelectedInnerBlock(clientId, true)
