@@ -3,10 +3,11 @@ const variations = [
 		name: 'image-carousel',
 		title: 'Image Carousel',
 		description: 'Carousel with image slides and navigation controls',
-		scope: ['inserter'],
+		icon: 'images-alt',
 		attributes: {
 			className: 'is-style-image-carousel',
 		},
+		scope: ['block', 'inserter'],
 		innerBlocks: [
 			[
 				'eighteen73-blocks/carousel-viewport',
@@ -39,9 +40,11 @@ const variations = [
 		name: 'post-carousel',
 		title: 'Post Carousel',
 		description: 'Carousel with post slides and navigation controls',
+		icon: 'admin-post',
 		attributes: {
 			className: 'is-style-post-carousel',
 		},
+		scope: ['block', 'inserter'],
 		innerBlocks: [
 			[
 				'eighteen73-blocks/carousel-viewport',

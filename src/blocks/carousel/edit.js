@@ -34,8 +34,29 @@ import { buildCarouselStyleVars } from './utils/styles';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
+import BlockVariationPicker from '../../components/block-variation-picker';
 
 import './editor.scss';
+
+const DEFAULT_CAROUSEL_TEMPLATE = [
+	['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
+	[
+		'core/group',
+		{
+			layout: {
+				type: 'flex',
+				justifyContent: 'space-between',
+				flexWrap: 'nowrap',
+				verticalAlignment: 'center',
+			},
+		},
+		[
+			['eighteen73-blocks/carousel-previous-button'],
+			['eighteen73-blocks/carousel-dots'],
+			['eighteen73-blocks/carousel-next-button'],
+		],
+	],
+];
 
 export default function Edit({
 	clientId,
@@ -212,7 +233,8 @@ export default function Edit({
 		{
 			...emblaOptions,
 			container: getContainer(),
-			slides: ':scope > :not(.block-list-appender)',
+			slides: '.block-editor-block-list__block:not(.block-list-appender)',
+			watchFocus: false,
 		},
 		emblaPlugins
 	);
@@ -290,31 +312,24 @@ export default function Edit({
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		orientation: 'vertical',
-		template: [
-			['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
-			[
-				'core/group',
-				{
-					layout: {
-						type: 'flex',
-						justifyContent: 'space-between',
-						flexWrap: 'nowrap',
-						verticalAlignment: 'center',
-					},
-				},
-				[
-					['eighteen73-blocks/carousel-previous-button'],
-					['eighteen73-blocks/carousel-dots'],
-					['eighteen73-blocks/carousel-next-button'],
-				],
-			],
-		],
+		template: DEFAULT_CAROUSEL_TEMPLATE,
 		templateLock: false,
 		renderAppender:
 			isSelected && !isInnerBlockSelected
 				? InnerBlocks.ButtonBlockAppender
 				: false,
 	});
+
+	if (innerBlocks.length === 0) {
+		return (
+			<BlockVariationPicker
+				blockName="eighteen73-blocks/carousel"
+				setAttributes={setAttributes}
+				clientId={clientId}
+				defaultTemplate={DEFAULT_CAROUSEL_TEMPLATE}
+			/>
+		);
+	}
 
 	return (
 		<>
