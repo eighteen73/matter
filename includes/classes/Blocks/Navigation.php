@@ -70,7 +70,7 @@ class Navigation {
 			// Wrap the list so core layout support classes attach here, not on the ul.
 			// The editor extracts only the ul for the useBlockProps nav wrapper.
 			return sprintf(
-				'<div class="eighteen73-navigation-editor-chrome"><ul class="wp-block-eighteen73-navigation__container">%1$s</ul></div>',
+				'<div class="eighteen73-navigation-editor-chrome"><ul class="wp-block-eighteen73-navigation__items">%1$s</ul></div>',
 				$items
 			);
 		}
@@ -80,7 +80,7 @@ class Navigation {
 			: 'data-wp-context="' . esc_attr( wp_json_encode( $context_data ) ) . '"';
 
 		return sprintf(
-			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-class--is-touch-enabled="state.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__container">%3$s</ul></nav>',
+			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-class--is-touch-enabled="state.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__items">%3$s</ul></nav>',
 			get_block_wrapper_attributes(
 				[
 					'class' => implode( ' ', $nav_classes ),
@@ -160,7 +160,7 @@ class Navigation {
 				$submenu_tabindex_attr = 'drill-down' === $type ? ' tabindex="-1"' : '';
 
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-container">%12$s</ul></div></li>',
+					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
 					$item_context,
 					$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
 					'' !== $url ? $url : '#',
@@ -187,7 +187,7 @@ class Navigation {
 
 			if ( in_array( $block_name, [ 'core/page-list', 'core/search', 'core/social-links', 'core/buttons', 'core/spacer' ], true ) ) {
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item">%s</li>',
+					'<li class="wp-block-navigation-item has-block-content">%s</li>',
 					render_block( $parsed_block )
 				);
 			}

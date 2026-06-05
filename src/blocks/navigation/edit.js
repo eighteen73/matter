@@ -40,7 +40,7 @@ function extractNavigationListMarkup(html) {
 	}
 
 	const match = html.match(
-		/<ul\s+class="wp-block-eighteen73-navigation__container"[^>]*>[\s\S]*<\/ul>/
+		/<ul\s+class="wp-block-eighteen73-navigation__items"[^>]*>[\s\S]*<\/ul>/
 	);
 
 	return match ? match[0] : html;
@@ -232,12 +232,15 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		ref,
 		type = 'simple',
 		submenuOpensOnClick,
+		iconColor,
+		accentColor,
 		submenuTextColor,
 		submenuBackgroundColor,
 		backTextColor,
 		backBackgroundColor,
 		submenuIconColor,
 		backIconColor,
+		submenuBorderColor,
 	} = attributes;
 	const { __unstableLayoutClassNames = '' } = useBlockEditContext();
 	const previewRef = useRef(null);
@@ -414,6 +417,30 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 			<InspectorControls group="color">
 				<ColorControl
+					label={__('Icon', 'eighteen73-blocks')}
+					value={iconColor}
+					attributeName="iconColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							iconColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Accent', 'eighteen73-blocks')}
+					value={accentColor}
+					attributeName="accentColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							accentColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
 					label={__('Submenu text', 'eighteen73-blocks')}
 					value={submenuTextColor}
 					attributeName="submenuTextColor"
@@ -424,6 +451,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					}
 					panelId={clientId}
 				/>
+
 				<ColorControl
 					label={__('Submenu background', 'eighteen73-blocks')}
 					value={submenuBackgroundColor}
@@ -453,6 +481,21 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 				{type === 'drill-down' && (
 					<>
+						<ColorControl
+							label={__('Submenu border', 'eighteen73-blocks')}
+							value={submenuBorderColor}
+							attributeName="submenuBorderColor"
+							onChange={(value, slug) =>
+								setAttributes({
+									submenuBorderColor: storeColorValue(
+										slug,
+										value
+									),
+								})
+							}
+							panelId={clientId}
+						/>
+
 						<ColorControl
 							label={__('Back text', 'eighteen73-blocks')}
 							value={backTextColor}

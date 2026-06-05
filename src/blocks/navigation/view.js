@@ -15,7 +15,7 @@ const SELECTORS = {
 	focusableSubmenuItems:
 		'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__back, .wp-block-eighteen73-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
-		':scope > .wp-block-eighteen73-navigation__back, :scope > .wp-block-navigation__submenu-container > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-container > .wp-block-navigation-item > .wp-block-eighteen73-navigation__submenu-toggle',
+		':scope > .wp-block-eighteen73-navigation__back, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-eighteen73-navigation__submenu-toggle',
 };
 
 const CLICK_OPEN_MODE = 'click';

@@ -27,6 +27,14 @@
 				"orientation": "vertical"
 			}
 		},
+		"iconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"accentColor": {
+			"type": "string",
+			"default": ""
+		},
 		"submenuTextColor": {
 			"type": "string",
 			"default": ""
@@ -48,6 +56,10 @@
 			"default": ""
 		},
 		"backIconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"submenuBorderColor": {
 			"type": "string",
 			"default": ""
 		}
