@@ -59,7 +59,7 @@
 			"type": "string",
 			"default": ""
 		},
-		"submenuBorderColor": {
+		"submenuDividerColor": {
 			"type": "string",
 			"default": ""
 		}

@@ -240,7 +240,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		backBackgroundColor,
 		submenuIconColor,
 		backIconColor,
-		submenuBorderColor,
+		submenuDividerColor,
 	} = attributes;
 	const { __unstableLayoutClassNames = '' } = useBlockEditContext();
 	const previewRef = useRef(null);
@@ -482,12 +482,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				{type === 'drill-down' && (
 					<>
 						<ColorControl
-							label={__('Submenu border', 'eighteen73-blocks')}
-							value={submenuBorderColor}
-							attributeName="submenuBorderColor"
+							label={__('Submenu divider', 'eighteen73-blocks')}
+							value={submenuDividerColor}
+							attributeName="submenuDividerColor"
 							onChange={(value, slug) =>
 								setAttributes({
-									submenuBorderColor: storeColorValue(
+									submenuDividerColor: storeColorValue(
 										slug,
 										value
 									),
