@@ -29,6 +29,8 @@ class Navigation {
 		$type                   = isset( $attributes['type'] ) ? (string) $attributes['type'] : 'simple';
 		$type                   = in_array( $type, [ 'simple', 'accordion', 'drill-down' ], true ) ? $type : 'simple';
 		$submenu_opens_on_click = ! empty( $attributes['submenuOpensOnClick'] );
+		$show_submenu_label     = ! empty( $attributes['showSubmenuLabel'] );
+		$show_submenu_view_all  = ! empty( $attributes['showSubmenuViewAll'] );
 
 		if ( ! $menu_id ) {
 			return '';
@@ -56,6 +58,14 @@ class Navigation {
 			'is-menu-type-' . $type,
 			$submenu_opens_on_click ? 'is-submenu-opens-on-click' : 'is-submenu-opens-on-hover',
 		];
+
+		if ( $show_submenu_label && 'drill-down' === $type ) {
+			$nav_classes[] = 'has-submenu-label';
+		}
+
+		if ( $show_submenu_view_all && 'drill-down' === $type ) {
+			$nav_classes[] = 'has-submenu-view-all';
+		}
 
 		$context_data = [
 			'menuType'            => $type,
@@ -178,7 +188,7 @@ class Navigation {
 					esc_html( $label ),
 					$submenu_tabindex_attr,
 					'drill-down' === $type
-						? '<button type="button" class="wp-block-eighteen73-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick">' . esc_html__( 'Back', 'eighteen73-blocks' ) . '</button>'
+						? self::render_drill_down_submenu_header( $label, $url, $target, $rel_attr )
 						: '',
 					$children_markup
 				);
@@ -194,6 +204,41 @@ class Navigation {
 		}
 
 		return $items_markup;
+	}
+
+	/**
+	 * Render drill-down submenu header with back button, parent label, and view-all link.
+	 *
+	 * @param string $label    Parent menu item label.
+	 * @param string $url      Parent menu item URL.
+	 * @param string $target   Parent menu item target attribute.
+	 * @param string $rel_attr Parent menu item rel attribute.
+	 * @return string
+	 */
+	private static function render_drill_down_submenu_header( string $label, string $url, string $target, string $rel_attr ): string {
+		return sprintf(
+			'<div class="wp-block-eighteen73-navigation__submenu-header"><button type="button" class="wp-block-eighteen73-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick" aria-label="%1$s"><span class="wp-block-eighteen73-navigation__back-text">%2$s</span></button><span class="wp-block-eighteen73-navigation__parent-label">%3$s</span><a class="wp-block-eighteen73-navigation__view-all" href="%4$s"%5$s%6$s aria-label="%7$s">%8$s</a></div>',
+			esc_attr(
+				sprintf(
+					/* translators: %s: parent menu item label. */
+					__( 'Back to %s', 'eighteen73-blocks' ),
+					$label
+				)
+			),
+			esc_html__( 'Back', 'eighteen73-blocks' ),
+			esc_html( $label ),
+			'' !== $url ? $url : '#',
+			$target,
+			$rel_attr,
+			esc_attr(
+				sprintf(
+					/* translators: %s: parent menu item label. */
+					__( 'View all %s', 'eighteen73-blocks' ),
+					$label
+				)
+			),
+			esc_html__( 'View all', 'eighteen73-blocks' )
+		);
 	}
 
 	/**

@@ -110,7 +110,9 @@ function useEditorPreviewInteractions(containerRef, options) {
 				return;
 			}
 
-			const link = target.closest('.wp-block-navigation-item__content');
+			const link = target.closest(
+				'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__view-all'
+			);
 			if (link) {
 				event.preventDefault();
 			}
@@ -232,6 +234,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		ref,
 		type = 'simple',
 		submenuOpensOnClick,
+		showSubmenuLabel,
+		showSubmenuViewAll,
 		iconColor,
 		accentColor,
 		submenuTextColor,
@@ -259,6 +263,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		submenuOpensOnClick
 			? 'is-submenu-opens-on-click'
 			: 'is-submenu-opens-on-hover',
+		type === 'drill-down' && showSubmenuLabel ? 'has-submenu-label' : '',
+		type === 'drill-down' && showSubmenuViewAll
+			? 'has-submenu-view-all'
+			: '',
 	]
 		.filter(Boolean)
 		.join(' ');
@@ -297,8 +305,16 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			ref: attributes.ref,
 			type: attributes.type,
 			submenuOpensOnClick: attributes.submenuOpensOnClick,
+			showSubmenuLabel: attributes.showSubmenuLabel,
+			showSubmenuViewAll: attributes.showSubmenuViewAll,
 		}),
-		[attributes.ref, attributes.type, attributes.submenuOpensOnClick]
+		[
+			attributes.ref,
+			attributes.type,
+			attributes.submenuOpensOnClick,
+			attributes.showSubmenuLabel,
+			attributes.showSubmenuViewAll,
+		]
 	);
 	const { content: serverRenderedPreview = '', status: serverRenderStatus } =
 		useServerSideRender({
@@ -411,6 +427,44 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								})
 							}
 						/>
+					)}
+					{type === 'drill-down' && (
+						<>
+							<ToggleControl
+								__nextHasNoMarginBottom
+								label={__(
+									'Show submenu label',
+									'eighteen73-blocks'
+								)}
+								help={__(
+									'Display the parent menu item name in the submenu.',
+									'eighteen73-blocks'
+								)}
+								checked={showSubmenuLabel}
+								onChange={(value) =>
+									setAttributes({
+										showSubmenuLabel: !!value,
+									})
+								}
+							/>
+							<ToggleControl
+								__nextHasNoMarginBottom
+								label={__(
+									'Show submenu view all link',
+									'eighteen73-blocks'
+								)}
+								help={__(
+									'Display a link to the parent menu item in the submenu.',
+									'eighteen73-blocks'
+								)}
+								checked={showSubmenuViewAll}
+								onChange={(value) =>
+									setAttributes({
+										showSubmenuViewAll: !!value,
+									})
+								}
+							/>
+						</>
 					)}
 				</PanelBody>
 			</InspectorControls>

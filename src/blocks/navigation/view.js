@@ -13,9 +13,9 @@ const SELECTORS = {
 	toggle: '.wp-block-eighteen73-navigation__submenu-toggle',
 	submenu: '.wp-block-eighteen73-navigation__submenu',
 	focusableSubmenuItems:
-		'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__back, .wp-block-eighteen73-navigation__submenu-toggle',
+		'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__back, .wp-block-eighteen73-navigation__view-all, .wp-block-eighteen73-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
-		':scope > .wp-block-eighteen73-navigation__back, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-eighteen73-navigation__submenu-toggle',
+		':scope > .wp-block-eighteen73-navigation__submenu-header > .wp-block-eighteen73-navigation__back, :scope > .wp-block-eighteen73-navigation__submenu-header > .wp-block-eighteen73-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-eighteen73-navigation__submenu-toggle',
 };
 
 const CLICK_OPEN_MODE = 'click';
