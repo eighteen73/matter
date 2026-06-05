@@ -148,7 +148,7 @@ const closeSubmenusWithoutFocus = (
 			return;
 		}
 
-		closeSubmenu(context, submenuId);
+		closeSubmenu(context, submenuId, menuItem);
 	});
 };
 
@@ -248,7 +248,45 @@ const deactivateTrap = (submenuId) => {
 	submenuTrapOwners.delete(submenuId);
 };
 
-const closeSubmenu = (context, submenuId) => {
+const getSubmenuIdFromMenuItem = (menuItem) => {
+	const toggle = getToggleElement(menuItem);
+	const controlsId = toggle?.getAttribute('aria-controls');
+	const match = controlsId?.match(/-(\d+)$/);
+
+	return match ? Number(match[1]) : null;
+};
+
+const getDescendantSubmenuIds = (menuItem) => {
+	const submenuElement = getSubmenuElement(menuItem);
+
+	if (!submenuElement) {
+		return [];
+	}
+
+	return [...submenuElement.querySelectorAll(SELECTORS.menuItemWithChild)]
+		.map(getSubmenuIdFromMenuItem)
+		.filter((id) => id !== null);
+};
+
+const closeSubmenu = (context, submenuId, menuItem = null) => {
+	const resolvedMenuItem =
+		menuItem ||
+		submenuTrapOwners.get(submenuId) ||
+		document
+			.getElementById(`eighteen73-navigation-submenu-${submenuId}`)
+			?.closest(SELECTORS.menuItemWithChild) ||
+		null;
+
+	const descendantIds = resolvedMenuItem
+		? getDescendantSubmenuIds(resolvedMenuItem)
+		: [];
+
+	[...descendantIds].reverse().forEach((id) => {
+		deactivateTrap(id);
+		removeSubmenu(context, id);
+		delete context.openModes[id];
+	});
+
 	deactivateTrap(submenuId);
 	removeSubmenu(context, submenuId);
 	delete context.openModes[submenuId];
@@ -285,14 +323,6 @@ const activateDrillDownSubmenuTrap = (context, submenuId, menuItem) => {
 	}
 
 	trap.activate();
-};
-
-const getSubmenuIdFromMenuItem = (menuItem) => {
-	const toggle = getToggleElement(menuItem);
-	const controlsId = toggle?.getAttribute('aria-controls');
-	const match = controlsId?.match(/-(\d+)$/);
-
-	return match ? Number(match[1]) : null;
 };
 
 const isFocusOnToggle = (eventTarget, menuItem) => {
@@ -338,7 +368,7 @@ const handleSubmenuEscapeKey = (event, context, navigationElement) => {
 	// Close the innermost open submenu first for nested structures.
 	event.preventDefault();
 	event.stopPropagation();
-	closeSubmenu(context, submenuId);
+	closeSubmenu(context, submenuId, menuItem);
 	getToggleElement(menuItem)?.focus();
 
 	return true;
@@ -476,6 +506,11 @@ const { state } = store(
 			closeSubmenuOnHover: () => {
 				const context = getContext();
 				const submenuId = context.submenuId;
+				const { ref } = getElement();
+				const menuItem =
+					ref?.nodeType === 1
+						? ref.closest(SELECTORS.menuItemWithChild)
+						: null;
 
 				if (
 					context.menuType !== 'simple' ||
@@ -489,7 +524,7 @@ const { state } = store(
 					return;
 				}
 
-				closeSubmenu(context, submenuId);
+				closeSubmenu(context, submenuId, menuItem);
 			},
 			toggleSubmenuOnClick: () => {
 				const context = getContext();
@@ -501,7 +536,7 @@ const { state } = store(
 						: null;
 
 				if (context.openSubmenus.includes(submenuId)) {
-					closeSubmenu(context, submenuId);
+					closeSubmenu(context, submenuId, menuItem);
 					return;
 				}
 
@@ -513,8 +548,13 @@ const { state } = store(
 			},
 			closeSubmenuOnClick: () => {
 				const context = getContext();
+				const { ref } = getElement();
+				const menuItem =
+					ref?.nodeType === 1
+						? ref.closest(SELECTORS.menuItemWithChild)
+						: null;
 
-				closeSubmenu(context, context.submenuId);
+				closeSubmenu(context, context.submenuId, menuItem);
 			},
 			handleNavKeydown: withSyncEvent((event) => {
 				const eventTarget = getEventTargetElement(event);
