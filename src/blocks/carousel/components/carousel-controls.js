@@ -269,6 +269,7 @@ export default function CarouselControls({
 								variant="secondary"
 								isDestructive
 								onClick={() => onResetLayer(tab.name)}
+								style={{ marginTop: '16px' }}
 							>
 								{__('Reset breakpoint', 'eighteen73-blocks')}
 							</Button>
