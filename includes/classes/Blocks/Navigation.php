@@ -20,14 +20,17 @@ class Navigation {
 	/**
 	 * Build navigation markup for block attributes.
 	 *
-	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array<string, mixed> $attributes              Block attributes.
+	 * @param bool                 $include_block_wrapper   When false, returns only the menu list markup for editor preview (wrapper comes from useBlockProps).
 	 * @return string
 	 */
-	public static function render( array $attributes ): string {
+	public static function render( array $attributes, bool $include_block_wrapper = true ): string {
 		$menu_id                = isset( $attributes['ref'] ) ? absint( $attributes['ref'] ) : 0;
 		$type                   = isset( $attributes['type'] ) ? (string) $attributes['type'] : 'simple';
 		$type                   = in_array( $type, [ 'simple', 'accordion', 'drill-down' ], true ) ? $type : 'simple';
 		$submenu_opens_on_click = ! empty( $attributes['submenuOpensOnClick'] );
+		$show_submenu_label     = ! empty( $attributes['showSubmenuLabel'] );
+		$show_submenu_view_all  = ! empty( $attributes['showSubmenuViewAll'] );
 
 		if ( ! $menu_id ) {
 			return '';
@@ -56,24 +59,42 @@ class Navigation {
 			$submenu_opens_on_click ? 'is-submenu-opens-on-click' : 'is-submenu-opens-on-hover',
 		];
 
+		if ( $show_submenu_label && 'drill-down' === $type ) {
+			$nav_classes[] = 'has-submenu-label';
+		}
+
+		if ( $show_submenu_view_all && 'drill-down' === $type ) {
+			$nav_classes[] = 'has-submenu-view-all';
+		}
+
 		$context_data = [
 			'menuType'            => $type,
 			'submenuOpensOnClick' => $submenu_opens_on_click,
 			'openSubmenus'        => [],
-			'openModes'           => [],
-			'submenuTraps'        => [],
+			'openModes'           => (object) [],
 		];
+
+		$color_style = Styles::get_styles( $attributes, Config::get( 'colors', 'navigation' ) );
+
+		if ( ! $include_block_wrapper ) {
+			// Wrap the list so core layout support classes attach here, not on the ul.
+			// The editor extracts only the ul for the useBlockProps nav wrapper.
+			return sprintf(
+				'<div class="eighteen73-navigation-editor-chrome"><ul class="wp-block-eighteen73-navigation__items">%1$s</ul></div>',
+				$items
+			);
+		}
 
 		$data_wp_context = function_exists( 'wp_interactivity_data_wp_context' )
 			? wp_interactivity_data_wp_context( $context_data )
 			: 'data-wp-context="' . esc_attr( wp_json_encode( $context_data ) ) . '"';
 
 		return sprintf(
-			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-init---touch="callbacks.isTouchEnabled" data-wp-watch---touch="callbacks.isTouchEnabled" data-wp-class--is-touch-enabled="callbacks.isTouchEnabled" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__container">%3$s</ul></nav>',
+			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-class--is-touch-enabled="state.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__items">%3$s</ul></nav>',
 			get_block_wrapper_attributes(
 				[
 					'class' => implode( ' ', $nav_classes ),
-					'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'navigation' ) ),
+					'style' => $color_style,
 				],
 			),
 			$data_wp_context,
@@ -145,12 +166,11 @@ class Navigation {
 					'submenuId' => $submenu_id,
 				];
 
-				$item_context = function_exists( 'wp_interactivity_data_wp_context' )
-					? wp_interactivity_data_wp_context( $item_context_data )
-					: 'data-wp-context="' . esc_attr( wp_json_encode( $item_context_data ) ) . '"';
+				$item_context          = wp_interactivity_data_wp_context( $item_context_data );
+				$submenu_tabindex_attr = 'drill-down' === $type ? ' tabindex="-1"' : '';
 
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="callbacks.isSubmenuOpen" data-wp-on--keydown="actions.handleKeydown" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="callbacks.isAriaExpanded" aria-controls="%7$s" aria-haspopup="true" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu" data-wp-bind--aria-hidden="!callbacks.isSubmenuOpen">%10$s<ul class="wp-block-navigation__submenu-container">%11$s</ul></div></li>',
+					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
 					$item_context,
 					$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
 					'' !== $url ? $url : '#',
@@ -166,8 +186,9 @@ class Navigation {
 						)
 					),
 					esc_html( $label ),
+					$submenu_tabindex_attr,
 					'drill-down' === $type
-						? '<button type="button" class="wp-block-eighteen73-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick">' . esc_html__( 'Back', 'eighteen73-blocks' ) . '</button>'
+						? self::render_drill_down_submenu_header( $label, $url, $target, $rel_attr )
 						: '',
 					$children_markup
 				);
@@ -176,13 +197,48 @@ class Navigation {
 
 			if ( in_array( $block_name, [ 'core/page-list', 'core/search', 'core/social-links', 'core/buttons', 'core/spacer' ], true ) ) {
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item">%s</li>',
+					'<li class="wp-block-navigation-item has-block-content">%s</li>',
 					render_block( $parsed_block )
 				);
 			}
 		}
 
 		return $items_markup;
+	}
+
+	/**
+	 * Render drill-down submenu header with back button, parent label, and view-all link.
+	 *
+	 * @param string $label    Parent menu item label.
+	 * @param string $url      Parent menu item URL.
+	 * @param string $target   Parent menu item target attribute.
+	 * @param string $rel_attr Parent menu item rel attribute.
+	 * @return string
+	 */
+	private static function render_drill_down_submenu_header( string $label, string $url, string $target, string $rel_attr ): string {
+		return sprintf(
+			'<div class="wp-block-eighteen73-navigation__submenu-header"><button type="button" class="wp-block-eighteen73-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick" aria-label="%1$s"><span class="wp-block-eighteen73-navigation__back-text">%2$s</span></button><span class="wp-block-eighteen73-navigation__parent-label">%3$s</span><a class="wp-block-eighteen73-navigation__view-all" href="%4$s"%5$s%6$s aria-label="%7$s">%8$s</a></div>',
+			esc_attr(
+				sprintf(
+					/* translators: %s: parent menu item label. */
+					__( 'Back to %s', 'eighteen73-blocks' ),
+					$label
+				)
+			),
+			esc_html__( 'Back', 'eighteen73-blocks' ),
+			esc_html( $label ),
+			'' !== $url ? $url : '#',
+			$target,
+			$rel_attr,
+			esc_attr(
+				sprintf(
+					/* translators: %s: parent menu item label. */
+					__( 'View all %s', 'eighteen73-blocks' ),
+					$label
+				)
+			),
+			esc_html__( 'View all', 'eighteen73-blocks' )
+		);
 	}
 
 	/**

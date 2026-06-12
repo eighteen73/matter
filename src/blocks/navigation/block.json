@@ -20,12 +20,28 @@
 			"type": "boolean",
 			"default": false
 		},
+		"showSubmenuLabel": {
+			"type": "boolean",
+			"default": false
+		},
+		"showSubmenuViewAll": {
+			"type": "boolean",
+			"default": false
+		},
 		"layout": {
 			"type": "object",
 			"default": {
 				"type": "flex",
 				"orientation": "vertical"
 			}
+		},
+		"iconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"accentColor": {
+			"type": "string",
+			"default": ""
 		},
 		"submenuTextColor": {
 			"type": "string",
@@ -48,6 +64,10 @@
 			"default": ""
 		},
 		"backIconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"submenuDividerColor": {
 			"type": "string",
 			"default": ""
 		}

@@ -1,11 +1,14 @@
 {
 	"navigation": {
-		"submenuTextColor": "--wp--custom--eighteen73-navigation--submenu-color",
-		"submenuBackgroundColor": "--wp--custom--eighteen73-navigation--submenu-background-color",
-		"submenuIconColor": "--wp--custom--eighteen73-navigation--submenu-icon-color",
-		"backTextColor": "--wp--custom--eighteen73-navigation--back-color",
-		"backBackgroundColor": "--wp--custom--eighteen73-navigation--back-background-color",
-		"backIconColor": "--wp--custom--eighteen73-navigation--back-icon-color"
+		"iconColor": "--eighteen73-navigation--item--icon-color",
+		"accentColor": "--eighteen73-navigation--accent-color",
+		"submenuTextColor": "--eighteen73-navigation--submenu--color",
+		"submenuBackgroundColor": "--eighteen73-navigation--submenu--background-color",
+		"submenuIconColor": "--eighteen73-navigation--submenu--icon-color",
+		"backTextColor": "--eighteen73-navigation--back--color",
+		"backBackgroundColor": "--eighteen73-navigation--back--background-color",
+		"backIconColor": "--eighteen73-navigation--back--icon-color",
+		"submenuDividerColor": "--eighteen73-navigation--submenu--divider-color"
 	},
 	"carousel": {
 		"dotColor": "--wp--custom--eighteen73-carousel--dot--color",
