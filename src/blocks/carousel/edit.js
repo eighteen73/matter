@@ -229,11 +229,14 @@ export default function Edit({
 		[pluginState]
 	);
 
+	const editorSlidesSelector =
+		':scope > .block-editor-block-list__block:not(.block-list-appender)';
+
 	const [emblaRef, emblaApi] = useEmblaCarousel(
 		{
 			...emblaOptions,
 			container: getContainer(),
-			slides: '.block-editor-block-list__block:not(.block-list-appender)',
+			slides: editorSlidesSelector,
 			watchFocus: false,
 		},
 		emblaPlugins
