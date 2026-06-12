@@ -46,7 +46,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 			<InspectorControls group="color">
 				<ColorControl
-					label={__('Bar colour', 'eighteen73-blocks')}
+					label={__('Bar', 'eighteen73-blocks')}
 					value={barColor}
 					onChange={(value, slug) =>
 						setAttributes({

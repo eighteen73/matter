@@ -6,7 +6,7 @@
 	"title": "Progress",
 	"category": "design",
 	"icon": "minus",
-	"description": "Carousel Progress",
+	"description": "Shows the progress of the carousel.",
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
@@ -26,6 +26,9 @@
 			"background": true,
 			"gradients": false,
 			"link": false
+		},
+		"dimensions": {
+			"height": true
 		},
 		"__experimentalBorder": {
 			"radius": true
