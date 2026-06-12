@@ -78,13 +78,13 @@ const applyBreakpointLayers = (resolved, layers) => {
 
 	for (const token of breakpointTokens) {
 		const layer = safeLayers[token];
-		const px = breakpoints[token]?.px;
+		const minWidth = breakpoints[token]?.value;
 
-		if (!isPlainObject(layer) || !px) {
+		if (!isPlainObject(layer) || !minWidth) {
 			continue;
 		}
 
-		const query = minWidthQuery(px);
+		const query = minWidthQuery(minWidth);
 
 		if (isPlainObject(layer.options) && Object.keys(layer.options).length) {
 			optionBreakpoints[query] = isPlainObject(optionBreakpoints[query])
