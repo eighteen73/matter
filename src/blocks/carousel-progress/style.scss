@@ -1,0 +1,25 @@
+.wp-block-eighteen73-blocks-carousel-progress {
+	--wp--custom--eighteen73-carousel--progress--background: var(--wp--preset--color--accent-primary, currentcolor);
+	--wp--custom--eighteen73-carousel--progress--bar: var(--wp--preset--color--accent-secondary, #7378cc);
+	--wp--custom--eighteen73-carousel--progress--height: 10px;
+
+	background-color: var(--wp--custom--eighteen73-carousel--progress--background);
+	height: var(--wp--custom--eighteen73-carousel--progress--height);
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+
+	&.has-background {
+		background-color: var(--wp--style--color--background);
+	}
+
+	.embla__progress__bar {
+		background-color: var(--wp--custom--eighteen73-carousel--progress--bar);
+		bottom: 0;
+		left: -100%;
+		position: absolute;
+		top: 0;
+		transition: transform 200ms ease-out;
+		width: 100%;
+	}
+}

@@ -1,0 +1,68 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "eighteen73-blocks/carousel",
+	"version": "0.1.0",
+	"title": "Carousel",
+	"category": "design",
+	"icon": "images-alt",
+	"description": "Carousel",
+	"allowedBlocks": [
+		"eighteen73-blocks/carousel-viewport",
+		"eighteen73-blocks/carousel-dots",
+		"eighteen73-blocks/carousel-progress",
+		"eighteen73-blocks/carousel-previous-button",
+		"eighteen73-blocks/carousel-next-button",
+		"core/group"
+	],
+	"attributes": {
+		"emblaConfig": {
+			"type": "object",
+			"default": {
+				"options": {
+					"loop": false,
+					"axis": "x",
+					"slidesToScroll": 1,
+					"active": true,
+					"slidesToShow": 1,
+					"slideGap": ""
+				},
+				"plugins": {
+					"autoplay": {
+						"active": false,
+						"type": "slide",
+						"speed": 1
+					}
+				},
+				"breakpointLayers": {}
+			}
+		},
+		"advancedEmblaConfig": {
+			"type": "object",
+			"default": {}
+		},
+		"advancedEmblaConfigMerge": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"supports": {
+		"inserter": true,
+		"align": ["wide", "full"],
+		"interactivity": true,
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": true,
+				"padding": false
+			}
+		}
+	},
+	"textdomain": "eighteen73-blocks",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php",
+	"viewScriptModule": "file:./view.js"
+}

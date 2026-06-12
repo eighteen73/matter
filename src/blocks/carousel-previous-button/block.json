@@ -1,0 +1,60 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "eighteen73-blocks/carousel-previous-button",
+	"version": "0.1.0",
+	"title": "Previous Button",
+	"category": "design",
+	"icon": "arrow-left-alt",
+	"description": "Moves the carousel to the previous slide.",
+	"ancestor": [
+		"eighteen73-blocks/carousel"
+	],
+	"attributes": {
+		"iconColor": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"color": {
+			"text": false,
+			"background": true,
+			"gradients": false,
+			"link": false
+		},
+		"dimensions": {
+			"aspectRatio": true,
+			"width": true,
+			"height": true,
+			"__experimentalDefaultControls": {
+				"aspectRatio": false,
+				"width": false,
+				"height": false
+			}
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": true
+			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
+		}
+	},
+	"textdomain": "eighteen73-blocks",
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

@@ -7,5 +7,10 @@
 		"backBackgroundColor": "--wp--custom--eighteen73-navigation--back-background-color",
 		"backIconColor": "--wp--custom--eighteen73-navigation--back-icon-color"
 	},
-	"carousel": {}
+	"carousel": {
+		"dotColor": "--wp--custom--eighteen73-carousel--dot--color",
+		"dotActiveColor": "--wp--custom--eighteen73-carousel--dot--active-color",
+		"barColor": "--wp--custom--eighteen73-carousel--progress--bar",
+		"iconColor": "--wp--custom--eighteen73-carousel--button--icon-color"
+	}
 }
