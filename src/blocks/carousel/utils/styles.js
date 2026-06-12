@@ -35,13 +35,15 @@ function buildSlidesToShowCssVars({
 		'--wp--custom--eighteen73-carousel--slides-to-show-base':
 			baseSlidesToShow,
 	};
+	let previousValue = baseSlidesToShow;
 
 	for (const breakpoint of breakpointTokens) {
+		previousValue =
+			breakpointLayers?.[breakpoint]?.options?.slidesToShow ??
+			previousValue;
 		styles[
 			`--wp--custom--eighteen73-carousel--slides-to-show-${breakpoint}`
-		] =
-			breakpointLayers?.[breakpoint]?.options?.slidesToShow ??
-			baseSlidesToShow;
+		] = previousValue;
 	}
 
 	return styles;

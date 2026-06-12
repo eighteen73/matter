@@ -56,11 +56,15 @@ class Carousel {
 	 * @return array The CSS variables.
 	 */
 	private static function generate_slides_to_show_css_variables( array $base_options, array $breakpoint_layers, array $breakpoint_tokens ): array {
-		$slides_to_show = [
-			'base' => $base_options['slidesToShow'] ?? 1,
+		$base_slides_to_show = $base_options['slidesToShow'] ?? 1;
+		$slides_to_show      = [
+			'base' => $base_slides_to_show,
 		];
+		$previous_value      = $base_slides_to_show;
+
 		foreach ( $breakpoint_tokens as $breakpoint ) {
-			$slides_to_show[ $breakpoint ] = $breakpoint_layers[ $breakpoint ]['options']['slidesToShow'] ?? $slides_to_show['base'];
+			$previous_value                = $breakpoint_layers[ $breakpoint ]['options']['slidesToShow'] ?? $previous_value;
+			$slides_to_show[ $breakpoint ] = $previous_value;
 		}
 
 		$css_variables = [];
