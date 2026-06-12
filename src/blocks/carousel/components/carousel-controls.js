@@ -97,7 +97,7 @@ function CarouselFields({
 			/>
 
 			<ToggleGroupControl
-				label={__('Enable Looping', 'eighteen73-blocks')}
+				label={__('Looping', 'eighteen73-blocks')}
 				value={!!options.loop}
 				onChange={(value) => onChangeOption('loop', value)}
 				isBlock
@@ -165,7 +165,7 @@ function CarouselFields({
 			)}
 
 			<ToggleGroupControl
-				label={__('Disable Carousel', 'eighteen73-blocks')}
+				label={__('Disabled', 'eighteen73-blocks')}
 				value={!!options.active}
 				onChange={(value) => onChangeOption('active', value)}
 				isBlock
