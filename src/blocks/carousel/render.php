@@ -43,7 +43,31 @@ $content           = isset( $content ) && is_string( $content ) ? $content : '';
 
 $style_variables = Carousel::generate_css_variables( $base_options, $breakpoint_layers, $breakpoint_tokens );
 
-$styles = implode( '; ', array_filter( $style_variables ) );
+$base_active      = ! isset( $base_options['active'] ) || false !== $base_options['active'];
+$carousel_classes = [];
+$has_disabled     = ! $base_active;
+
+if ( ! $base_active ) {
+	$carousel_classes[] = 'carousel-disabled';
+}
+
+$previous_effective_active = $base_active;
+foreach ( $breakpoint_tokens as $breakpoint ) {
+	$layer_active = $breakpoint_layers[ $breakpoint ]['options']['active'] ?? null;
+	$active       = null !== $layer_active ? (bool) $layer_active : $previous_effective_active;
+
+	if ( ! $active && $active !== $previous_effective_active ) {
+		$carousel_classes[] = "carousel-disabled-on-{$breakpoint}";
+		$has_disabled       = true;
+	} elseif ( $active && $has_disabled && $active !== $previous_effective_active ) {
+		$carousel_classes[] = "carousel-enabled-on-{$breakpoint}";
+	}
+
+	$previous_effective_active = $active;
+}
+
+$styles           = implode( '; ', array_filter( $style_variables ) );
+$carousel_classes = implode( ' ', $carousel_classes );
 ?>
 
 <div
@@ -55,6 +79,7 @@ $styles = implode( '; ', array_filter( $style_variables ) );
 				'data-wp-interactive' => 'eighteen73-blocks/carousel',
 				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
 				'style'               => $styles,
+				'class'               => $carousel_classes,
 			]
 		)
 		. ' '
