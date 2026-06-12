@@ -6,12 +6,12 @@
 	"title": "Next Button",
 	"category": "design",
 	"icon": "arrow-right-alt",
-	"description": "Carousel Next Button",
+	"description": "Moves the carousel to the next slide.",
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
 	"attributes": {
-		"arrowColor": {
+		"iconColor": {
 			"type": "string",
 			"default": ""
 		}
@@ -25,7 +25,11 @@
 		},
 		"spacing": {
 			"margin": true,
-			"padding": true
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": true
+			}
 		},
 		"__experimentalBorder": {
 			"radius": true

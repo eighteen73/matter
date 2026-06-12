@@ -11,7 +11,7 @@ import ColorControl from '../../../components/color-control';
 import { getColorStyles, storeColorValue } from '../../../utils/colors';
 
 function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
-	const { arrowColor } = attributes;
+	const { iconColor } = attributes;
 
 	const colorStyles = getColorStyles(attributes, 'carousel');
 
@@ -25,11 +25,11 @@ function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 		<>
 			<InspectorControls group="color">
 				<ColorControl
-					label={__('Arrow colour', 'eighteen73-blocks')}
-					value={arrowColor}
+					label={__('Icon', 'eighteen73-blocks')}
+					value={iconColor}
 					onChange={(value, slug) =>
 						setAttributes({
-							arrowColor: storeColorValue(slug, value),
+							iconColor: storeColorValue(slug, value),
 						})
 					}
 					panelId={clientId}

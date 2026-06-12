@@ -8,10 +8,10 @@
  * @package Eighteen73Blocks\\CarouselPreviousButton
  */
 
+defined( 'ABSPATH' ) || exit;
+
 use Eighteen73\Blocks\Color\Styles;
 use Eighteen73\Blocks\Config;
-
-defined( 'ABSPATH' ) || exit;
 
 $wrapper_attributes = [
 	'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),

@@ -58,7 +58,7 @@
 		--wp--custom--eighteen73-carousel--button--icon-size: 12px;
 		--wp--custom--eighteen73-carousel--button--gap: var(--wp--preset--spacing--md, 12px);
 		--wp--custom--eighteen73-carousel--button--background-color: transparent;
-		--wp--custom--eighteen73-carousel--button--arrow-color: currentcolor;
+		--wp--custom--eighteen73-carousel--button--icon-color: currentcolor;
 		--wp--custom--eighteen73-carousel--button--border-radius: 50%;
 
 		&:where(.has-background) .embla__button {
@@ -90,7 +90,7 @@
 				text-indent: -9999px;
 
 				&::after {
-					background-color: var(--wp--custom--eighteen73-carousel--button--arrow-color);
+					background-color: var(--wp--custom--eighteen73-carousel--button--icon-color);
 					border-radius: inherit;
 					content: "";
 					inset: 0;

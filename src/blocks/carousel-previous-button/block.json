@@ -6,12 +6,12 @@
 	"title": "Previous Button",
 	"category": "design",
 	"icon": "arrow-left-alt",
-	"description": "Carousel Previous Button",
+	"description": "Moves the carousel to the previous slide.",
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
 	"attributes": {
-		"arrowColor": {
+		"iconColor": {
 			"type": "string",
 			"default": ""
 		}
@@ -25,7 +25,11 @@
 		},
 		"spacing": {
 			"margin": true,
-			"padding": true
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": true
+			}
 		},
 		"__experimentalBorder": {
 			"radius": true
