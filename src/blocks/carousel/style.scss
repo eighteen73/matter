@@ -55,64 +55,62 @@
 	.wp-block-eighteen73-blocks-carousel-next-button,
 	.wp-block-eighteen73-blocks-carousel-previous-button {
 		--wp--custom--eighteen73-carousel--button--size: 32px;
-		--wp--custom--eighteen73-carousel--button--icon-size: 12px;
+		--wp--custom--eighteen73-carousel--button--icon-size: 50%;
 		--wp--custom--eighteen73-carousel--button--gap: var(--wp--preset--spacing--md, 12px);
 		--wp--custom--eighteen73-carousel--button--background-color: transparent;
 		--wp--custom--eighteen73-carousel--button--icon-color: currentcolor;
 		--wp--custom--eighteen73-carousel--button--border-radius: 50%;
 
-		&:where(.has-background) .embla__button {
+		align-items: center;
+		appearance: none;
+		background-color: var(--wp--custom--eighteen73-carousel--button--background-color);
+		border: 0;
+		border-radius: var(--wp--custom--eighteen73-carousel--button--border-radius);
+		cursor: pointer;
+		display: inline-flex;
+		height: var(--wp--custom--eighteen73-carousel--button--size);
+		justify-content: center;
+		margin: 0;
+		padding: 0;
+		position: relative;
+		text-decoration: none;
+		touch-action: manipulation;
+		width: var(--wp--custom--eighteen73-carousel--button--size);
+
+		&:where(.has-background) {
 			background-color: var(--wp--style--color--background);
 		}
 
-		.embla__button {
-			align-items: center;
-			appearance: none;
-			background-color: var(--wp--custom--eighteen73-carousel--button--background-color);
-			border: 0;
-			border-radius: var(--wp--custom--eighteen73-carousel--button--border-radius);
-			cursor: pointer;
-			display: inline-flex;
-			height: var(--wp--custom--eighteen73-carousel--button--size);
-			justify-content: center;
-			margin: 0;
-			padding: 0;
-			position: relative;
-			text-decoration: none;
-			touch-action: manipulation;
-			width: var(--wp--custom--eighteen73-carousel--button--size);
+		&:disabled {
+			opacity: 0.3;
+		}
 
-			&:disabled {
-				opacity: 0.3;
+		.embla__button-label {
+			text-indent: -9999px;
+
+			&::after {
+				background-color: var(--wp--custom--eighteen73-carousel--button--icon-color);
+				border-radius: inherit;
+				content: "";
+				inset: 0;
+				mask-position: center;
+				mask-repeat: no-repeat;
+				mask-size: var(--wp--custom--eighteen73-carousel--button--icon-size);
+				position: absolute;
 			}
+		}
 
-			.embla__button-label {
-				text-indent: -9999px;
-
-				&::after {
-					background-color: var(--wp--custom--eighteen73-carousel--button--icon-color);
-					border-radius: inherit;
-					content: "";
-					inset: 0;
-					mask-position: center;
-					mask-repeat: no-repeat;
-					mask-size: var(--wp--custom--eighteen73-carousel--button--icon-size);
-					position: absolute;
-				}
+		&:where(.embla__button--previous) {
+			.embla__button-label::after {
+				mask-image: url("../../../assets/svg/arrow-left.svg");
 			}
+		}
 
-			&:where(.embla__button--previous) {
-				.embla__button-label::after {
-					mask-image: url("../../../assets/svg/arrow-left.svg");
-				}
-			}
+		&:where(.embla__button--next) {
+			justify-self: flex-end;
 
-			&:where(.embla__button--next) {
-				justify-self: flex-end;
-
-				.embla__button-label::after {
-					mask-image: url("../../../assets/svg/arrow-right.svg");
-				}
+			.embla__button-label::after {
+				mask-image: url("../../../assets/svg/arrow-right.svg");
 			}
 		}
 	}

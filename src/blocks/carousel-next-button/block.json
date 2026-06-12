@@ -23,6 +23,16 @@
 			"gradients": false,
 			"link": false
 		},
+		"dimensions": {
+			"aspectRatio": true,
+			"width": true,
+			"height": true,
+			"__experimentalDefaultControls": {
+				"aspectRatio": false,
+				"width": false,
+				"height": false
+			}
+		},
 		"spacing": {
 			"margin": true,
 			"padding": true,

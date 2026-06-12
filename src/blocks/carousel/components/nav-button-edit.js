@@ -19,6 +19,12 @@ function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 
 	const blockProps = useBlockProps({
 		style: colorStyles,
+		className: isNext
+			? 'embla__button embla__button--next'
+			: 'embla__button embla__button--previous',
+		'data-wp-on--click': isNext
+			? 'actions.scrollNext'
+			: 'actions.scrollPrev',
 	});
 
 	return (
@@ -36,24 +42,13 @@ function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 				/>
 			</InspectorControls>
 
-			<div {...blockProps}>
-				<button
-					className={
-						isNext
-							? 'embla__button embla__button--next'
-							: 'embla__button embla__button--previous'
-					}
-					data-wp-on--click={
-						isNext ? 'actions.scrollNext' : 'actions.scrollPrev'
-					}
-				>
-					<span className="embla__button-label">
-						{isNext
-							? __('Next slide', 'eighteen73-blocks')
-							: __('Previous slide', 'eighteen73-blocks')}
-					</span>
-				</button>
-			</div>
+			<button {...blockProps}>
+				<span className="embla__button-label">
+					{isNext
+						? __('Next slide', 'eighteen73-blocks')
+						: __('Previous slide', 'eighteen73-blocks')}
+				</span>
+			</button>
 		</>
 	);
 }
