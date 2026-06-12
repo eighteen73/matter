@@ -8,12 +8,12 @@ import breakpoints from '../../../config/breakpoints.json';
 export const breakpointTokens = Object.keys(breakpoints);
 
 /**
- * Build the `(min-width: Npx)` media query string Embla expects as a
+ * Build the `(min-width: value)` media query string Embla expects as a
  * breakpoint key on both core options and plugin options.
  *
- * @param {number} px
+ * @param {string} value
  * @return {string} The media query string.
  */
-export const minWidthQuery = (px) => `(min-width: ${px}px)`;
+export const minWidthQuery = (value) => `(min-width: ${value})`;
 
 export default breakpoints;
