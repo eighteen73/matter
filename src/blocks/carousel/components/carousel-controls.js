@@ -52,13 +52,13 @@ function CarouselFields({
 	return (
 		<div style={{ marginTop: '16px' }}>
 			<RangeControl
-				label={__('Slides to scroll', 'eighteen73-blocks')}
-				value={options.slidesToScroll}
+				label={__('Slides to show', 'eighteen73-blocks')}
+				value={options.slidesToShow}
 				onChange={(value) =>
 					onChangeOption(
-						'slidesToScroll',
+						'slidesToShow',
 						value === undefined
-							? DEFAULT_EMBLA_CONFIG.options.slidesToScroll
+							? DEFAULT_EMBLA_CONFIG.options.slidesToShow
 							: value
 					)
 				}
@@ -68,13 +68,13 @@ function CarouselFields({
 			/>
 
 			<RangeControl
-				label={__('Slides to show', 'eighteen73-blocks')}
-				value={options.slidesToShow}
+				label={__('Slides to scroll', 'eighteen73-blocks')}
+				value={options.slidesToScroll}
 				onChange={(value) =>
 					onChangeOption(
-						'slidesToShow',
+						'slidesToScroll',
 						value === undefined
-							? DEFAULT_EMBLA_CONFIG.options.slidesToShow
+							? DEFAULT_EMBLA_CONFIG.options.slidesToScroll
 							: value
 					)
 				}
