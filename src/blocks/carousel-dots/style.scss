@@ -2,7 +2,7 @@
 	--wp--custom--eighteen73-carousel--dot--size: 12px;
 	--wp--custom--eighteen73-carousel--dot--gap: var(--wp--preset--spacing--xs, 8px);
 	--wp--custom--eighteen73-carousel--dot--color: var(--wp--preset--color--accent-primary, currentcolor);
-	--wp--custom--eighteen73-carousel--dot--color-active: var(--wp--preset--color--accent-secondary, #7378cc);
+	--wp--custom--eighteen73-carousel--dot--active-color: var(--wp--preset--color--accent-secondary, #7378cc);
 	--wp--custom--eighteen73-carousel--dot--border-radius: 50%;
 
 	align-items: center;
@@ -32,6 +32,6 @@
 	}
 
 	.embla__dot--selected {
-		background-color: var(--wp--custom--eighteen73-carousel--dot--color-active);
+		background-color: var(--wp--custom--eighteen73-carousel--dot--active-color);
 	}
 }

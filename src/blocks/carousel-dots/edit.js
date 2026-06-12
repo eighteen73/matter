@@ -24,7 +24,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		<>
 			<InspectorControls group="color">
 				<ColorControl
-					label={__('Dot colour', 'eighteen73-blocks')}
+					label={__('Dot', 'eighteen73-blocks')}
 					value={dotColor}
 					onChange={(value, slug) =>
 						setAttributes({
@@ -35,7 +35,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Dot active colour', 'eighteen73-blocks')}
+					label={__('Active dot', 'eighteen73-blocks')}
 					value={dotActiveColor}
 					onChange={(value, slug) =>
 						setAttributes({

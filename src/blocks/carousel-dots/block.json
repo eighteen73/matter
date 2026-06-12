@@ -6,7 +6,7 @@
 	"title": "Dots",
 	"category": "design",
 	"icon": "ellipsis",
-	"description": "Carousel Dots",
+	"description": "Displays pagination dots to navigate between slides.",
 	"ancestor": [
 		"eighteen73-blocks/carousel"
 	],
@@ -29,7 +29,11 @@
 		},
 		"spacing": {
 			"margin": true,
-			"padding": true
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": true,
+				"padding": false
+			}
 		},
 		"__experimentalBorder": {
 			"radius": true
