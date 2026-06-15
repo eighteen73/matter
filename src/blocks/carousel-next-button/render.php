@@ -23,6 +23,6 @@ $wrapper_attributes = [
 
 <button <?php echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) ); ?>>
 	<span class="embla__button-label">
-		<?php esc_html_e( 'Next slide', 'eighteen73-blocks' ); ?>
+		<?php esc_html_e( 'Next slide', 'matter' ); ?>
 	</span>
 </button>

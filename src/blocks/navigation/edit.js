@@ -40,7 +40,7 @@ function extractNavigationListMarkup(html) {
 	}
 
 	const match = html.match(
-		/<ul\s+class="wp-block-eighteen73-navigation__items"[^>]*>[\s\S]*<\/ul>/
+		/<ul\s+class="wp-block-matter-navigation__items"[^>]*>[\s\S]*<\/ul>/
 	);
 
 	return match ? match[0] : html;
@@ -55,7 +55,7 @@ function getMenuTitle(menu) {
 
 	return sprintf(
 		/* translators: %d: menu ID. */
-		__('Menu #%d', 'eighteen73-blocks'),
+		__('Menu #%d', 'matter'),
 		menu?.id || 0
 	);
 }
@@ -78,10 +78,10 @@ function useEditorPreviewInteractions(containerRef, options) {
 			menuItem.classList.toggle('has-open-submenu', isOpen);
 
 			const toggle = menuItem.querySelector(
-				'.wp-block-eighteen73-navigation__submenu-toggle'
+				'.wp-block-matter-navigation__submenu-toggle'
 			);
 			const submenu = menuItem.querySelector(
-				'.wp-block-eighteen73-navigation__submenu'
+				'.wp-block-matter-navigation__submenu'
 			);
 
 			if (toggle) {
@@ -111,14 +111,14 @@ function useEditorPreviewInteractions(containerRef, options) {
 			}
 
 			const link = target.closest(
-				'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__view-all'
+				'.wp-block-navigation-item__content, .wp-block-matter-navigation__view-all'
 			);
 			if (link) {
 				event.preventDefault();
 			}
 
 			const toggle = target.closest(
-				'.wp-block-eighteen73-navigation__submenu-toggle'
+				'.wp-block-matter-navigation__submenu-toggle'
 			);
 			if (toggle) {
 				event.preventDefault();
@@ -138,7 +138,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			}
 
 			const backButton = target.closest(
-				'.wp-block-eighteen73-navigation__back'
+				'.wp-block-matter-navigation__back'
 			);
 			if (!backButton) {
 				return;
@@ -146,7 +146,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 
 			event.preventDefault();
 			const submenu = backButton.closest(
-				'.wp-block-eighteen73-navigation__submenu'
+				'.wp-block-matter-navigation__submenu'
 			);
 
 			if (!submenu) {
@@ -288,7 +288,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const menuOptions = [
 		{
 			value: '0',
-			label: __('Select a menu', 'eighteen73-blocks'),
+			label: __('Select a menu', 'matter'),
 		},
 		...(menus || []).map((menu) => ({
 			value: String(menu.id),
@@ -296,9 +296,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		})),
 	];
 	const menuTypeOptions = [
-		{ value: 'simple', label: __('Simple', 'eighteen73-blocks') },
-		{ value: 'accordion', label: __('Accordion', 'eighteen73-blocks') },
-		{ value: 'drill-down', label: __('Drill-down', 'eighteen73-blocks') },
+		{ value: 'simple', label: __('Simple', 'matter') },
+		{ value: 'accordion', label: __('Accordion', 'matter') },
+		{ value: 'drill-down', label: __('Drill-down', 'matter') },
 	];
 	const serverSideAttributes = useMemo(
 		() => ({
@@ -318,7 +318,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	);
 	const { content: serverRenderedPreview = '', status: serverRenderStatus } =
 		useServerSideRender({
-			block: 'eighteen73/navigation',
+			block: 'matter/navigation',
 			attributes: serverSideAttributes,
 			skipBlockSupportAttributes: true,
 		});
@@ -353,26 +353,26 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						target="_blank"
 						rel="noopener noreferrer"
 						showTooltip
-						label={__('Edit navigation', 'eighteen73-blocks')}
+						label={__('Edit navigation', 'matter')}
 					>
-						{__('Edit navigation', 'eighteen73-blocks')}
+						{__('Edit navigation', 'matter')}
 					</ToolbarButton>
 				</BlockControls>
 			)}
 
 			<InspectorControls group="settings">
-				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
+				<PanelBody title={__('Settings', 'matter')}>
 					{!hasResolved && <Spinner />}
 					{hasResolved && (
 						<SelectControl
 							__next40pxDefaultSize
-							label={__('Menu', 'eighteen73-blocks')}
+							label={__('Menu', 'matter')}
 							help={
 								ref
 									? createInterpolateElement(
 											__(
 												'Edit menu items in the <a>Navigation editor</a>',
-												'eighteen73-blocks'
+												'matter'
 											),
 											{
 												a: (
@@ -386,7 +386,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 										)
 									: __(
 											'Select a navigation menu to display.',
-											'eighteen73-blocks'
+											'matter'
 										)
 							}
 							options={menuOptions}
@@ -400,7 +400,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					)}
 					<SelectControl
 						__next40pxDefaultSize
-						label={__('Menu Type', 'eighteen73-blocks')}
+						label={__('Menu Type', 'matter')}
 						options={menuTypeOptions}
 						value={type}
 						onChange={(value) =>
@@ -412,13 +412,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					{!!ref && (
 						<ToggleControl
 							__nextHasNoMarginBottom
-							label={__(
-								'Open submenus on click',
-								'eighteen73-blocks'
-							)}
+							label={__('Open submenus on click', 'matter')}
 							help={__(
 								'When disabled, simple menus can open on hover for pointer users.',
-								'eighteen73-blocks'
+								'matter'
 							)}
 							checked={submenuOpensOnClick}
 							onChange={(value) =>
@@ -432,13 +429,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						<>
 							<ToggleControl
 								__nextHasNoMarginBottom
-								label={__(
-									'Show submenu label',
-									'eighteen73-blocks'
-								)}
+								label={__('Show submenu label', 'matter')}
 								help={__(
 									'Display the parent menu item name in the submenu.',
-									'eighteen73-blocks'
+									'matter'
 								)}
 								checked={showSubmenuLabel}
 								onChange={(value) =>
@@ -451,11 +445,11 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								__nextHasNoMarginBottom
 								label={__(
 									'Show submenu view all link',
-									'eighteen73-blocks'
+									'matter'
 								)}
 								help={__(
 									'Display a link to the parent menu item in the submenu.',
-									'eighteen73-blocks'
+									'matter'
 								)}
 								checked={showSubmenuViewAll}
 								onChange={(value) =>
@@ -471,7 +465,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 			<InspectorControls group="color">
 				<ColorControl
-					label={__('Icon', 'eighteen73-blocks')}
+					label={__('Icon', 'matter')}
 					value={iconColor}
 					attributeName="iconColor"
 					onChange={(value, slug) =>
@@ -483,7 +477,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Accent', 'eighteen73-blocks')}
+					label={__('Accent', 'matter')}
 					value={accentColor}
 					attributeName="accentColor"
 					onChange={(value, slug) =>
@@ -495,7 +489,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Submenu text', 'eighteen73-blocks')}
+					label={__('Submenu text', 'matter')}
 					value={submenuTextColor}
 					attributeName="submenuTextColor"
 					onChange={(value, slug) =>
@@ -507,7 +501,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Submenu background', 'eighteen73-blocks')}
+					label={__('Submenu background', 'matter')}
 					value={submenuBackgroundColor}
 					attributeName="submenuBackgroundColor"
 					onChange={(value, slug) =>
@@ -522,7 +516,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				/>
 
 				<ColorControl
-					label={__('Submenu icon', 'eighteen73-blocks')}
+					label={__('Submenu icon', 'matter')}
 					value={submenuIconColor}
 					attributeName="submenuIconColor"
 					onChange={(value, slug) =>
@@ -536,7 +530,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				{type === 'drill-down' && (
 					<>
 						<ColorControl
-							label={__('Submenu divider', 'eighteen73-blocks')}
+							label={__('Submenu divider', 'matter')}
 							value={submenuDividerColor}
 							attributeName="submenuDividerColor"
 							onChange={(value, slug) =>
@@ -551,7 +545,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						/>
 
 						<ColorControl
-							label={__('Back text', 'eighteen73-blocks')}
+							label={__('Back text', 'matter')}
 							value={backTextColor}
 							attributeName="backTextColor"
 							onChange={(value, slug) =>
@@ -563,7 +557,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						/>
 
 						<ColorControl
-							label={__('Back background', 'eighteen73-blocks')}
+							label={__('Back background', 'matter')}
 							value={backBackgroundColor}
 							attributeName="backBackgroundColor"
 							onChange={(value, slug) =>
@@ -578,7 +572,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						/>
 
 						<ColorControl
-							label={__('Back icon', 'eighteen73-blocks')}
+							label={__('Back icon', 'matter')}
 							value={backIconColor}
 							attributeName="backIconColor"
 							onChange={(value, slug) =>
@@ -597,11 +591,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					{...blockProps}
 					className={editorNavClassName || undefined}
 				>
-					<p className="wp-block-eighteen73-navigation__empty">
-						{__(
-							'Select a menu from the block settings.',
-							'eighteen73-blocks'
-						)}
+					<p className="wp-block-matter-navigation__empty">
+						{__('Select a menu from the block settings.', 'matter')}
 					</p>
 				</nav>
 			)}
@@ -626,10 +617,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					{...blockProps}
 					className={editorNavClassName || undefined}
 				>
-					<p className="wp-block-eighteen73-navigation__empty">
+					<p className="wp-block-matter-navigation__empty">
 						{__(
 							'The selected menu could not be loaded. Please reselect it from block settings.',
-							'eighteen73-blocks'
+							'matter'
 						)}
 					</p>
 				</nav>
@@ -643,11 +634,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						{...blockProps}
 						className={editorNavClassName || undefined}
 					>
-						<p className="wp-block-eighteen73-navigation__empty">
-							{__(
-								'This menu has no items yet.',
-								'eighteen73-blocks'
-							)}
+						<p className="wp-block-matter-navigation__empty">
+							{__('This menu has no items yet.', 'matter')}
 						</p>
 					</nav>
 				)}

@@ -80,7 +80,7 @@ class Navigation {
 			// Wrap the list so core layout support classes attach here, not on the ul.
 			// The editor extracts only the ul for the useBlockProps nav wrapper.
 			return sprintf(
-				'<div class="eighteen73-navigation-editor-chrome"><ul class="wp-block-eighteen73-navigation__items">%1$s</ul></div>',
+				'<div class="eighteen73-navigation-editor-chrome"><ul class="wp-block-eighteen73-blocks-navigation__items">%1$s</ul></div>',
 				$items
 			);
 		}
@@ -90,7 +90,7 @@ class Navigation {
 			: 'data-wp-context="' . esc_attr( wp_json_encode( $context_data ) ) . '"';
 
 		return sprintf(
-			'<nav %1$s data-wp-interactive="eighteen73/navigation" %2$s data-wp-class--is-touch-enabled="state.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-navigation__items">%3$s</ul></nav>',
+			'<nav %1$s data-wp-interactive="eighteen73-blocks/navigation" %2$s data-wp-class--is-touch-enabled="state.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-eighteen73-blocks-navigation__items">%3$s</ul></nav>',
 			get_block_wrapper_attributes(
 				[
 					'class' => implode( ' ', $nav_classes ),
@@ -170,7 +170,7 @@ class Navigation {
 				$submenu_tabindex_attr = 'drill-down' === $type ? ' tabindex="-1"' : '';
 
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-eighteen73-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
+					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-eighteen73-blocks-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-eighteen73-blocks-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-eighteen73-blocks-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
 					$item_context,
 					$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
 					'' !== $url ? $url : '#',
@@ -217,7 +217,7 @@ class Navigation {
 	 */
 	private static function render_drill_down_submenu_header( string $label, string $url, string $target, string $rel_attr ): string {
 		return sprintf(
-			'<div class="wp-block-eighteen73-navigation__submenu-header"><button type="button" class="wp-block-eighteen73-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick" aria-label="%1$s"><span class="wp-block-eighteen73-navigation__back-text">%2$s</span></button><span class="wp-block-eighteen73-navigation__parent-label">%3$s</span><a class="wp-block-eighteen73-navigation__view-all" href="%4$s"%5$s%6$s aria-label="%7$s">%8$s</a></div>',
+			'<div class="wp-block-eighteen73-blocks-navigation__submenu-header"><button type="button" class="wp-block-eighteen73-blocks-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick" aria-label="%1$s"><span class="wp-block-eighteen73-blocks-navigation__back-text">%2$s</span></button><span class="wp-block-eighteen73-blocks-navigation__parent-label">%3$s</span><a class="wp-block-eighteen73-blocks-navigation__view-all" href="%4$s"%5$s%6$s aria-label="%7$s">%8$s</a></div>',
 			esc_attr(
 				sprintf(
 					/* translators: %s: parent menu item label. */

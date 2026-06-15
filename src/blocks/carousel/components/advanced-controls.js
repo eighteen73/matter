@@ -35,7 +35,7 @@ export default function AdvancedControls({
 				Array.isArray(parsed)
 			) {
 				setAdvancedJsonError(
-					__('Value must be a JSON object.', 'eighteen73-blocks')
+					__('Value must be a JSON object.', 'matter')
 				);
 				setAdvancedJsonDraft(
 					JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
@@ -46,7 +46,7 @@ export default function AdvancedControls({
 			setAttributes({ advancedEmblaConfig: parsed });
 			setAdvancedJsonDraft(JSON.stringify(parsed, null, 2));
 		} catch {
-			setAdvancedJsonError(__('Invalid JSON.', 'eighteen73-blocks'));
+			setAdvancedJsonError(__('Invalid JSON.', 'matter'));
 			setAdvancedJsonDraft(
 				JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
 			);
@@ -64,9 +64,9 @@ export default function AdvancedControls({
 			<TextareaControl
 				help={__(
 					'Enter a JSON object to override the carousel settings. Use the same shape as the block config: nest core options under "options" and plugin options under "plugins" (for example, {"options":{"loop":true},"plugins":{"autoplay":{"active":true,"type":"scroll"}}}).',
-					'eighteen73-blocks'
+					'matter'
 				)}
-				label={__('Advanced Carousel Config', 'eighteen73-blocks')}
+				label={__('Advanced Carousel Config', 'matter')}
 				value={advancedJsonDraft}
 				onChange={(value) => {
 					setAdvancedJsonDraft(value);
@@ -80,10 +80,10 @@ export default function AdvancedControls({
 			/>
 
 			<ToggleControl
-				label={__('Merge with carousel settings', 'eighteen73-blocks')}
+				label={__('Merge with carousel settings', 'matter')}
 				help={__(
 					'When enabled, Settings apply first; keys in the JSON below override them.',
-					'eighteen73-blocks'
+					'matter'
 				)}
 				checked={mergeWithUi}
 				onChange={(value) =>

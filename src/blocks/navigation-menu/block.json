@@ -1,0 +1,51 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/navigation-menu",
+	"version": "0.1.0",
+	"title": "Navigation Menu",
+	"category": "theme",
+	"description": "Responsive navigation shell with optional breakpoint collapse and configurable menu surface.",
+	"attributes": {
+		"navigationType": {
+			"type": "string",
+			"default": "anchored",
+			"enum": [ "anchored", "fullscreen", "drawer" ]
+		},
+		"drawerPosition": {
+			"type": "string",
+			"default": "right",
+			"enum": [ "left", "right" ]
+		},
+		"collapseMode": {
+			"type": "string",
+			"default": "breakpoint",
+			"enum": [ "always", "breakpoint" ]
+		},
+		"breakpoint": {
+			"type": "string",
+			"default": "md"
+		},
+		"toggleLabel": {
+			"type": "string",
+			"default": "Menu"
+		},
+		"closeLabel": {
+			"type": "string",
+			"default": "Close menu"
+		}
+	},
+	"supports": {
+		"interactivity": true,
+		"html": false,
+		"anchor": true,
+		"align": [ "wide", "full" ],
+		"lock": false
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"viewScriptModule": "file:./view.js",
+	"style": "file:./style-index.css",
+	"editorStyle": "file:./index.css",
+	"render": "file:./render.php"
+}

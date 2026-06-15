@@ -7,15 +7,15 @@ import {
 import { createFocusTrap } from 'focus-trap';
 
 const SELECTORS = {
-	navigation: '.wp-block-eighteen73-navigation',
+	navigation: '.wp-block-matter-navigation',
 	menuItemWithChild: '.wp-block-navigation-item.has-child',
-	topLevelContainer: '.wp-block-eighteen73-navigation__container',
-	toggle: '.wp-block-eighteen73-navigation__submenu-toggle',
-	submenu: '.wp-block-eighteen73-navigation__submenu',
+	topLevelContainer: '.wp-block-matter-navigation__container',
+	toggle: '.wp-block-matter-navigation__submenu-toggle',
+	submenu: '.wp-block-matter-navigation__submenu',
 	focusableSubmenuItems:
-		'.wp-block-navigation-item__content, .wp-block-eighteen73-navigation__back, .wp-block-eighteen73-navigation__view-all, .wp-block-eighteen73-navigation__submenu-toggle',
+		'.wp-block-navigation-item__content, .wp-block-matter-navigation__back, .wp-block-matter-navigation__view-all, .wp-block-matter-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
-		':scope > .wp-block-eighteen73-navigation__submenu-header > .wp-block-eighteen73-navigation__back, :scope > .wp-block-eighteen73-navigation__submenu-header > .wp-block-eighteen73-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-eighteen73-navigation__submenu-toggle',
+		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle',
 };
 
 const CLICK_OPEN_MODE = 'click';
@@ -130,7 +130,7 @@ const getTopLevelControls = (element) => {
 
 const getMenuItemForSubmenuId = (navigationElement, submenuId) => {
 	const toggle = navigationElement.querySelector(
-		`[aria-controls="eighteen73-navigation-submenu-${submenuId}"]`
+		`[aria-controls="matter-navigation-submenu-${submenuId}"]`
 	);
 
 	return toggle?.closest(SELECTORS.menuItemWithChild) || null;
@@ -273,7 +273,7 @@ const closeSubmenu = (context, submenuId, menuItem = null) => {
 		menuItem ||
 		submenuTrapOwners.get(submenuId) ||
 		document
-			.getElementById(`eighteen73-navigation-submenu-${submenuId}`)
+			.getElementById(`matter-navigation-submenu-${submenuId}`)
 			?.closest(SELECTORS.menuItemWithChild) ||
 		null;
 
@@ -475,7 +475,7 @@ const handleArrowKeyboard = (event, context, navigationElement) => {
 };
 
 const { state } = store(
-	'eighteen73/navigation',
+	'matter/navigation',
 	{
 		state: {
 			get isTouchEnabled() {

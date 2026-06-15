@@ -1,14 +1,14 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "eighteen73-blocks/carousel-next-button",
+	"name": "matter/carousel-next-button",
 	"version": "0.1.0",
 	"title": "Next Button",
 	"category": "design",
 	"icon": "arrow-right-alt",
 	"description": "Moves the carousel to the next slide.",
 	"ancestor": [
-		"eighteen73-blocks/carousel"
+		"matter/carousel"
 	],
 	"attributes": {
 		"iconColor": {
@@ -54,7 +54,7 @@
 			}
 		}
 	},
-	"textdomain": "eighteen73-blocks",
+	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"render": "file:./render.php"
 }

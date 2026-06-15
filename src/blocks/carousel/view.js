@@ -12,7 +12,7 @@ import {
 	setupProgressBar,
 } from './utils/embla';
 
-const STORE_NAMESPACE = 'eighteen73-blocks/carousel';
+const STORE_NAMESPACE = 'matter/carousel';
 
 store(STORE_NAMESPACE, {
 	callbacks: {

@@ -40,7 +40,7 @@ const SpacingControl = ({ label, value, onChange }) => {
 
 	const presets = useMemo(
 		() => [
-			{ name: __('None', 'eighteen73-blocks'), slug: '', size: 0 },
+			{ name: __('None', 'matter'), slug: '', size: 0 },
 			...(spacingPresets || []).map((preset) => ({
 				name: preset.name,
 				slug: preset.slug || '',
