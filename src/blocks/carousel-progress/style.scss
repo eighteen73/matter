@@ -1,10 +1,12 @@
-.wp-block-matter-carousel-progress {
-	--wp--custom--matter-carousel--progress--background: var(--wp--preset--color--accent-primary, currentcolor);
-	--wp--custom--matter-carousel--progress--bar: var(--wp--preset--color--accent-secondary, #7378cc);
-	--wp--custom--matter-carousel--progress--height: 10px;
+// CSS variable pattern: see src/constants/css-variables-pattern.scss
 
-	background-color: var(--wp--custom--matter-carousel--progress--background);
-	height: var(--wp--custom--matter-carousel--progress--height);
+.wp-block-matter-carousel-progress {
+	--_progress--background: var(--matter-carousel--progress--background, var(--wp--custom--matter-carousel--progress--background, var(--wp--preset--color--accent-primary, currentcolor)));
+	--_progress--bar: var(--matter-carousel--progress--bar, var(--wp--custom--matter-carousel--progress--bar, var(--wp--preset--color--accent-secondary, #7378cc)));
+	--_progress--height: var(--matter-carousel--progress--height, var(--wp--custom--matter-carousel--progress--height, 10px));
+
+	background-color: var(--_progress--background);
+	height: var(--_progress--height);
 	overflow: hidden;
 	position: relative;
 	width: 100%;
@@ -14,7 +16,7 @@
 	}
 
 	.embla__progress__bar {
-		background-color: var(--wp--custom--matter-carousel--progress--bar);
+		background-color: var(--_progress--bar);
 		bottom: 0;
 		left: -100%;
 		position: absolute;

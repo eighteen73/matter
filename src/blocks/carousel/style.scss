@@ -25,22 +25,22 @@
 }
 
 .wp-block-matter-carousel {
-	--wp--custom--matter-carousel--slide--gap: var(--wp--custom--matter-carousel--slide--gap-base, 0);
-	--wp--custom--matter-carousel--slide--gap-left: var(--wp--custom--matter-carousel--slide--gap-left-base, 0);
-	--wp--custom--matter-carousel--slide--gap-top: var(--wp--custom--matter-carousel--slide--gap-top-base, 0);
-	--wp--custom--matter-carousel--slides-to-show: var(--wp--custom--matter-carousel--slides-to-show-base, 1);
-	--wp--custom--matter-carousel--slide--width: calc(100% / var(--wp--custom--matter-carousel--slides-to-show));
-	--wp--custom--matter-carousel--direction: row;
-	--wp--custom--matter-carousel--container-height: var(--wp--custom--matter-carousel--container-height-base, auto);
+	--_slides-to-show: var(--matter-carousel--slides-to-show-base, var(--wp--custom--matter-carousel--slides-to-show-base, 1));
+	--_slide--gap: var(--matter-carousel--slide--gap-base, var(--wp--custom--matter-carousel--slide--gap-base, 0));
+	--_slide--gap-left: var(--matter-carousel--slide--gap-left-base, var(--wp--custom--matter-carousel--slide--gap-left-base, 0));
+	--_slide--gap-top: var(--matter-carousel--slide--gap-top-base, var(--wp--custom--matter-carousel--slide--gap-top-base, 0));
+	--_slide--width: calc(100% / var(--_slides-to-show));
+	--_direction: var(--matter-carousel--direction-base, var(--wp--custom--matter-carousel--direction-base, row));
+	--_container-height: var(--matter-carousel--container-height-base, var(--wp--custom--matter-carousel--container-height-base, auto));
 
 	@each $name, $size in bp.$breakpoints {
 		@media (--#{$name}) {
-			--wp--custom--matter-carousel--slides-to-show: var(--wp--custom--matter-carousel--slides-to-show-#{$name}, var(--wp--custom--matter-carousel--slides-to-show-base));
-			--wp--custom--matter-carousel--slide--gap: var(--wp--custom--matter-carousel--slide--gap-#{$name}, var(--wp--custom--matter-carousel--slide--gap-base, 0));
-			--wp--custom--matter-carousel--slide--gap-left: var(--wp--custom--matter-carousel--slide--gap-left-#{$name}, var(--wp--custom--matter-carousel--slide--gap-left-base, 0));
-			--wp--custom--matter-carousel--slide--gap-top: var(--wp--custom--matter-carousel--slide--gap-top-#{$name}, var(--wp--custom--matter-carousel--slide--gap-top-base, 0));
-			--wp--custom--matter-carousel--direction: var(--wp--custom--matter-carousel--direction-#{$name}, var(--wp--custom--matter-carousel--direction-base, row));
-			--wp--custom--matter-carousel--container-height: var(--wp--custom--matter-carousel--container-height-#{$name}, var(--wp--custom--matter-carousel--container-height-base, auto));
+			--_slides-to-show: var(--matter-carousel--slides-to-show-#{$name}, var(--wp--custom--matter-carousel--slides-to-show-#{$name}, var(--_slides-to-show)));
+			--_slide--gap: var(--matter-carousel--slide--gap-#{$name}, var(--wp--custom--matter-carousel--slide--gap-#{$name}, var(--_slide--gap)));
+			--_slide--gap-left: var(--matter-carousel--slide--gap-left-#{$name}, var(--wp--custom--matter-carousel--slide--gap-left-#{$name}, var(--_slide--gap-left)));
+			--_slide--gap-top: var(--matter-carousel--slide--gap-top-#{$name}, var(--wp--custom--matter-carousel--slide--gap-top-#{$name}, var(--_slide--gap-top)));
+			--_direction: var(--matter-carousel--direction-#{$name}, var(--wp--custom--matter-carousel--direction-#{$name}, var(--_direction)));
+			--_container-height: var(--matter-carousel--container-height-#{$name}, var(--wp--custom--matter-carousel--container-height-#{$name}, var(--_container-height)));
 		}
 	}
 
@@ -69,10 +69,10 @@
 		}
 
 		.embla__container {
-			flex-direction: var(--wp--custom--matter-carousel--direction);
-			height: var(--wp--custom--matter-carousel--container-height);
-			margin-left: calc(var(--wp--custom--matter-carousel--slide--gap-left) * -1);
-			margin-top: calc(var(--wp--custom--matter-carousel--slide--gap-top) * -1);
+			flex-direction: var(--_direction);
+			height: var(--_container-height);
+			margin-left: calc(var(--_slide--gap-left) * -1);
+			margin-top: calc(var(--_slide--gap-top) * -1);
 		}
 
 		.embla__container:has(> *:not(.wp-block-query, .wp-block-woocommerce-product-collection)),
@@ -82,11 +82,11 @@
 			touch-action: pan-y pinch-zoom;
 
 			> * {
-				flex: 0 0 var(--wp--custom--matter-carousel--slide--width);
+				flex: 0 0 var(--_slide--width);
 				margin: 0;
 				min-width: 0;
-				padding-left: var(--wp--custom--matter-carousel--slide--gap-left);
-				padding-top: var(--wp--custom--matter-carousel--slide--gap-top);
+				padding-left: var(--_slide--gap-left);
+				padding-top: var(--_slide--gap-top);
 				transform: translate3d(0, 0, 0);
 			}
 		}

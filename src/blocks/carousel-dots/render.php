@@ -8,14 +8,14 @@
  * @package Eighteen73\Matter\CarouselDots
  */
 
-use Eighteen73\Matter\Color\Styles;
+use Eighteen73\Matter\Styling\Color;
 use Eighteen73\Matter\Config;
 
 defined( 'ABSPATH' ) || exit;
 
 $wrapper_attributes = [
 	'class' => 'embla__dots',
-	'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
+	'style' => Color::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
 ];
 ?>
 
