@@ -173,7 +173,6 @@ export default function Edit({
 	});
 
 	const blockProps = useBlockProps({
-		className: 'embla',
 		style: carouselStyleVars,
 	});
 

@@ -5,15 +5,15 @@
 		"submenuTextColor": "--matter-navigation--submenu--color",
 		"submenuBackgroundColor": "--matter-navigation--submenu--background-color",
 		"submenuIconColor": "--matter-navigation--submenu--icon-color",
-		"backTextColor": "--matter-navigation--back--color",
-		"backBackgroundColor": "--matter-navigation--back--background-color",
-		"backIconColor": "--matter-navigation--back--icon-color",
+		"backTextColor": "--matter-navigation--submenu-header--color",
+		"backBackgroundColor": "--matter-navigation--submenu-header--background-color",
+		"backIconColor": "--matter-navigation--submenu-header--icon-color",
 		"submenuDividerColor": "--matter-navigation--submenu--divider-color"
 	},
 	"carousel": {
-		"dotColor": "--wp--custom--matter-carousel--dot--color",
-		"dotActiveColor": "--wp--custom--matter-carousel--dot--active-color",
-		"barColor": "--wp--custom--matter-carousel--progress--bar",
-		"iconColor": "--wp--custom--matter-carousel--button--icon-color"
+		"dotColor": "--matter-carousel--dot--color",
+		"dotActiveColor": "--matter-carousel--dot--active-color",
+		"barColor": "--matter-carousel--progress--bar",
+		"iconColor": "--matter-carousel--button--icon-color"
 	}
 }

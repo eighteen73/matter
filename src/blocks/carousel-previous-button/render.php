@@ -10,12 +10,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use Eighteen73\Matter\Color\Styles;
+use Eighteen73\Matter\Styling\Color;
 use Eighteen73\Matter\Config;
 
 $wrapper_attributes = [
 	'class' => 'embla__button embla__button--previous',
-	'style' => Styles::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
+	'style' => Color::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
 ];
 
 ?>

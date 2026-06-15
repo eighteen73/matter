@@ -5,14 +5,14 @@
  * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Matter\Color;
+namespace Eighteen73\Matter\Styling;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Resolve block color attribute values into CSS declarations.
  */
-class Styles {
+class Color {
 
 	/**
 	 * Resolve a stored color attribute value to a CSS color value.

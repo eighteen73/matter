@@ -1,43 +1,43 @@
 .wp-block-matter-navigation {
 
 	// Global.
-	--_accent-color: var(--matter-navigation--accent-color, var(--wp--custom--eighteen-73-navigation--accent-color, var(--wp--preset--color--brand-primary, #000)));
-	--_transition-duration: var(--matter-navigation--transition-duration, var(--wp--custom--eighteen-73-navigation--transition-duration, 300ms));
-	--_icon-size: var(--matter-navigation--icon-size, var(--wp--custom--eighteen-73-navigation--icon-size, 0.75em));
+	--_accent-color: var(--matter-navigation--accent-color, var(--wp--custom--matter-navigation--accent-color, var(--wp--preset--color--brand-primary, #000)));
+	--_transition-duration: var(--matter-navigation--transition-duration, var(--wp--custom--matter-navigation--transition-duration, 300ms));
+	--_icon-size: var(--matter-navigation--icon-size, var(--wp--custom--matter-navigation--icon-size, 0.75em));
 
 	// Items.
-	--_item--gap: var(--matter-navigation--item--gap, var(--wp--custom--eighteen-73-navigation--item--gap, var(--wp--preset--spacing--xs, 8px)));
-	--_item--padding: var(--matter-navigation--item--padding, var(--wp--custom--eighteen-73-navigation--item--padding, 0));
-	--_item--color: var(--matter-navigation--item--color, var(--wp--custom--eighteen-73-navigation--item--color, currentcolor));
-	--_item--icon-color: var(--matter-navigation--item--icon-color, var(--wp--custom--eighteen-73-navigation--item--icon-color, currentcolor));
+	--_item--gap: var(--matter-navigation--item--gap, var(--wp--custom--matter-navigation--item--gap, var(--wp--preset--spacing--xs, 8px)));
+	--_item--padding: var(--matter-navigation--item--padding, var(--wp--custom--matter-navigation--item--padding, 0));
+	--_item--color: var(--matter-navigation--item--color, var(--wp--custom--matter-navigation--item--color, currentcolor));
+	--_item--icon-color: var(--matter-navigation--item--icon-color, var(--wp--custom--matter-navigation--item--icon-color, currentcolor));
 
 	// Submenus.
-	--_submenu--gap: var(--matter-navigation--submenu--gap, var(--wp--custom--eighteen-73-navigation--submenu--gap, inherit));
-	--_submenu--padding: var(--matter-navigation--submenu--padding, var(--wp--custom--eighteen-73-navigation--submenu--padding, var(--wp--preset--spacing--sm, 8px)));
-	--_submenu--item-padding: var(--matter-navigation--submenu--item-padding, var(--wp--custom--eighteen-73-navigation--submenu--item-padding, 0px)); //stylelint-disable-line length-zero-no-unit
-	--_submenu--color: var(--matter-navigation--submenu--color, var(--wp--custom--eighteen-73-navigation--submenu--color, inherit));
-	--_submenu--background-color: var(--matter-navigation--submenu--background-color, var(--wp--custom--eighteen-73-navigation--submenu--background-color, var(--wp--preset--color--base, #fff)));
-	--_submenu--icon-color: var(--matter-navigation--submenu--icon-color, var(--wp--custom--eighteen-73-navigation--submenu--icon-color, var(--wp--preset--color--contrast, #000)));
+	--_submenu--gap: var(--matter-navigation--submenu--gap, var(--wp--custom--matter-navigation--submenu--gap, inherit));
+	--_submenu--padding: var(--matter-navigation--submenu--padding, var(--wp--custom--matter-navigation--submenu--padding, var(--wp--preset--spacing--sm, 8px)));
+	--_submenu--item-padding: var(--matter-navigation--submenu--item-padding, var(--wp--custom--matter-navigation--submenu--item-padding, 0px)); //stylelint-disable-line length-zero-no-unit
+	--_submenu--color: var(--matter-navigation--submenu--color, var(--wp--custom--matter-navigation--submenu--color, inherit));
+	--_submenu--background-color: var(--matter-navigation--submenu--background-color, var(--wp--custom--matter-navigation--submenu--background-color, var(--wp--preset--color--base, #fff)));
+	--_submenu--icon-color: var(--matter-navigation--submenu--icon-color, var(--wp--custom--matter-navigation--submenu--icon-color, var(--wp--preset--color--contrast, #000)));
 	--_submenu--divider: 1px solid var(--matter-navigation--submenu--divider-color, transparent);
 
 	// Drill-down.
-	--_drill-down--item--padding: var(--matter-navigation--drill-down--item--padding, var(--wp--custom--eighteen-73-navigation--drill-down--item--padding, var(--wp--preset--spacing--sm, 8px) 0));
+	--_drill-down--item--padding: var(--matter-navigation--drill-down--item--padding, var(--wp--custom--matter-navigation--drill-down--item--padding, var(--wp--preset--spacing--sm, 8px) 0));
 
 	// Submenu header.
-	--_submenu-header--padding: var(--matter-navigation--submenu-header--padding, var(--wp--custom--eighteen-73-navigation--submenu-header--padding, var(--wp--preset--spacing--md, 12px)));
-	--_submenu-header--gap: var(--matter-navigation--submenu-header--gap, var(--wp--custom--eighteen-73-navigation--submenu-header--gap, var(--wp--preset--spacing--xl, 24px)));
-	--_submenu-header--color: var(--matter-navigation--submenu-header--color, var(--wp--custom--eighteen-73-navigation--submenu-header--color, var(--wp--preset--color--base, #fff)));
-	--_submenu-header--background-color: var(--matter-navigation--submenu-header--background-color, var(--wp--custom--eighteen-73-navigation--submenu-header--background-color, var(--wp--preset--color--contrast, #000)));
-	--_submenu-header--icon-color: var(--matter-navigation--submenu-header--icon-color, var(--wp--custom--eighteen-73-navigation--submenu-header--icon-color, currentcolor));
+	--_submenu-header--padding: var(--matter-navigation--submenu-header--padding, var(--wp--custom--matter-navigation--submenu-header--padding, var(--wp--preset--spacing--md, 12px)));
+	--_submenu-header--gap: var(--matter-navigation--submenu-header--gap, var(--wp--custom--matter-navigation--submenu-header--gap, var(--wp--preset--spacing--xl, 24px)));
+	--_submenu-header--color: var(--matter-navigation--submenu-header--color, var(--wp--custom--matter-navigation--submenu-header--color, var(--wp--preset--color--base, #fff)));
+	--_submenu-header--background-color: var(--matter-navigation--submenu-header--background-color, var(--wp--custom--matter-navigation--submenu-header--background-color, var(--wp--preset--color--contrast, #000)));
+	--_submenu-header--icon-color: var(--matter-navigation--submenu-header--icon-color, var(--wp--custom--matter-navigation--submenu-header--icon-color, currentcolor));
 
 	// Submenu header label.
-	--_submenu-header-label--font-size: var(--matter-navigation--submenu-header-label--font-size, var(--wp--custom--eighteen-73-navigation--submenu-header-label--font-size, inherit));
-	--_submenu-header-label--font-weight: var(--matter-navigation--submenu-header-label--font-weight, var(--wp--custom--eighteen-73-navigation--submenu-header-label--font-weight, inherit));
+	--_submenu-header-label--font-size: var(--matter-navigation--submenu-header-label--font-size, var(--wp--custom--matter-navigation--submenu-header-label--font-size, inherit));
+	--_submenu-header-label--font-weight: var(--matter-navigation--submenu-header-label--font-weight, var(--wp--custom--matter-navigation--submenu-header-label--font-weight, inherit));
 
 	// View all link.
-	--_view-all--font-size: var(--matter-navigation--view-all--font-size, var(--wp--custom--eighteen-73-navigation--view-all--font-size, inherit));
-	--_view-all--font-weight: var(--matter-navigation--view-all--font-weight, var(--wp--custom--eighteen-73-navigation--view-all--font-weight, inherit));
-	--_view-all--color: var(--matter-navigation--view-all--color, var(--wp--custom--eighteen-73-navigation--view-all--color, inherit));
+	--_view-all--font-size: var(--matter-navigation--view-all--font-size, var(--wp--custom--matter-navigation--view-all--font-size, inherit));
+	--_view-all--font-weight: var(--matter-navigation--view-all--font-weight, var(--wp--custom--matter-navigation--view-all--font-weight, inherit));
+	--_view-all--color: var(--matter-navigation--view-all--color, var(--wp--custom--matter-navigation--view-all--color, inherit));
 
 	@media (prefers-reduced-motion: reduce) {
 		--_transition-duration: 0ms;
@@ -68,6 +68,12 @@
 		line-height: 1;
 		position: relative;
 		row-gap: inherit;
+	}
+
+	// Current page item
+	.current-menu-item > .wp-block-navigation-item__content,
+	.current-menu-item > .wp-block-matter-navigation__submenu-toggle {
+		color: var(--_accent-color);
 	}
 
 	// Link
@@ -457,8 +463,8 @@
 
 		// Parent label
 		.wp-block-matter-navigation__parent-label {
-			font-size: var(--_submenu-header--font-size);
-			font-weight: var(--_submenu-header--font-weight);
+			font-size: var(--_submenu-header-label--font-size);
+			font-weight: var(--_submenu-header-label--font-weight);
 		}
 
 		// View all link
