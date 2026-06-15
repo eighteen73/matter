@@ -1,6 +1,7 @@
 /// Map of breakpoints.
 /// Keep these values in sync with `../../../config/breakpoints.json` so SCSS
 /// media queries and JS/PHP consumers use the same breakpoint values.
+/// See `src/constants/css-variables-pattern.scss` for the Matter CSS variable pattern.
 $breakpoints: (
 	xs: 480px,
 	sm: 640px,

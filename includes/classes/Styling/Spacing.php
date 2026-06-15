@@ -5,14 +5,14 @@
  * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Matter\Spacing;
+namespace Eighteen73\Matter\Styling;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Resolve block spacing attribute values into CSS declarations.
  */
-class Styles {
+class Spacing {
 
 	/**
 	 * Resolve a stored spacing attribute value to a CSS spacing value.
@@ -39,13 +39,15 @@ class Styles {
 	 * @param string $base_value        Base attribute value.
 	 * @param array  $breakpoint_layers Breakpoint layer values keyed by token.
 	 * @param array  $breakpoint_tokens Breakpoint token list in priority order.
+	 * @param string $option_key        Option key within breakpoint layer options.
 	 * @return string
 	 */
 	public static function get_responsive_css_vars(
 		string $prefix,
 		string $base_value,
 		array $breakpoint_layers,
-		array $breakpoint_tokens
+		array $breakpoint_tokens,
+		string $option_key = 'slideGap'
 	): string {
 		$declarations = [
 			"{$prefix}-base: " . self::to_css_spacing_value( $base_value ),
@@ -60,10 +62,10 @@ class Styles {
 
 			$layer_value = '';
 			if (
-				isset( $breakpoint_layers[ $token ]['options']['slideGap'] ) &&
-				is_string( $breakpoint_layers[ $token ]['options']['slideGap'] )
+				isset( $breakpoint_layers[ $token ]['options'][ $option_key ] ) &&
+				is_string( $breakpoint_layers[ $token ]['options'][ $option_key ] )
 			) {
-				$layer_value = $breakpoint_layers[ $token ]['options']['slideGap'];
+				$layer_value = $breakpoint_layers[ $token ]['options'][ $option_key ];
 			}
 
 			$resolved_value = '' !== $layer_value ? $layer_value : $base_value;
