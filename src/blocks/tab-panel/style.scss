@@ -1,0 +1,24 @@
+.wp-block-eighteen73-blocks-tab-panel {
+	box-sizing: border-box;
+	flex-basis: 100%;
+	flex-grow: 1;
+	max-width: 100%;
+
+	> *:first-child {
+		margin-top: 0;
+	}
+
+	> *:last-child {
+		margin-bottom: 0;
+	}
+
+	&[hidden],
+	&:empty {
+		display: none !important; // stylelint-disable-line declaration-no-important
+	}
+}
+
+.wp-block-eighteen73-blocks-tab-panel.wp-block.has-background,
+.wp-block-eighteen73-blocks-tab-panel:not(.wp-block).has-background {
+	padding: var(--wp--preset--spacing--30);
+}
