@@ -27,6 +27,8 @@ class Plugin {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
+
+		// Register blocks.
 		Registry::instance()->setup();
 	}
 
