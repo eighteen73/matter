@@ -5,13 +5,13 @@
  *     $content (string): The block default content.
  *     $block (WP_Block): The block instance.
  *
- * @package Eighteen73Blocks\\CarouselPreviousButton
+ * @package Eighteen73\Matter\CarouselPreviousButton
  */
 
 defined( 'ABSPATH' ) || exit;
 
-use Eighteen73\Blocks\Color\Styles;
-use Eighteen73\Blocks\Config;
+use Eighteen73\Matter\Color\Styles;
+use Eighteen73\Matter\Config;
 
 $wrapper_attributes = [
 	'class' => 'embla__button embla__button--previous',

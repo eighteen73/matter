@@ -2,10 +2,10 @@
 /**
  * Shared JSON config loader.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks;
+namespace Eighteen73\Matter;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -34,7 +34,7 @@ class Config {
 			return self::$files[ $config_key ];
 		}
 
-		$config_file = EIGHTEEN73_BLOCKS_PATH . 'config/' . $config_key . '.json';
+		$config_file = MATTER_PATH . 'config/' . $config_key . '.json';
 
 		if ( ! file_exists( $config_file ) ) {
 			self::$files[ $config_key ] = [];

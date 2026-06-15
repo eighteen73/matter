@@ -5,11 +5,11 @@
  *     $content (string): The block default content.
  *     $block (WP_Block): The block instance.
  *
- * @package Eighteen73Blocks\\Carousel
+ * @package Eighteen73\Matter\Carousel
  */
 
-use Eighteen73\Blocks\Config;
-use Eighteen73\Blocks\Blocks\Carousel;
+use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Blocks\Carousel;
 
 $embla_config = isset( $attributes['emblaConfig'] ) && is_array( $attributes['emblaConfig'] )
 	? $attributes['emblaConfig']

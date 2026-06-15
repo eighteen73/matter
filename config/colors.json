@@ -1,19 +1,19 @@
 {
 	"navigation": {
-		"iconColor": "--eighteen73-navigation--item--icon-color",
-		"accentColor": "--eighteen73-navigation--accent-color",
-		"submenuTextColor": "--eighteen73-navigation--submenu--color",
-		"submenuBackgroundColor": "--eighteen73-navigation--submenu--background-color",
-		"submenuIconColor": "--eighteen73-navigation--submenu--icon-color",
-		"backTextColor": "--eighteen73-navigation--back--color",
-		"backBackgroundColor": "--eighteen73-navigation--back--background-color",
-		"backIconColor": "--eighteen73-navigation--back--icon-color",
-		"submenuDividerColor": "--eighteen73-navigation--submenu--divider-color"
+		"iconColor": "--matter-navigation--item--icon-color",
+		"accentColor": "--matter-navigation--accent-color",
+		"submenuTextColor": "--matter-navigation--submenu--color",
+		"submenuBackgroundColor": "--matter-navigation--submenu--background-color",
+		"submenuIconColor": "--matter-navigation--submenu--icon-color",
+		"backTextColor": "--matter-navigation--back--color",
+		"backBackgroundColor": "--matter-navigation--back--background-color",
+		"backIconColor": "--matter-navigation--back--icon-color",
+		"submenuDividerColor": "--matter-navigation--submenu--divider-color"
 	},
 	"carousel": {
-		"dotColor": "--wp--custom--eighteen73-carousel--dot--color",
-		"dotActiveColor": "--wp--custom--eighteen73-carousel--dot--active-color",
-		"barColor": "--wp--custom--eighteen73-carousel--progress--bar",
-		"iconColor": "--wp--custom--eighteen73-carousel--button--icon-color"
+		"dotColor": "--wp--custom--matter-carousel--dot--color",
+		"dotActiveColor": "--wp--custom--matter-carousel--dot--active-color",
+		"barColor": "--wp--custom--matter-carousel--progress--bar",
+		"iconColor": "--wp--custom--matter-carousel--button--icon-color"
 	}
 }

@@ -2,12 +2,12 @@
 /**
  * Carousel block.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks\Blocks;
+namespace Eighteen73\Matter\Blocks;
 
-use Eighteen73\Blocks\Spacing\Styles;
+use Eighteen73\Matter\Spacing\Styles;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -33,7 +33,7 @@ class Carousel {
 		$css_variables = array_merge( $css_variables, self::generate_container_height_css_variables( $base_options, $breakpoint_layers, $breakpoint_tokens ) );
 
 		$slide_gap_css_variables = Styles::get_responsive_css_vars(
-			'--wp--custom--eighteen73-carousel--slide--gap',
+			'--wp--custom--matter-carousel--slide--gap',
 			isset( $base_options['slideGap'] ) && is_string( $base_options['slideGap'] ) ? $base_options['slideGap'] : '',
 			$breakpoint_layers,
 			$breakpoint_tokens
@@ -69,7 +69,7 @@ class Carousel {
 
 		$css_variables = [];
 		foreach ( $slides_to_show as $breakpoint => $value ) {
-			$css_variables[] = "--wp--custom--eighteen73-carousel--slides-to-show-{$breakpoint}: {$value}";
+			$css_variables[] = "--wp--custom--matter-carousel--slides-to-show-{$breakpoint}: {$value}";
 		}
 
 		return $css_variables;
@@ -101,7 +101,7 @@ class Carousel {
 
 		$css_variables = [];
 		foreach ( $direction as $breakpoint => $value ) {
-			$css_variables[] = "--wp--custom--eighteen73-carousel--direction-{$breakpoint}: {$value}";
+			$css_variables[] = "--wp--custom--matter-carousel--direction-{$breakpoint}: {$value}";
 		}
 
 		return $css_variables;
@@ -132,7 +132,7 @@ class Carousel {
 
 		$css_variables = [];
 		foreach ( $container_height as $breakpoint => $value ) {
-			$css_variables[] = "--wp--custom--eighteen73-carousel--container-height-{$breakpoint}: {$value}";
+			$css_variables[] = "--wp--custom--matter-carousel--container-height-{$breakpoint}: {$value}";
 		}
 
 		return $css_variables;
@@ -183,8 +183,8 @@ class Carousel {
 		$top_gap       = 'y' === $axis ? $css_slide_gap : '0';
 
 		return [
-			"--wp--custom--eighteen73-carousel--slide--gap-left-{$breakpoint}: {$left_gap}",
-			"--wp--custom--eighteen73-carousel--slide--gap-top-{$breakpoint}: {$top_gap}",
+			"--wp--custom--matter-carousel--slide--gap-left-{$breakpoint}: {$left_gap}",
+			"--wp--custom--matter-carousel--slide--gap-top-{$breakpoint}: {$top_gap}",
 		];
 	}
 }
