@@ -166,7 +166,7 @@ export default function Edit({
 		});
 	};
 
-	const carouselId = `matter-carousel-${clientId}`;
+	const carouselId = `block-${clientId}`;
 	const carouselStylesheet = useMemo(
 		() =>
 			buildCarouselStylesheet(`#${carouselId}`, {

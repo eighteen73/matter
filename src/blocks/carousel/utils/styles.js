@@ -47,8 +47,7 @@ function resolveResponsiveValues({
 
 	for (const breakpoint of breakpointTokens) {
 		const options = breakpointLayers?.[breakpoint]?.options || {};
-		previousSlidesToShow =
-			options.slidesToShow ?? previousSlidesToShow;
+		previousSlidesToShow = options.slidesToShow ?? previousSlidesToShow;
 
 		if (
 			typeof options.axis === 'string' &&
@@ -190,12 +189,7 @@ function compileCssRules(rules) {
  */
 export function buildCarouselStylesheet(
 	selector,
-	{
-		baseOptions,
-		breakpointLayers,
-		breakpointTokens,
-		breakpointConfig,
-	}
+	{ baseOptions, breakpointLayers, breakpointTokens, breakpointConfig }
 ) {
 	const resolvedValues = resolveResponsiveValues({
 		baseOptions,
