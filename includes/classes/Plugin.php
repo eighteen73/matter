@@ -2,12 +2,12 @@
 /**
  * Main plugin class.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks;
+namespace Eighteen73\Matter;
 
-use Eighteen73\Blocks\Blocks\Registry;
+use Eighteen73\Matter\Blocks\Registry;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -37,9 +37,9 @@ class Plugin {
 	 */
 	public function load_textdomain(): void {
 		load_plugin_textdomain(
-			'eighteen73-blocks',
+			'matter',
 			false,
-			EIGHTEEN73_BLOCKS_PATH . '/languages'
+			MATTER_PATH . '/languages'
 		);
 	}
 

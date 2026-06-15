@@ -1,14 +1,14 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "eighteen73-blocks/carousel-dots",
+	"name": "matter/carousel-dots",
 	"version": "0.1.0",
 	"title": "Dots",
 	"category": "design",
 	"icon": "ellipsis",
 	"description": "Displays pagination dots to navigate between slides.",
 	"ancestor": [
-		"eighteen73-blocks/carousel"
+		"matter/carousel"
 	],
 	"attributes": {
 		"dotColor": {
@@ -39,7 +39,7 @@
 			"radius": true
 		}
 	},
-	"textdomain": "eighteen73-blocks",
+	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
 	"render": "file:./render.php"

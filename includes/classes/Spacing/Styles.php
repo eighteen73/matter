@@ -2,10 +2,10 @@
 /**
  * Shared spacing style utilities.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks\Spacing;
+namespace Eighteen73\Matter\Spacing;
 
 defined( 'ABSPATH' ) || exit;
 

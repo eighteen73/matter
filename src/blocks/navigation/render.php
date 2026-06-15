@@ -2,10 +2,10 @@
 /**
  * Navigation block render template.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-use Eighteen73\Blocks\Blocks\Navigation;
+use Eighteen73\Matter\Blocks\Navigation;
 
 defined( 'ABSPATH' ) || exit;
 

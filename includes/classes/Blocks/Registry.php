@@ -2,13 +2,13 @@
 /**
  * Handles block registration.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks\Blocks;
+namespace Eighteen73\Matter\Blocks;
 
 use WP_Block_Metadata_Registry;
-use Eighteen73\Blocks\Singleton;
+use Eighteen73\Matter\Singleton;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,8 +36,8 @@ class Registry {
 	 * @return void
 	 */
 	public function register(): void {
-		$blocks_path   = EIGHTEEN73_BLOCKS_PATH . 'build/blocks';
-		$manifest_file = EIGHTEEN73_BLOCKS_PATH . 'build/blocks-manifest.php';
+		$blocks_path   = MATTER_PATH . 'build/blocks';
+		$manifest_file = MATTER_PATH . 'build/blocks-manifest.php';
 
 		if ( ! is_dir( $blocks_path ) || ! file_exists( $manifest_file ) ) {
 			return;

@@ -22,7 +22,7 @@ const BASE_TAB = 'base';
 const buildTabs = () => [
 	{
 		name: BASE_TAB,
-		title: __('Default', 'eighteen73-blocks'),
+		title: __('Default', 'matter'),
 		icon: settings,
 	},
 	...Object.entries(breakpoints).map(([name, bp]) => ({
@@ -52,7 +52,7 @@ function CarouselFields({
 	return (
 		<div style={{ marginTop: '16px' }}>
 			<RangeControl
-				label={__('Slides to show', 'eighteen73-blocks')}
+				label={__('Slides to show', 'matter')}
 				value={options.slidesToShow}
 				onChange={(value) =>
 					onChangeOption(
@@ -68,7 +68,7 @@ function CarouselFields({
 			/>
 
 			<RangeControl
-				label={__('Slides to scroll', 'eighteen73-blocks')}
+				label={__('Slides to scroll', 'matter')}
 				value={options.slidesToScroll}
 				onChange={(value) =>
 					onChangeOption(
@@ -84,7 +84,7 @@ function CarouselFields({
 			/>
 
 			<SpacingControl
-				label={__('Slide gap', 'eighteen73-blocks')}
+				label={__('Slide gap', 'matter')}
 				value={options.slideGap}
 				onChange={(value) =>
 					onChangeOption(
@@ -97,86 +97,86 @@ function CarouselFields({
 			/>
 
 			<ToggleGroupControl
-				label={__('Looping', 'eighteen73-blocks')}
+				label={__('Looping', 'matter')}
 				value={!!options.loop}
 				onChange={(value) => onChangeOption('loop', value)}
 				isBlock
 			>
 				<ToggleGroupControlOption
 					value={false}
-					label={__('No', 'eighteen73-blocks')}
+					label={__('No', 'matter')}
 				/>
 				<ToggleGroupControlOption
 					value={true}
-					label={__('Yes', 'eighteen73-blocks')}
+					label={__('Yes', 'matter')}
 				/>
 			</ToggleGroupControl>
 
 			<ToggleGroupControl
-				label={__('Axis', 'eighteen73-blocks')}
+				label={__('Axis', 'matter')}
 				value={options.axis}
 				onChange={(value) => onChangeOption('axis', value)}
 				isBlock
 			>
 				<ToggleGroupControlOptionIcon
 					value="x"
-					label={__('Horizontal', 'eighteen73-blocks')}
+					label={__('Horizontal', 'matter')}
 					icon={arrowRight}
 				/>
 				<ToggleGroupControlOptionIcon
 					value="y"
-					label={__('Vertical', 'eighteen73-blocks')}
+					label={__('Vertical', 'matter')}
 					icon={arrowDown}
 				/>
 			</ToggleGroupControl>
 
 			<ToggleGroupControl
-				label={__('Autoplay', 'eighteen73-blocks')}
+				label={__('Autoplay', 'matter')}
 				value={!!autoplay.active}
 				onChange={(value) => onChangeAutoplay('active', value)}
 				isBlock
 			>
 				<ToggleGroupControlOption
 					value={false}
-					label={__('No', 'eighteen73-blocks')}
+					label={__('No', 'matter')}
 				/>
 				<ToggleGroupControlOption
 					value={true}
-					label={__('Yes', 'eighteen73-blocks')}
+					label={__('Yes', 'matter')}
 				/>
 			</ToggleGroupControl>
 
 			{autoplay.active && (
 				<ToggleGroupControl
-					label={__('Autoplay Type', 'eighteen73-blocks')}
+					label={__('Autoplay Type', 'matter')}
 					value={autoplay.type}
 					onChange={(value) => onChangeAutoplay('type', value)}
 					isBlock
 				>
 					<ToggleGroupControlOption
 						value="slide"
-						label={__('Slide', 'eighteen73-blocks')}
+						label={__('Slide', 'matter')}
 					/>
 					<ToggleGroupControlOption
 						value="scroll"
-						label={__('Scroll', 'eighteen73-blocks')}
+						label={__('Scroll', 'matter')}
 					/>
 				</ToggleGroupControl>
 			)}
 
 			<ToggleGroupControl
-				label={__('Disabled', 'eighteen73-blocks')}
+				label={__('Disabled', 'matter')}
 				value={!!options.active}
 				onChange={(value) => onChangeOption('active', value)}
 				isBlock
 			>
 				<ToggleGroupControlOption
 					value={true}
-					label={__('No', 'eighteen73-blocks')}
+					label={__('No', 'matter')}
 				/>
 				<ToggleGroupControlOption
 					value={false}
-					label={__('Yes', 'eighteen73-blocks')}
+					label={__('Yes', 'matter')}
 				/>
 			</ToggleGroupControl>
 		</div>
@@ -214,7 +214,7 @@ export default function CarouselControls({
 
 	return (
 		<TabPanel
-			className="eighteen73-blocks-carousel__settings-tabs"
+			className="matter-carousel__settings-tabs"
 			initialTabName={BASE_TAB}
 			tabs={tabs}
 		>
@@ -271,7 +271,7 @@ export default function CarouselControls({
 								onClick={() => onResetLayer(tab.name)}
 								style={{ marginTop: '16px' }}
 							>
-								{__('Reset breakpoint', 'eighteen73-blocks')}
+								{__('Reset breakpoint', 'matter')}
 							</Button>
 						)}
 					</>

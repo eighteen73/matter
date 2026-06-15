@@ -10,7 +10,7 @@ const variations = [
 		scope: ['block', 'inserter'],
 		innerBlocks: [
 			[
-				'eighteen73-blocks/carousel-viewport',
+				'matter/carousel-viewport',
 				{
 					allowedBlocks: ['core/image'],
 					lock: { remove: true },
@@ -28,9 +28,9 @@ const variations = [
 					},
 				},
 				[
-					['eighteen73-blocks/carousel-previous-button'],
-					['eighteen73-blocks/carousel-dots'],
-					['eighteen73-blocks/carousel-next-button'],
+					['matter/carousel-previous-button'],
+					['matter/carousel-dots'],
+					['matter/carousel-next-button'],
 				],
 			],
 		],
@@ -47,7 +47,7 @@ const variations = [
 		scope: ['block', 'inserter'],
 		innerBlocks: [
 			[
-				'eighteen73-blocks/carousel-viewport',
+				'matter/carousel-viewport',
 				{
 					allowedBlocks: ['core/query'],
 					lock: { remove: true },
@@ -93,9 +93,9 @@ const variations = [
 					},
 				},
 				[
-					['eighteen73-blocks/carousel-previous-button'],
-					['eighteen73-blocks/carousel-dots'],
-					['eighteen73-blocks/carousel-next-button'],
+					['matter/carousel-previous-button'],
+					['matter/carousel-dots'],
+					['matter/carousel-next-button'],
 				],
 			],
 		],

@@ -32,8 +32,7 @@ function buildSlidesToShowCssVars({
 }) {
 	const baseSlidesToShow = baseOptions?.slidesToShow ?? 1;
 	const styles = {
-		'--wp--custom--eighteen73-carousel--slides-to-show-base':
-			baseSlidesToShow,
+		'--wp--custom--matter-carousel--slides-to-show-base': baseSlidesToShow,
 	};
 	let previousValue = baseSlidesToShow;
 
@@ -41,9 +40,8 @@ function buildSlidesToShowCssVars({
 		previousValue =
 			breakpointLayers?.[breakpoint]?.options?.slidesToShow ??
 			previousValue;
-		styles[
-			`--wp--custom--eighteen73-carousel--slides-to-show-${breakpoint}`
-		] = previousValue;
+		styles[`--wp--custom--matter-carousel--slides-to-show-${breakpoint}`] =
+			previousValue;
 	}
 
 	return styles;
@@ -67,13 +65,13 @@ function buildDirectionCssVars({
 		typeof baseOptions?.axis === 'string' ? baseOptions.axis : 'x';
 	const baseDirection = AXIS_TO_FLEX_DIRECTION[baseAxis] ?? 'row';
 	const styles = {
-		'--wp--custom--eighteen73-carousel--direction-base': baseDirection,
+		'--wp--custom--matter-carousel--direction-base': baseDirection,
 	};
 
 	for (const breakpoint of breakpointTokens) {
 		const breakpointAxis =
 			breakpointLayers?.[breakpoint]?.options?.axis ?? baseAxis;
-		styles[`--wp--custom--eighteen73-carousel--direction-${breakpoint}`] =
+		styles[`--wp--custom--matter-carousel--direction-${breakpoint}`] =
 			AXIS_TO_FLEX_DIRECTION[breakpointAxis] ?? baseDirection;
 	}
 
@@ -98,14 +96,14 @@ function buildContainerHeightCssVars({
 		typeof baseOptions?.axis === 'string' ? baseOptions.axis : 'x';
 	const baseHeight = AXIS_TO_CONTAINER_HEIGHT[baseAxis] ?? 'auto';
 	const styles = {
-		'--wp--custom--eighteen73-carousel--container-height-base': baseHeight,
+		'--wp--custom--matter-carousel--container-height-base': baseHeight,
 	};
 
 	for (const breakpoint of breakpointTokens) {
 		const breakpointAxis =
 			breakpointLayers?.[breakpoint]?.options?.axis ?? baseAxis;
 		styles[
-			`--wp--custom--eighteen73-carousel--container-height-${breakpoint}`
+			`--wp--custom--matter-carousel--container-height-${breakpoint}`
 		] = AXIS_TO_CONTAINER_HEIGHT[breakpointAxis] ?? baseHeight;
 	}
 
@@ -171,9 +169,9 @@ function getSlideGapOffsetCssVars({ breakpoint, axis, slideGap }) {
 	const cssSlideGap = toCssSpacingValue(slideGap);
 
 	return {
-		[`--wp--custom--eighteen73-carousel--slide--gap-left-${breakpoint}`]:
+		[`--wp--custom--matter-carousel--slide--gap-left-${breakpoint}`]:
 			axis === 'x' ? cssSlideGap : '0',
-		[`--wp--custom--eighteen73-carousel--slide--gap-top-${breakpoint}`]:
+		[`--wp--custom--matter-carousel--slide--gap-top-${breakpoint}`]:
 			axis === 'y' ? cssSlideGap : '0',
 	};
 }
@@ -209,7 +207,7 @@ export function buildCarouselStyleVars({
 			breakpointTokens,
 		}),
 		...buildResponsiveSpacingCssVars({
-			prefix: '--wp--custom--eighteen73-carousel--slide--gap',
+			prefix: '--wp--custom--matter-carousel--slide--gap',
 			baseValue: baseOptions?.slideGap,
 			breakpointLayers,
 			breakpointTokens,

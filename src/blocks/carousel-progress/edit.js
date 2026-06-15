@@ -24,15 +24,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody
-					title={__('Settings', 'eighteen73-blocks')}
-					initialOpen={true}
-				>
+				<PanelBody title={__('Settings', 'matter')} initialOpen={true}>
 					<ToggleControl
-						label={__(
-							'Indicate current position',
-							'eighteen73-blocks'
-						)}
+						label={__('Indicate current position', 'matter')}
 						checked={indicateCurrentPosition}
 						onChange={() =>
 							setAttributes({
@@ -46,7 +40,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 			<InspectorControls group="color">
 				<ColorControl
-					label={__('Bar', 'eighteen73-blocks')}
+					label={__('Bar', 'matter')}
 					value={barColor}
 					onChange={(value, slug) =>
 						setAttributes({

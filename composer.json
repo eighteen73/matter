@@ -1,6 +1,6 @@
 {
-	"name": "eighteen73/eighteen73-blocks",
-	"description": "Eighteen73 Blocks",
+	"name": "eighteen73/matter",
+	"description": "Matter",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"minimum-stability": "dev",
@@ -12,7 +12,7 @@
 	],
 	"autoload": {
 		"psr-4": {
-			"Eighteen73\\Blocks\\": "includes/classes/"
+			"Eighteen73\\Matter\\": "includes/classes/"
 		}
 	},
 	"require": {

@@ -39,7 +39,7 @@ import BlockVariationPicker from '../../components/block-variation-picker';
 import './editor.scss';
 
 const DEFAULT_CAROUSEL_TEMPLATE = [
-	['eighteen73-blocks/carousel-viewport', { lock: { remove: true } }],
+	['matter/carousel-viewport', { lock: { remove: true } }],
 	[
 		'core/group',
 		{
@@ -51,9 +51,9 @@ const DEFAULT_CAROUSEL_TEMPLATE = [
 			},
 		},
 		[
-			['eighteen73-blocks/carousel-previous-button'],
-			['eighteen73-blocks/carousel-dots'],
-			['eighteen73-blocks/carousel-next-button'],
+			['matter/carousel-previous-button'],
+			['matter/carousel-dots'],
+			['matter/carousel-next-button'],
 		],
 	],
 ];
@@ -185,7 +185,7 @@ export default function Edit({
 
 	const viewportBlock =
 		innerBlocks.find(
-			(block) => block.name === 'eighteen73-blocks/carousel-viewport'
+			(block) => block.name === 'matter/carousel-viewport'
 		) || false;
 
 	const viewportInnerBlocks = useSelect((select) =>
@@ -337,7 +337,7 @@ export default function Edit({
 	if (innerBlocks.length === 0) {
 		return (
 			<BlockVariationPicker
-				blockName="eighteen73-blocks/carousel"
+				blockName="matter/carousel"
 				setAttributes={setAttributes}
 				clientId={clientId}
 				defaultTemplate={DEFAULT_CAROUSEL_TEMPLATE}
@@ -348,7 +348,7 @@ export default function Edit({
 	return (
 		<>
 			<InspectorControls group="settings">
-				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
+				<PanelBody title={__('Settings', 'matter')}>
 					<CarouselControls
 						baseOptions={uiOptions}
 						baseAutoplay={uiAutoplay}
@@ -383,7 +383,7 @@ export default function Edit({
 						<SingleBlockTypeAppender
 							onClickAfter={() => {}}
 							variant="secondary"
-							text={__('Add item', 'eighteen73-blocks')}
+							text={__('Add item', 'matter')}
 							allowedBlock={
 								viewportBlock?.attributes?.allowedBlocks?.[0]
 							}

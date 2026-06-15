@@ -5,7 +5,7 @@
  *     $content (string): The block default content.
  *     $block (WP_Block): The block instance.
  *
- * @package Eighteen73Blocks\\CarouselViewport
+ * @package Eighteen73\Matter\CarouselViewport
  */
 
 ?>

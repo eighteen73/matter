@@ -5,11 +5,11 @@
  *     $content (string): The block default content.
  *     $block (WP_Block): The block instance.
  *
- * @package Eighteen73Blocks\\Carousel
+ * @package Eighteen73\Matter\Carousel
  */
 
-use Eighteen73\Blocks\Config;
-use Eighteen73\Blocks\Blocks\Carousel;
+use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Blocks\Carousel;
 
 $embla_config = isset( $attributes['emblaConfig'] ) && is_array( $attributes['emblaConfig'] )
 	? $attributes['emblaConfig']
@@ -23,7 +23,7 @@ $advanced_embla_config_merge = isset( $attributes['advancedEmblaConfigMerge'] )
 	? (bool) $attributes['advancedEmblaConfigMerge']
 	: false;
 
-$carousel_id = wp_unique_id( 'eighteen73-blocks-carousel-' );
+$carousel_id = wp_unique_id( 'matter-carousel-' );
 
 $carousel_context = [
 	'emblaConfig'              => $embla_config,
@@ -76,7 +76,7 @@ $carousel_classes = implode( ' ', $carousel_classes );
 		get_block_wrapper_attributes(
 			[
 				'id'                  => $carousel_id,
-				'data-wp-interactive' => 'eighteen73-blocks/carousel',
+				'data-wp-interactive' => 'matter/carousel',
 				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
 				'style'               => $styles,
 				'class'               => $carousel_classes,

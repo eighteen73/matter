@@ -2,10 +2,10 @@
 /**
  * Shared color style utilities.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks\Color;
+namespace Eighteen73\Matter\Color;
 
 defined( 'ABSPATH' ) || exit;
 

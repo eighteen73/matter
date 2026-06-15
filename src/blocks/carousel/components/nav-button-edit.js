@@ -31,7 +31,7 @@ function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 		<>
 			<InspectorControls group="color">
 				<ColorControl
-					label={__('Icon', 'eighteen73-blocks')}
+					label={__('Icon', 'matter')}
 					value={iconColor}
 					onChange={(value, slug) =>
 						setAttributes({
@@ -45,8 +45,8 @@ function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 			<button {...blockProps}>
 				<span className="embla__button-label">
 					{isNext
-						? __('Next slide', 'eighteen73-blocks')
-						: __('Previous slide', 'eighteen73-blocks')}
+						? __('Next slide', 'matter')
+						: __('Previous slide', 'matter')}
 				</span>
 			</button>
 		</>
