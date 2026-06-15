@@ -8,66 +8,19 @@
  * @package Eighteen73\Matter\Carousel
  */
 
-use Eighteen73\Matter\Config;
 use Eighteen73\Matter\Blocks\Carousel;
 
-$embla_config = isset( $attributes['emblaConfig'] ) && is_array( $attributes['emblaConfig'] )
-	? $attributes['emblaConfig']
-	: [];
+$carousel_id      = wp_unique_id( 'matter-carousel-' );
+$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
 
-$advanced_embla_config = isset( $attributes['advancedEmblaConfig'] ) && is_array( $attributes['advancedEmblaConfig'] )
-	? $attributes['advancedEmblaConfig']
-	: [];
+$carousel_classes = implode( ' ', Carousel::generate_carousel_classes( $block_attributes ) );
+$carousel_context = Carousel::build_carousel_context( $carousel_id, $block_attributes );
+$generated_styles = Carousel::generate_styles( $carousel_id, $block_attributes );
 
-$advanced_embla_config_merge = isset( $attributes['advancedEmblaConfigMerge'] )
-	? (bool) $attributes['advancedEmblaConfigMerge']
-	: false;
-
-$carousel_id = wp_unique_id( 'matter-carousel-' );
-
-$carousel_context = [
-	'emblaConfig'              => $embla_config,
-	'advancedEmblaConfig'      => $advanced_embla_config,
-	'advancedEmblaConfigMerge' => $advanced_embla_config_merge,
-	'carouselId'               => $carousel_id,
-];
-
-$breakpoint_tokens = array_keys( Config::file( 'breakpoints' ) );
-$breakpoint_layers = isset( $embla_config['breakpointLayers'] ) && is_array( $embla_config['breakpointLayers'] )
-	? $embla_config['breakpointLayers']
-	: [];
-$base_options      = isset( $embla_config['options'] ) && is_array( $embla_config['options'] )
-	? $embla_config['options']
-	: [];
-$content           = isset( $content ) && is_string( $content ) ? $content : '';
-
-$style_variables = Carousel::generate_css_variables( $base_options, $breakpoint_layers, $breakpoint_tokens );
-
-$base_active      = ! isset( $base_options['active'] ) || false !== $base_options['active'];
-$carousel_classes = [];
-$has_disabled     = ! $base_active;
-
-if ( ! $base_active ) {
-	$carousel_classes[] = 'carousel-disabled';
+if ( ! empty( $generated_styles ) && ! empty( $block->block_type->style ) ) {
+	wp_enqueue_style( $block->block_type->style );
+	wp_add_inline_style( $block->block_type->style, $generated_styles );
 }
-
-$previous_effective_active = $base_active;
-foreach ( $breakpoint_tokens as $breakpoint ) {
-	$layer_active = $breakpoint_layers[ $breakpoint ]['options']['active'] ?? null;
-	$active       = null !== $layer_active ? (bool) $layer_active : $previous_effective_active;
-
-	if ( ! $active && $active !== $previous_effective_active ) {
-		$carousel_classes[] = "carousel-disabled-on-{$breakpoint}";
-		$has_disabled       = true;
-	} elseif ( $active && $has_disabled && $active !== $previous_effective_active ) {
-		$carousel_classes[] = "carousel-enabled-on-{$breakpoint}";
-	}
-
-	$previous_effective_active = $active;
-}
-
-$styles           = implode( '; ', array_filter( $style_variables ) );
-$carousel_classes = implode( ' ', $carousel_classes );
 ?>
 
 <div
@@ -78,7 +31,6 @@ $carousel_classes = implode( ' ', $carousel_classes );
 				'id'                  => $carousel_id,
 				'data-wp-interactive' => 'matter/carousel',
 				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
-				'style'               => $styles,
 				'class'               => $carousel_classes,
 			]
 		)

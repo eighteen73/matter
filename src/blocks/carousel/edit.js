@@ -30,7 +30,7 @@ import {
 	normalizeEmblaConfig,
 	prepareEmblaBlockState,
 } from './utils/embla-block-config';
-import { buildCarouselStyleVars } from './utils/styles';
+import { buildCarouselStylesheet } from './utils/styles';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
@@ -166,14 +166,20 @@ export default function Edit({
 		});
 	};
 
-	const carouselStyleVars = buildCarouselStyleVars({
-		baseOptions: resolvedConfig.options,
-		breakpointLayers: resolvedConfig.breakpointLayers,
-		breakpointTokens: Object.keys(breakpoints),
-	});
+	const carouselId = `matter-carousel-${clientId}`;
+	const carouselStylesheet = useMemo(
+		() =>
+			buildCarouselStylesheet(`#${carouselId}`, {
+				baseOptions: resolvedConfig.options,
+				breakpointLayers: resolvedConfig.breakpointLayers,
+				breakpointTokens: Object.keys(breakpoints),
+				breakpointConfig: breakpoints,
+			}),
+		[carouselId, resolvedConfig.options, resolvedConfig.breakpointLayers]
+	);
 
 	const blockProps = useBlockProps({
-		style: carouselStyleVars,
+		id: carouselId,
 	});
 
 	const innerBlocks = useSelect((select) =>
@@ -245,16 +251,19 @@ export default function Edit({
 	// needs a reInit to reflect immediately in the editor.
 	const slidesToShowSignature = useMemo(() => {
 		const base = resolvedConfig.options.slidesToShow;
+		const baseAxis = resolvedConfig.options.axis;
 		const baseSlideGap = resolvedConfig.options.slideGap;
 		const layers = resolvedConfig.breakpointLayers || {};
 		const perBp = Object.keys(breakpoints).map((token) => [
 			token,
 			layers?.[token]?.options?.slidesToShow,
+			layers?.[token]?.options?.axis,
 			layers?.[token]?.options?.slideGap,
 		]);
-		return JSON.stringify({ base, baseSlideGap, perBp });
+		return JSON.stringify({ base, baseAxis, baseSlideGap, perBp });
 	}, [
 		resolvedConfig.options.slidesToShow,
+		resolvedConfig.options.axis,
 		resolvedConfig.options.slideGap,
 		resolvedConfig.breakpointLayers,
 	]);
@@ -346,6 +355,8 @@ export default function Edit({
 
 	return (
 		<>
+			{carouselStylesheet && <style>{carouselStylesheet}</style>}
+
 			<InspectorControls group="settings">
 				<PanelBody title={__('Settings', 'matter')}>
 					<CarouselControls
