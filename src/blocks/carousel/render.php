@@ -10,6 +10,8 @@
 
 use Eighteen73\Matter\Blocks\Carousel;
 
+defined( 'ABSPATH' ) || exit;
+
 $carousel_id      = wp_unique_id( 'matter-carousel-' );
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
 
