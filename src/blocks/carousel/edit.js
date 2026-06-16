@@ -6,15 +6,18 @@ import {
 	useInnerBlocksProps,
 	InspectorControls,
 	InnerBlocks,
+	store as blockEditorStore,
 } from '@wordpress/block-editor';
+import { createBlock } from '@wordpress/blocks';
 import { PanelBody } from '@wordpress/components';
-import { useSelect } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
  * External dependencies
  */
+import EmblaCarousel from 'embla-carousel';
 import useEmblaCarousel from 'embla-carousel-react';
 
 /**
@@ -24,6 +27,7 @@ import SingleBlockTypeAppender from '../../components/single-block-type-appender
 import {
 	addDotBtnsAndClickHandlers,
 	addPrevNextBtnsClickHandlers,
+	addThumbsClickHandlers,
 } from './utils/embla';
 import {
 	buildEmblaPlugins,
@@ -57,6 +61,8 @@ const DEFAULT_CAROUSEL_TEMPLATE = [
 		],
 	],
 ];
+
+const DEFAULT_THUMB_BLOCK = 'core/group';
 
 export default function Edit({
 	clientId,
@@ -201,6 +207,20 @@ export default function Edit({
 			: []
 	);
 
+	const thumbsBlock =
+		innerBlocks.find((block) => block.name === 'matter/carousel-thumbs') ||
+		false;
+
+	const thumbsInnerBlocks = useSelect((select) =>
+		thumbsBlock &&
+		select('core/block-editor').getBlock(thumbsBlock.clientId)
+			? select('core/block-editor').getBlock(thumbsBlock.clientId)
+					.innerBlocks
+			: []
+	);
+
+	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+
 	const hasQueryLoop = viewportInnerBlocks.find(
 		(block) =>
 			block.name === 'core/query' ||
@@ -284,6 +304,37 @@ export default function Edit({
 	}, [emblaApi, viewportInnerBlocks.length]);
 
 	useEffect(() => {
+		if (!thumbsBlock) {
+			return;
+		}
+
+		const viewportCount = viewportInnerBlocks.length;
+		const thumbsCount = thumbsInnerBlocks.length;
+
+		if (viewportCount === thumbsCount) {
+			return;
+		}
+
+		const nextThumbBlocks =
+			thumbsCount > viewportCount
+				? thumbsInnerBlocks.slice(0, viewportCount)
+				: [
+						...thumbsInnerBlocks,
+						...Array.from(
+							{ length: viewportCount - thumbsCount },
+							() => createBlock(DEFAULT_THUMB_BLOCK)
+						),
+					];
+
+		replaceInnerBlocks(thumbsBlock.clientId, nextThumbBlocks, false);
+	}, [
+		replaceInnerBlocks,
+		thumbsBlock,
+		thumbsInnerBlocks,
+		viewportInnerBlocks.length,
+	]);
+
+	useEffect(() => {
 		if (!emblaApi) {
 			return;
 		}
@@ -304,26 +355,54 @@ export default function Edit({
 		const controlsScope = block || emblaRootNode || null;
 		const buttons = controlsScope?.querySelectorAll('.embla__button');
 		const dotsNode = controlsScope?.querySelector('.embla__dots');
+		const thumbsViewportNode = controlsScope?.querySelector(
+			'.embla__thumbs__viewport'
+		);
+		const thumbsContainerNode = controlsScope?.querySelector(
+			'.embla__thumbs__container'
+		);
+		const removeHandlers = [];
 
-		if (!buttons || buttons.length < 2 || !dotsNode) {
-			return;
+		if (buttons && buttons.length >= 2) {
+			removeHandlers.push(
+				addPrevNextBtnsClickHandlers(emblaApi, buttons[0], buttons[1])
+			);
 		}
 
-		const removePrevNextBtnsClickHandlers = addPrevNextBtnsClickHandlers(
-			emblaApi,
-			buttons[0],
-			buttons[1]
-		);
-		const removeDotBtnsAndClickHandlers = addDotBtnsAndClickHandlers(
-			emblaApi,
-			dotsNode
-		);
+		if (dotsNode) {
+			removeHandlers.push(addDotBtnsAndClickHandlers(emblaApi, dotsNode));
+		}
+
+		if (thumbsViewportNode && thumbsContainerNode) {
+			const thumbsEmblaApi = EmblaCarousel(thumbsViewportNode, {
+				containScroll: 'keepSnaps',
+				container: thumbsContainerNode,
+				dragFree: true,
+				slides: editorSlidesSelector,
+				watchFocus: false,
+			});
+
+			removeHandlers.push(
+				addThumbsClickHandlers(
+					emblaApi,
+					thumbsEmblaApi,
+					thumbsContainerNode
+				)
+			);
+			removeHandlers.push(() => thumbsEmblaApi.destroy());
+		}
 
 		return () => {
-			removePrevNextBtnsClickHandlers();
-			removeDotBtnsAndClickHandlers();
+			removeHandlers.forEach((removeHandler) => removeHandler());
 		};
-	}, [clientId, emblaApi, innerBlocks, viewportInnerBlocks, setAttributes]);
+	}, [
+		clientId,
+		emblaApi,
+		innerBlocks,
+		thumbsInnerBlocks,
+		viewportInnerBlocks,
+		setAttributes,
+	]);
 
 	const isInnerBlockSelected = useSelect((select) =>
 		select('core/block-editor').hasSelectedInnerBlock(clientId, true)

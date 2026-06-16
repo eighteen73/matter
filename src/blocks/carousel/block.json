@@ -9,6 +9,7 @@
 	"description": "Carousel",
 	"allowedBlocks": [
 		"matter/carousel-viewport",
+		"matter/carousel-thumbs",
 		"matter/carousel-dots",
 		"matter/carousel-progress",
 		"matter/carousel-previous-button",

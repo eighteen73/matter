@@ -1,0 +1,30 @@
+.wp-block-matter-carousel-thumbs {
+	--_thumb--gap: var(--matter-carousel--thumb--gap, var(--wp--custom--matter-carousel--thumb--gap, var(--wp--preset--spacing--xs, 8px)));
+	--_thumb--border-radius: var(--matter-carousel--thumb--border-radius, var(--wp--custom--matter-carousel--thumb--border-radius, 4px));
+	--_thumb--selected-outline-color: var(--matter-carousel--thumb--selected-outline-color, var(--wp--preset--color--accent-primary, currentcolor));
+
+	margin-top: var(--_thumb--gap);
+
+	.embla__thumbs__viewport {
+		overflow: hidden;
+	}
+
+	.embla__thumbs__container {
+		display: flex;
+		gap: var(--_thumb--gap);
+		touch-action: pan-y pinch-zoom;
+	}
+
+	.embla__thumb {
+		border-radius: var(--_thumb--border-radius);
+		cursor: pointer;
+		flex: 0 0 auto;
+		margin: 0;
+		touch-action: manipulation;
+	}
+
+	.embla__thumb--selected {
+		outline: 2px solid var(--_thumb--selected-outline-color);
+		outline-offset: 2px;
+	}
+}

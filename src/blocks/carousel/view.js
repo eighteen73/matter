@@ -9,6 +9,7 @@ import {
 import {
 	addPrevNextBtnsClickHandlers,
 	addDotBtnsAndClickHandlers,
+	addThumbsClickHandlers,
 	setupProgressBar,
 } from './utils/embla';
 
@@ -60,6 +61,12 @@ store(STORE_NAMESPACE, {
 			);
 			const nextButtonNode = ref.querySelector('.embla__button--next');
 			const dotsNode = ref.querySelector('.embla__dots');
+			const thumbsViewportNode = ref.querySelector(
+				'.embla__thumbs__viewport'
+			);
+			const thumbsContainerNode = ref.querySelector(
+				'.embla__thumbs__container'
+			);
 			const progressNode = ref.querySelector('.embla__progress__bar');
 
 			if (prevButtonNode && nextButtonNode) {
@@ -78,6 +85,22 @@ store(STORE_NAMESPACE, {
 					addDotBtnsAndClickHandlers(emblaApi, dotsNode);
 
 				emblaApi.on('destroy', removeDotBtnsAndClickHandlers);
+			}
+
+			if (thumbsViewportNode && thumbsContainerNode) {
+				const thumbsEmblaApi = EmblaCarousel(thumbsViewportNode, {
+					containScroll: 'keepSnaps',
+					container: thumbsContainerNode,
+					dragFree: true,
+				});
+				const removeThumbsClickHandlers = addThumbsClickHandlers(
+					emblaApi,
+					thumbsEmblaApi,
+					thumbsContainerNode
+				);
+
+				emblaApi.on('destroy', removeThumbsClickHandlers);
+				emblaApi.on('destroy', () => thumbsEmblaApi.destroy());
 			}
 
 			if (progressNode) {
