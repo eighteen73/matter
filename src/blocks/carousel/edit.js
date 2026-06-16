@@ -249,7 +249,7 @@ export default function Edit({
 
 	// Embla measures slide sizes on init; changing CSS vars that affect widths
 	// needs a reInit to reflect immediately in the editor.
-	const slidesToShowSignature = useMemo(() => {
+	const layoutSignature = useMemo(() => {
 		const base = resolvedConfig.options.slidesToShow;
 		const baseAxis = resolvedConfig.options.axis;
 		const baseSlideGap = resolvedConfig.options.slideGap;
@@ -273,7 +273,7 @@ export default function Edit({
 			return;
 		}
 		emblaApi.reInit();
-	}, [emblaApi, slidesToShowSignature]);
+	}, [emblaApi, layoutSignature]);
 
 	useEffect(() => {
 		if (!emblaApi) {
