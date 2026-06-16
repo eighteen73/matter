@@ -8,10 +8,20 @@
  * @package Eighteen73\Matter\CarouselThumbs
  */
 
+use Eighteen73\Matter\Styling\Spacing;
+use Eighteen73\Matter\Config;
+
 defined( 'ABSPATH' ) || exit;
+
+$thumb_gap = isset( $attributes['thumbGap'] ) ? $attributes['thumbGap'] : '';
+
+$wrapper_attributes = [
+	'class'                          => 'embla__thumbs',
+	'style'                          => Spacing::get_responsive_css_vars( '--matter-carousel--thumb--gap', $thumb_gap, [], [], 'thumbGap' ),
+];
 ?>
 
-<div <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'embla__thumbs' ] ) ); ?>>
+<div <?php echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) ); ?>>
 	<div class="embla__thumbs__viewport">
 		<div class="embla__thumbs__container">
 			<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

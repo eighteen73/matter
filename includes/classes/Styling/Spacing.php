@@ -50,7 +50,7 @@ class Spacing {
 		string $option_key = 'slideGap'
 	): string {
 		$declarations = [
-			"{$prefix}-base: " . self::to_css_spacing_value( $base_value ),
+			"{$prefix}: " . self::to_css_spacing_value( $base_value ),
 		];
 
 		foreach ( $breakpoint_tokens as $token ) {
