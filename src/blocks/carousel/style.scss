@@ -4,7 +4,8 @@
 	.wp-block-matter-carousel-previous-button,
 	.wp-block-matter-carousel-next-button,
 	.wp-block-matter-carousel-dots,
-	.wp-block-matter-carousel-progress {
+	.wp-block-matter-carousel-progress,
+	.wp-block-matter-carousel-thumbs {
 		display: none;
 	}
 }
@@ -20,6 +21,10 @@
 	}
 
 	.wp-block-matter-carousel-progress {
+		display: block;
+	}
+
+	.wp-block-matter-carousel-thumbs {
 		display: block;
 	}
 }
