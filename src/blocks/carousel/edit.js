@@ -8,7 +8,7 @@ import {
 	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { createBlock } from '@wordpress/blocks';
+import { cloneBlock, createBlock } from '@wordpress/blocks';
 import { PanelBody } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
@@ -63,6 +63,23 @@ const DEFAULT_CAROUSEL_TEMPLATE = [
 ];
 
 const DEFAULT_THUMB_BLOCK = 'core/group';
+
+const createThumbBlockFromViewportBlock = (viewportInnerBlock) => {
+	if (!viewportInnerBlock) {
+		return createBlock(DEFAULT_THUMB_BLOCK);
+	}
+
+	if (viewportInnerBlock.name === 'core/image') {
+		return cloneBlock(viewportInnerBlock, {
+			aspectRatio: '1',
+			height: '50px',
+			scale: 'cover',
+			width: '50px',
+		});
+	}
+
+	return cloneBlock(viewportInnerBlock);
+};
 
 export default function Edit({
 	clientId,
@@ -322,7 +339,10 @@ export default function Edit({
 						...thumbsInnerBlocks,
 						...Array.from(
 							{ length: viewportCount - thumbsCount },
-							() => createBlock(DEFAULT_THUMB_BLOCK)
+							(_, offset) =>
+								createThumbBlockFromViewportBlock(
+									viewportInnerBlocks[thumbsCount + offset]
+								)
 						),
 					];
 
