@@ -18,6 +18,8 @@ $wrapper_attributes = [
 	'style' => Color::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
 ];
 
+do_action( 'qm/debug', $attributes );
+
 ?>
 
 <button <?php echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) ); ?>>

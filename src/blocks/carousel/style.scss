@@ -87,8 +87,8 @@
 		--wp--custom--matter-carousel--button--icon-size: 50%;
 		--wp--custom--matter-carousel--button--gap: var(--wp--preset--spacing--md, 12px);
 		--wp--custom--matter-carousel--button--background-color: transparent;
-		--wp--custom--matter-carousel--button--icon-color: currentcolor;
 		--wp--custom--matter-carousel--button--border-radius: 50%;
+		--_button-icon-color: var(--matter-carousel--button--icon-color, var(--wp--custom--matter-carousel--button--icon-color, currentcolor));
 
 		align-items: center;
 		appearance: none;
@@ -118,7 +118,7 @@
 			text-indent: -9999px;
 
 			&::after {
-				background-color: var(--wp--custom--matter-carousel--button--icon-color);
+				background-color: var(--_button-icon-color);
 				border-radius: inherit;
 				content: "";
 				inset: 0;
