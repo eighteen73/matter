@@ -2,6 +2,7 @@
  * Internal dependencies
  */
 import { toCssSpacingValue } from '../../../utils/spacing';
+import { getCssDeclarations, compileCssRules } from '../../../utils/styles';
 
 const AXIS_TO_FLEX_DIRECTION = {
 	x: 'row',
@@ -12,6 +13,8 @@ const AXIS_TO_CONTAINER_HEIGHT = {
 	x: 'auto',
 	y: '400px',
 };
+
+const PREFIX = '--matter-carousel';
 
 /**
  * Resolve CSS variable values for base and breakpoint layers.
@@ -108,7 +111,7 @@ function buildResponsiveRules({ selector, resolvedValues, breakpointConfig }) {
 	const rules = [
 		{
 			selector,
-			declarations: getCssDeclarations(resolvedValues.base),
+			declarations: getCssDeclarations(resolvedValues.base, PREFIX),
 		},
 	];
 	let previousValues = resolvedValues.base;
@@ -135,45 +138,11 @@ function buildResponsiveRules({ selector, resolvedValues, breakpointConfig }) {
 		rules.push({
 			rulesGroup: `@media (min-width: ${config.value})`,
 			selector,
-			declarations: getCssDeclarations(changedValues),
+			declarations: getCssDeclarations(changedValues, PREFIX),
 		});
 	}
 
 	return rules;
-}
-
-/**
- * Get CSS declarations.
- *
- * @param {Object} values Resolved values.
- * @return {Object<string, string>} CSS declarations.
- */
-function getCssDeclarations(values) {
-	return Object.fromEntries(
-		Object.entries(values).map(([key, value]) => [
-			`--matter-carousel--${key}`,
-			value,
-		])
-	);
-}
-
-/**
- * Compile CSS rules into a stylesheet string.
- *
- * @param {Array} rules CSS rules.
- * @return {string} Stylesheet.
- */
-function compileCssRules(rules) {
-	return rules
-		.map(({ rulesGroup, selector, declarations }) => {
-			const cssDeclarations = Object.entries(declarations)
-				.map(([property, value]) => `${property}:${value}`)
-				.join(';');
-			const rule = `${selector}{${cssDeclarations}}`;
-
-			return rulesGroup ? `${rulesGroup}{${rule}}` : rule;
-		})
-		.join('');
 }
 
 /**
