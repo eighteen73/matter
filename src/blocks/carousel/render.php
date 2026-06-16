@@ -17,9 +17,8 @@ $carousel_classes = implode( ' ', Carousel::generate_carousel_classes( $block_at
 $carousel_context = Carousel::build_carousel_context( $carousel_id, $block_attributes );
 $generated_styles = Carousel::generate_styles( $carousel_id, $block_attributes );
 
-if ( ! empty( $generated_styles ) && ! empty( $block->block_type->style ) ) {
-	wp_enqueue_style( $block->block_type->style );
-	wp_add_inline_style( $block->block_type->style, $generated_styles );
+if ( ! empty( $generated_styles ) ) {
+	wp_enqueue_block_support_styles( $generated_styles, 10 );
 }
 ?>
 
