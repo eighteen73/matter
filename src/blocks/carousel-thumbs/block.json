@@ -7,6 +7,12 @@
 	"category": "design",
 	"icon": "grid-view",
 	"description": "Displays thumbnail blocks to navigate between carousel slides.",
+	"attributes": {
+		"thumbGap": {
+			"type": "string",
+			"default": ""
+		}
+	},
 	"supports": {
 		"lock": false,
 		"spacing": {
@@ -14,7 +20,7 @@
 			"padding": true,
 			"__experimentalDefaultControls": {
 				"margin": true,
-				"padding": false
+				"padding": true
 			}
 		}
 	},
