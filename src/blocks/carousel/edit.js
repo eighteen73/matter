@@ -225,8 +225,9 @@ export default function Edit({
 	);
 
 	const thumbsBlock =
-		innerBlocks.find((block) => block.name === 'matter/carousel-thumbs') ||
-		false;
+		innerBlocks.find(
+			(block) => block.name === 'matter/carousel-thumbnails'
+		) || false;
 
 	const thumbsInnerBlocks = useSelect((select) =>
 		thumbsBlock &&

@@ -9,7 +9,7 @@
 	"description": "Carousel",
 	"allowedBlocks": [
 		"matter/carousel-viewport",
-		"matter/carousel-thumbs",
+		"matter/carousel-thumbnails",
 		"matter/carousel-dots",
 		"matter/carousel-progress",
 		"matter/carousel-previous-button",
@@ -55,7 +55,7 @@
 			"margin": true,
 			"padding": true,
 			"__experimentalDefaultControls": {
-				"margin": true,
+				"margin": false,
 				"padding": false
 			}
 		}

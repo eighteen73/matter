@@ -1,17 +1,16 @@
-.wp-block-matter-carousel-thumbs {
-	--_thumb--gap: var(--matter-carousel--thumb--gap, var(--wp--custom--matter-carousel--thumb--gap, var(--wp--preset--spacing--xs, 8px)));
+.wp-block-matter-carousel-thumbnails {
+	--_thumb--gap: inherit;
 	--_thumb--border-radius: var(--matter-carousel--thumb--border-radius, var(--wp--custom--matter-carousel--thumb--border-radius, 4px));
 	--_thumb--selected-outline-color: var(--matter-carousel--thumb--selected-outline-color, var(--wp--preset--color--accent-primary, currentcolor));
 
-	margin-top: var(--_thumb--gap);
-
 	.embla__thumbs__viewport {
+		gap: inherit;
 		overflow: hidden;
 	}
 
 	.embla__thumbs__container {
 		display: flex;
-		gap: var(--_thumb--gap);
+		gap: inherit;
 		touch-action: pan-y pinch-zoom;
 	}
 
