@@ -351,7 +351,7 @@ export default function Edit({
 		replaceInnerBlocks,
 		thumbsBlock,
 		thumbsInnerBlocks,
-		viewportInnerBlocks.length,
+		viewportInnerBlocks,
 	]);
 
 	useEffect(() => {
