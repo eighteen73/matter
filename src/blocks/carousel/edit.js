@@ -8,7 +8,6 @@ import {
 	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { cloneBlock, createBlock } from '@wordpress/blocks';
 import { PanelBody } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
@@ -35,6 +34,7 @@ import {
 	prepareEmblaBlockState,
 } from './utils/embla-block-config';
 import { buildCarouselStylesheet } from './utils/styles';
+import { shouldReplaceThumbBlocks } from './utils/thumbnails-sync';
 import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
@@ -61,25 +61,6 @@ const DEFAULT_CAROUSEL_TEMPLATE = [
 		],
 	],
 ];
-
-const DEFAULT_THUMB_BLOCK = 'core/group';
-
-const createThumbBlockFromViewportBlock = (viewportInnerBlock) => {
-	if (!viewportInnerBlock) {
-		return createBlock(DEFAULT_THUMB_BLOCK);
-	}
-
-	if (viewportInnerBlock.name === 'core/image') {
-		return cloneBlock(viewportInnerBlock, {
-			aspectRatio: '1',
-			height: '50px',
-			scale: 'cover',
-			width: '50px',
-		});
-	}
-
-	return cloneBlock(viewportInnerBlock);
-};
 
 export default function Edit({
 	clientId,
@@ -326,26 +307,17 @@ export default function Edit({
 			return;
 		}
 
-		const viewportCount = viewportInnerBlocks.length;
-		const thumbsCount = thumbsInnerBlocks.length;
+		const syncWithCarousel =
+			thumbsBlock.attributes?.syncWithCarousel !== false;
+		const nextThumbBlocks = shouldReplaceThumbBlocks({
+			syncWithCarousel,
+			viewportInnerBlocks,
+			thumbsInnerBlocks,
+		});
 
-		if (viewportCount === thumbsCount) {
+		if (!nextThumbBlocks) {
 			return;
 		}
-
-		const nextThumbBlocks =
-			thumbsCount > viewportCount
-				? thumbsInnerBlocks.slice(0, viewportCount)
-				: [
-						...thumbsInnerBlocks,
-						...Array.from(
-							{ length: viewportCount - thumbsCount },
-							(_, offset) =>
-								createThumbBlockFromViewportBlock(
-									viewportInnerBlocks[thumbsCount + offset]
-								)
-						),
-					];
 
 		replaceInnerBlocks(thumbsBlock.clientId, nextThumbBlocks, false);
 	}, [

@@ -11,9 +11,9 @@
 		"matter/carousel"
 	],
 	"attributes": {
-		"thumbGap": {
-			"type": "string",
-			"default": ""
+		"syncWithCarousel": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"supports": {

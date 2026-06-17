@@ -4,12 +4,14 @@
 	--_thumb--selected-outline-color: var(--matter-carousel--thumb--selected-outline-color, var(--wp--preset--color--accent-primary, currentcolor));
 
 	.embla__thumbs__viewport {
+		flex-direction: inherit;
 		gap: inherit;
 		overflow: hidden;
 	}
 
 	.embla__thumbs__container {
 		display: flex;
+		flex-direction: inherit;
 		gap: inherit;
 		touch-action: pan-y pinch-zoom;
 	}

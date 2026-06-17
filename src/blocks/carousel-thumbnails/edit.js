@@ -3,24 +3,16 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { PanelBody } from '@wordpress/components';
-import SpacingControl from '../../components/spacing-control';
+import { PanelBody, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 import './editor.scss';
-import { buildResponsiveSpacingCssVars } from '../../utils/spacing';
 
 export default function Edit({ attributes, setAttributes }) {
-	const { thumbGap } = attributes;
+	const { syncWithCarousel = true } = attributes;
 
 	const blockProps = useBlockProps({
 		className: 'embla__thumbs',
-		style: buildResponsiveSpacingCssVars({
-			prefix: '--matter-carousel--thumb--gap',
-			baseValue: thumbGap,
-			breakpointLayers: [],
-			breakpointTokens: [],
-		}),
 	});
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
@@ -33,10 +25,16 @@ export default function Edit({ attributes, setAttributes }) {
 		<>
 			<InspectorControls>
 				<PanelBody title={__('Settings', 'matter')} initialOpen={true}>
-					<SpacingControl
-						label={__('Thumb gap', 'matter')}
-						value={thumbGap}
-						onChange={(value) => setAttributes({ thumbGap: value })}
+					<ToggleControl
+						label={__('Sync with carousel', 'matter')}
+						help={__(
+							'When enabled, thumbnail content mirrors the carousel viewport slides.',
+							'matter'
+						)}
+						checked={syncWithCarousel}
+						onChange={(value) =>
+							setAttributes({ syncWithCarousel: value })
+						}
 					/>
 				</PanelBody>
 			</InspectorControls>
