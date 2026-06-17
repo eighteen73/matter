@@ -13,6 +13,7 @@
 	"supports": {
 		"html": false,
 		"interactivity": true,
+		"lock": false,
 		"reusable": false
 	},
 	"usesContext": [ "matter/modal-id", "matter/drawer-id", "matter/collapsible-id" ],

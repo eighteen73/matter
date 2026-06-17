@@ -1,0 +1,59 @@
+import {
+	BlockControls,
+	InnerBlocks,
+	useBlockProps,
+	useInnerBlocksProps,
+	store as blockEditorStore,
+} from '@wordpress/block-editor';
+import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { __ } from '@wordpress/i18n';
+
+/**
+ * @param {Object} props          Component props.
+ * @param {Object} props.context  Block context.
+ * @param {string} props.clientId Block client ID.
+ * @return {Element} Element to render.
+ */
+export default function Edit({ context, clientId }) {
+	const isOpen = !!context['matter/collapsible-is-open'];
+	const parentClientId = useSelect(
+		(select) => select(blockEditorStore).getBlockRootClientId(clientId),
+		[clientId]
+	);
+	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
+		useDispatch(blockEditorStore);
+	const blockProps = useBlockProps({
+		hidden: !isOpen,
+	});
+	const innerBlocksProps = useInnerBlocksProps(blockProps, {
+		renderAppender: InnerBlocks.ButtonBlockAppender,
+		templateLock: false,
+	});
+
+	const closeEditorPreview = () => {
+		if (!parentClientId) {
+			return;
+		}
+
+		__unstableMarkNextChangeAsNotPersistent();
+		updateBlockAttributes(parentClientId, {
+			editorIsOpen: false,
+		});
+	};
+
+	return (
+		<>
+			{isOpen && (
+				<BlockControls>
+					<ToolbarGroup>
+						<ToolbarButton onClick={closeEditorPreview}>
+							{__('Close collapsible', 'matter')}
+						</ToolbarButton>
+					</ToolbarGroup>
+				</BlockControls>
+			)}
+			<div {...innerBlocksProps} />
+		</>
+	);
+}

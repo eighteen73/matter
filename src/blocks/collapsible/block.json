@@ -1,0 +1,40 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/collapsible",
+	"version": "0.1.0",
+	"title": "Collapsible",
+	"keywords": [ "accordion", "collapsible", "toggle" ],
+	"category": "widgets",
+	"description": "An interactive section which reveals content when triggered.",
+	"allowedBlocks": [ "matter/trigger", "matter/collapsible-content" ],
+	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
+		"targetId": {
+			"type": "string",
+			"default": ""
+		},
+		"editorIsOpen": {
+			"type": "boolean",
+			"default": false,
+			"role": "local"
+		}
+	},
+	"providesContext": {
+		"matter/collapsible-id": "targetId",
+		"matter/collapsible-is-open": "editorIsOpen"
+	},
+	"supports": {
+		"anchor": true,
+		"html": false,
+		"interactivity": true
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php",
+	"viewScriptModule": "file:./view.js"
+}
