@@ -8,7 +8,7 @@
  * @package Eighteen73Blocks\\TabList
  */
 
-$tabs = $block->context['eighteen73-blocks/tabs-list'] ?? [];
+$tabs = $block->context['matter/tabs-list'] ?? [];
 ?>
 
 <div <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'role' => 'tablist' ] ) ); ?>>

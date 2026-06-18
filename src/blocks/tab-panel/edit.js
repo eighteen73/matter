@@ -30,9 +30,8 @@ export default function Edit({ clientId, context, isSelected }) {
 	const focusRef = useRef();
 
 	// Consume tab indices from context
-	const activeTabIndex = context['eighteen73-blocks/tabs-activeTabIndex'];
-	const editorActiveTabIndex =
-		context['eighteen73-blocks/tabs-editorActiveTabIndex'];
+	const activeTabIndex = context['matter/tabs-activeTabIndex'];
+	const editorActiveTabIndex = context['matter/tabs-editorActiveTabIndex'];
 	const effectiveActiveIndex = editorActiveTabIndex ?? activeTabIndex;
 
 	// Clean up animation frames on unmount.

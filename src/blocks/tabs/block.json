@@ -1,12 +1,12 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "eighteen73/tabs",
+	"name": "matter/tabs",
 	"title": "Tabs",
 	"description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
 	"category": "design",
 	"textdomain": "default",
-	"allowedBlocks": [ "eighteen73/tab-list", "eighteen73/tab-panels" ],
+	"allowedBlocks": [ "matter/tab-list", "matter/tab-panels" ],
 	"attributes": {
 		"activeTabIndex": {
 			"type": "number",
@@ -56,10 +56,10 @@
 		"renaming": true
 	},
 	"providesContext": {
-		"eighteen73-blocks/tabs-activeTabIndex": "activeTabIndex",
-		"eighteen73-blocks/tabs-editorActiveTabIndex": "editorActiveTabIndex"
+		"matter/tabs-activeTabIndex": "activeTabIndex",
+		"matter/tabs-editorActiveTabIndex": "editorActiveTabIndex"
 	},
-	"usesContext": [ "eighteen73-blocks/tabs-list", "eighteen73-blocks/tabs-id" ],
+	"usesContext": [ "matter/tabs-list", "matter/tabs-id" ],
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",

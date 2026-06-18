@@ -30,7 +30,7 @@ const EMPTY_ARRAY = [];
  * Initial tab/panel creation is delegated to the tab-panels template in
  * tab-panels/edit.js (templateLock: false, applied only when empty).
  */
-const TABS_TEMPLATE = [['eighteen73/tab-list'], ['eighteen73/tab-panels']];
+const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
 function Edit({ clientId, attributes, setAttributes }) {
 	const { anchor, activeTabIndex, editorActiveTabIndex } = attributes;
@@ -41,10 +41,10 @@ function Edit({ clientId, attributes, setAttributes }) {
 			const innerBlocks = getBlocks(clientId);
 
 			const tabPanelsBlock = innerBlocks.find(
-				(block) => block.name === 'eighteen73/tab-panels'
+				(block) => block.name === 'matter/tab-panels'
 			);
 			const tabList = innerBlocks.find(
-				(block) => block.name === 'eighteen73/tab-list'
+				(block) => block.name === 'matter/tab-list'
 			);
 
 			return {
@@ -74,10 +74,10 @@ function Edit({ clientId, attributes, setAttributes }) {
 		}));
 
 		return {
-			'eighteen73-blocks/tabs-list': tabList,
-			'eighteen73-blocks/tabs-id': anchor,
-			'eighteen73-blocks/tabs-activeTabIndex': activeTabIndex,
-			'eighteen73-blocks/tabs-editorActiveTabIndex': editorActiveTabIndex,
+			'matter/tabs-list': tabList,
+			'matter/tabs-id': anchor,
+			'matter/tabs-activeTabIndex': activeTabIndex,
+			'matter/tabs-editorActiveTabIndex': editorActiveTabIndex,
 		};
 	}, [tabPanels, anchor, activeTabIndex, editorActiveTabIndex]);
 

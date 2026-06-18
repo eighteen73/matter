@@ -30,7 +30,7 @@ import RemoveTabToolbarControl from '../tab-panel/remove-tab-toolbar-control';
 const EMPTY_ARRAY = [];
 
 function Edit({ attributes, clientId, context }) {
-	const tabsList = context['eighteen73-blocks/tabs-list'] || EMPTY_ARRAY;
+	const tabsList = context['matter/tabs-list'] || EMPTY_ARRAY;
 
 	const colorProps = useColorProps(attributes);
 	const borderProps = useBorderProps(attributes);

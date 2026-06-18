@@ -1,13 +1,13 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "eighteen73/tab-panels",
+	"name": "matter/tab-panels",
 	"title": "Tab Panels",
 	"description": "Container for tab panel content in a tabbed interface.",
 	"category": "design",
 	"textdomain": "default",
-	"parent": [ "eighteen73/tabs" ],
-	"allowedBlocks": [ "eighteen73/tab-panel" ],
+	"parent": [ "matter/tabs" ],
+	"allowedBlocks": [ "matter/tab-panel" ],
 	"attributes": {},
 	"supports": {
 		"anchor": false,
