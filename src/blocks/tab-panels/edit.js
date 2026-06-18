@@ -21,8 +21,8 @@ import RemoveTabToolbarControl from '../tab-panel/remove-tab-toolbar-control';
  * existing blocks that already have tab panels saved.
  */
 const TAB_PANELS_TEMPLATE = [
-	['eighteen73/tab-panel', { label: __('Tab') }],
-	['eighteen73/tab-panel', { label: __('Tab') }],
+	['matter/tab-panel', { label: __('Tab') }],
+	['matter/tab-panel', { label: __('Tab') }],
 ];
 
 export default function Edit({ clientId }) {

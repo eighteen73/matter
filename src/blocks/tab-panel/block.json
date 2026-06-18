@@ -1,7 +1,7 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "eighteen73/tab-panel",
+	"name": "matter/tab-panel",
 	"title": "Tab Panel",
 	"description": "Content for a tab in a tabbed interface.",
 	"category": "design",
@@ -12,11 +12,11 @@
 			"default": ""
 		}
 	},
-	"parent": [ "eighteen73/tab-panels" ],
+	"parent": [ "matter/tab-panels" ],
 	"usesContext": [
-		"eighteen73-blocks/tabs-activeTabIndex",
-		"eighteen73-blocks/tabs-editorActiveTabIndex",
-		"eighteen73-blocks/tabs-id"
+		"matter/tabs-activeTabIndex",
+		"matter/tabs-editorActiveTabIndex",
+		"matter/tabs-id"
 	],
 	"supports": {
 		"anchor": true,
@@ -48,7 +48,7 @@
 		"visibility": false
 	},
 	"providesContext": {
-		"eighteen73-blocks/tab-label": "label"
+		"matter/tab-label": "label"
 	},
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css"
