@@ -10,9 +10,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Styling\Color;
+
+
 $context        = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
 $collapsible_id = ! empty( $context['matter/collapsible-id'] ) ? $context['matter/collapsible-id'] : '';
 $content_id     = ! empty( $collapsible_id ) ? $collapsible_id . '-content' : wp_unique_id( 'matter-collapsible-content-' );
+$styles         = Color::get_styles( $attributes, Config::get( 'colors', 'collapsible-content' ) );
 ?>
 
 <div
@@ -21,6 +26,7 @@ $content_id     = ! empty( $collapsible_id ) ? $collapsible_id . '-content' : wp
 		get_block_wrapper_attributes(
 			[
 				'id'                   => $content_id,
+				'style'                => Color::get_styles( $attributes, Config::get( 'colors', 'collapsible-content' ) ),
 				'data-wp-bind--hidden' => '!context.isOpen',
 			]
 		)

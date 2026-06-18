@@ -25,6 +25,8 @@ foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
 if ( empty( $collapsible_id ) ) {
 	$collapsible_id = wp_unique_id( 'matter-collapsible-' );
 }
+
+$type = ! empty( $block_attributes['type'] ) ? $block_attributes['type'] : 'popover';
 ?>
 
 <div
@@ -33,6 +35,7 @@ if ( empty( $collapsible_id ) ) {
 		get_block_wrapper_attributes(
 			[
 				'id'                  => $collapsible_id,
+				'class'               => "is-type-{$type}",
 				'data-wp-interactive' => 'matter/collapsible',
 			]
 		)

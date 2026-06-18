@@ -2,12 +2,24 @@ import {
 	BlockControls,
 	useBlockProps,
 	useInnerBlocksProps,
+	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { Notice, ToolbarButton, ToolbarGroup } from '@wordpress/components';
+import {
+	Notice,
+	ToolbarButton,
+	ToolbarGroup,
+	__experimentalToolsPanel as ToolsPanel,
+	__experimentalToolsPanelItem as ToolsPanelItem,
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+	SelectControl,
+} from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+
+import clsx from 'clsx';
 
 import {
 	generateBlockId,
@@ -27,7 +39,7 @@ const TEMPLATE = [
  * @return {Element} Element to render.
  */
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { anchor, editorIsOpen, generatedId, targetId } = attributes;
+	const { anchor, editorIsOpen, generatedId, targetId, type } = attributes;
 	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch(blockEditorStore);
 
@@ -97,7 +109,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	]);
 
 	const blockProps = useBlockProps({
-		className: editorIsOpen ? 'is-open' : undefined,
+		className: clsx(
+			editorIsOpen ? 'is-open' : undefined,
+			`is-type-${type}`
+		),
 	});
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
@@ -123,6 +138,44 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					</ToolbarButton>
 				</ToolbarGroup>
 			</BlockControls>
+
+			<InspectorControls>
+				<ToolsPanel>
+					<ToolsPanelItem
+						hasValue={() => !!type}
+						label={__('Type', 'matter')}
+						onDeselect={() => setAttributes({ type: 'popover' })}
+					>
+						<ToggleGroupControl
+							label={__('Type', 'matter')}
+							value={type}
+							onChange={(value) => setAttributes({ type: value })}
+							isBlock
+							help={
+								type === 'popover'
+									? __(
+											'Open the collapsible content over the content of the page.',
+											'matter'
+										)
+									: __(
+											'Open the collapsible content inline with the content of the page.',
+											'matter'
+										)
+							}
+						>
+							<ToggleGroupControlOption
+								value="popover"
+								label={__('Popover', 'matter')}
+							/>
+							<ToggleGroupControlOption
+								value="inline"
+								label={__('Inline', 'matter')}
+							/>
+						</ToggleGroupControl>
+					</ToolsPanelItem>
+				</ToolsPanel>
+			</InspectorControls>
+
 			<div {...innerBlocksProps}>
 				{duplicateAnchor && (
 					<Notice status="warning" isDismissible={false}>

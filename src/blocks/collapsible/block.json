@@ -17,6 +17,11 @@
 			"type": "string",
 			"default": ""
 		},
+		"type": {
+			"type": "string",
+			"enum": [ "popover", "inline" ],
+			"default": "popover"
+		},
 		"editorIsOpen": {
 			"type": "boolean",
 			"default": false,
