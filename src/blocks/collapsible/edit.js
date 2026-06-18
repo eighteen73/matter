@@ -140,11 +140,15 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			</BlockControls>
 
 			<InspectorControls>
-				<ToolsPanel>
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() => setAttributes({ type: 'popover' })}
+				>
 					<ToolsPanelItem
 						hasValue={() => !!type}
 						label={__('Type', 'matter')}
 						onDeselect={() => setAttributes({ type: 'popover' })}
+						isShownByDefault
 					>
 						<ToggleGroupControl
 							label={__('Type', 'matter')}
