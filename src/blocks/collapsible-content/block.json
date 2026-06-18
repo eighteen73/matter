@@ -23,7 +23,7 @@
 			"blockGap": true
 		}
 	},
-	"usesContext": [ "matter/collapsible-id" ],
+	"usesContext": [ "matter/collapsible-id", "matter/collapsible-is-open" ],
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
