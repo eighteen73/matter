@@ -1,0 +1,21 @@
+.wp-block-matter-close {
+	align-items: center;
+	border: unset;
+	box-shadow: unset;
+	cursor: pointer;
+	display: inline-flex;
+	gap: 0.5em;
+	line-height: 1;
+	padding: unset;
+
+	&::before {
+		background-color: currentcolor;
+		content: "";
+		display: inline-block;
+		height: 1em;
+		mask-image: url("../../../assets/svg/x.svg");
+		mask-repeat: no-repeat;
+		mask-size: contain;
+		width: 1em;
+	}
+}

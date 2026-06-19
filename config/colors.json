@@ -15,5 +15,10 @@
 		"dotActiveColor": "--matter-carousel--dot--active-color",
 		"barColor": "--matter-carousel--progress--bar",
 		"iconColor": "--matter-carousel--button--icon-color"
+	},
+	"drawer-content": {
+		"backdropColor": "--matter-drawer-content--backdrop-color",
+		"backdropOpacity": "--matter-drawer-content--backdrop-opacity",
+		"backdropBlur": "--matter-drawer-content--backdrop-blur"
 	}
 }

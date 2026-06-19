@@ -1,0 +1,79 @@
+.wp-block-matter-drawer__content {
+	--_backdrop-color: var(--matter-drawer-content--backdrop-color, var(--wp--custom--matter-drawer-content--backdrop-color, transparent));
+	--_backdrop-opacity: calc(var(--matter-drawer-content--backdrop-opacity, var(--wp--custom--matter-drawer-content--backdrop-opacity, 50)) / 100);
+	--_backdrop-blur: calc(var(--matter-drawer-content--backdrop-blur, var(--wp--custom--matter-drawer-content--backdrop-blur, 0)) * 1px);
+	--_width: var(--matter-drawer-content--width, var(--wp--custom--matter-drawer-content--width, 320px));
+	--_height: var(--matter-drawer-content--height, var(--wp--custom--matter-drawer-content--height, 320px));
+	--_transition: var(--matter-drawer-content--transition, var(--wp--custom--matter-drawer-content--transition, 300ms ease-in-out));
+
+	border: unset;
+	margin: 0;
+	max-height: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	position: fixed;
+	transition: transform var(--_transition);
+	will-change: transform;
+	z-index: 1000;
+
+	&::backdrop {
+		backdrop-filter: blur(var(--_backdrop-blur));
+		background-color: var(--_backdrop-color);
+		opacity: var(--_backdrop-opacity);
+	}
+
+	&.is-layout-flex {
+		align-items: stretch;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		justify-content: stretch;
+	}
+
+	&.opens-left {
+		height: 100%;
+		left: 0;
+		right: auto;
+		top: 0;
+		transform: translateX(-100%);
+		width: var(--_width);
+	}
+
+	&.opens-right {
+		height: 100%;
+		left: auto;
+		right: 0;
+		top: 0;
+		transform: translateX(100%);
+		width: var(--_width);
+	}
+
+	&.opens-top {
+		height: var(--_height);
+		left: 0;
+		right: 0;
+		top: 0;
+		transform: translateY(-100%);
+		width: 100%;
+	}
+
+	&.opens-bottom {
+		bottom: 0;
+		height: var(--_height);
+		left: 0;
+		right: 0;
+		top: auto;
+		transform: translateY(100%);
+		width: 100%;
+	}
+
+	&[open] {
+		transform: translate(0, 0);
+	}
+
+	> .is-vertical {
+		flex-wrap: nowrap;
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
+}

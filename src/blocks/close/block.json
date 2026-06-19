@@ -1,0 +1,52 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/close",
+	"version": "0.1.0",
+	"title": "Close",
+	"keywords": [ "close", "dismiss", "button" ],
+	"category": "widgets",
+	"description": "A close button for modal and drawer content.",
+	"ancestor": [ "matter/drawer-content", "matter/modal-content" ],
+	"attributes": {
+		"label": {
+			"type": "string",
+			"default": "Close"
+		},
+		"showLabel": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"supports": {
+		"border": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"color": {
+			"text": true,
+			"background": true,
+			"gradients": true
+		},
+		"html": false,
+		"reusable": false,
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": true
+			}
+		},
+		"typography": {
+			"fontSize": true
+		}
+	},
+	"usesContext": [ "matter/drawer-id", "matter/modal-id" ],
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}
