@@ -23,13 +23,6 @@
 		opacity: var(--_backdrop-opacity);
 	}
 
-	&.is-layout-flex {
-		align-items: stretch;
-		flex-direction: column;
-		flex-wrap: nowrap;
-		justify-content: stretch;
-	}
-
 	&.opens-left {
 		height: 100%;
 		left: 0;
@@ -71,6 +64,7 @@
 		transform: translate(0, 0);
 	}
 
+	// When a group block is set to stack, allow it to scroll.
 	> .is-vertical {
 		flex-wrap: nowrap;
 		overflow-x: hidden;

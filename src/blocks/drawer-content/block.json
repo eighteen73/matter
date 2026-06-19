@@ -43,10 +43,13 @@
 		"html": false,
 		"layout": {
 			"default": {
-				"type": "flex"
+				"type": "flex",
+				"orientation": "vertical"
 			},
 			"allowSizingOnChildren": true,
-			"allowWrap": false
+			"allowWrap": false,
+			"allowVerticalAlignment": true,
+			"allowOrientation": false
 		},
 		"lock": false,
 		"reusable": false,
