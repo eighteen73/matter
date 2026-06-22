@@ -8,8 +8,8 @@ import {
 	store as blockEditorStore,
 	InspectorControls,
 } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
-import { useMemo } from '@wordpress/element';
+import { useSelect, useDispatch } from '@wordpress/data';
+import { useMemo, useCallback } from '@wordpress/element';
 import {
 	PanelBody,
 	ToggleControl,
@@ -23,9 +23,8 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import AddTabToolbarControl from '../tab-panel/add-tab-toolbar-control';
-import RemoveTabToolbarControl from '../tab-panel/remove-tab-toolbar-control';
 import breakpoints from '../../constants/breakpoints';
+import SingleBlockTypeAppender from '../../components/single-block-type-appender';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
@@ -40,7 +39,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 		collapsesOn,
 	} = attributes;
 
-	const { tabPanels } = useSelect(
+	const { tabPanels, tabPanelsClientId, tabListClientId } = useSelect(
 		(select) => {
 			const { getBlocks } = select(blockEditorStore);
 			const innerBlocks = getBlocks(clientId);
@@ -48,23 +47,49 @@ function Edit({ clientId, attributes, setAttributes }) {
 			const tabPanelsBlock = innerBlocks.find(
 				(block) => block.name === 'matter/tab-panels'
 			);
+			const tabListBlock = innerBlocks.find(
+				(block) => block.name === 'matter/tab-list'
+			);
 
 			return {
 				tabPanels: tabPanelsBlock?.innerBlocks ?? [],
+				tabPanelsClientId: tabPanelsBlock?.clientId ?? null,
+				tabListClientId: tabListBlock?.clientId ?? null,
 			};
 		},
 		[clientId]
+	);
+
+	const {
+		updateBlockAttributes,
+		selectBlock,
+		__unstableMarkNextChangeAsNotPersistent,
+	} = useDispatch(blockEditorStore);
+
+	const handleAddTabAfter = useCallback(
+		(newTabIndex) => {
+			__unstableMarkNextChangeAsNotPersistent();
+			updateBlockAttributes(clientId, {
+				editorActiveTabIndex: newTabIndex,
+			});
+
+			if (tabListClientId) {
+				selectBlock(tabListClientId);
+			}
+		},
+		[
+			clientId,
+			tabListClientId,
+			updateBlockAttributes,
+			selectBlock,
+			__unstableMarkNextChangeAsNotPersistent,
+		]
 	);
 
 	/**
 	 * Memoize context value to prevent unnecessary re-renders.
 	 */
 	const contextValue = useMemo(() => {
-		/**
-		 * Compute tabs list from innerblocks to provide via context.
-		 * This traverses the tab-panels block to find all tab-panel blocks
-		 * and extracts their label and anchor for the tab-list to consume.
-		 */
 		const tabList = tabPanels.map((tab, index) => ({
 			id: tab.attributes.anchor || `tab-${index}`,
 			label: tab.attributes.label || '',
@@ -161,12 +186,25 @@ function Edit({ clientId, attributes, setAttributes }) {
 			</InspectorControls>
 
 			<BlockContextProvider value={contextValue}>
-				<div {...innerBlockProps}>
-					<AddTabToolbarControl tabsClientId={clientId} />
-					<RemoveTabToolbarControl tabsClientId={clientId} />
+				<div {...innerBlockProps}>{innerBlockProps.children}</div>
 
-					{innerBlockProps.children}
-				</div>
+				<SingleBlockTypeAppender
+					clientId={tabPanelsClientId}
+					allowedBlock={['matter/tab-panel']}
+					blockAttributes={{ label: __('Tab') }}
+					onClickAfter={handleAddTabAfter}
+					isEnabled={!!tabPanelsClientId}
+					variant="secondary"
+					text={__('Add tab', 'matter')}
+					style={{
+						width: '50%',
+						justifyContent: 'center',
+						marginTop: '1rem',
+						marginLeft: 'auto',
+						marginRight: 'auto',
+						display: 'flex',
+					}}
+				/>
 			</BlockContextProvider>
 		</>
 	);

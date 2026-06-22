@@ -24,8 +24,6 @@ import { useMemo, useCallback, useEffect, useRef } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import AddTabToolbarControl from '../tab-panel/add-tab-toolbar-control';
-import RemoveTabToolbarControl from '../tab-panel/remove-tab-toolbar-control';
 
 const EMPTY_ARRAY = [];
 
@@ -151,24 +149,15 @@ function Edit({ attributes, clientId, context }) {
 		}
 	}, [tabsList.length, effectiveActiveIndex]);
 
-	const blockProps = useBlockProps({
-		className: clsx({
-			'is-collapsible': collapses,
-			[`is-collapsible-until-${collapsesOn}`]: collapses,
-		}),
-		...(collapses
-			? {
-					'data-collapses': 'true',
-					'data-collapses-on': collapsesOn,
-				}
-			: {}),
-	});
+	const blockProps = useBlockProps();
 
-	const listProps = {
-		className: 'wp-block-matter-tab-list__list',
-		role: 'tablist',
-		ref: menuRef,
-	};
+	const listProps = collapses
+		? {
+				className: 'wp-block-matter-tab-list__list',
+				role: 'tablist',
+				ref: menuRef,
+			}
+		: null;
 
 	const buttonClassName = clsx(colorProps.className, borderProps.className);
 
@@ -178,42 +167,41 @@ function Edit({ attributes, clientId, context }) {
 		...spacingProps.style,
 	};
 
-	return (
-		<>
-			<AddTabToolbarControl tabsClientId={tabsClientId} />
-			<RemoveTabToolbarControl tabsClientId={tabsClientId} />
+	const tabButtons = tabsList.map((tab, index) => {
+		const isActive = index === effectiveActiveIndex;
 
-			<div {...blockProps}>
-				<div {...listProps}>
-					{tabsList.map((tab, index) => {
-						const isActive = index === effectiveActiveIndex;
-						return (
-							<button
-								key={tab.clientId || index}
-								type="button"
-								className={clsx(buttonClassName, {
-									'is-active': isActive,
-								})}
-								style={buttonStyle}
-								tabIndex={-1}
-								onClick={(event) => {
-									event.preventDefault();
-									handleTabClick(index);
-								}}
-							>
-								<RichText
-									tagName="span"
-									withoutInteractiveFormatting
-									placeholder={__('Tab title')}
-									value={tab.label}
-									onChange={(newLabel) =>
-										handleLabelChange(index, newLabel)
-									}
-								/>
-							</button>
-						);
-					})}
-				</div>
+		return (
+			<button
+				key={tab.clientId || index}
+				type="button"
+				className={clsx(buttonClassName, {
+					'is-active': isActive,
+				})}
+				style={buttonStyle}
+				tabIndex={-1}
+				onClick={(event) => {
+					event.preventDefault();
+					handleTabClick(index);
+				}}
+			>
+				<RichText
+					tagName="span"
+					withoutInteractiveFormatting
+					placeholder={__('Tab title')}
+					value={tab.label}
+					onChange={(newLabel) => handleLabelChange(index, newLabel)}
+				/>
+			</button>
+		);
+	});
+
+	return (
+		<div {...blockProps}>
+				{collapses ? (
+					<div {...listProps}>{tabButtons}</div>
+				) : (
+					tabButtons
+				)}
 
 				{collapses && (
 					<select
@@ -229,8 +217,7 @@ function Edit({ attributes, clientId, context }) {
 						))}
 					</select>
 				)}
-			</div>
-		</>
+		</div>
 	);
 }
 
