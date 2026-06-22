@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Config;
 use Eighteen73\Matter\Singleton;
 use WP_Block;
 use WP_HTML_Tag_Processor;
@@ -174,48 +175,106 @@ class Tabs {
 	 * Enhance saved tab-list buttons with accessibility and interactivity attributes.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param string               $content    Saved block content.
 	 * @param WP_Block             $block      Block instance.
 	 * @return string
 	 */
-	public static function render_tab_list( array $attributes, string $content, WP_Block $block ): string {
-		$tabs_list = $block->context['matter/tabs-list'] ?? [];
+	public static function render_tab_list( array $attributes, WP_Block $block ): string {
+		$tabs_list    = $block->context['matter/tabs-list'] ?? [];
+		$tabs_id      = $block->context['matter/tabs-id'] ?? null;
+		$collapses    = ! empty( $block->context['matter/tabs-collapses'] );
+		$collapses_on = sanitize_key( (string) ( $block->context['matter/tabs-collapsesOn'] ?? 'lg' ) );
 
 		if ( empty( $tabs_list ) ) {
-			return $content;
+			return '';
 		}
 
-		$tag_processor = new WP_HTML_Tag_Processor( $content );
-		$tab_index     = 0;
+		$allowed_breakpoints = array_keys( Config::file( 'breakpoints' ) );
+		if ( ! in_array( $collapses_on, $allowed_breakpoints, true ) ) {
+			$collapses_on = 'lg';
+		}
 
-		while ( $tag_processor->next_tag( 'button' ) ) {
-			$tab = $tabs_list[ $tab_index ] ?? null;
+		$wrapper_classes = [];
+		if ( $collapses ) {
+			$wrapper_classes[] = 'is-collapsible';
+			$wrapper_classes[] = 'is-collapsible-until-' . $collapses_on;
+		}
 
-			if ( null === $tab ) {
-				break;
-			}
+		$wrapper_attributes = [];
 
-			$tab_id = $tab['id'] ?? 'tab-' . $tab_index;
+		if ( ! empty( $wrapper_classes ) ) {
+			$wrapper_attributes['class'] = implode( ' ', $wrapper_classes );
+		}
 
-			$tag_processor->set_attribute( 'id', 'tab__' . $tab_id );
-			$tag_processor->set_attribute( 'aria-controls', $tab_id );
-			$tag_processor->set_attribute( 'data-wp-on--click', 'actions.handleTabClick' );
-			$tag_processor->set_attribute( 'data-wp-on--keydown', 'actions.handleTabKeyDown' );
-			$tag_processor->set_attribute( 'data-wp-bind--aria-selected', 'state.isActiveTab' );
-			$tag_processor->set_attribute( 'data-wp-bind--tabindex', 'state.tabIndexAttribute' );
-			$tag_processor->set_attribute(
-				'data-wp-context',
+		if ( $collapses ) {
+			$wrapper_attributes['data-collapses']    = 'true';
+			$wrapper_attributes['data-collapses-on'] = $collapses_on;
+		}
+
+		$buttons_markup = '';
+		foreach ( $tabs_list as $tab_index => $tab ) {
+			$buttons_markup .= self::render_tab_button( $tab, (int) $tab_index );
+		}
+
+		$select_markup = $collapses ? self::render_tab_select( $tabs_list, $tabs_id ) : '';
+
+		return sprintf(
+			'<div %1$s><div class="wp-block-matter-tab-list__list" role="tablist">%2$s</div>%3$s</div>',
+			get_block_wrapper_attributes( $wrapper_attributes ),
+			$buttons_markup,
+			$select_markup
+		);
+	}
+
+	/**
+	 * Render a single tab button.
+	 *
+	 * @param array<string, mixed> $tab       Tab data.
+	 * @param int                  $tab_index Tab index.
+	 * @return string
+	 */
+	private static function render_tab_button( array $tab, int $tab_index ): string {
+		$tab_id = $tab['id'] ?? 'tab-' . $tab_index;
+		$label  = $tab['label'] ?? '';
+
+		return sprintf(
+			'<button type="button" role="tab" id="%1$s" aria-controls="%2$s" data-wp-on--click="actions.handleTabClick" data-wp-on--keydown="actions.handleTabKeyDown" data-wp-bind--aria-selected="state.isActiveTab" data-wp-bind--tabindex="state.tabIndexAttribute" data-wp-context="%3$s">%4$s</button>',
+			esc_attr( 'tab__' . $tab_id ),
+			esc_attr( (string) $tab_id ),
+			esc_attr(
 				(string) wp_json_encode(
 					[
 						'tabIndex' => $tab_index,
 					]
 				)
-			);
+			),
+			esc_html( (string) $label )
+		);
+	}
 
-			++$tab_index;
+	/**
+	 * Render the collapsible tab select control.
+	 *
+	 * @param array<int, array<string, mixed>> $tabs_list Tabs list data.
+	 * @param string                           $tabs_id   Tabs ID.
+	 * @return string
+	 */
+	private static function render_tab_select( array $tabs_list, string $tabs_id ): string {
+		$options_markup = '';
+
+		foreach ( $tabs_list as $tab_index => $tab ) {
+			$options_markup .= sprintf(
+				'<option value="%1$s">%2$s</option>',
+				esc_attr( (string) $tab_index ),
+				esc_html( (string) ( $tab['label'] ?? '' ) )
+			);
 		}
 
-		return $tag_processor->get_updated_html();
+		return sprintf(
+			'<select class="wp-block-matter-tab-list__select" id="wp-block-matter-tab-list__select__%1$s" aria-label="%2$s" data-wp-on--change="actions.handleSelectChange" data-wp-bind--value="state.selectValue">%3$s</select>',
+			esc_attr( (string) $tabs_id ),
+			esc_attr__( 'Select tab', 'matter' ),
+			$options_markup
+		);
 	}
 
 	/**

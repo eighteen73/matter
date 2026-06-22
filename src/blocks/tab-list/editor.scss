@@ -1,7 +1,23 @@
 .wp-block-matter-tab-list {
-	display: flex;
-	flex-wrap: nowrap;
-	gap: 0.5em;
+	&.is-collapsible {
+		.wp-block-matter-tab-list__list,
+		.wp-block-matter-tab-list__select {
+			display: block;
+		}
+
+		.wp-block-matter-tab-list__list {
+			display: flex;
+			flex-wrap: nowrap;
+			gap: 0.5em;
+			margin-bottom: 0.5em;
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 0.5em;
+	}
 
 	button {
 		&.is-active::before {

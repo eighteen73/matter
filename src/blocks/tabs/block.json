@@ -23,6 +23,14 @@
 		"deepLinkingUpdateHistory": {
 			"type": "boolean",
 			"default": false
+		},
+		"collapses": {
+			"type": "boolean",
+			"default": false
+		},
+		"collapsesOn": {
+			"type": "string",
+			"default": "lg"
 		}
 	},
 	"supports": {
@@ -65,7 +73,9 @@
 	},
 	"providesContext": {
 		"matter/tabs-activeTabIndex": "activeTabIndex",
-		"matter/tabs-editorActiveTabIndex": "editorActiveTabIndex"
+		"matter/tabs-editorActiveTabIndex": "editorActiveTabIndex",
+		"matter/tabs-collapses": "collapses",
+		"matter/tabs-collapsesOn": "collapsesOn"
 	},
 	"usesContext": [ "matter/tabs-list", "matter/tabs-id" ],
 	"editorScript": "file:./index.js",
