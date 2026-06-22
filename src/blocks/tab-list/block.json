@@ -7,21 +7,13 @@
 	"category": "design",
 	"textdomain": "default",
 	"parent": [ "matter/tabs" ],
-	"usesContext": [ "matter/tabs-list" ],
-	"attributes": {
-		"tabs": {
-			"type": "array",
-			"source": "query",
-			"selector": "button",
-			"query": {
-				"label": {
-					"type": "string",
-					"source": "html"
-				}
-			},
-			"default": []
-		}
-	},
+	"usesContext": [
+		"matter/tabs-id",
+		"matter/tabs-list",
+		"matter/tabs-collapses",
+		"matter/tabs-collapsesOn"
+	],
+	"attributes": {},
 	"supports": {
 		"html": false,
 		"reusable": false,

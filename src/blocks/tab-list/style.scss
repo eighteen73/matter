@@ -1,9 +1,46 @@
+@use "../../constants/breakpoints" as bp;
+
+.wp-block-matter-tab-list {
+	&__select {
+		display: none;
+		width: 100%;
+	}
+
+	&__list {
+		display: flex;
+		flex-wrap: inherit;
+		gap: inherit;
+	}
+
+	&.is-collapsible {
+		.wp-block-matter-tab-list__select {
+			display: block;
+		}
+
+		.wp-block-matter-tab-list__list {
+			display: none;
+		}
+	}
+
+	@each $breakpoint-name, $breakpoint-size in bp.$breakpoints {
+		&.is-collapsible-until-#{$breakpoint-name} {
+			@media (min-width: $breakpoint-size) {
+				.wp-block-matter-tab-list__select {
+					display: none;
+				}
+
+				.wp-block-matter-tab-list__list {
+					display: flex;
+				}
+			}
+		}
+	}
+}
+
 :where(.wp-block-matter-tab-list button) {
 	-webkit-appearance: none;
 	appearance: none;
 	background: none;
-
-	// Button reset
 	border: none;
 	box-sizing: border-box;
 	color: inherit;
@@ -12,13 +49,10 @@
 	flex-basis: inherit !important; // stylelint-disable-line declaration-no-important
 	flex-grow: inherit !important; // stylelint-disable-line declaration-no-important
 	font-family: inherit;
-
-	// Inherit typography from parent
 	font-size: inherit;
 	font-weight: inherit;
 	letter-spacing: inherit;
 	line-height: inherit;
-
 	margin: 0;
 	padding: var(--wp--preset--spacing--20, 0.5em) var(--wp--preset--spacing--30, 1em);
 	position: relative;

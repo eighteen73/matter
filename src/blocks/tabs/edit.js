@@ -10,15 +10,22 @@ import {
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { useMemo } from '@wordpress/element';
-import { PanelBody, ToggleControl } from '@wordpress/components';
+import {
+	PanelBody,
+	ToggleControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import useTabListItemsSync from './use-tab-list-items-sync';
 import AddTabToolbarControl from '../tab-panel/add-tab-toolbar-control';
 import RemoveTabToolbarControl from '../tab-panel/remove-tab-toolbar-control';
+import breakpoints from '../../constants/breakpoints';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
@@ -29,9 +36,11 @@ function Edit({ clientId, attributes, setAttributes }) {
 		editorActiveTabIndex,
 		deepLinking,
 		deepLinkingUpdateHistory,
+		collapses,
+		collapsesOn,
 	} = attributes;
 
-	const { tabPanels, tabListClientId } = useSelect(
+	const { tabPanels } = useSelect(
 		(select) => {
 			const { getBlocks } = select(blockEditorStore);
 			const innerBlocks = getBlocks(clientId);
@@ -39,19 +48,13 @@ function Edit({ clientId, attributes, setAttributes }) {
 			const tabPanelsBlock = innerBlocks.find(
 				(block) => block.name === 'matter/tab-panels'
 			);
-			const tabList = innerBlocks.find(
-				(block) => block.name === 'matter/tab-list'
-			);
 
 			return {
 				tabPanels: tabPanelsBlock?.innerBlocks ?? [],
-				tabListClientId: tabList?.clientId ?? null,
 			};
 		},
 		[clientId]
 	);
-
-	useTabListItemsSync({ tabPanels, tabListClientId });
 
 	/**
 	 * Memoize context value to prevent unnecessary re-renders.
@@ -74,8 +77,17 @@ function Edit({ clientId, attributes, setAttributes }) {
 			'matter/tabs-id': anchor,
 			'matter/tabs-activeTabIndex': activeTabIndex,
 			'matter/tabs-editorActiveTabIndex': editorActiveTabIndex,
+			'matter/tabs-collapses': collapses,
+			'matter/tabs-collapsesOn': collapsesOn,
 		};
-	}, [tabPanels, anchor, activeTabIndex, editorActiveTabIndex]);
+	}, [
+		tabPanels,
+		anchor,
+		activeTabIndex,
+		editorActiveTabIndex,
+		collapses,
+		collapsesOn,
+	]);
 
 	const blockProps = useBlockProps();
 
@@ -90,6 +102,37 @@ function Edit({ clientId, attributes, setAttributes }) {
 		<>
 			<InspectorControls>
 				<PanelBody title={__('Settings', 'matter')}>
+					<ToggleControl
+						label={__('Collapse', 'matter')}
+						help={__('Collapse tabs on smaller screens.', 'matter')}
+						checked={collapses}
+						onChange={(value) =>
+							setAttributes({ collapses: value })
+						}
+					/>
+
+					{collapses && (
+						<ToggleGroupControl
+							label={__('Collapse up to')}
+							onChange={(value) => {
+								setAttributes({ collapsesOn: value });
+							}}
+							value={collapsesOn}
+							isBlock
+							style={{ width: '100%' }}
+						>
+							{Object.entries(breakpoints).map(
+								([name, breakpoint]) => (
+									<ToggleGroupControlOption
+										key={name}
+										value={name}
+										label={breakpoint.label.toUpperCase()}
+									/>
+								)
+							)}
+						</ToggleGroupControl>
+					)}
+
 					<ToggleControl
 						label={__('Deep Linking', 'matter')}
 						help={__('Enable deep linking.', 'matter')}

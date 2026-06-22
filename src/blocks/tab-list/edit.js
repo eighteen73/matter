@@ -31,6 +31,8 @@ const EMPTY_ARRAY = [];
 
 function Edit({ attributes, clientId, context }) {
 	const tabsList = context['matter/tabs-list'] || EMPTY_ARRAY;
+	const collapses = context['matter/tabs-collapses'] || false;
+	const collapsesOn = context['matter/tabs-collapsesOn'] || 'lg';
 
 	const colorProps = useColorProps(attributes);
 	const borderProps = useBorderProps(attributes);
@@ -68,6 +70,29 @@ function Edit({ attributes, clientId, context }) {
 				__unstableMarkNextChangeAsNotPersistent();
 				updateBlockAttributes(tabsClientId, {
 					editorActiveTabIndex: tabIndex,
+				});
+			}
+		},
+		[
+			tabsClientId,
+			effectiveActiveIndex,
+			updateBlockAttributes,
+			__unstableMarkNextChangeAsNotPersistent,
+		]
+	);
+
+	const handleSelectChange = useCallback(
+		(event) => {
+			const selectedIndex = parseInt(event.target.value, 10);
+
+			if (Number.isNaN(selectedIndex) || !tabsClientId) {
+				return;
+			}
+
+			if (selectedIndex !== effectiveActiveIndex) {
+				__unstableMarkNextChangeAsNotPersistent();
+				updateBlockAttributes(tabsClientId, {
+					editorActiveTabIndex: selectedIndex,
 				});
 			}
 		},
@@ -127,9 +152,23 @@ function Edit({ attributes, clientId, context }) {
 	}, [tabsList.length, effectiveActiveIndex]);
 
 	const blockProps = useBlockProps({
+		className: clsx({
+			'is-collapsible': collapses,
+			[`is-collapsible-until-${collapsesOn}`]: collapses,
+		}),
+		...(collapses
+			? {
+					'data-collapses': 'true',
+					'data-collapses-on': collapsesOn,
+				}
+			: {}),
+	});
+
+	const listProps = {
+		className: 'wp-block-matter-tab-list__list',
 		role: 'tablist',
 		ref: menuRef,
-	});
+	};
 
 	const buttonClassName = clsx(colorProps.className, borderProps.className);
 
@@ -144,34 +183,51 @@ function Edit({ attributes, clientId, context }) {
 			<AddTabToolbarControl tabsClientId={tabsClientId} />
 			<RemoveTabToolbarControl tabsClientId={tabsClientId} />
 			<div {...blockProps}>
-				{tabsList.map((tab, index) => {
-					const isActive = index === effectiveActiveIndex;
-					return (
-						<button
-							key={tab.clientId || index}
-							type="button"
-							className={clsx(buttonClassName, {
-								'is-active': isActive,
-							})}
-							style={buttonStyle}
-							tabIndex={-1}
-							onClick={(event) => {
-								event.preventDefault();
-								handleTabClick(index);
-							}}
-						>
-							<RichText
-								tagName="span"
-								withoutInteractiveFormatting
-								placeholder={__('Tab title')}
-								value={tab.label}
-								onChange={(newLabel) =>
-									handleLabelChange(index, newLabel)
-								}
-							/>
-						</button>
-					);
-				})}
+				<div {...listProps}>
+					{tabsList.map((tab, index) => {
+						const isActive = index === effectiveActiveIndex;
+						return (
+							<button
+								key={tab.clientId || index}
+								type="button"
+								className={clsx(buttonClassName, {
+									'is-active': isActive,
+								})}
+								style={buttonStyle}
+								tabIndex={-1}
+								onClick={(event) => {
+									event.preventDefault();
+									handleTabClick(index);
+								}}
+							>
+								<RichText
+									tagName="span"
+									withoutInteractiveFormatting
+									placeholder={__('Tab title')}
+									value={tab.label}
+									onChange={(newLabel) =>
+										handleLabelChange(index, newLabel)
+									}
+								/>
+							</button>
+						);
+					})}
+				</div>
+
+				{collapses && (
+					<select
+						className="wp-block-matter-tab-list__select"
+						aria-label={__('Select tab', 'matter')}
+						value={String(effectiveActiveIndex)}
+						onChange={handleSelectChange}
+					>
+						{tabsList.map((tab, index) => (
+							<option key={tab.clientId || index} value={index}>
+								{tab.label || __('Tab title')}
+							</option>
+						))}
+					</select>
+				)}
 			</div>
 		</>
 	);

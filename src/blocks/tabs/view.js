@@ -111,6 +111,23 @@ const { actions: privateActions, state: privateState } = store(
 			get tabIndexAttribute() {
 				return privateState.isActiveTab ? 0 : -1;
 			},
+			/**
+			 * Active tab index from context for select binding.
+			 *
+			 * @type {number}
+			 */
+			get activeTabIndex() {
+				const context = getContext();
+				return context?.activeTabIndex ?? 0;
+			},
+			/**
+			 * String value for select binding.
+			 *
+			 * @type {string}
+			 */
+			get selectValue() {
+				return String(privateState.activeTabIndex);
+			},
 		},
 		actions: {
 			/**
@@ -153,6 +170,20 @@ const { actions: privateActions, state: privateState } = store(
 				if (tabIndex !== null) {
 					privateActions.setActiveTab(tabIndex);
 				}
+			}),
+			/**
+			 * Handles the change event for the collapsible tab select.
+			 *
+			 * @param {Event} event The change event.
+			 */
+			handleSelectChange: withSyncEvent((event) => {
+				const selectedIndex = parseInt(event.target.value, 10);
+
+				if (Number.isNaN(selectedIndex)) {
+					return;
+				}
+
+				privateActions.setActiveTab(selectedIndex, false);
 			}),
 			/**
 			 * Moves focus to a specific tab without activating it.
@@ -321,6 +352,15 @@ const { actions: privateActions, state: privateState } = store(
 				if (hash) {
 					privateActions.activateTabByHash(hash);
 				}
+
+				// register tabs on window
+				window.matter = window.matter || {};
+				window.matter.tabs = window.matter.tabs || new Map();
+
+				window.matter.tabs.set(context.tabsId, {
+					tabsList: privateState.tabsList,
+					activeTabIndex: privateState.activeTabIndex,
+				});
 			},
 		},
 	},
