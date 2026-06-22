@@ -15,8 +15,13 @@ import {
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useCallback } from '@wordpress/element';
 
+/**
+ * Internal dependencies
+ */
+import Media from '../../components/media';
+
 export default function Edit({ attributes, setAttributes, clientId, context }) {
-	const { label } = attributes;
+	const { label, mediaId, mediaType, focalPoint, posterId } = attributes;
 	const activeTabIndex = context['matter/tabs-activeTabIndex'];
 	const editorActiveTabIndex = context['matter/tabs-editorActiveTabIndex'];
 
@@ -77,6 +82,16 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 
 	return (
 		<button {...blockProps}>
+			<Media
+				mediaId={mediaId}
+				mediaType={mediaType}
+				posterId={posterId}
+				focalPoint={focalPoint}
+				setAttributes={setAttributes}
+				videoClassName="wp-block-matter-tab-button__video"
+				imageClassName="wp-block-matter-tab-button__image"
+			/>
+
 			<RichText
 				tagName="span"
 				withoutInteractiveFormatting
