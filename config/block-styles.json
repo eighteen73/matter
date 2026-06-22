@@ -76,5 +76,27 @@
 			"variable": "--matter-drawer-content--height",
 			"type": "spacing"
 		}
+	},
+	"modal-content": {
+		"backdropColor": {
+			"variable": "--matter-modal-content--backdrop-color",
+			"type": "color"
+		},
+		"backdropOpacity": {
+			"variable": "--matter-modal-content--backdrop-opacity",
+			"type": "number"
+		},
+		"backdropBlur": {
+			"variable": "--matter-modal-content--backdrop-blur",
+			"type": "number"
+		},
+		"width": {
+			"variable": "--matter-modal-content--width",
+			"type": "spacing"
+		},
+		"height": {
+			"variable": "--matter-modal-content--height",
+			"type": "spacing"
+		}
 	}
 }

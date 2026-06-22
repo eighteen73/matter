@@ -8,13 +8,33 @@
 	"category": "widgets",
 	"description": "An interactive modal dialog to display content without leaving the page.",
 	"allowedBlocks": [ "matter/trigger", "matter/modal-content" ],
-	"attributes": {},
+	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
+		"targetId": {
+			"type": "string",
+			"default": ""
+		},
+		"editorIsOpen": {
+			"type": "boolean",
+			"default": false,
+			"role": "local"
+		}
+	},
+	"providesContext": {
+		"matter/modal-id": "targetId",
+		"matter/modal-is-open": "editorIsOpen"
+	},
 	"supports": {
+		"anchor": true,
 		"html": false,
 		"interactivity": true
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
 	"render": "file:./render.php",
 	"viewScriptModule": "file:./view.js"
