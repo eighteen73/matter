@@ -18,13 +18,13 @@ import { useDispatch, useSelect } from '@wordpress/data';
  * @param {string} props.tabsClientId The client ID of the parent tabs block.
  * @return {React.JSX.Element} The toolbar control element.
  */
-export default function RemoveTabToolbarControl( { tabsClientId } ) {
+export default function RemoveTabToolbarControl({ tabsClientId }) {
 	const {
 		removeBlock,
 		updateBlockAttributes,
 		selectBlock,
 		__unstableMarkNextChangeAsNotPersistent,
-	} = useDispatch( blockEditorStore );
+	} = useDispatch(blockEditorStore);
 
 	const {
 		activeTabPanelClientId,
@@ -32,8 +32,8 @@ export default function RemoveTabToolbarControl( { tabsClientId } ) {
 		editorActiveTabIndex,
 		tabListClientId,
 	} = useSelect(
-		( select ) => {
-			if ( ! tabsClientId ) {
+		(select) => {
+			if (!tabsClientId) {
 				return {
 					activeTabPanelClientId: null,
 					tabCount: 0,
@@ -41,22 +41,21 @@ export default function RemoveTabToolbarControl( { tabsClientId } ) {
 					tabListClientId: null,
 				};
 			}
-			const { getBlocks, getBlockAttributes } =
-				select( blockEditorStore );
-			const tabsAttributes = getBlockAttributes( tabsClientId );
+			const { getBlocks, getBlockAttributes } = select(blockEditorStore);
+			const tabsAttributes = getBlockAttributes(tabsClientId);
 			const activeIndex =
 				tabsAttributes?.editorActiveTabIndex ??
 				tabsAttributes?.activeTabIndex ??
 				0;
-			const innerBlocks = getBlocks( tabsClientId );
+			const innerBlocks = getBlocks(tabsClientId);
 			const tabPanels = innerBlocks.find(
-				( block ) => block.name === 'core/tab-panels'
+				(block) => block.name === 'core/tab-panels'
 			);
 			const tabList = innerBlocks.find(
-				( block ) => block.name === 'core/tab-list'
+				(block) => block.name === 'core/tab-list'
 			);
 			const tabPanelBlocks = tabPanels?.innerBlocks || [];
-			const activeTabPanel = tabPanelBlocks[ activeIndex ];
+			const activeTabPanel = tabPanelBlocks[activeIndex];
 
 			return {
 				activeTabPanelClientId: activeTabPanel?.clientId || null,
@@ -65,11 +64,11 @@ export default function RemoveTabToolbarControl( { tabsClientId } ) {
 				tabListClientId: tabList?.clientId || null,
 			};
 		},
-		[ tabsClientId ]
+		[tabsClientId]
 	);
 
 	const removeTab = () => {
-		if ( ! activeTabPanelClientId || tabCount <= 1 ) {
+		if (!activeTabPanelClientId || tabCount <= 1) {
 			return;
 		}
 
@@ -80,29 +79,29 @@ export default function RemoveTabToolbarControl( { tabsClientId } ) {
 				: editorActiveTabIndex;
 
 		__unstableMarkNextChangeAsNotPersistent();
-		updateBlockAttributes( tabsClientId, {
+		updateBlockAttributes(tabsClientId, {
 			editorActiveTabIndex: newActiveIndex,
-		} );
+		});
 
 		// Remove the tab panel.
-		removeBlock( activeTabPanelClientId, false );
+		removeBlock(activeTabPanelClientId, false);
 
 		// Select the tab-list so focus moves to the new active tab button.
-		if ( tabListClientId ) {
-			selectBlock( tabListClientId );
+		if (tabListClientId) {
+			selectBlock(tabListClientId);
 		}
 	};
 
-	const isDisabled = tabCount <= 1 || ! activeTabPanelClientId;
+	const isDisabled = tabCount <= 1 || !activeTabPanelClientId;
 
 	return (
 		<BlockControls group="other">
 			<ToolbarGroup>
 				<ToolbarButton
 					className="components-toolbar__control"
-					onClick={ removeTab }
-					text={ __( 'Remove tab' ) }
-					disabled={ isDisabled }
+					onClick={removeTab}
+					text={__('Remove tab')}
+					disabled={isDisabled}
 				/>
 			</ToolbarGroup>
 		</BlockControls>
