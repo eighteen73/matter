@@ -15,6 +15,14 @@
 		"editorActiveTabIndex": {
 			"type": "number",
 			"role": "local"
+		},
+		"deepLinking": {
+			"type": "boolean",
+			"default": false
+		},
+		"deepLinkingUpdateHistory": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {
