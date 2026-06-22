@@ -1,5 +1,8 @@
 .wp-block-matter-close {
+	--_background-color: var(--matter-close--background-color, var(--wp--custom--matter-close--background-color, transparent));
+
 	align-items: center;
+	background-color: var(--_background-color);
 	border: unset;
 	box-shadow: unset;
 	cursor: pointer;
