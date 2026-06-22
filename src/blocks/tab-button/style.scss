@@ -3,13 +3,18 @@
 	--_media-border-radius: var(--matter-tab-button--media-border-radius, 100%);
 	--_media-gap: var(--matter-tab-button--media-gap, 10px);
 	--_padding: var(--matter-tab-button--padding, 0.5em);
+	--_border-radius: var(--matter-tab-button--border-radius, 0);
+	--_background-color: var(--matter-tab-button--background-color, transparent);
+	--_color: var(--matter-tab-button--color, currentcolor);
+	--_border: var(--matter-tab-button--border, none);
 
 	align-items: center;
 	appearance: none;
-	background: none;
-	border: none;
+	background: var(--_background-color);
+	border: var(--_border);
+	border-radius: var(--_border-radius);
 	box-sizing: border-box;
-	color: inherit;
+	color: var(--_color);
 	cursor: pointer;
 	display: flex;
 	flex-basis: inherit !important; // stylelint-disable-line declaration-no-important
