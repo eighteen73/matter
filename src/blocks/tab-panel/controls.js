@@ -16,18 +16,13 @@ import { useDispatch } from '@wordpress/data';
 /**
  * Internal dependencies
  */
-import AddTabToolbarControl from './add-tab-toolbar-control';
-import RemoveTabToolbarControl from './remove-tab-toolbar-control';
 
 export default function Controls({ tabsClientId, blockIndex, isDefaultTab }) {
 	const { updateBlockAttributes } = useDispatch(blockEditorStore);
 
 	return (
-		<>
-			<AddTabToolbarControl tabsClientId={tabsClientId} />
-			<RemoveTabToolbarControl tabsClientId={tabsClientId} />
-			<InspectorControls>
-				<ToolsPanel
+		<InspectorControls>
+			<ToolsPanel
 					label={__('Settings')}
 					resetAll={() => {
 						updateBlockAttributes(tabsClientId, {
@@ -55,8 +50,7 @@ export default function Controls({ tabsClientId, blockIndex, isDefaultTab }) {
 							}}
 						/>
 					</ToolsPanelItem>
-				</ToolsPanel>
-			</InspectorControls>
-		</>
+			</ToolsPanel>
+		</InspectorControls>
 	);
 }
