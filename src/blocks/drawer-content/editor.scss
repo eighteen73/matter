@@ -1,17 +1,24 @@
-.wp-block-matter-drawer__editor-backdrop {
-	--_backdrop-color: var(--matter-drawer-content--backdrop-color, var(--wp--custom--matter-drawer-content--backdrop-color, transparent));
-	--_backdrop-opacity: calc(var(--matter-drawer-content--backdrop-opacity, var(--wp--custom--matter-drawer-content--backdrop-opacity, 50)) / 100);
-	--_backdrop-blur: calc(var(--matter-drawer-content--backdrop-blur, var(--wp--custom--matter-drawer-content--backdrop-blur, 0)) * 1px);
+.wp-block-matter-drawer-content {
+	&__editor-backdrop {
+		--_backdrop-color: var(--matter-drawer-content--backdrop-color, var(--wp--custom--matter-drawer-content--backdrop-color, transparent));
+		--_backdrop-opacity: calc(var(--matter-drawer-content--backdrop-opacity, var(--wp--custom--matter-drawer-content--backdrop-opacity, 50)) / 100);
+		--_backdrop-blur: calc(var(--matter-drawer-content--backdrop-blur, var(--wp--custom--matter-drawer-content--backdrop-blur, 0)) * 1px);
+		--_backdrop-background: rgb(from var(--_backdrop-color) r g b / var(--_backdrop-opacity));
 
-	backdrop-filter: blur(var(--_backdrop-blur));
-	background-color: var(--_backdrop-color);
-	inset: 0;
-	opacity: var(--_backdrop-opacity);
-	pointer-events: auto;
-	position: fixed;
-	z-index: 99999;
-}
+		backdrop-filter: blur(var(--_backdrop-blur));
+		background-color: var(--_backdrop-background);
+		inset: 0;
+		pointer-events: auto;
+		position: fixed;
+	}
 
-.wp-block-matter-drawer__content {
-	z-index: 100000;
+	&__editor-preview {
+		isolation: isolate;
+		z-index: 99999;
+	}
+
+	.block-list-appender {
+		position: static;
+		width: 100%;
+	}
 }
