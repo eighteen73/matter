@@ -6,14 +6,11 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	store as blockEditorStore,
+	InspectorControls,
 } from '@wordpress/block-editor';
+import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useRef, useEffect } from '@wordpress/element';
-
-/**
- * Internal dependencies
- */
-import Controls from './controls';
 
 const TEMPLATE = [
 	[
@@ -134,11 +131,21 @@ export default function Edit({ clientId, context, isSelected }) {
 
 	return (
 		<section {...innerBlocksProps}>
-			<Controls
-				tabsClientId={tabsClientId}
-				blockIndex={blockIndex}
-				isDefaultTab={isDefaultTab}
-			/>
+			<InspectorControls>
+				<PanelBody title={__('Settings', 'matter')}>
+					<ToggleControl
+						label={__('Default tab', 'matter')}
+						help={__('Open this tab by default.', 'matter')}
+						checked={isDefaultTab}
+						onChange={(value) => {
+							updateBlockAttributes(tabsClientId, {
+								activeTabIndex: value ? blockIndex : 0,
+							});
+						}}
+					/>
+				</PanelBody>
+			</InspectorControls>
+
 			{isSelectedTab && innerBlocksProps.children}
 		</section>
 	);

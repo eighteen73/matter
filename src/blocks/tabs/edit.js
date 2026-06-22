@@ -9,10 +9,11 @@ import {
 	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useMemo, useCallback } from '@wordpress/element';
+import { useMemo, useCallback, useRef } from '@wordpress/element';
 import {
 	PanelBody,
 	ToggleControl,
+	Button,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -24,7 +25,7 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import breakpoints from '../../constants/breakpoints';
-import SingleBlockTypeAppender from '../../components/single-block-type-appender';
+import { useTabButtonsSync, insertTabPair } from './utils/sync-tab-buttons';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
@@ -39,32 +40,39 @@ function Edit({ clientId, attributes, setAttributes }) {
 		collapsesOn,
 	} = attributes;
 
-	const { tabPanels, tabPanelsClientId, tabListClientId } = useSelect(
-		(select) => {
-			const { getBlocks } = select(blockEditorStore);
-			const innerBlocks = getBlocks(clientId);
+	const { tabPanels, tabButtons, tabPanelsClientId, tabListClientId } =
+		useSelect(
+			(select) => {
+				const { getBlocks } = select(blockEditorStore);
+				const innerBlocks = getBlocks(clientId);
 
-			const tabPanelsBlock = innerBlocks.find(
-				(block) => block.name === 'matter/tab-panels'
-			);
-			const tabListBlock = innerBlocks.find(
-				(block) => block.name === 'matter/tab-list'
-			);
+				const tabPanelsBlock = innerBlocks.find(
+					(block) => block.name === 'matter/tab-panels'
+				);
+				const tabListBlock = innerBlocks.find(
+					(block) => block.name === 'matter/tab-list'
+				);
 
-			return {
-				tabPanels: tabPanelsBlock?.innerBlocks ?? [],
-				tabPanelsClientId: tabPanelsBlock?.clientId ?? null,
-				tabListClientId: tabListBlock?.clientId ?? null,
-			};
-		},
-		[clientId]
-	);
+				return {
+					tabPanels: tabPanelsBlock?.innerBlocks ?? [],
+					tabButtons: tabListBlock?.innerBlocks ?? [],
+					tabPanelsClientId: tabPanelsBlock?.clientId ?? null,
+					tabListClientId: tabListBlock?.clientId ?? null,
+				};
+			},
+			[clientId]
+		);
 
 	const {
+		insertBlock,
 		updateBlockAttributes,
 		selectBlock,
 		__unstableMarkNextChangeAsNotPersistent,
 	} = useDispatch(blockEditorStore);
+
+	const isAddingTabRef = useRef(false);
+
+	useTabButtonsSync({ tabListClientId, tabPanelsClientId, isAddingTabRef });
 
 	const handleAddTabAfter = useCallback(
 		(newTabIndex) => {
@@ -86,16 +94,48 @@ function Edit({ clientId, attributes, setAttributes }) {
 		]
 	);
 
-	/**
-	 * Memoize context value to prevent unnecessary re-renders.
-	 */
+	const handleAddTab = useCallback(async () => {
+		if (!tabPanelsClientId || !tabListClientId) {
+			return;
+		}
+
+		const insertAt = tabPanels.length;
+
+		isAddingTabRef.current = true;
+
+		try {
+			await insertTabPair({
+				insertBlock,
+				tabPanelsClientId,
+				tabListClientId,
+				insertAt,
+				defaultLabel: __('Tab'),
+			});
+
+			handleAddTabAfter(insertAt);
+		} finally {
+			isAddingTabRef.current = false;
+		}
+	}, [
+		tabPanels.length,
+		tabPanelsClientId,
+		tabListClientId,
+		insertBlock,
+		handleAddTabAfter,
+	]);
+
 	const contextValue = useMemo(() => {
-		const tabList = tabPanels.map((tab, index) => ({
-			id: tab.attributes.anchor || `tab-${index}`,
-			label: tab.attributes.label || '',
-			clientId: tab.clientId,
-			index,
-		}));
+		const tabList = tabButtons.map((button, index) => {
+			const panel = tabPanels[index];
+
+			return {
+				id: panel?.attributes?.anchor || `tab-${index}`,
+				label: button.attributes.label || '',
+				clientId: button.clientId,
+				panelClientId: panel?.clientId,
+				index,
+			};
+		});
 
 		return {
 			'matter/tabs-list': tabList,
@@ -106,6 +146,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 			'matter/tabs-collapsesOn': collapsesOn,
 		};
 	}, [
+		tabButtons,
 		tabPanels,
 		anchor,
 		activeTabIndex,
@@ -188,14 +229,11 @@ function Edit({ clientId, attributes, setAttributes }) {
 			<BlockContextProvider value={contextValue}>
 				<div {...innerBlockProps}>{innerBlockProps.children}</div>
 
-				<SingleBlockTypeAppender
-					clientId={tabPanelsClientId}
-					allowedBlock={['matter/tab-panel']}
-					blockAttributes={{ label: __('Tab') }}
-					onClickAfter={handleAddTabAfter}
-					isEnabled={!!tabPanelsClientId}
+				<Button
 					variant="secondary"
 					text={__('Add tab', 'matter')}
+					onClick={handleAddTab}
+					disabled={!tabPanelsClientId || !tabListClientId}
 					style={{
 						width: '50%',
 						justifyContent: 'center',

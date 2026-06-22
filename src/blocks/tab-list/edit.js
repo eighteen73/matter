@@ -9,8 +9,8 @@ import clsx from 'clsx';
 import { __ } from '@wordpress/i18n';
 import {
 	useBlockProps,
+	useInnerBlocksProps,
 	store as blockEditorStore,
-	RichText,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseBorderProps as useBorderProps,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -20,10 +20,6 @@ import {
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useCallback, useEffect, useRef } from '@wordpress/element';
-
-/**
- * Internal dependencies
- */
 
 const EMPTY_ARRAY = [];
 
@@ -62,23 +58,6 @@ function Edit({ attributes, clientId, context }) {
 	const { __unstableMarkNextChangeAsNotPersistent, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
 
-	const handleTabClick = useCallback(
-		(tabIndex) => {
-			if (tabsClientId && tabIndex !== effectiveActiveIndex) {
-				__unstableMarkNextChangeAsNotPersistent();
-				updateBlockAttributes(tabsClientId, {
-					editorActiveTabIndex: tabIndex,
-				});
-			}
-		},
-		[
-			tabsClientId,
-			effectiveActiveIndex,
-			updateBlockAttributes,
-			__unstableMarkNextChangeAsNotPersistent,
-		]
-	);
-
 	const handleSelectChange = useCallback(
 		(event) => {
 			const selectedIndex = parseInt(event.target.value, 10);
@@ -102,20 +81,9 @@ function Edit({ attributes, clientId, context }) {
 		]
 	);
 
-	const handleLabelChange = useCallback(
-		(tabIndex, newLabel) => {
-			const tab = tabsList[tabIndex];
-			if (tab?.clientId) {
-				updateBlockAttributes(tab.clientId, { label: newLabel });
-			}
-		},
-		[tabsList, updateBlockAttributes]
-	);
-
 	const menuRef = useRef();
 	const prevTabCountRef = useRef(tabsList.length);
 
-	// When tabs are added or removed, focus the appropriate button.
 	useEffect(() => {
 		const prevCount = prevTabCountRef.current;
 		prevTabCountRef.current = tabsList.length;
@@ -126,7 +94,9 @@ function Edit({ attributes, clientId, context }) {
 
 		const focusButtonAt = (index) => {
 			window.requestAnimationFrame(() => {
-				const buttons = menuRef.current?.querySelectorAll('button');
+				const buttons = menuRef.current?.querySelectorAll(
+					'.wp-block-matter-tab-button'
+				);
 				const target = buttons?.[index];
 				if (!target) {
 					return;
@@ -141,82 +111,67 @@ function Edit({ attributes, clientId, context }) {
 		};
 
 		if (tabsList.length > prevCount) {
-			// Tab added — focus the last (newly added) button.
 			focusButtonAt(tabsList.length - 1);
 		} else {
-			// Tab removed — focus the new active button.
 			focusButtonAt(effectiveActiveIndex);
 		}
 	}, [tabsList.length, effectiveActiveIndex]);
 
-	const blockProps = useBlockProps();
-
-	const listProps = collapses
-		? {
-				className: 'wp-block-matter-tab-list__list',
-				role: 'tablist',
-				ref: menuRef,
+	const blockProps = useBlockProps({
+		className: clsx(
+			colorProps.className,
+			borderProps.className,
+			spacingProps.className,
+			{
+				'is-collapsible': collapses,
+				[`is-collapsible-until-${collapsesOn}`]: collapses,
 			}
-		: null;
-
-	const buttonClassName = clsx(colorProps.className, borderProps.className);
-
-	const buttonStyle = {
-		...colorProps.style,
-		...borderProps.style,
-		...spacingProps.style,
-	};
-
-	const tabButtons = tabsList.map((tab, index) => {
-		const isActive = index === effectiveActiveIndex;
-
-		return (
-			<button
-				key={tab.clientId || index}
-				type="button"
-				className={clsx(buttonClassName, {
-					'is-active': isActive,
-				})}
-				style={buttonStyle}
-				tabIndex={-1}
-				onClick={(event) => {
-					event.preventDefault();
-					handleTabClick(index);
-				}}
-			>
-				<RichText
-					tagName="span"
-					withoutInteractiveFormatting
-					placeholder={__('Tab title')}
-					value={tab.label}
-					onChange={(newLabel) => handleLabelChange(index, newLabel)}
-				/>
-			</button>
-		);
+		),
+		style: {
+			...colorProps.style,
+			...borderProps.style,
+			...spacingProps.style,
+		},
+		...(collapses
+			? {
+					'data-collapses': 'true',
+					'data-collapses-on': collapsesOn,
+				}
+			: {}),
 	});
+
+	const innerBlocksProps = useInnerBlocksProps(
+		{
+			className: 'wp-block-matter-tab-list__list',
+			role: 'tablist',
+			ref: menuRef,
+		},
+		{
+			allowedBlocks: ['matter/tab-button'],
+			templateLock: false,
+			renderAppender: false,
+			orientation: attributes.layout?.orientation ?? 'horizontal',
+		}
+	);
 
 	return (
 		<div {...blockProps}>
-				{collapses ? (
-					<div {...listProps}>{tabButtons}</div>
-				) : (
-					tabButtons
-				)}
+			<div {...innerBlocksProps} />
 
-				{collapses && (
-					<select
-						className="wp-block-matter-tab-list__select"
-						aria-label={__('Select tab', 'matter')}
-						value={String(effectiveActiveIndex)}
-						onChange={handleSelectChange}
-					>
-						{tabsList.map((tab, index) => (
-							<option key={tab.clientId || index} value={index}>
-								{tab.label || __('Tab title')}
-							</option>
-						))}
-					</select>
-				)}
+			{collapses && (
+				<select
+					className="wp-block-matter-tab-list__select"
+					aria-label={__('Select tab', 'matter')}
+					value={String(effectiveActiveIndex)}
+					onChange={handleSelectChange}
+				>
+					{tabsList.map((tab, index) => (
+						<option key={tab.clientId || index} value={index}>
+							{tab.label || __('Tab title')}
+						</option>
+					))}
+				</select>
+			)}
 		</div>
 	);
 }
