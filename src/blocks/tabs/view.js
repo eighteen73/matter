@@ -8,8 +8,8 @@ import {
 	withSyncEvent,
 } from '@wordpress/interactivity';
 
-function createReadOnlyProxy( obj ) {
-	const arrayMutationMethods = new Set( [
+function createReadOnlyProxy(obj) {
+	const arrayMutationMethods = new Set([
 		'push',
 		'pop',
 		'shift',
@@ -19,18 +19,18 @@ function createReadOnlyProxy( obj ) {
 		'reverse',
 		'copyWithin',
 		'fill',
-	] );
+	]);
 
-	return new Proxy( obj, {
-		get( target, prop ) {
+	return new Proxy(obj, {
+		get(target, prop) {
 			// If accessing an array mutation method, return a no-op function.
-			if ( Array.isArray( target ) && arrayMutationMethods.has( prop ) ) {
+			if (Array.isArray(target) && arrayMutationMethods.has(prop)) {
 				return () => {};
 			}
 
-			const value = target[ prop ];
-			if ( typeof value === 'object' && value !== null ) {
-				return createReadOnlyProxy( value );
+			const value = target[prop];
+			if (typeof value === 'object' && value !== null) {
+				return createReadOnlyProxy(value);
 			}
 			return value;
 		},
@@ -40,7 +40,7 @@ function createReadOnlyProxy( obj ) {
 		deleteProperty() {
 			return false;
 		},
-	} );
+	});
 }
 
 // Private store for internal tabs functionality and security.
@@ -56,7 +56,7 @@ const { actions: privateActions, state: privateState } = store(
 			get tabsList() {
 				const context = getContext();
 				const tabsId = context?.tabsId;
-				const tabsList = privateState[ tabsId ];
+				const tabsList = privateState[tabsId];
 				return tabsList;
 			},
 			/**
@@ -66,14 +66,30 @@ const { actions: privateActions, state: privateState } = store(
 			 * @type {number|null}
 			 */
 			get tabIndex() {
+				const context = getContext();
 				const { attributes } = getElement();
-				const tabId = attributes?.id?.replace( 'tab__', '' ) || null;
+
+				if ( typeof context?.tabIndex === 'number' ) {
+					return context.tabIndex;
+				}
+
+				let tabId = attributes?.id?.replace( 'tab__', '' ) || null;
+
+				if ( ! tabId && context?.tab?.id ) {
+					tabId = context.tab.id;
+				}
+
 				if ( ! tabId ) {
 					return null;
 				}
+
 				const { tabsList } = privateState;
-				const tabIndex = tabsList.findIndex( ( t ) => t.id === tabId );
-				return tabIndex;
+
+				if ( ! tabsList ) {
+					return null;
+				}
+
+				return tabsList.findIndex( ( t ) => t.id === tabId );
 			},
 			/**
 			 * Whether the tab panel or tab label is the active tab.
@@ -101,64 +117,64 @@ const { actions: privateActions, state: privateState } = store(
 			 *
 			 * @param {KeyboardEvent} event The keydown event.
 			 */
-			handleTabKeyDown: withSyncEvent( ( event ) => {
+			handleTabKeyDown: withSyncEvent((event) => {
 				const context = getContext();
 				const { isVertical } = context;
 				const { tabIndex } = privateState;
 
-				if ( tabIndex === null ) {
+				if (tabIndex === null) {
 					return;
 				}
 
-				if ( event.key === 'ArrowRight' && ! isVertical ) {
+				if (event.key === 'ArrowRight' && !isVertical) {
 					event.preventDefault();
-					privateActions.moveFocus( tabIndex + 1 );
-				} else if ( event.key === 'ArrowLeft' && ! isVertical ) {
+					privateActions.moveFocus(tabIndex + 1);
+				} else if (event.key === 'ArrowLeft' && !isVertical) {
 					event.preventDefault();
-					privateActions.moveFocus( tabIndex - 1 );
-				} else if ( event.key === 'ArrowDown' && isVertical ) {
+					privateActions.moveFocus(tabIndex - 1);
+				} else if (event.key === 'ArrowDown' && isVertical) {
 					event.preventDefault();
-					privateActions.moveFocus( tabIndex + 1 );
-				} else if ( event.key === 'ArrowUp' && isVertical ) {
+					privateActions.moveFocus(tabIndex + 1);
+				} else if (event.key === 'ArrowUp' && isVertical) {
 					event.preventDefault();
-					privateActions.moveFocus( tabIndex - 1 );
+					privateActions.moveFocus(tabIndex - 1);
 				}
-			} ),
+			}),
 			/**
 			 * Handles the click event for the tab label.
 			 *
 			 * @param {MouseEvent} event The click event.
 			 */
-			handleTabClick: withSyncEvent( ( event ) => {
+			handleTabClick: withSyncEvent((event) => {
 				event.preventDefault();
 
 				const { tabIndex } = privateState;
-				if ( tabIndex !== null ) {
-					privateActions.setActiveTab( tabIndex );
+				if (tabIndex !== null) {
+					privateActions.setActiveTab(tabIndex);
 				}
-			} ),
+			}),
 			/**
 			 * Moves focus to a specific tab without activating it.
 			 *
 			 * @param {number} tabIndex The index to move focus to.
 			 */
-			moveFocus: ( tabIndex ) => {
+			moveFocus: (tabIndex) => {
 				const { tabsList } = privateState;
 
-				if ( ! tabsList || tabsList.length === 0 ) {
+				if (!tabsList || tabsList.length === 0) {
 					return;
 				}
 
 				let newIndex = tabIndex;
-				if ( newIndex < 0 ) {
+				if (newIndex < 0) {
 					newIndex = tabsList.length - 1;
-				} else if ( newIndex >= tabsList.length ) {
+				} else if (newIndex >= tabsList.length) {
 					newIndex = 0;
 				}
 
-				const tabId = tabsList[ newIndex ].id;
-				const tabElement = document.getElementById( 'tab__' + tabId );
-				if ( tabElement ) {
+				const tabId = tabsList[newIndex].id;
+				const tabElement = document.getElementById('tab__' + tabId);
+				if (tabElement) {
 					tabElement.focus();
 				}
 			},
@@ -168,30 +184,30 @@ const { actions: privateActions, state: privateState } = store(
 			 * @param {number}  tabIndex    The index of the active tab.
 			 * @param {boolean} scrollToTab Whether to scroll to the tab element.
 			 */
-			setActiveTab: ( tabIndex, scrollToTab = false ) => {
+			setActiveTab: (tabIndex, scrollToTab = false) => {
 				const { tabsList } = privateState;
 
-				if ( ! tabsList || tabsList.length === 0 ) {
+				if (!tabsList || tabsList.length === 0) {
 					return;
 				}
 
 				let newIndex = tabIndex;
-				if ( newIndex < 0 ) {
+				if (newIndex < 0) {
 					newIndex = 0;
-				} else if ( newIndex >= tabsList.length ) {
+				} else if (newIndex >= tabsList.length) {
 					newIndex = tabsList.length - 1;
 				}
 
 				const context = getContext();
 				context.activeTabIndex = newIndex;
 
-				if ( scrollToTab ) {
-					const tabId = tabsList[ newIndex ].id;
-					const tabElement = document.getElementById( tabId );
-					if ( tabElement ) {
-						setTimeout( () => {
-							tabElement.scrollIntoView( { behavior: 'smooth' } );
-						}, 100 );
+				if (scrollToTab) {
+					const tabId = tabsList[newIndex].id;
+					const tabElement = document.getElementById(tabId);
+					if (tabElement) {
+						setTimeout(() => {
+							tabElement.scrollIntoView({ behavior: 'smooth' });
+						}, 100);
 					}
 				}
 			},
@@ -203,16 +219,16 @@ const { actions: privateActions, state: privateState } = store(
 			 */
 			onTabsInit: () => {
 				const { tabsList } = privateState;
-				if ( tabsList.length === 0 ) {
+				if (tabsList.length === 0) {
 					return;
 				}
 
 				const { hash } = window.location;
-				const tabId = hash.replace( '#', '' );
-				const tabIndex = tabsList.findIndex( ( t ) => t.id === tabId );
+				const tabId = hash.replace('#', '');
+				const tabIndex = tabsList.findIndex((t) => t.id === tabId);
 				// Check if tabIndex is a positive number and if so we'll auto activate that tab.
-				if ( tabIndex >= 0 ) {
-					privateActions.setActiveTab( tabIndex, true );
+				if (tabIndex >= 0) {
+					privateActions.setActiveTab(tabIndex, true);
 				}
 			},
 		},
@@ -223,7 +239,7 @@ const { actions: privateActions, state: privateState } = store(
 );
 
 // Public store for third-party extensibility.
-store( 'core/tabs', {
+store('core/tabs', {
 	state: {
 		/**
 		 * Gets a contextually aware list of tabs for the current tabs block.
@@ -232,7 +248,7 @@ store( 'core/tabs', {
 		 * @type {Array}
 		 */
 		get tabsList() {
-			return createReadOnlyProxy( privateState.tabsList );
+			return createReadOnlyProxy(privateState.tabsList);
 		},
 		/**
 		 * Gets the index of the active tab element whether it
@@ -260,8 +276,8 @@ store( 'core/tabs', {
 		 * @param {number}  tabIndex    The index of the active tab.
 		 * @param {boolean} scrollToTab Whether to scroll to the tab element.
 		 */
-		setActiveTab: ( tabIndex, scrollToTab = false ) => {
-			privateActions.setActiveTab( tabIndex, scrollToTab );
+		setActiveTab: (tabIndex, scrollToTab = false) => {
+			privateActions.setActiveTab(tabIndex, scrollToTab);
 		},
 	},
-} );
+});
