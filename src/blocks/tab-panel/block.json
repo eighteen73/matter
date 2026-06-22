@@ -24,25 +24,15 @@
 		"reusable": false,
 		"color": {
 			"background": true,
-			"text": true,
-			"__experimentalDefaultControls": {
-				"background": true,
-				"text": true
-			}
+			"text": true
 		},
-		"layout": true,
 		"spacing": {
 			"blockGap": true,
 			"padding": true,
 			"margin": false
 		},
-		"typography": {
-			"fontSize": true,
-			"__experimentalFontFamily": true,
-			"__experimentalDefaultControls": {
-				"fontSize": true,
-				"__experimentalFontFamily": true
-			}
+		"__experimentalBorder": {
+			"radius": true
 		},
 		"renaming": true,
 		"visibility": false

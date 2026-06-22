@@ -15,49 +15,17 @@
 		"reusable": false,
 		"visibility": false,
 		"lock": false,
-		"dimensions": {
-			"aspectRatio": false,
-			"height": false,
-			"minHeight": false,
-			"width": false
-		},
 		"color": {
 			"background": true,
-			"text": true,
-			"heading": true,
-			"link": true,
-			"__experimentalDefaultControls": {
-				"background": true,
-				"text": true
-			}
+			"text": true
 		},
 		"spacing": {
 			"blockGap": false,
 			"padding": true,
 			"margin": true
 		},
-		"typography": {
-			"fontSize": true,
-			"__experimentalFontFamily": true
-		},
-		"layout": {
-			"default": {
-				"type": "flex",
-				"flexWrap": "nowrap",
-				"justifyContent": "stretch",
-				"orientation": "vertical"
-			},
-			"allowSwitching": false,
-			"allowVerticalAlignment": false,
-			"allowOrientation": false,
-			"allowJustification": true,
-			"allowSizingOnChildren": false
-		},
 		"__experimentalBorder": {
-			"radius": true,
-			"color": true,
-			"width": true,
-			"style": true
+			"radius": true
 		}
 	},
 	"editorScript": "file:./index.js",

@@ -182,6 +182,7 @@ function Edit({ attributes, clientId, context }) {
 		<>
 			<AddTabToolbarControl tabsClientId={tabsClientId} />
 			<RemoveTabToolbarControl tabsClientId={tabsClientId} />
+
 			<div {...blockProps}>
 				<div {...listProps}>
 					{tabsList.map((tab, index) => {

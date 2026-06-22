@@ -38,11 +38,7 @@
 		"anchor": true,
 		"color": {
 			"text": true,
-			"background": true,
-			"__experimentalDefaultControls": {
-				"text": true,
-				"background": true
-			}
+			"background": true
 		},
 		"layout": {
 			"default": {
@@ -55,8 +51,7 @@
 			"allowSwitching": false,
 			"allowVerticalAlignment": true,
 			"allowJustification": true,
-			"allowOrientation": true,
-			"allowSizingOnChildren": true
+			"allowOrientation": true
 		},
 		"html": false,
 		"interactivity": true,
@@ -65,9 +60,8 @@
 			"margin": true,
 			"padding": true
 		},
-		"typography": {
-			"fontSize": true,
-			"__experimentalFontFamily": true
+		"__experimentalBorder": {
+			"radius": true
 		},
 		"renaming": true
 	},
