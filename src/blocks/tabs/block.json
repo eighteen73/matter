@@ -50,8 +50,9 @@
 			},
 			"allowSwitching": false,
 			"allowVerticalAlignment": true,
-			"allowJustification": true,
-			"allowOrientation": true
+			"allowJustification": false,
+			"allowOrientation": true,
+			"allowWrap": false
 		},
 		"html": false,
 		"interactivity": true,
