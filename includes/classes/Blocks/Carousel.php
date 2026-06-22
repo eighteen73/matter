@@ -7,7 +7,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
-use Eighteen73\Matter\Styling\Spacing;
+use Eighteen73\Matter\Styling\BlockStyles;
 use Eighteen73\Matter\Config;
 
 defined( 'ABSPATH' ) || exit;
@@ -106,7 +106,7 @@ class Carousel {
 	 * @return array The resolved values.
 	 */
 	private static function get_resolved_values( $slides_to_show, string $axis, string $slide_gap, array $axis_to_flex_direction, array $axis_to_height ): array {
-		$css_slide_gap = Spacing::to_css_spacing_value( $slide_gap );
+		$css_slide_gap = BlockStyles::resolve_value( $slide_gap, 'spacing' );
 
 		return [
 			'slides-to-show'   => (string) $slides_to_show,

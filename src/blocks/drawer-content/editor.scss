@@ -4,12 +4,17 @@
 		--_backdrop-opacity: calc(var(--matter-drawer-content--backdrop-opacity, var(--wp--custom--matter-drawer-content--backdrop-opacity, 50)) / 100);
 		--_backdrop-blur: calc(var(--matter-drawer-content--backdrop-blur, var(--wp--custom--matter-drawer-content--backdrop-blur, 0)) * 1px);
 		--_backdrop-background: rgb(from var(--_backdrop-color) r g b / var(--_backdrop-opacity));
+		--_transition: var(--matter-drawer-content--transition, var(--wp--custom--matter-drawer-content--transition, 300ms ease-in-out));
 
 		backdrop-filter: blur(var(--_backdrop-blur));
 		background-color: var(--_backdrop-background);
 		inset: 0;
 		pointer-events: auto;
 		position: fixed;
+		transition:
+			background-color var(--_transition),
+			backdrop-filter var(--_transition),
+			opacity var(--_transition);
 	}
 
 	&__editor-preview {

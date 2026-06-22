@@ -24,7 +24,7 @@ export default function Edit({ context, clientId }) {
 	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch(blockEditorStore);
 	const blockProps = useBlockProps({
-		hidden: !isOpen,
+		className: 'wp-block-matter-collapsible__content',
 	});
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
 		renderAppender: InnerBlocks.ButtonBlockAppender,

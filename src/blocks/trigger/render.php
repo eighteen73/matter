@@ -17,7 +17,6 @@ $target_contexts = [
 ];
 
 $target_id  = '';
-$namespace  = '';
 $context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
 $tag_markup = isset( $content ) && is_string( $content ) ? $content : '';
 
@@ -27,7 +26,6 @@ foreach ( $target_contexts as $context_key => $context_namespace ) {
 	}
 
 	$target_id = $context[ $context_key ];
-	$namespace = $context_namespace;
 	break;
 }
 
@@ -50,7 +48,6 @@ while ( $tag_processor->next_tag() ) {
 	$tag_processor->set_attribute( 'aria-controls', $target_id );
 	$tag_processor->set_attribute( 'aria-expanded', 'false' );
 	$tag_processor->set_attribute( 'data-wp-bind--aria-expanded', 'context.isOpen' );
-	$tag_processor->set_attribute( 'data-wp-interactive', $namespace );
 	$tag_processor->set_attribute( 'data-wp-on--click', 'actions.toggle' );
 
 	if ( 'button' === $tag_name && ! $tag_processor->get_attribute( 'type' ) ) {

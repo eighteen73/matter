@@ -23,17 +23,18 @@ import { __ } from '@wordpress/i18n';
 import clsx from 'clsx';
 
 import ColorControl from '../../components/color-control';
-import { storeColorValue, getColorStyles } from '../../utils/colors';
+import { storeColorValue } from '../../utils/colors';
+import { getBlockStyles } from '../../utils/block-styles';
 import { getEditorPortalRoot } from '../../utils/get-editor-portal-root';
 
 const TEMPLATE = [['matter/close']];
 
 /**
- * @param {Object} props          Component props.
- * @param {Object} props.attributes Block attributes.
+ * @param {Object}   props               Component props.
+ * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Update block attributes.
- * @param {Object}   props.context    Block context.
- * @param {string}   props.clientId   Block client ID.
+ * @param {Object}   props.context       Block context.
+ * @param {string}   props.clientId      Block client ID.
  * @return {Element} Element to render.
  */
 export default function Edit({ context, clientId, attributes, setAttributes }) {
@@ -58,8 +59,8 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 		setPortalRoot(getEditorPortalRoot());
 	}, []);
 
-	const colorStyles = useMemo(
-		() => getColorStyles(attributes, 'drawer-content'),
+	const cssVarStyles = useMemo(
+		() => getBlockStyles(attributes, 'drawer-content'),
 		[attributes]
 	);
 	const blockProps = useBlockProps({
@@ -74,7 +75,7 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 			...blockProps,
 			style: {
 				...(blockProps.style || {}),
-				...colorStyles,
+				...cssVarStyles,
 			},
 		},
 		{
@@ -118,7 +119,7 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 							hasValue={() => !!backdropOpacity}
 							label={__('Overlay opacity', 'matter')}
 							onDeselect={() =>
-								setAttributes({ backdropOpacity: 0.5 })
+								setAttributes({ backdropOpacity: 50 })
 							}
 							resetAllFilter={() => ({
 								backdropOpacity: '',
@@ -241,6 +242,10 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 							onChange={(value) =>
 								setAttributes({ height: value })
 							}
+							unit="px"
+							min={0}
+							max={1000}
+							step={10}
 						/>
 					</ToolsPanelItem>
 				)}
@@ -257,11 +262,11 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 			)}
 			{portalRoot &&
 				createPortal(
-					<div className="wp-block-matter-drawer__editor-preview">
+					<div className="wp-block-matter-drawer-content__editor-preview">
 						{isOpen && (
 							<div
-								className="wp-block-matter-drawer__editor-backdrop"
-								style={colorStyles}
+								className="wp-block-matter-drawer-content__editor-backdrop"
+								style={cssVarStyles}
 								onClick={closeEditorPreview}
 								role="presentation"
 							/>

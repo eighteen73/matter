@@ -8,12 +8,13 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import ColorControl from '../../components/color-control';
-import { getColorStyles, storeColorValue } from '../../utils/colors';
+import { getBlockStyles } from '../../utils/block-styles';
+import { storeColorValue } from '../../utils/colors';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const { dotColor, dotActiveColor } = attributes;
 
-	const colorStyles = getColorStyles(attributes, 'carousel');
+	const colorStyles = getBlockStyles(attributes, 'carousel');
 
 	const blockProps = useBlockProps({
 		className: 'embla__dots',
@@ -26,6 +27,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<ColorControl
 					label={__('Dot', 'matter')}
 					value={dotColor}
+					attributeName="dotColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							dotColor: storeColorValue(slug, value),
@@ -37,6 +39,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<ColorControl
 					label={__('Active dot', 'matter')}
 					value={dotActiveColor}
+					attributeName="dotActiveColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							dotActiveColor: storeColorValue(slug, value),

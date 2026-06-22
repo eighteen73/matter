@@ -7,8 +7,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
-use Eighteen73\Matter\Styling\Color;
-use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -74,7 +73,7 @@ class Navigation {
 			'openModes'           => (object) [],
 		];
 
-		$color_style = Color::get_styles( $attributes, Config::get( 'colors', 'navigation' ) );
+		$color_style = BlockStyles::get_styles( 'navigation', $attributes );
 
 		if ( ! $include_block_wrapper ) {
 			// Wrap the list so core layout support classes attach here, not on the ul.

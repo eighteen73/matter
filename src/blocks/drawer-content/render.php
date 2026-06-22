@@ -8,19 +8,18 @@
  * @package Matter\\DrawerContent
  */
 
-use Eighteen73\Matter\Config;
-use Eighteen73\Matter\Styling\Color;
+use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
 $context   = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
 $drawer_id = ! empty( $context['matter/drawer-id'] ) ? $context['matter/drawer-id'] : wp_unique_id( 'matter-drawer-' );
-$position = ! empty( $attributes['position'] ) ? $attributes['position'] : 'left';
+$position  = ! empty( $attributes['position'] ) ? $attributes['position'] : 'left';
 
 $wrapper_attributes = [
 	'id'                 => $drawer_id,
 	'class'              => "wp-block-matter-drawer__content opens-{$position}",
-	'style'              => Color::get_styles( $attributes, Config::get( 'colors', 'drawer-content' ) ),
+	'style'              => BlockStyles::get_styles( 'drawer-content', $attributes ),
 	'data-wp-watch'      => 'callbacks.syncDialog',
 	'data-wp-on--close'  => 'callbacks.onNativeClose',
 	'data-wp-on--cancel' => 'callbacks.onCancel',
