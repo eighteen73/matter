@@ -16,34 +16,34 @@ import { useEffect, useRef } from '@wordpress/element';
  * @param {Array}       props.tabPanels       Raw core/tab-panel block objects.
  * @param {string|null} props.tabListClientId Client ID of the core/tab-list block.
  */
-export default function useTabListItemsSync( { tabPanels, tabListClientId } ) {
+export default function useTabListItemsSync({ tabPanels, tabListClientId }) {
 	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
-		useDispatch( blockEditorStore );
+		useDispatch(blockEditorStore);
 
-	const prevTabsRef = useRef( null );
+	const prevTabsRef = useRef(null);
 
-	useEffect( () => {
-		if ( ! tabListClientId ) {
+	useEffect(() => {
+		if (!tabListClientId) {
 			return;
 		}
 
-		const newTabs = tabPanels.map( ( tab ) => ( {
+		const newTabs = tabPanels.map((tab) => ({
 			label: tab.attributes.label || '',
-		} ) );
+		}));
 
 		// Only update if tabs actually changed to avoid unnecessary re-renders.
-		const serialized = JSON.stringify( newTabs );
-		if ( serialized === prevTabsRef.current ) {
+		const serialized = JSON.stringify(newTabs);
+		if (serialized === prevTabsRef.current) {
 			return;
 		}
 		prevTabsRef.current = serialized;
 
 		__unstableMarkNextChangeAsNotPersistent();
-		updateBlockAttributes( tabListClientId, { tabs: newTabs } );
+		updateBlockAttributes(tabListClientId, { tabs: newTabs });
 	}, [
 		tabPanels,
 		tabListClientId,
 		updateBlockAttributes,
 		__unstableMarkNextChangeAsNotPersistent,
-	] );
+	]);
 }

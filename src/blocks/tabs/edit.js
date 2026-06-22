@@ -16,20 +16,6 @@ import { useMemo } from '@wordpress/element';
 import Controls from './controls';
 import useTabListItemsSync from './use-tab-list-items-sync';
 
-const EMPTY_ARRAY = [];
-
-/**
- * Only the two structural child blocks are specified here — without inner
- * block entries for core/tab-list or core/tab-panels.
- *
- * If inner blocks were included in this template, `synchronizeBlocksWithTemplate`
- * (called whenever templateLock === 'all') would recurse into the containers and
- * truncate them to the template count, causing data loss when a saved block with
- * more than two tabs is re-opened in the editor.
- *
- * Initial tab/panel creation is delegated to the tab-panels template in
- * tab-panels/edit.js (templateLock: false, applied only when empty).
- */
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
 function Edit({ clientId, attributes, setAttributes }) {
@@ -48,7 +34,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 			);
 
 			return {
-				tabPanels: tabPanelsBlock?.innerBlocks ?? EMPTY_ARRAY,
+				tabPanels: tabPanelsBlock?.innerBlocks ?? [],
 				tabListClientId: tabList?.clientId ?? null,
 			};
 		},
