@@ -66,10 +66,15 @@ class Tabs {
 						? $tabs_id . '-tab-' . $tab_index
 						: 'tab-' . $tab_index );
 
+				$deep_linking_id = ! empty( $attrs['anchor'] )
+					? (string) $attrs['anchor']
+					: ( ! empty( $tab_label ) ? sanitize_title( $tab_label ) : $tab_id );
+
 				$tabs_list[] = [
-					'id'    => esc_attr( (string) $tab_id ),
-					'label' => $tab_label,
-					'index' => $tab_index,
+					'id'            => esc_attr( (string) $tab_id ),
+					'label'         => $tab_label,
+					'index'         => $tab_index,
+					'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
 				];
 
 				++$tab_index;
@@ -113,9 +118,11 @@ class Tabs {
 	 * @return string
 	 */
 	public static function render_tabs( array $attributes, string $content, WP_Block $block ): string {
-		$active_tab_index = $attributes['activeTabIndex'] ?? 0;
-		$tabs_list        = $block->context['matter/tabs-list'] ?? [];
-		$tabs_id          = $block->context['matter/tabs-id'] ?? null;
+		$active_tab_index            = $attributes['activeTabIndex'] ?? 0;
+		$tabs_list                   = $block->context['matter/tabs-list'] ?? [];
+		$tabs_id                     = $block->context['matter/tabs-id'] ?? null;
+		$deep_linking                = $attributes['deepLinking'] ?? false;
+		$deep_linking_update_history = $attributes['deepLinkingUpdateHistory'] ?? false;
 
 		if ( empty( $tabs_id ) ) {
 			return $content;
@@ -142,13 +149,16 @@ class Tabs {
 			'data-wp-context',
 			(string) wp_json_encode(
 				[
-					'tabsId'         => $tabs_id,
-					'activeTabIndex' => $active_tab_index,
+					'tabsId'                   => $tabs_id,
+					'activeTabIndex'           => $active_tab_index,
+					'deepLinking'              => (bool) $deep_linking,
+					'deepLinkingUpdateHistory' => (bool) $deep_linking_update_history,
 				]
 			)
 		);
 		$tag_processor->set_attribute( 'data-wp-init', 'callbacks.onTabsInit' );
 		$tag_processor->set_attribute( 'data-wp-on--keydown', 'actions.handleTabKeyDown' );
+		$tag_processor->set_attribute( 'data-wp-on-window--hashchange', 'actions.onHashChange' );
 
 		wp_interactivity_state(
 			'core/tabs/private',
@@ -252,6 +262,9 @@ class Tabs {
 			$tag_processor->set_attribute( 'id', $tab_id );
 		}
 
+		$tabs_list       = $block->context['matter/tabs-list'] ?? [];
+		$deep_linking_id = $tabs_list[ $tab_index ]['deepLinkingId'] ?? $tab_id;
+
 		$tag_processor->set_attribute( 'data-wp-interactive', 'core/tabs/private' );
 		$tag_processor->set_attribute(
 			'data-wp-context',
@@ -267,6 +280,7 @@ class Tabs {
 		);
 		$tag_processor->set_attribute( 'role', 'tabpanel' );
 		$tag_processor->set_attribute( 'aria-labelledby', 'tab__' . $tab_id );
+		$tag_processor->set_attribute( 'data-deep-linking-id', $deep_linking_id );
 		$tag_processor->set_attribute( 'data-wp-bind--hidden', '!state.isActiveTab' );
 		$tag_processor->set_attribute( 'tabindex', '0' );
 

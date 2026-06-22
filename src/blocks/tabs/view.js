@@ -67,29 +67,30 @@ const { actions: privateActions, state: privateState } = store(
 			 */
 			get tabIndex() {
 				const context = getContext();
-				const { attributes } = getElement();
 
-				if ( typeof context?.tabIndex === 'number' ) {
+				if (typeof context?.tabIndex === 'number') {
 					return context.tabIndex;
 				}
 
-				let tabId = attributes?.id?.replace( 'tab__', '' ) || null;
+				const { attributes } = getElement();
 
-				if ( ! tabId && context?.tab?.id ) {
+				let tabId = attributes?.id?.replace('tab__', '') || null;
+
+				if (!tabId && context?.tab?.id) {
 					tabId = context.tab.id;
 				}
 
-				if ( ! tabId ) {
+				if (!tabId) {
 					return null;
 				}
 
 				const { tabsList } = privateState;
 
-				if ( ! tabsList ) {
+				if (!tabsList) {
 					return null;
 				}
 
-				return tabsList.findIndex( ( t ) => t.id === tabId );
+				return tabsList.findIndex((t) => t.id === tabId);
 			},
 			/**
 			 * Whether the tab panel or tab label is the active tab.
@@ -182,7 +183,7 @@ const { actions: privateActions, state: privateState } = store(
 			 * Sets the active tab index (internal implementation).
 			 *
 			 * @param {number}  tabIndex    The index of the active tab.
-			 * @param {boolean} scrollToTab Whether to scroll to the tab element.
+			 * @param {boolean} scrollToTab Whether to scroll the tab button into view.
 			 */
 			setActiveTab: (tabIndex, scrollToTab = false) => {
 				const { tabsList } = privateState;
@@ -201,34 +202,124 @@ const { actions: privateActions, state: privateState } = store(
 				const context = getContext();
 				context.activeTabIndex = newIndex;
 
+				if (context.deepLinking) {
+					privateActions.updateUrlHash(newIndex);
+				}
+
 				if (scrollToTab) {
-					const tabId = tabsList[newIndex].id;
-					const tabElement = document.getElementById(tabId);
-					if (tabElement) {
-						setTimeout(() => {
-							tabElement.scrollIntoView({ behavior: 'smooth' });
-						}, 100);
-					}
+					privateActions.scrollTabIntoView(newIndex);
+				}
+			},
+			/**
+			 * Activates a tab based on a URL hash matching a panel deep linking ID.
+			 *
+			 * @param {string} hash The URL hash including the leading #.
+			 */
+			activateTabByHash: (hash) => {
+				const { tabsList } = privateState;
+
+				if (!tabsList || tabsList.length === 0 || !hash) {
+					return;
+				}
+
+				const targetId = hash.replace('#', '');
+				const tabIndex = tabsList.findIndex(
+					(tab) => tab.deepLinkingId === targetId
+				);
+
+				if (tabIndex < 0) {
+					return;
+				}
+
+				const context = getContext();
+				context.activeTabIndex = tabIndex;
+				privateActions.scrollTabIntoView(tabIndex);
+			},
+			/**
+			 * Updates the URL hash when deep linking is enabled.
+			 *
+			 * @param {number} tabIndex The active tab index.
+			 */
+			updateUrlHash: (tabIndex) => {
+				const context = getContext();
+
+				if (!context.deepLinking) {
+					return;
+				}
+
+				const { tabsList } = privateState;
+				const deepLinkingId = tabsList?.[tabIndex]?.deepLinkingId;
+
+				if (!deepLinkingId) {
+					return;
+				}
+
+				const newHash = `#${deepLinkingId}`;
+
+				if (context.deepLinkingUpdateHistory) {
+					window.history.pushState(null, '', newHash);
+				} else {
+					window.history.replaceState(null, '', newHash);
+				}
+			},
+			/**
+			 * Scrolls the tab button into view.
+			 *
+			 * @param {number} tabIndex The tab index to scroll to.
+			 */
+			scrollTabIntoView: (tabIndex) => {
+				const { tabsList } = privateState;
+				const tab = tabsList?.[tabIndex];
+
+				if (!tab?.id) {
+					return;
+				}
+
+				const tabElement = document.getElementById('tab__' + tab.id);
+
+				if (!tabElement) {
+					return;
+				}
+
+				setTimeout(() => {
+					tabElement.scrollIntoView({
+						behavior: 'smooth',
+						block: 'start',
+					});
+				}, 100);
+			},
+			/**
+			 * Handles browser hash changes for deep linking.
+			 */
+			onHashChange: () => {
+				const context = getContext();
+
+				if (!context.deepLinking) {
+					return;
+				}
+
+				const { hash } = window.location;
+
+				if (hash) {
+					privateActions.activateTabByHash(hash);
 				}
 			},
 		},
 		callbacks: {
 			/**
-			 * When the tabs are initialized, we need to check if there is a hash in the url and if so if it exists in the current tabsList, set the active tab to that index.
-			 *
+			 * Initialise tabs and activate a deep-linked tab from the URL hash.
 			 */
 			onTabsInit: () => {
-				const { tabsList } = privateState;
-				if (tabsList.length === 0) {
+				const context = getContext();
+
+				if (!context.deepLinking) {
 					return;
 				}
 
 				const { hash } = window.location;
-				const tabId = hash.replace('#', '');
-				const tabIndex = tabsList.findIndex((t) => t.id === tabId);
-				// Check if tabIndex is a positive number and if so we'll auto activate that tab.
-				if (tabIndex >= 0) {
-					privateActions.setActiveTab(tabIndex, true);
+
+				if (hash) {
+					privateActions.activateTabByHash(hash);
 				}
 			},
 		},

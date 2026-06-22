@@ -6,20 +6,30 @@ import {
 	useInnerBlocksProps,
 	BlockContextProvider,
 	store as blockEditorStore,
+	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { useMemo } from '@wordpress/element';
+import { PanelBody, ToggleControl } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import Controls from './controls';
 import useTabListItemsSync from './use-tab-list-items-sync';
+import AddTabToolbarControl from '../tab-panel/add-tab-toolbar-control';
+import RemoveTabToolbarControl from '../tab-panel/remove-tab-toolbar-control';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
 function Edit({ clientId, attributes, setAttributes }) {
-	const { anchor, activeTabIndex, editorActiveTabIndex } = attributes;
+	const {
+		anchor,
+		activeTabIndex,
+		editorActiveTabIndex,
+		deepLinking,
+		deepLinkingUpdateHistory,
+	} = attributes;
 
 	const { tabPanels, tabListClientId } = useSelect(
 		(select) => {
@@ -77,16 +87,45 @@ function Edit({ clientId, attributes, setAttributes }) {
 	});
 
 	return (
-		<BlockContextProvider value={contextValue}>
-			<div {...innerBlockProps}>
-				<Controls
-					clientId={clientId}
-					attributes={attributes}
-					setAttributes={setAttributes}
-				/>
-				{innerBlockProps.children}
-			</div>
-		</BlockContextProvider>
+		<>
+			<InspectorControls>
+				<PanelBody title={__('Settings', 'matter')}>
+					<ToggleControl
+						label={__('Deep Linking', 'matter')}
+						help={__('Enable deep linking.', 'matter')}
+						checked={deepLinking}
+						onChange={(value) =>
+							setAttributes({ deepLinking: value })
+						}
+					/>
+
+					{deepLinking && (
+						<ToggleControl
+							label={__('Update History', 'matter')}
+							help={__(
+								'Update history on deep linking. If enabled, the URL will be updated when the tab is changed.',
+								'matter'
+							)}
+							checked={deepLinkingUpdateHistory}
+							onChange={(value) =>
+								setAttributes({
+									deepLinkingUpdateHistory: value,
+								})
+							}
+						/>
+					)}
+				</PanelBody>
+			</InspectorControls>
+
+			<BlockContextProvider value={contextValue}>
+				<div {...innerBlockProps}>
+					<AddTabToolbarControl tabsClientId={clientId} />
+					<RemoveTabToolbarControl tabsClientId={clientId} />
+
+					{innerBlockProps.children}
+				</div>
+			</BlockContextProvider>
+		</>
 	);
 }
 
