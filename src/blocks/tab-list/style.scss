@@ -1,15 +1,20 @@
 @use "../../constants/breakpoints" as bp;
 
 .wp-block-matter-tab-list {
+	width: 100%;
+
 	&__select {
 		display: none;
 		width: 100%;
 	}
 
 	&__list {
+		align-items: inherit;
 		display: flex;
 		flex-wrap: inherit;
 		gap: inherit;
+		justify-content: inherit;
+		width: 100%;
 	}
 
 	&.is-collapsible {
