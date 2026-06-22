@@ -25,6 +25,18 @@ foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
 if ( empty( $modal_id ) ) {
 	$modal_id = wp_unique_id( 'matter-modal-' );
 }
+
+wp_interactivity_state(
+	'matter/overlay/private',
+	[
+		'items' => [
+			$modal_id => [
+				'isOpen' => false,
+				'type'   => 'modal',
+			],
+		],
+	]
+);
 ?>
 
 <div
@@ -32,14 +44,14 @@ if ( empty( $modal_id ) ) {
 	echo wp_kses_data(
 		get_block_wrapper_attributes(
 			[
-				'data-wp-interactive' => 'matter/modal',
+				'data-wp-interactive' => 'matter/overlay',
 			]
 		)
 		. ' '
 		. wp_interactivity_data_wp_context(
 			[
-				'id'     => $modal_id,
-				'isOpen' => false,
+				'id'   => $modal_id,
+				'type' => 'modal',
 			]
 		)
 	);

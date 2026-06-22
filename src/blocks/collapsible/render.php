@@ -27,6 +27,18 @@ if ( empty( $collapsible_id ) ) {
 }
 
 $type = ! empty( $block_attributes['type'] ) ? $block_attributes['type'] : 'popover';
+
+wp_interactivity_state(
+	'matter/overlay/private',
+	[
+		'items' => [
+			$collapsible_id => [
+				'isOpen' => false,
+				'type'   => 'collapsible',
+			],
+		],
+	]
+);
 ?>
 
 <div
@@ -36,14 +48,15 @@ $type = ! empty( $block_attributes['type'] ) ? $block_attributes['type'] : 'popo
 			[
 				'id'                     => $collapsible_id,
 				'class'                  => "is-type-{$type}",
-				'data-wp-interactive'    => 'matter/collapsible',
-				'data-wp-class--is-open' => 'context.isOpen',
+				'data-wp-interactive'    => 'matter/overlay',
+				'data-wp-class--is-open' => 'state.item.isOpen',
 			]
 		)
 		. ' '
 		. wp_interactivity_data_wp_context(
 			[
-				'isOpen' => false,
+				'id'   => $collapsible_id,
+				'type' => 'collapsible',
 			]
 		)
 	);

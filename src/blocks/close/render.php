@@ -11,8 +11,8 @@
 defined( 'ABSPATH' ) || exit;
 
 $target_contexts = [
-	'matter/modal-id'  => 'matter/modal',
-	'matter/drawer-id' => 'matter/drawer',
+	'matter/modal-id',
+	'matter/drawer-id',
 ];
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
@@ -20,19 +20,17 @@ $context          = isset( $block->context ) && is_array( $block->context ) ? $b
 $label            = isset( $block_attributes['label'] ) ? trim( wp_strip_all_tags( $block_attributes['label'] ) ) : '';
 $show_label       = ! array_key_exists( 'showLabel', $block_attributes ) || (bool) $block_attributes['showLabel'];
 $target_id        = '';
-$namespace        = '';
 
 if ( '' === $label ) {
 	$label = __( 'Close', 'matter' );
 }
 
-foreach ( $target_contexts as $context_key => $context_namespace ) {
+foreach ( $target_contexts as $context_key ) {
 	if ( empty( $context[ $context_key ] ) ) {
 		continue;
 	}
 
 	$target_id = $context[ $context_key ];
-	$namespace = $context_namespace;
 	break;
 }
 
@@ -41,9 +39,9 @@ $button_attributes = [
 	'aria-label' => $label,
 ];
 
-if ( ! empty( $target_id ) && ! empty( $namespace ) ) {
+if ( ! empty( $target_id ) ) {
 	$button_attributes['aria-controls']       = $target_id;
-	$button_attributes['data-wp-interactive'] = $namespace;
+	$button_attributes['data-wp-interactive'] = 'matter/overlay';
 	$button_attributes['data-wp-on--click']   = 'actions.close';
 }
 ?>

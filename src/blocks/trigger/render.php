@@ -11,16 +11,16 @@
 defined( 'ABSPATH' ) || exit;
 
 $target_contexts = [
-	'matter/modal-id'       => 'matter/modal',
-	'matter/drawer-id'      => 'matter/drawer',
-	'matter/collapsible-id' => 'matter/collapsible',
+	'matter/modal-id',
+	'matter/drawer-id',
+	'matter/collapsible-id',
 ];
 
 $target_id  = '';
 $context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
 $tag_markup = isset( $content ) && is_string( $content ) ? $content : '';
 
-foreach ( $target_contexts as $context_key => $context_namespace ) {
+foreach ( $target_contexts as $context_key ) {
 	if ( empty( $context[ $context_key ] ) ) {
 		continue;
 	}
@@ -47,7 +47,7 @@ while ( $tag_processor->next_tag() ) {
 	$tag_processor->add_class( 'wp-block-matter-trigger__control' );
 	$tag_processor->set_attribute( 'aria-controls', $target_id );
 	$tag_processor->set_attribute( 'aria-expanded', 'false' );
-	$tag_processor->set_attribute( 'data-wp-bind--aria-expanded', 'context.isOpen' );
+	$tag_processor->set_attribute( 'data-wp-bind--aria-expanded', 'state.item.isOpen' );
 	$tag_processor->set_attribute( 'data-wp-on--click', 'actions.toggle' );
 
 	if ( 'button' === $tag_name && ! $tag_processor->get_attribute( 'type' ) ) {

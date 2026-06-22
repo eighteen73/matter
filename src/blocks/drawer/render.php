@@ -25,6 +25,18 @@ foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
 if ( empty( $drawer_id ) ) {
 	$drawer_id = wp_unique_id( 'matter-drawer-' );
 }
+
+wp_interactivity_state(
+	'matter/overlay/private',
+	[
+		'items' => [
+			$drawer_id => [
+				'isOpen' => false,
+				'type'   => 'drawer',
+			],
+		],
+	]
+);
 ?>
 
 <div
@@ -32,14 +44,14 @@ if ( empty( $drawer_id ) ) {
 	echo wp_kses_data(
 		get_block_wrapper_attributes(
 			[
-				'data-wp-interactive' => 'matter/drawer',
+				'data-wp-interactive' => 'matter/overlay',
 			]
 		)
 		. ' '
 		. wp_interactivity_data_wp_context(
 			[
-				'id'     => $drawer_id,
-				'isOpen' => false,
+				'id'   => $drawer_id,
+				'type' => 'drawer',
 			]
 		)
 	);
