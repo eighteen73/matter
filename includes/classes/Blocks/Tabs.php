@@ -37,51 +37,93 @@ class Tabs {
 	}
 
 	/**
-	 * Build tabs list data from tab-panel inner blocks.
+	 * Build tabs list data from tab-list and tab-panels inner blocks.
 	 *
 	 * @param array<int, array<string, mixed>> $inner_blocks Parsed inner blocks of the tabs block.
 	 * @param string                           $tabs_id      Unique ID for the tabs instance.
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function generate_tabs_list( array $inner_blocks, string $tabs_id = '' ): array {
-		$tabs_list = [];
+		$tab_list_inner   = [];
+		$tab_panels_inner = [];
 
 		foreach ( $inner_blocks as $inner_block ) {
-			if ( 'matter/tab-panels' !== ( $inner_block['blockName'] ?? '' ) ) {
+			$block_name = $inner_block['blockName'] ?? '';
+
+			if ( 'matter/tab-list' === $block_name ) {
+				$tab_list_inner = $inner_block['innerBlocks'] ?? [];
+			}
+
+			if ( 'matter/tab-panels' === $block_name ) {
+				$tab_panels_inner = $inner_block['innerBlocks'] ?? [];
+			}
+		}
+
+		$tabs_list = [];
+		$tab_index = 0;
+
+		foreach ( $tab_list_inner as $button_block ) {
+			if ( 'matter/tab-button' !== ( $button_block['blockName'] ?? '' ) ) {
 				continue;
 			}
 
-			$tab_index = 0;
+			$button_attrs = $button_block['attrs'] ?? [];
+			$panel_block  = $tab_panels_inner[ $tab_index ] ?? null;
+			$panel_attrs  = is_array( $panel_block ) ? ( $panel_block['attrs'] ?? [] ) : [];
 
-			foreach ( $inner_block['innerBlocks'] ?? [] as $tab_block ) {
-				if ( 'matter/tab-panel' !== ( $tab_block['blockName'] ?? '' ) ) {
-					continue;
-				}
+			$tab_label = $button_attrs['label'] ?? $panel_attrs['label'] ?? '';
 
-				$attrs     = $tab_block['attrs'] ?? [];
-				$tab_label = $attrs['label'] ?? '';
+			$tab_id = ! empty( $panel_attrs['anchor'] )
+				? $panel_attrs['anchor']
+				: ( ! empty( $tabs_id )
+					? $tabs_id . '-tab-' . $tab_index
+					: 'tab-' . $tab_index );
 
-				$tab_id = ! empty( $attrs['anchor'] )
-					? $attrs['anchor']
-					: ( ! empty( $tabs_id )
-						? $tabs_id . '-tab-' . $tab_index
-						: 'tab-' . $tab_index );
+			$deep_linking_id = ! empty( $panel_attrs['anchor'] )
+				? (string) $panel_attrs['anchor']
+				: ( ! empty( $tab_label ) ? sanitize_title( $tab_label ) : $tab_id );
 
-				$deep_linking_id = ! empty( $attrs['anchor'] )
-					? (string) $attrs['anchor']
-					: ( ! empty( $tab_label ) ? sanitize_title( $tab_label ) : $tab_id );
+			$tabs_list[] = [
+				'id'            => esc_attr( (string) $tab_id ),
+				'label'         => $tab_label,
+				'index'         => $tab_index,
+				'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
+			];
 
-				$tabs_list[] = [
-					'id'            => esc_attr( (string) $tab_id ),
-					'label'         => $tab_label,
-					'index'         => $tab_index,
-					'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
-				];
+			++$tab_index;
+		}
 
-				++$tab_index;
+		if ( ! empty( $tabs_list ) ) {
+			return $tabs_list;
+		}
+
+		// Legacy fallback: derive tabs list from tab-panel labels when tab-buttons are absent.
+		foreach ( $tab_panels_inner as $tab_block ) {
+			if ( 'matter/tab-panel' !== ( $tab_block['blockName'] ?? '' ) ) {
+				continue;
 			}
 
-			break;
+			$attrs     = $tab_block['attrs'] ?? [];
+			$tab_label = $attrs['label'] ?? '';
+
+			$tab_id = ! empty( $attrs['anchor'] )
+				? $attrs['anchor']
+				: ( ! empty( $tabs_id )
+					? $tabs_id . '-tab-' . $tab_index
+					: 'tab-' . $tab_index );
+
+			$deep_linking_id = ! empty( $attrs['anchor'] )
+				? (string) $attrs['anchor']
+				: ( ! empty( $tab_label ) ? sanitize_title( $tab_label ) : $tab_id );
+
+			$tabs_list[] = [
+				'id'            => esc_attr( (string) $tab_id ),
+				'label'         => $tab_label,
+				'index'         => $tab_index,
+				'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
+			];
+
+			++$tab_index;
 		}
 
 		return $tabs_list;
@@ -211,8 +253,26 @@ class Tabs {
 		}
 
 		$buttons_markup = '';
-		foreach ( $tabs_list as $tab_index => $tab ) {
-			$buttons_markup .= self::render_tab_button( $tab, (int) $tab_index );
+		$button_index   = 0;
+
+		foreach ( $block->inner_blocks as $inner_block ) {
+			if ( 'matter/tab-button' !== $inner_block->name ) {
+				continue;
+			}
+
+			$tab = $tabs_list[ $button_index ] ?? [];
+			if ( ! empty( $inner_block->attributes['label'] ) ) {
+				$tab['label'] = $inner_block->attributes['label'];
+			}
+
+			$buttons_markup .= self::render_tab_button( $tab, $button_index );
+			++$button_index;
+		}
+
+		if ( '' === $buttons_markup ) {
+			foreach ( $tabs_list as $tab_index => $tab ) {
+				$buttons_markup .= self::render_tab_button( $tab, (int) $tab_index );
+			}
 		}
 
 		$select_markup = $collapses ? self::render_tab_select( $tabs_list, $tabs_id ) : '';
@@ -237,7 +297,7 @@ class Tabs {
 		$label  = $tab['label'] ?? '';
 
 		return sprintf(
-			'<button type="button" role="tab" id="%1$s" aria-controls="%2$s" data-wp-on--click="actions.handleTabClick" data-wp-on--keydown="actions.handleTabKeyDown" data-wp-bind--aria-selected="state.isActiveTab" data-wp-bind--tabindex="state.tabIndexAttribute" data-wp-context="%3$s">%4$s</button>',
+			'<button type="button" class="wp-block-matter-tab-button" role="tab" id="%1$s" aria-controls="%2$s" data-wp-on--click="actions.handleTabClick" data-wp-on--keydown="actions.handleTabKeyDown" data-wp-bind--aria-selected="state.isActiveTab" data-wp-bind--tabindex="state.tabIndexAttribute" data-wp-context="%3$s">%4$s</button>',
 			esc_attr( 'tab__' . $tab_id ),
 			esc_attr( (string) $tab_id ),
 			esc_attr(

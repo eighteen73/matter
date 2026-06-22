@@ -1,22 +1,30 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "matter/tab-panel",
-	"title": "Tab Panel",
-	"description": "Content for a tab in a tabbed interface.",
+	"name": "matter/tab-button",
+	"title": "Tab Button",
+	"description": "A tab label button in a tabbed interface.",
 	"category": "design",
 	"textdomain": "default",
-	"attributes": {},
-	"parent": [ "matter/tab-panels" ],
+	"parent": [ "matter/tab-list" ],
+	"attributes": {
+		"label": {
+			"type": "string",
+			"default": ""
+		},
+		"tabPanelClientId": {
+			"type": "string"
+		}
+	},
 	"usesContext": [
 		"matter/tabs-activeTabIndex",
-		"matter/tabs-editorActiveTabIndex",
-		"matter/tabs-id"
+		"matter/tabs-editorActiveTabIndex"
 	],
 	"supports": {
-		"anchor": true,
 		"html": false,
 		"reusable": false,
+		"lock": false,
+		"inserter": false,
 		"color": {
 			"background": true,
 			"text": true
@@ -26,17 +34,9 @@
 			"padding": true,
 			"margin": false
 		},
-		"layout": {
-			"default": {
-				"type": "default"
-			},
-			"allowSwitching": false
-		},
 		"__experimentalBorder": {
 			"radius": true
-		},
-		"renaming": true,
-		"visibility": false
+		}
 	},
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",

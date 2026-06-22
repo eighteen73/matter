@@ -52,7 +52,8 @@
 			"allowVerticalAlignment": true,
 			"allowJustification": false,
 			"allowOrientation": true,
-			"allowWrap": false
+			"allowWrap": false,
+			"allowSizingOnChildren": true
 		},
 		"html": false,
 		"interactivity": true,

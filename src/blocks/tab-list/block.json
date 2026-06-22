@@ -7,6 +7,7 @@
 	"category": "design",
 	"textdomain": "default",
 	"parent": [ "matter/tabs" ],
+	"allowedBlocks": [ "matter/tab-button" ],
 	"usesContext": [
 		"matter/tabs-id",
 		"matter/tabs-list",
