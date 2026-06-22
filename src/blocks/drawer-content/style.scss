@@ -14,11 +14,24 @@
 	overflow-x: hidden;
 	overflow-y: auto;
 	position: fixed;
-	transition: transform var(--_transition);
+	transition:
+		transform var(--_transition),
+		overlay var(--_transition) allow-discrete,
+		display var(--_transition) allow-discrete;
 	will-change: transform;
-	z-index: 1000;
+	z-index: 99999; // Above the admin toolbar.
 
 	&::backdrop {
+		backdrop-filter: blur(0);
+		background-color: transparent;
+		transition:
+			background-color var(--_transition),
+			backdrop-filter var(--_transition),
+			overlay var(--_transition) allow-discrete,
+			display var(--_transition) allow-discrete;
+	}
+
+	&[open]::backdrop {
 		backdrop-filter: blur(var(--_backdrop-blur));
 		background-color: var(--_backdrop-background);
 	}
@@ -69,5 +82,28 @@
 		flex-wrap: nowrap;
 		overflow-x: hidden;
 		overflow-y: auto;
+	}
+}
+
+@starting-style {
+	.wp-block-matter-drawer__content.opens-left[open] {
+		transform: translateX(-100%);
+	}
+
+	.wp-block-matter-drawer__content.opens-right[open] {
+		transform: translateX(100%);
+	}
+
+	.wp-block-matter-drawer__content.opens-top[open] {
+		transform: translateY(-100%);
+	}
+
+	.wp-block-matter-drawer__content.opens-bottom[open] {
+		transform: translateY(100%);
+	}
+
+	.wp-block-matter-drawer__content[open]::backdrop {
+		backdrop-filter: blur(0);
+		background-color: transparent;
 	}
 }
