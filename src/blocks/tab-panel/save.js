@@ -1,5 +1,13 @@
-import { InnerBlocks } from '@wordpress/block-editor';
+/**
+ * WordPress dependencies
+ */
+import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
 
-export default function Save() {
-	return <InnerBlocks.Content />;
+export default function save() {
+	const blockProps = useBlockProps.save( {
+		role: 'tabpanel',
+	} );
+	const innerBlocksProps = useInnerBlocksProps.save( blockProps );
+
+	return <section { ...innerBlocksProps } />;
 }

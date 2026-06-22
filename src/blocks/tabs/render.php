@@ -1,15 +1,23 @@
 <?php
 /**
- * The following variables are exposed to the file:
- *     $attributes (array): The block attributes.
- *     $content (string): The block default content.
- *     $block (WP_Block): The block instance.
+ * Tabs block render template.
  *
- * @package Eighteen73Blocks\\Tabs
+ * @package Eighteen73\Matter
  */
 
-?>
+use Eighteen73\Matter\Blocks\Tabs;
 
-<div <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</div>
+defined( 'ABSPATH' ) || exit;
+
+$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
+$block_content    = isset( $content ) ? (string) $content : '';
+$block_instance   = isset( $block ) && $block instanceof \WP_Block ? $block : null;
+
+if ( ! $block_instance instanceof \WP_Block ) {
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Saved block markup.
+	echo $block_content;
+	return;
+}
+
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Block renderer returns complete escaped markup.
+echo Tabs::render_tabs( $block_attributes, $block_content, $block_instance );
