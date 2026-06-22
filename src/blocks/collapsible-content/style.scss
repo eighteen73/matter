@@ -1,8 +1,33 @@
 .wp-block-matter-collapsible-content {
+	--_transition: var(--matter-collapsible-content--transition, var(--wp--custom--matter-collapsible-content--transition, 300ms ease-in-out));
+
+	> :first-child {
+		margin-top: 0;
+	}
+
+	> :last-child {
+		margin-bottom: 0;
+	}
+
 	.is-type-popover & {
 		left: 0;
+		opacity: 0;
 		position: absolute;
 		top: 100%;
+		transition: opacity var(--_transition), visibility var(--_transition);
+		visibility: hidden;
 		z-index: 50;
+	}
+
+	.is-type-inline & {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--_transition);
+	}
+
+	.is-open & {
+		grid-template-rows: 1fr;
+		opacity: 1;
+		visibility: visible;
 	}
 }

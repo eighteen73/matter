@@ -34,9 +34,10 @@ $type = ! empty( $block_attributes['type'] ) ? $block_attributes['type'] : 'popo
 	echo wp_kses_data(
 		get_block_wrapper_attributes(
 			[
-				'id'                  => $collapsible_id,
-				'class'               => "is-type-{$type}",
-				'data-wp-interactive' => 'matter/collapsible',
+				'id'                     => $collapsible_id,
+				'class'                  => "is-type-{$type}",
+				'data-wp-interactive'    => 'matter/collapsible',
+				'data-wp-class--is-open' => 'context.isOpen',
 			]
 		)
 		. ' '
