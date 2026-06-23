@@ -14,6 +14,10 @@
 		"syncWithCarousel": {
 			"type": "boolean",
 			"default": true
+		},
+		"activeThumbnailColor": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {
