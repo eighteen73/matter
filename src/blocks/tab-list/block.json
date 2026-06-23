@@ -14,7 +14,16 @@
 		"matter/tabs-collapses",
 		"matter/tabs-collapsesOn"
 	],
-	"attributes": {},
+	"attributes": {
+		"tabBackgroundColor": {
+			"type": "string",
+			"default": ""
+		},
+		"tabActiveColor": {
+			"type": "string",
+			"default": ""
+		}
+	},
 	"supports": {
 		"align": true,
 		"html": false,

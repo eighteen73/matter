@@ -9,6 +9,7 @@ namespace Eighteen73\Matter\Blocks;
 
 use Eighteen73\Matter\Config;
 use Eighteen73\Matter\Singleton;
+use Eighteen73\Matter\Styling\Color;
 use WP_Block;
 use WP_HTML_Tag_Processor;
 
@@ -255,6 +256,8 @@ class Tabs {
 			$wrapper_attributes['data-collapses']    = 'true';
 			$wrapper_attributes['data-collapses-on'] = $collapses_on;
 		}
+
+		$wrapper_attributes['style'] = Color::get_styles( $attributes, Config::get( 'colors', 'tabList' ) );
 
 		$buttons_markup = '';
 		$button_index   = 0;

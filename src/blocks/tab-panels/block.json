@@ -8,7 +8,12 @@
 	"textdomain": "default",
 	"parent": [ "matter/tabs" ],
 	"allowedBlocks": [ "matter/tab-panel" ],
-	"attributes": {},
+	"attributes": {
+		"tabPanelActiveColor": {
+			"type": "string",
+			"default": ""
+		}
+	},
 	"supports": {
 		"anchor": false,
 		"html": false,

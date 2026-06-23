@@ -11,26 +11,22 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	store as blockEditorStore,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalUseBorderProps as useBorderProps,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalUseColorProps as useColorProps,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useCallback, useEffect, useRef } from '@wordpress/element';
+import ColorControl from '../../components/color-control';
+import { getColorStyles, storeColorValue } from '../../utils/colors';
 
 const EMPTY_ARRAY = [];
 
-function Edit({ attributes, clientId, context }) {
+function Edit({ attributes, setAttributes, clientId, context }) {
+	const { tabBackgroundColor, tabActiveColor } = attributes;
+
 	const tabsList = context['matter/tabs-list'] || EMPTY_ARRAY;
 	const collapses = context['matter/tabs-collapses'] || false;
 	const collapsesOn = context['matter/tabs-collapsesOn'] || 'lg';
-
-	const colorProps = useColorProps(attributes);
-	const borderProps = useBorderProps(attributes);
-	const spacingProps = getSpacingClassesAndStyles(attributes);
+	const colorStyles = getColorStyles(attributes, 'tabList');
 
 	const { tabsClientId, editorActiveTabIndex, activeTabIndex } = useSelect(
 		(select) => {
@@ -118,20 +114,11 @@ function Edit({ attributes, clientId, context }) {
 	}, [tabsList.length, effectiveActiveIndex]);
 
 	const blockProps = useBlockProps({
-		className: clsx(
-			colorProps.className,
-			borderProps.className,
-			spacingProps.className,
-			{
-				'is-collapsible': collapses,
-				[`is-collapsible-until-${collapsesOn}`]: collapses,
-			}
-		),
-		style: {
-			...colorProps.style,
-			...borderProps.style,
-			...spacingProps.style,
-		},
+		className: clsx({
+			'is-collapsible': collapses,
+			[`is-collapsible-until-${collapsesOn}`]: collapses,
+		}),
+		style: colorStyles,
 		...(collapses
 			? {
 					'data-collapses': 'true',
@@ -155,24 +142,50 @@ function Edit({ attributes, clientId, context }) {
 	);
 
 	return (
-		<div {...blockProps}>
-			<div {...innerBlocksProps} />
+		<>
+			<InspectorControls group="color">
+				<ColorControl
+					label={__('Tab background', 'matter')}
+					value={tabBackgroundColor}
+					onChange={(value, slug) =>
+						setAttributes({
+							tabBackgroundColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
 
-			{collapses && (
-				<select
-					className="wp-block-matter-tab-list__select"
-					aria-label={__('Select tab', 'matter')}
-					value={String(effectiveActiveIndex)}
-					onChange={handleSelectChange}
-				>
-					{tabsList.map((tab, index) => (
-						<option key={tab.clientId || index} value={index}>
-							{tab.label || __('Tab title')}
-						</option>
-					))}
-				</select>
-			)}
-		</div>
+				<ColorControl
+					label={__('Tab active', 'matter')}
+					value={tabActiveColor}
+					onChange={(value, slug) =>
+						setAttributes({
+							tabActiveColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+			</InspectorControls>
+
+			<div {...blockProps}>
+				<div {...innerBlocksProps} />
+
+				{collapses && (
+					<select
+						className="wp-block-matter-tab-list__select"
+						aria-label={__('Select tab', 'matter')}
+						value={String(effectiveActiveIndex)}
+						onChange={handleSelectChange}
+					>
+						{tabsList.map((tab, index) => (
+							<option key={tab.clientId || index} value={index}>
+								{tab.label || __('Tab title')}
+							</option>
+						))}
+					</select>
+				)}
+			</div>
+		</>
 	);
 }
 

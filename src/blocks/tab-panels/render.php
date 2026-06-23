@@ -8,8 +8,17 @@
  * @package Eighteen73Blocks\\TabPanels
  */
 
+use Eighteen73\Matter\Styling\Color;
+use Eighteen73\Matter\Config;
+
+defined( 'ABSPATH' ) || exit;
+
+$wrapper_attributes = [
+	'class' => 'wp-block-matter-tab-panels',
+	'style' => Color::get_styles( $attributes, Config::get( 'colors', 'tabPanel' ) ),
+];
 ?>
 
-<div <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
+<div <?php echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) ); ?>>
 	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </div>
