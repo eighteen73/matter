@@ -9,6 +9,7 @@ import {
 	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
+import { store as coreDataStore } from '@wordpress/core-data';
 import { useMemo, useCallback, useRef } from '@wordpress/element';
 import {
 	PanelBody,
@@ -24,8 +25,14 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
+import './editor.scss';
 import breakpoints from '../../constants/breakpoints';
 import { useTabButtonsSync, insertTabPair } from './utils/sync-tab-buttons';
+import {
+	buildTabsListFromPosts,
+	findQueryBlock,
+	getEntityQueryArgs,
+} from './utils/query-tabs-list';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
@@ -38,6 +45,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 		deepLinkingUpdateHistory,
 		collapses,
 		collapsesOn,
+		isQueryMode,
 	} = attributes;
 
 	const { tabPanels, tabButtons, tabPanelsClientId, tabListClientId } =
@@ -72,7 +80,33 @@ function Edit({ clientId, attributes, setAttributes }) {
 
 	const isAddingTabRef = useRef(false);
 
-	useTabButtonsSync({ tabListClientId, tabPanelsClientId, isAddingTabRef });
+	useTabButtonsSync({
+		tabListClientId,
+		tabPanelsClientId,
+		isAddingTabRef,
+		enabled: !isQueryMode,
+	});
+
+	const queryBlock = useMemo(() => findQueryBlock(tabPanels), [tabPanels]);
+
+	const queryPosts = useSelect(
+		(select) => {
+			if (!isQueryMode || !queryBlock) {
+				return [];
+			}
+
+			const entityQuery = getEntityQueryArgs(queryBlock.attributes);
+			if (!entityQuery) {
+				return [];
+			}
+
+			const postType = queryBlock.attributes?.query?.postType || 'post';
+			const { getEntityRecords } = select(coreDataStore);
+
+			return getEntityRecords('postType', postType, entityQuery) ?? [];
+		},
+		[isQueryMode, queryBlock]
+	);
 
 	const handleAddTabAfter = useCallback(
 		(newTabIndex) => {
@@ -125,17 +159,19 @@ function Edit({ clientId, attributes, setAttributes }) {
 	]);
 
 	const contextValue = useMemo(() => {
-		const tabList = tabButtons.map((button, index) => {
-			const panel = tabPanels[index];
+		const tabList = isQueryMode
+			? buildTabsListFromPosts(queryPosts, anchor)
+			: tabButtons.map((button, index) => {
+					const panel = tabPanels[index];
 
-			return {
-				id: panel?.attributes?.anchor || `tab-${index}`,
-				label: button.attributes.label || '',
-				clientId: button.clientId,
-				panelClientId: panel?.clientId,
-				index,
-			};
-		});
+					return {
+						id: panel?.attributes?.anchor || `tab-${index}`,
+						label: button.attributes.label || '',
+						clientId: button.clientId,
+						panelClientId: panel?.clientId,
+						index,
+					};
+				});
 
 		return {
 			'matter/tabs-list': tabList,
@@ -144,8 +180,11 @@ function Edit({ clientId, attributes, setAttributes }) {
 			'matter/tabs-editorActiveTabIndex': editorActiveTabIndex,
 			'matter/tabs-collapses': collapses,
 			'matter/tabs-collapsesOn': collapsesOn,
+			'matter/tabs-isQueryMode': isQueryMode,
 		};
 	}, [
+		isQueryMode,
+		queryPosts,
 		tabButtons,
 		tabPanels,
 		anchor,
@@ -229,20 +268,22 @@ function Edit({ clientId, attributes, setAttributes }) {
 			<BlockContextProvider value={contextValue}>
 				<div {...innerBlockProps}>{innerBlockProps.children}</div>
 
-				<Button
-					variant="secondary"
-					text={__('Add tab', 'matter')}
-					onClick={handleAddTab}
-					disabled={!tabPanelsClientId || !tabListClientId}
-					style={{
-						width: '50%',
-						justifyContent: 'center',
-						marginTop: '1rem',
-						marginLeft: 'auto',
-						marginRight: 'auto',
-						display: 'flex',
-					}}
-				/>
+				{!isQueryMode && (
+					<Button
+						variant="secondary"
+						text={__('Add tab', 'matter')}
+						onClick={handleAddTab}
+						disabled={!tabPanelsClientId || !tabListClientId}
+						style={{
+							width: '50%',
+							justifyContent: 'center',
+							marginTop: '1rem',
+							marginLeft: 'auto',
+							marginRight: 'auto',
+							display: 'flex',
+						}}
+					/>
+				)}
 			</BlockContextProvider>
 		</>
 	);

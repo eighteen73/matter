@@ -11,6 +11,7 @@ use Eighteen73\Matter\Config;
 use Eighteen73\Matter\Singleton;
 use Eighteen73\Matter\Styling\Color;
 use WP_Block;
+use WP_Query;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -57,6 +58,11 @@ class Tabs {
 			if ( 'matter/tab-panels' === $block_name ) {
 				$tab_panels_inner = $inner_block['innerBlocks'] ?? [];
 			}
+		}
+
+		$query_block = self::find_query_block( $tab_panels_inner );
+		if ( null !== $query_block ) {
+			return self::generate_tabs_list_from_query( $query_block, $tabs_id );
 		}
 
 		$tabs_list = [];
@@ -134,6 +140,140 @@ class Tabs {
 	}
 
 	/**
+	 * Find a core/query block in tab-panels inner blocks.
+	 *
+	 * @param array<int, array<string, mixed>> $inner_blocks Parsed inner blocks.
+	 * @return array<string, mixed>|null
+	 */
+	private static function find_query_block( array $inner_blocks ): ?array {
+		foreach ( $inner_blocks as $inner_block ) {
+			if ( 'core/query' === ( $inner_block['blockName'] ?? '' ) ) {
+				return $inner_block;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Build tabs list data from a query block preview.
+	 *
+	 * @param array<string, mixed> $query_block Parsed query block.
+	 * @param string               $tabs_id     Unique ID for the tabs instance.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function generate_tabs_list_from_query( array $query_block, string $tabs_id ): array {
+		$query = self::get_query_posts_from_block( $query_block );
+
+		if ( null === $query ) {
+			return [];
+		}
+
+		$tabs_list = [];
+		$tab_index = 0;
+
+		foreach ( $query->posts as $post ) {
+			if ( ! $post instanceof \WP_Post ) {
+				continue;
+			}
+
+			$tab_label = $post->post_title;
+
+			$tab_id = ! empty( $tabs_id )
+				? $tabs_id . '-tab-' . $post->ID
+				: 'tab-' . $post->ID;
+
+			$deep_linking_id = ! empty( $post->post_name )
+				? (string) $post->post_name
+				: sanitize_title( $post->post_title );
+
+			$tabs_list[] = [
+				'id'            => esc_attr( (string) $tab_id ),
+				'label'         => $tab_label,
+				'index'         => $tab_index,
+				'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
+				'postId'        => $post->ID,
+			];
+
+			++$tab_index;
+		}
+
+		return $tabs_list;
+	}
+
+	/**
+	 * Run the same query the nested post-template block would use.
+	 *
+	 * build_query_vars_from_query_block() reads query settings from block context,
+	 * not attributes, so we simulate the post-template context here.
+	 *
+	 * @param array<string, mixed> $query_block Parsed query block.
+	 * @return WP_Query|null
+	 */
+	private static function get_query_posts_from_block( array $query_block ): ?WP_Query {
+		$query_attrs = $query_block['attrs'] ?? [];
+		$query       = $query_attrs['query'] ?? [];
+
+		if ( ! empty( $query['inherit'] ) ) {
+			global $wp_query;
+
+			if ( in_the_loop() ) {
+				$inherited_query = clone $wp_query;
+				$inherited_query->rewind_posts();
+
+				return $inherited_query;
+			}
+
+			return $wp_query;
+		}
+
+		if ( ! function_exists( 'build_query_vars_from_query_block' ) ) {
+			return null;
+		}
+
+		$available_context = [
+			'query' => $query,
+		];
+
+		if ( isset( $query_attrs['queryId'] ) ) {
+			$available_context['queryId'] = $query_attrs['queryId'];
+		}
+
+		$block_for_query = new WP_Block(
+			[
+				'blockName'   => 'core/post-template',
+				'attrs'       => [],
+				'innerBlocks' => [],
+			],
+			$available_context
+		);
+
+		$query_vars = build_query_vars_from_query_block( $block_for_query, 1 );
+
+		return new WP_Query( $query_vars );
+	}
+
+	/**
+	 * Resolve a tab ID for a query loop panel.
+	 *
+	 * @param string $tabs_id  Tabs instance ID.
+	 * @param int    $post_id  Post ID from query loop context.
+	 * @param int    $fallback_index Fallback index when post ID is unavailable.
+	 * @return string
+	 */
+	public static function get_query_tab_id( string $tabs_id, int $post_id, int $fallback_index = 0 ): string {
+		if ( $post_id > 0 ) {
+			return ! empty( $tabs_id )
+				? $tabs_id . '-tab-' . $post_id
+				: 'tab-' . $post_id;
+		}
+
+		return ! empty( $tabs_id )
+			? $tabs_id . '-tab-' . $fallback_index
+			: 'tab-' . $fallback_index;
+	}
+
+	/**
 	 * Provide tabs list context during server-side rendering.
 	 *
 	 * @param array<string, mixed> $context      Default block context.
@@ -151,7 +291,18 @@ class Tabs {
 			$parsed_block['innerBlocks'] ?? [],
 			(string) $tabs_id
 		);
-		$context['matter/tabs-id']   = $tabs_id;
+		$context['matter/tabs-id'] = $tabs_id;
+
+		$tab_panels_inner = [];
+		foreach ( $parsed_block['innerBlocks'] ?? [] as $inner_block ) {
+			if ( 'matter/tab-panels' === ( $inner_block['blockName'] ?? '' ) ) {
+				$tab_panels_inner = $inner_block['innerBlocks'] ?? [];
+				break;
+			}
+		}
+
+		$context['matter/tabs-isQueryMode'] = ! empty( $parsed_block['attrs']['isQueryMode'] )
+			|| null !== self::find_query_block( $tab_panels_inner );
 
 		return $context;
 	}

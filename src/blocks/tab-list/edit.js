@@ -26,6 +26,7 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 	const tabsList = context['matter/tabs-list'] || EMPTY_ARRAY;
 	const collapses = context['matter/tabs-collapses'] || false;
 	const collapsesOn = context['matter/tabs-collapsesOn'] || 'lg';
+	const isQueryMode = context['matter/tabs-isQueryMode'] ?? false;
 	const colorStyles = getColorStyles(attributes, 'tabList');
 
 	const { tabsClientId, editorActiveTabIndex, activeTabIndex } = useSelect(
@@ -68,6 +69,25 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 					editorActiveTabIndex: selectedIndex,
 				});
 			}
+		},
+		[
+			tabsClientId,
+			effectiveActiveIndex,
+			updateBlockAttributes,
+			__unstableMarkNextChangeAsNotPersistent,
+		]
+	);
+
+	const handleTabClick = useCallback(
+		(index) => {
+			if (!tabsClientId || index === effectiveActiveIndex) {
+				return;
+			}
+
+			__unstableMarkNextChangeAsNotPersistent();
+			updateBlockAttributes(tabsClientId, {
+				editorActiveTabIndex: index,
+			});
 		},
 		[
 			tabsClientId,
@@ -141,6 +161,32 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 		}
 	);
 
+	const { children: innerBlocksChildren, ...listLayoutProps } =
+		innerBlocksProps;
+
+	const queryTabButtons = isQueryMode ? (
+		<div {...listLayoutProps}>
+			{tabsList.map((tab, index) => (
+				<button
+					key={tab.clientId || index}
+					type="button"
+					className={clsx('wp-block-matter-tab-button', {
+						'is-active': effectiveActiveIndex === index,
+					})}
+					role="tab"
+					aria-selected={effectiveActiveIndex === index}
+					onClick={() => handleTabClick(index)}
+				>
+					<span className="wp-block-matter-tab-button__label">
+						{tab.label || __('Tab title', 'matter')}
+					</span>
+				</button>
+			))}
+		</div>
+	) : (
+		<div {...innerBlocksProps}>{innerBlocksChildren}</div>
+	);
+
 	return (
 		<>
 			<InspectorControls group="color">
@@ -168,7 +214,7 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 			</InspectorControls>
 
 			<div {...blockProps}>
-				<div {...innerBlocksProps} />
+				{queryTabButtons}
 
 				{collapses && (
 					<select

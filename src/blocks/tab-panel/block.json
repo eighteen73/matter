@@ -6,13 +6,26 @@
 	"description": "Content for a tab in a tabbed interface.",
 	"category": "design",
 	"textdomain": "default",
-	"attributes": {},
-	"parent": [ "matter/tab-panels" ],
+	"attributes": {
+		"inQueryLoop": {
+			"type": "boolean",
+			"default": false
+		},
+		"label": {
+			"type": "string"
+		}
+	},
+	"parent": [ "matter/tab-panels", "core/post-template" ],
+	"ancestor": [ "matter/tabs" ],
 	"usesContext": [
 		"matter/tabs-activeTabIndex",
 		"matter/tabs-editorActiveTabIndex",
 		"matter/tabs-id",
-		"matter/tabs-list"
+		"matter/tabs-list",
+		"matter/tabs-isQueryMode",
+		"postId",
+		"postType",
+		"queryId"
 	],
 	"supports": {
 		"anchor": true,

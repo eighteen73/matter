@@ -14,11 +14,13 @@ import { __ } from '@wordpress/i18n';
  * @param {string|null} options.tabListClientId
  * @param {string|null} options.tabPanelsClientId
  * @param {Object}      options.isAddingTabRef
+ * @param {boolean}     options.enabled
  */
 export function useTabButtonsSync({
 	tabListClientId,
 	tabPanelsClientId,
 	isAddingTabRef,
+	enabled = true,
 }) {
 	const { tabPanels, tabButtons } = useSelect(
 		(storeSelect) => {
@@ -50,6 +52,10 @@ export function useTabButtonsSync({
 	const buttonIdsKey = tabButtons.map((block) => block.clientId).join('|');
 
 	useEffect(() => {
+		if ( ! enabled ) {
+			return;
+		}
+
 		const prevPanelIds = prevPanelIdsRef.current;
 
 		if (
@@ -220,6 +226,7 @@ export function useTabButtonsSync({
 		moveBlockToPosition,
 		updateBlockAttributes,
 		isAddingTabRef,
+		enabled,
 	]);
 }
 

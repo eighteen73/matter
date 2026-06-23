@@ -12,7 +12,10 @@
 		"matter/tabs-id",
 		"matter/tabs-list",
 		"matter/tabs-collapses",
-		"matter/tabs-collapsesOn"
+		"matter/tabs-collapsesOn",
+		"matter/tabs-isQueryMode",
+		"matter/tabs-editorActiveTabIndex",
+		"matter/tabs-activeTabIndex"
 	],
 	"attributes": {
 		"tabBackgroundColor": {
