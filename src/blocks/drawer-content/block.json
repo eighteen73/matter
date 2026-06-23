@@ -62,6 +62,18 @@
 				"margin": false,
 				"padding": true
 			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
 		}
 	},
 	"usesContext": [ "matter/drawer-id", "matter/drawer-is-open" ],

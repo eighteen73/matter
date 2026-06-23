@@ -21,6 +21,18 @@
 			"margin": true,
 			"padding": true,
 			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
 		}
 	},
 	"usesContext": [ "matter/collapsible-id", "matter/collapsible-is-open" ],
