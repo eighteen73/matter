@@ -121,27 +121,21 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 		__unstableMarkNextChangeAsNotPersistent,
 	]);
 
-	// Determine if this is the currently active tab (for editor visibility)
 	const isActiveTab = effectiveActiveIndex === blockIndex;
-
-	// Determine if this is the default tab (for the "Default Tab" toggle in controls)
 	const isDefaultTab = activeTabIndex === blockIndex;
 
 	/**
-	 * This hook determines if the current tab panel should be visible.
-	 * This is true if it is the editor active tab, or if it is selected directly.
+	 * Determine if current tab panel should be visible
 	 */
 	const isSelectedTab = useMemo(() => {
 		if (inQueryLoop || isQueryMode) {
 			return true;
 		}
 
-		// Show if this tab is directly selected or has selected inner blocks
 		if (isSelected || hasInnerBlocksSelected) {
 			return true;
 		}
-		// Always show the active tab (at effectiveActiveIndex) regardless of other selection state.
-		// This ensures the tab panel remains visible when editing labels in tab-list.
+
 		if (isActiveTab) {
 			return true;
 		}
