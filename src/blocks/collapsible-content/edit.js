@@ -9,6 +9,8 @@ import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 
+import { useOpenParentOnSelection } from '../../utils/use-open-parent-on-selection';
+
 /**
  * @param {Object} props          Component props.
  * @param {Object} props.context  Block context.
@@ -17,6 +19,7 @@ import { __ } from '@wordpress/i18n';
  */
 export default function Edit({ context, clientId }) {
 	const isOpen = !!context['matter/collapsible-is-open'];
+	useOpenParentOnSelection(clientId, isOpen);
 	const parentClientId = useSelect(
 		(select) => select(blockEditorStore).getBlockRootClientId(clientId),
 		[clientId]

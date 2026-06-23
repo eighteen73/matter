@@ -24,6 +24,7 @@ import ColorControl from '../../components/color-control';
 import { storeColorValue } from '../../utils/colors';
 import { getBlockStyles } from '../../utils/block-styles';
 import { getEditorPortalRoot } from '../../utils/get-editor-portal-root';
+import { useOpenParentOnSelection } from '../../utils/use-open-parent-on-selection';
 
 const TEMPLATE = [['matter/close']];
 
@@ -45,6 +46,7 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 		height,
 	} = attributes;
 	const isOpen = !!context['matter/modal-is-open'];
+	useOpenParentOnSelection(clientId, isOpen);
 	const [portalRoot, setPortalRoot] = useState(getEditorPortalRoot);
 	const parentClientId = useSelect(
 		(select) => select(blockEditorStore).getBlockRootClientId(clientId),
