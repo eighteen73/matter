@@ -34,6 +34,7 @@ import {
 	getQueryPostsForEditor,
 } from './utils/query-tabs-list';
 import BlockVariationPicker from '../../components/block-variation-picker';
+import BreakpointSelectorControl from '../../components/breakpoint-selector-control';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
@@ -47,6 +48,9 @@ function Edit({ clientId, attributes, setAttributes }) {
 		collapses,
 		collapsesOn,
 		isQueryMode,
+		layout,
+		stackOnMobile,
+		stackedBreakpoint,
 	} = attributes;
 
 	const { tabPanels, tabButtons, tabPanelsClientId, tabListClientId } =
@@ -224,25 +228,41 @@ function Edit({ clientId, attributes, setAttributes }) {
 					/>
 
 					{collapses && (
-						<ToggleGroupControl
-							label={__('Collapse up to')}
-							onChange={(value) => {
-								setAttributes({ collapsesOn: value });
-							}}
+						<BreakpointSelectorControl
 							value={collapsesOn}
-							isBlock
-							style={{ width: '100%' }}
-						>
-							{Object.entries(breakpoints).map(
-								([name, breakpoint]) => (
-									<ToggleGroupControlOption
-										key={name}
-										value={name}
-										label={breakpoint.label.toUpperCase()}
-									/>
-								)
+							onChange={(value) =>
+								setAttributes({ collapsesOn: value })
+							}
+							label={__('Collapse up to', 'matter')}
+						/>
+					)}
+
+					{layout.orientation === 'horizontal' && (
+						<>
+							<ToggleControl
+								label={__('Stack on mobile', 'matter')}
+								help={__(
+									'Stack tabs on smaller screens.',
+									'matter'
+								)}
+								checked={stackOnMobile}
+								onChange={(value) => {
+									setAttributes({ stackOnMobile: value });
+								}}
+							/>
+
+							{stackOnMobile && (
+								<BreakpointSelectorControl
+									value={stackedBreakpoint}
+									onChange={(value) =>
+										setAttributes({
+											stackedBreakpoint: value,
+										})
+									}
+									label={__('Stacked breakpoint', 'matter')}
+								/>
 							)}
-						</ToggleGroupControl>
+						</>
 					)}
 
 					<ToggleControl
