@@ -1,4 +1,11 @@
 /**
+ * WordPress dependencies
+ */
+import { cleanForSlug } from '@wordpress/url';
+import { store as coreDataStore } from '@wordpress/core-data';
+import { store as editorStore } from '@wordpress/editor';
+
+/**
  * Build entity query args from a core/query block's attributes.
  *
  * @param {Object} queryAttributes Query block attributes.
@@ -21,7 +28,63 @@ export function getEntityQueryArgs(queryAttributes) {
 		search: query.search,
 		exclude: query.exclude,
 		sticky: query.sticky,
+		inherit: query.inherit,
 	};
+}
+
+/**
+ * Resolve query posts for the tabs block editor preview.
+ *
+ * @param {Object}   queryAttributes Query block attributes.
+ * @param {Function} select          Data store select function.
+ * @return {Array<Object>} Post entity records.
+ */
+export function getQueryPostsForEditor(queryAttributes, select) {
+	if (!queryAttributes?.query) {
+		return [];
+	}
+
+	const { query } = queryAttributes;
+	const postType = query.postType || 'post';
+	const { getEntityRecords, getEntityRecord } = select(coreDataStore);
+
+	if (query.inherit) {
+		const inheritedPosts =
+			getEntityRecords('postType', postType, {
+				per_page: query.perPage ?? 10,
+				order: query.order,
+				orderby: query.orderBy,
+				inherit: true,
+			}) ?? [];
+
+		if (inheritedPosts.length > 0) {
+			return inheritedPosts;
+		}
+
+		const { getCurrentPostId, getCurrentPostType } = select(editorStore);
+		const postId = getCurrentPostId();
+		const currentPostType = getCurrentPostType() || postType;
+
+		if (!postId) {
+			return [];
+		}
+
+		const currentPost = getEntityRecord(
+			'postType',
+			currentPostType,
+			postId
+		);
+
+		return currentPost ? [currentPost] : [];
+	}
+
+	const entityQuery = getEntityQueryArgs(queryAttributes);
+
+	if (!entityQuery) {
+		return [];
+	}
+
+	return getEntityRecords('postType', postType, entityQuery) ?? [];
 }
 
 /**
@@ -50,6 +113,43 @@ export function buildTabsListFromPosts(posts, tabsId) {
 			deepLinkingId: post.slug || '',
 		};
 	});
+}
+
+/**
+ * Build a manual-mode tabs list entry matching PHP conventions.
+ *
+ * @param {Object}      options
+ * @param {Object}      options.button Tab button block.
+ * @param {Object|null} options.panel  Tab panel block.
+ * @param {number}      options.index  Tab index.
+ * @param {string}      options.tabsId Tabs block anchor.
+ * @return {Object} Tabs list context entry.
+ */
+export function buildManualTabEntry({ button, panel, index, tabsId }) {
+	const label = button?.attributes?.label || '';
+	const anchor = panel?.attributes?.anchor;
+	const baseId = tabsId || '';
+
+	const id = anchor
+		? anchor
+		: baseId
+			? `${baseId}-tab-${index}`
+			: `tab-${index}`;
+
+	const deepLinkingId = anchor
+		? anchor
+		: label
+			? cleanForSlug(label)
+			: id;
+
+	return {
+		id,
+		label,
+		deepLinkingId,
+		clientId: button?.clientId,
+		panelClientId: panel?.clientId,
+		index,
+	};
 }
 
 /**

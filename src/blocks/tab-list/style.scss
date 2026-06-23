@@ -24,6 +24,13 @@
 		}
 	}
 
+	.is-vertical {
+		.wp-block-matter-tab-button {
+			flex-basis: 100%;
+			width: 100%;
+		}
+	}
+
 	&.is-collapsible {
 		.wp-block-matter-tab-list__select {
 			display: block;
@@ -84,12 +91,9 @@
 		text-transform: inherit;
 		width: max-content;
 
-		.is-vertical > & {
-			width: 100%;
-		}
-
 		&__media {
 			display: block;
+			flex-shrink: 0;
 			overflow: hidden;
 		}
 

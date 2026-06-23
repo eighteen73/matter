@@ -68,33 +68,35 @@ export default function Media({
 				/>
 			</BlockControls>
 
-			<InspectorControls>
-				{mediaType === 'video' && (
-					<PanelBody title={__('Poster')} initialOpen={true}>
-						<ImageControl
-							help={__(
-								'The image to display while the video is loading.',
-								'pulsar'
-							)}
-							value={posterId}
-							onChange={(image) =>
-								setAttributes({ posterId: image?.id })
+			{mediaId && (
+				<InspectorControls>
+					{mediaType === 'video' && (
+						<PanelBody title={__('Poster')} initialOpen={true}>
+							<ImageControl
+								help={__(
+									'The image to display while the video is loading.',
+									'pulsar'
+								)}
+								value={posterId}
+								onChange={(image) =>
+									setAttributes({ posterId: image?.id })
+								}
+							/>
+						</PanelBody>
+					)}
+
+					<PanelBody title={__('Focal Point')} initialOpen={false}>
+						<FocalPointPicker
+							url={media?.source_url}
+							autoPlay={true}
+							value={focalPoint}
+							onChange={(value) =>
+								setAttributes({ focalPoint: value })
 							}
 						/>
 					</PanelBody>
-				)}
-
-				<PanelBody title={__('Focal Point')} initialOpen={false}>
-					<FocalPointPicker
-						url={media?.source_url}
-						autoPlay={true}
-						value={focalPoint}
-						onChange={(value) =>
-							setAttributes({ focalPoint: value })
-						}
-					/>
-				</PanelBody>
-			</InspectorControls>
+				</InspectorControls>
+			)}
 
 			{mediaContent}
 		</>

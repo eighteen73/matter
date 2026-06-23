@@ -14,9 +14,10 @@ import {
 	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useMemo, useCallback, useEffect, useRef } from '@wordpress/element';
+import { useCallback, useEffect, useRef } from '@wordpress/element';
 import ColorControl from '../../components/color-control';
 import { getColorStyles, storeColorValue } from '../../utils/colors';
+import { useEffectiveActiveTabIndex } from '../tabs/utils/use-effective-active-tab-index';
 
 const EMPTY_ARRAY = [];
 
@@ -27,30 +28,19 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 	const collapses = context['matter/tabs-collapses'] || false;
 	const collapsesOn = context['matter/tabs-collapsesOn'] || 'lg';
 	const isQueryMode = context['matter/tabs-isQueryMode'] ?? false;
+	const effectiveActiveIndex = useEffectiveActiveTabIndex(context);
 	const colorStyles = getColorStyles(attributes, 'tabList');
 
-	const { tabsClientId, editorActiveTabIndex, activeTabIndex } = useSelect(
+	const { tabsClientId } = useSelect(
 		(select) => {
-			const { getBlockRootClientId, getBlockAttributes } =
-				select(blockEditorStore);
-
-			const _tabsClientId = getBlockRootClientId(clientId);
-			const tabsAttributes = _tabsClientId
-				? getBlockAttributes(_tabsClientId)
-				: {};
+			const { getBlockRootClientId } = select(blockEditorStore);
 
 			return {
-				tabsClientId: _tabsClientId,
-				editorActiveTabIndex: tabsAttributes?.editorActiveTabIndex,
-				activeTabIndex: tabsAttributes?.activeTabIndex ?? 0,
+				tabsClientId: getBlockRootClientId(clientId),
 			};
 		},
 		[clientId]
 	);
-
-	const effectiveActiveIndex = useMemo(() => {
-		return editorActiveTabIndex ?? activeTabIndex;
-	}, [editorActiveTabIndex, activeTabIndex]);
 
 	const { __unstableMarkNextChangeAsNotPersistent, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
@@ -225,7 +215,7 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 					>
 						{tabsList.map((tab, index) => (
 							<option key={tab.clientId || index} value={index}>
-								{tab.label || __('Tab title')}
+								{tab.label || __('Tab title', 'matter')}
 							</option>
 						))}
 					</select>

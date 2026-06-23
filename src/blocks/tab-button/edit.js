@@ -13,21 +13,17 @@ import {
 	RichText,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useMemo, useCallback } from '@wordpress/element';
+import { useCallback } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
 import Media from '../../components/media';
+import { useEffectiveActiveTabIndex } from '../tabs/utils/use-effective-active-tab-index';
 
 export default function Edit({ attributes, setAttributes, clientId, context }) {
 	const { label, mediaId, mediaType, focalPoint, posterId } = attributes;
-	const activeTabIndex = context['matter/tabs-activeTabIndex'];
-	const editorActiveTabIndex = context['matter/tabs-editorActiveTabIndex'];
-
-	const effectiveActiveIndex = useMemo(() => {
-		return editorActiveTabIndex ?? activeTabIndex ?? 0;
-	}, [editorActiveTabIndex, activeTabIndex]);
+	const effectiveActiveIndex = useEffectiveActiveTabIndex(context);
 
 	const { blockIndex, tabsClientId } = useSelect(
 		(select) => {
@@ -77,6 +73,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		role: 'tab',
 		tabIndex: -1,
 		type: 'button',
+		'aria-selected': isActive,
 		onClick: handleClick,
 	});
 
@@ -94,8 +91,9 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 
 			<RichText
 				tagName="span"
+				className="wp-block-matter-tab-button__label"
 				withoutInteractiveFormatting
-				placeholder={__('Tab title')}
+				placeholder={__('Tab title', 'matter')}
 				value={label}
 				onChange={(newLabel) => setAttributes({ label: newLabel })}
 				allowedFormats={[]}
