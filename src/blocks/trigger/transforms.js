@@ -22,18 +22,18 @@ function getTriggerButtonText(innerBlocks) {
 }
 
 /**
- * Block transforms from matter/trigger to matter/menu-trigger.
+ * Block transforms from matter/trigger to matter/trigger-hamburger.
  *
  * @return {Object} Transform definition.
  */
-export function triggerToMenuTriggerTransform() {
+export function triggerToTriggerHamburgerTransform() {
 	return {
 		type: 'block',
-		blocks: ['matter/menu-trigger'],
+		blocks: ['matter/trigger-hamburger'],
 		transform: (attributes, innerBlocks) => {
 			const buttonText = getTriggerButtonText(innerBlocks);
 
-			return createBlock('matter/menu-trigger', {
+			return createBlock('matter/trigger-hamburger', {
 				label: buttonText || __('Open menu', 'matter'),
 				showLabel: false,
 			});
@@ -42,11 +42,11 @@ export function triggerToMenuTriggerTransform() {
 }
 
 /**
- * Block transforms from matter/menu-trigger to matter/trigger.
+ * Block transforms from matter/trigger-hamburger to matter/trigger.
  *
  * @return {Object} Transform definition.
  */
-export function menuTriggerToTriggerTransform() {
+export function triggerHamburgerToTriggerTransform() {
 	return {
 		type: 'block',
 		blocks: ['matter/trigger'],

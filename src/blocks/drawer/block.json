@@ -7,7 +7,7 @@
 	"keywords": [ "drawer", "sidebar" ],
 	"category": "widgets",
 	"description": "An interactive drawer to display content without leaving the page.",
-	"allowedBlocks": [ "matter/trigger", "matter/drawer-content" ],
+	"allowedBlocks": [ "matter/trigger", "matter/trigger-hamburger", "matter/drawer-content" ],
 	"attributes": {
 		"generatedId": {
 			"type": "string",

@@ -19,7 +19,7 @@ import clsx from 'clsx';
 import './editor.scss';
 
 const TEMPLATE = [
-	['matter/trigger', { lock: { remove: true } }],
+	['matter/trigger'],
 	['matter/drawer-content', { lock: { remove: true } }],
 ];
 
@@ -108,7 +108,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		template: TEMPLATE,
-		templateLock: 'insert',
 	});
 
 	const toggleEditorPreview = () => {

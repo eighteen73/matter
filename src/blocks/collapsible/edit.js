@@ -27,7 +27,7 @@ import {
 } from '../../utils/block-ids';
 
 const TEMPLATE = [
-	['matter/trigger', { lock: { remove: true } }],
+	['matter/trigger'],
 	['matter/collapsible-content', { lock: { remove: true } }],
 ];
 
@@ -117,7 +117,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		template: TEMPLATE,
-		templateLock: 'insert',
 	});
 
 	const toggleEditorPreview = () => {

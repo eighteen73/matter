@@ -12,6 +12,7 @@
 	border: unset;
 	border-radius: var(--border-radius);
 	box-shadow: unset;
+	color: var(--_color);
 	cursor: pointer;
 	display: inline-flex;
 	font-size: var(--font-size);
@@ -19,8 +20,8 @@
 	line-height: 1;
 	padding: var(--padding);
 
-	&::before {
-		background-color: currentcolor;
+	&__icon {
+		background-color: var(--_icon-color);
 		content: "";
 		display: inline-block;
 		height: 1em; // Match the text size

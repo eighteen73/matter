@@ -7,7 +7,7 @@
 	"keywords": [ "accordion", "collapsible", "toggle" ],
 	"category": "widgets",
 	"description": "An interactive section which reveals content when triggered.",
-	"allowedBlocks": [ "matter/trigger", "matter/collapsible-content" ],
+	"allowedBlocks": [ "matter/trigger", "matter/trigger-hamburger", "matter/collapsible-content" ],
 	"attributes": {
 		"generatedId": {
 			"type": "string",

@@ -47,6 +47,11 @@ if ( ! empty( $target_id ) ) {
 ?>
 
 <button <?php echo wp_kses_data( get_block_wrapper_attributes( $button_attributes ) ); ?>>
+	<span
+		class="wp-block-matter-close__icon"
+		aria-hidden="true"
+	></span>
+
 	<?php if ( $show_label ) : ?>
 		<span class="wp-block-matter-close__label">
 			<?php echo esc_html( $label ); ?>

@@ -5,12 +5,12 @@ import './style.scss';
 import Edit from './edit';
 import Save from './save';
 import metadata from './block.json';
-import { triggerToMenuTriggerTransform } from './transforms';
+import { triggerToTriggerHamburgerTransform } from './transforms';
 
 registerBlockType(metadata.name, {
 	edit: Edit,
 	save: Save,
 	transforms: {
-		to: [triggerToMenuTriggerTransform()],
+		to: [triggerToTriggerHamburgerTransform()],
 	},
 });

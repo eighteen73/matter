@@ -64,6 +64,10 @@ export default function Edit({ attributes, setAttributes }) {
 			</InspectorControls>
 
 			<button {...blockProps}>
+				<span
+					className="wp-block-matter-close__icon"
+					aria-hidden="true"
+				/>
 				{showLabel && (
 					<span className="wp-block-matter-close__label">
 						{buttonLabel}
