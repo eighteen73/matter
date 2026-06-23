@@ -316,7 +316,7 @@ class Tabs {
 		);
 
 		return sprintf(
-			'<button type="button" class="wp-block-matter-tab-button" role="tab" id="%1$s" aria-controls="%2$s" data-wp-on--click="actions.handleTabClick" data-wp-on--keydown="actions.handleTabKeyDown" data-wp-bind--aria-selected="state.isActiveTab" data-wp-bind--tabindex="state.tabIndexAttribute" data-wp-context="%3$s">%4$s</button>',
+			'<button type="button" class="wp-block-matter-tab-button" role="tab" id="%1$s" aria-controls="%2$s" data-wp-on--click="actions.handleTabClick" data-wp-on--keydown="actions.handleTabKeyDown" data-wp-bind--aria-selected="state.isActiveTab" data-wp-class--is-active="state.isActiveTab" data-wp-bind--tabindex="state.tabIndexAttribute" data-wp-context="%3$s">%4$s</button>',
 			esc_attr( 'tab__' . $tab_id ),
 			esc_attr( (string) $tab_id ),
 			esc_attr(
@@ -506,6 +506,7 @@ class Tabs {
 		$tag_processor->set_attribute( 'aria-labelledby', 'tab__' . $tab_id );
 		$tag_processor->set_attribute( 'data-deep-linking-id', $deep_linking_id );
 		$tag_processor->set_attribute( 'data-wp-bind--hidden', '!state.isActiveTab' );
+		$tag_processor->set_attribute( 'data-wp-class--is-active', 'state.isActiveTab' );
 		$tag_processor->set_attribute( 'tabindex', '0' );
 
 		if ( $tab_index !== $active_tab_index ) {
