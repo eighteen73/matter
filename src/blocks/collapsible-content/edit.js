@@ -29,7 +29,7 @@ export default function Edit({ context, clientId }) {
 	const blockProps = useBlockProps({
 		className: 'wp-block-matter-collapsible__content',
 	});
-	const innerBlocksProps = useInnerBlocksProps(blockProps, {
+	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		renderAppender: InnerBlocks.ButtonBlockAppender,
 		templateLock: false,
 	});
@@ -56,7 +56,11 @@ export default function Edit({ context, clientId }) {
 					</ToolbarGroup>
 				</BlockControls>
 			)}
-			<div {...innerBlocksProps} />
+			<div {...innerBlocksProps}>
+				<div className="wp-block-matter-collapsible-content__container">
+					{children}
+				</div>
+			</div>
 		</>
 	);
 }

@@ -26,5 +26,7 @@ $content_id     = ! empty( $collapsible_id ) ? $collapsible_id . '-content' : wp
 	);
 	?>
 >
-	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	<div class="wp-block-matter-collapsible-content__container">
+		<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	</div>
 </div>
