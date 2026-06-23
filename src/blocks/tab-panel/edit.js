@@ -9,7 +9,6 @@ import {
 	InspectorControls,
 } from '@wordpress/block-editor';
 import {
-	PanelBody,
 	ToggleControl,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,
@@ -186,7 +185,6 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 							/>
 						</ToolsPanelItem>
 					</ToolsPanel>
-					<PanelBody title={__('Settings', 'matter')}></PanelBody>
 				</InspectorControls>
 			)}
 
