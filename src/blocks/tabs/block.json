@@ -35,6 +35,14 @@
 		"isQueryMode": {
 			"type": "boolean",
 			"default": false
+		},
+		"stackOnMobile": {
+			"type": "boolean",
+			"default": false
+		},
+		"stackedBreakpoint": {
+			"type": "string",
+			"default": "lg"
 		}
 	},
 	"supports": {

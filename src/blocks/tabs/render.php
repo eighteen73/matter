@@ -5,6 +5,8 @@
  * @package Eighteen73\Matter
  */
 
+use Eighteen73\Matter\Config;
+
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
@@ -22,11 +24,25 @@ $tabs_list                   = $block_instance->context['matter/tabs-list'] ?? [
 $active_tab_index            = $block_attributes['activeTabIndex'] ?? 0;
 $deep_linking                = $block_attributes['deepLinking'] ?? false;
 $deep_linking_update_history = $block_attributes['deepLinkingUpdateHistory'] ?? false;
+$stack_on_mobile             = $block_attributes['stackOnMobile'] ?? false;
+$stacked_breakpoint          = $block_attributes['stackedBreakpoint'] ?? 'lg';
+$is_horizontal               = $block_attributes['layout']['orientation'] === 'horizontal';
+
+$allowed_breakpoints = array_keys( Config::file( 'breakpoints' ) );
+if ( ! in_array( $stacked_breakpoint, $allowed_breakpoints, true ) ) {
+	$stacked_breakpoint = 'lg';
+}
 
 if ( empty( $tabs_id ) ) {
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Saved block markup.
 	echo $block_content;
 	return;
+}
+
+$wrapper_classes = [];
+if ( $stack_on_mobile && $is_horizontal ) {
+	$wrapper_classes[] = 'is-stacked-on-mobile';
+	$wrapper_classes[] = 'is-stacked-on-mobile-until-' . $stacked_breakpoint;
 }
 
 wp_interactivity_state(
@@ -48,6 +64,7 @@ $wrapper_attributes = [
 	'data-wp-init'                  => 'callbacks.onTabsInit',
 	'data-wp-on--keydown'           => 'actions.handleTabKeyDown',
 	'data-wp-on-window--hashchange' => 'actions.onHashChange',
+	'class'                         => implode( ' ', $wrapper_classes ),
 ];
 
 ?>
