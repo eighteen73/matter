@@ -11,7 +11,8 @@
 	"usesContext": [
 		"matter/tabs-activeTabIndex",
 		"matter/tabs-editorActiveTabIndex",
-		"matter/tabs-id"
+		"matter/tabs-id",
+		"matter/tabs-list"
 	],
 	"supports": {
 		"anchor": true,
