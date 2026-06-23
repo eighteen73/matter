@@ -9,7 +9,6 @@ import {
 	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { store as coreDataStore } from '@wordpress/core-data';
 import { useMemo, useCallback, useRef } from '@wordpress/element';
 import {
 	PanelBody,
@@ -30,8 +29,9 @@ import breakpoints from '../../constants/breakpoints';
 import { useTabButtonsSync, insertTabPair } from './utils/sync-tab-buttons';
 import {
 	buildTabsListFromPosts,
+	buildManualTabEntry,
 	findQueryBlock,
-	getEntityQueryArgs,
+	getQueryPostsForEditor,
 } from './utils/query-tabs-list';
 import BlockVariationPicker from '../../components/block-variation-picker';
 
@@ -96,15 +96,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 				return [];
 			}
 
-			const entityQuery = getEntityQueryArgs(queryBlock.attributes);
-			if (!entityQuery) {
-				return [];
-			}
-
-			const postType = queryBlock.attributes?.query?.postType || 'post';
-			const { getEntityRecords } = select(coreDataStore);
-
-			return getEntityRecords('postType', postType, entityQuery) ?? [];
+			return getQueryPostsForEditor(queryBlock.attributes, select);
 		},
 		[isQueryMode, queryBlock]
 	);
@@ -144,7 +136,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 				tabPanelsClientId,
 				tabListClientId,
 				insertAt,
-				defaultLabel: __('Tab'),
+				defaultLabel: __('Tab', 'matter'),
 			});
 
 			handleAddTabAfter(insertAt);
@@ -162,17 +154,14 @@ function Edit({ clientId, attributes, setAttributes }) {
 	const contextValue = useMemo(() => {
 		const tabList = isQueryMode
 			? buildTabsListFromPosts(queryPosts, anchor)
-			: tabButtons.map((button, index) => {
-					const panel = tabPanels[index];
-
-					return {
-						id: panel?.attributes?.anchor || `tab-${index}`,
-						label: button.attributes.label || '',
-						clientId: button.clientId,
-						panelClientId: panel?.clientId,
+			: tabButtons.map((button, index) =>
+					buildManualTabEntry({
+						button,
+						panel: tabPanels[index],
 						index,
-					};
-				});
+						tabsId: anchor,
+					})
+				);
 
 		return {
 			'matter/tabs-list': tabList,

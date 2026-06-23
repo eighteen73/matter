@@ -90,10 +90,10 @@ class Tabs {
 				: ( ! empty( $tab_label ) ? sanitize_title( $tab_label ) : $tab_id );
 
 			$tabs_list[] = [
-				'id'            => esc_attr( (string) $tab_id ),
+				'id'            => (string) $tab_id,
 				'label'         => $tab_label,
 				'index'         => $tab_index,
-				'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
+				'deepLinkingId' => (string) $deep_linking_id,
 				'mediaId'       => $button_attrs['mediaId'] ?? null,
 				'mediaType'     => $button_attrs['mediaType'] ?? null,
 				'posterId'      => $button_attrs['posterId'] ?? null,
@@ -127,10 +127,10 @@ class Tabs {
 				: ( ! empty( $tab_label ) ? sanitize_title( $tab_label ) : $tab_id );
 
 			$tabs_list[] = [
-				'id'            => esc_attr( (string) $tab_id ),
+				'id'            => (string) $tab_id,
 				'label'         => $tab_label,
 				'index'         => $tab_index,
-				'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
+				'deepLinkingId' => (string) $deep_linking_id,
 			];
 
 			++$tab_index;
@@ -177,7 +177,7 @@ class Tabs {
 				continue;
 			}
 
-			$tab_label = $post->post_title;
+			$tab_label = wp_strip_all_tags( $post->post_title );
 
 			$tab_id = ! empty( $tabs_id )
 				? $tabs_id . '-tab-' . $post->ID
@@ -188,10 +188,10 @@ class Tabs {
 				: sanitize_title( $post->post_title );
 
 			$tabs_list[] = [
-				'id'            => esc_attr( (string) $tab_id ),
+				'id'            => (string) $tab_id,
 				'label'         => $tab_label,
 				'index'         => $tab_index,
-				'deepLinkingId' => esc_attr( (string) $deep_linking_id ),
+				'deepLinkingId' => (string) $deep_linking_id,
 				'postId'        => $post->ID,
 			];
 
@@ -348,6 +348,8 @@ class Tabs {
 
 		$wrapper_attributes['style'] = Color::get_styles( $attributes, Config::get( 'colors', 'tabList' ) );
 
+		$orientation  = $attributes['layout']['orientation'] ?? 'horizontal';
+		$is_vertical  = 'vertical' === $orientation;
 		$buttons_markup = '';
 		$button_index   = 0;
 
@@ -366,13 +368,13 @@ class Tabs {
 			$tab['posterId']   = $inner_block->attributes['posterId'] ?? null;
 			$tab['focalPoint'] = $inner_block->attributes['focalPoint'] ?? null;
 
-			$buttons_markup .= self::render_tab_button( $tab, $button_index );
+			$buttons_markup .= self::render_tab_button( $tab, $button_index, $is_vertical );
 			++$button_index;
 		}
 
 		if ( '' === $buttons_markup ) {
 			foreach ( $tabs_list as $tab_index => $tab ) {
-				$buttons_markup .= self::render_tab_button( $tab, (int) $tab_index );
+				$buttons_markup .= self::render_tab_button( $tab, (int) $tab_index, $is_vertical );
 			}
 		}
 
@@ -389,11 +391,12 @@ class Tabs {
 	/**
 	 * Render a single tab button.
 	 *
-	 * @param array<string, mixed> $tab       Tab data.
-	 * @param int                  $tab_index Tab index.
+	 * @param array<string, mixed> $tab         Tab data.
+	 * @param int                  $tab_index   Tab index.
+	 * @param bool                 $is_vertical Whether the tab list is vertical.
 	 * @return string
 	 */
-	private static function render_tab_button( array $tab, int $tab_index ): string {
+	private static function render_tab_button( array $tab, int $tab_index, bool $is_vertical = false ): string {
 		$tab_id      = $tab['id'] ?? 'tab-' . $tab_index;
 		$label       = $tab['label'] ?? '';
 		$media_id    = isset( $tab['mediaId'] ) ? (int) $tab['mediaId'] : 0;
@@ -414,7 +417,8 @@ class Tabs {
 			esc_attr(
 				(string) wp_json_encode(
 					[
-						'tabIndex' => $tab_index,
+						'tabIndex'   => $tab_index,
+						'isVertical' => $is_vertical,
 					]
 				)
 			),

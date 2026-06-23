@@ -10,7 +10,7 @@ import {
 } from '@wordpress/block-editor';
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useMemo, useRef, useEffect } from '@wordpress/element';
+import { useMemo, useEffect } from '@wordpress/element';
 import clsx from 'clsx';
 
 /**
@@ -20,38 +20,24 @@ import {
 	findTabsClientId,
 	getTabPanelIndex,
 } from '../tabs/utils/query-tabs-list';
+import { useEffectiveActiveTabIndex } from '../tabs/utils/use-effective-active-tab-index';
 
 const TEMPLATE = [
 	[
 		'core/paragraph',
 		{
-			placeholder: __('Type / to choose a block'),
+			placeholder: __('Type / to choose a block', 'matter'),
 		},
 	],
 ];
 
 const QUERY_TEMPLATE = [['core/post-content']];
 
-const { cancelAnimationFrame } = window;
-
 export default function Edit({ attributes, clientId, context, isSelected }) {
-	const focusRef = useRef();
 	const { inQueryLoop } = attributes;
 	const isQueryMode = context['matter/tabs-isQueryMode'] ?? false;
-
-	// Consume tab indices from context
+	const effectiveActiveIndex = useEffectiveActiveTabIndex(context);
 	const activeTabIndex = context['matter/tabs-activeTabIndex'];
-	const editorActiveTabIndex = context['matter/tabs-editorActiveTabIndex'];
-	const effectiveActiveIndex = editorActiveTabIndex ?? activeTabIndex;
-
-	// Clean up animation frames on unmount.
-	useEffect(() => {
-		return () => {
-			if (focusRef.current) {
-				cancelAnimationFrame(focusRef.current);
-			}
-		};
-	}, []);
 
 	const { blockIndex, hasInnerBlocksSelected, tabsClientId } = useSelect(
 		(select) => {
@@ -90,20 +76,17 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch(blockEditorStore);
 
-	// Sync editorActiveTabIndex when this tab is selected directly
 	useEffect(() => {
 		if (inQueryLoop || isQueryMode) {
 			return;
 		}
 
-		// Only update if this tab is selected and not already the active index
 		const isTabSelected = isSelected || hasInnerBlocksSelected;
 		if (
 			isTabSelected &&
 			tabsClientId &&
 			effectiveActiveIndex !== blockIndex
 		) {
-			// Mark as non-persistent so it doesn't add to undo history
 			__unstableMarkNextChangeAsNotPersistent();
 			updateBlockAttributes(tabsClientId, {
 				editorActiveTabIndex: blockIndex,
@@ -124,9 +107,6 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 	const isActiveTab = effectiveActiveIndex === blockIndex;
 	const isDefaultTab = activeTabIndex === blockIndex;
 
-	/**
-	 * Determine if current tab panel should be visible
-	 */
 	const isSelectedTab = useMemo(() => {
 		if (inQueryLoop || isQueryMode) {
 			return true;
@@ -174,8 +154,12 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 							help={__('Open this tab by default.', 'matter')}
 							checked={isDefaultTab}
 							onChange={(value) => {
+								if (!value || !tabsClientId) {
+									return;
+								}
+
 								updateBlockAttributes(tabsClientId, {
-									activeTabIndex: value ? blockIndex : 0,
+									activeTabIndex: blockIndex,
 								});
 							}}
 						/>

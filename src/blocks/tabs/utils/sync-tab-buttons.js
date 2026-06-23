@@ -8,6 +8,140 @@ import { useEffect, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
+ * Tab panels are the source of truth; tab-list buttons mirror their count,
+ * order, and panel links. Legacy content without buttons is migrated on load.
+ */
+
+function migrateLegacyButtons({
+	tabPanels,
+	tabListClientId,
+	replaceInnerBlocks,
+	updateBlockAttributes,
+}) {
+	const migratedButtons = tabPanels.map((panel) =>
+		createBlock('matter/tab-button', {
+			label: panel.attributes.label || '',
+			tabPanelClientId: panel.clientId,
+		})
+	);
+
+	replaceInnerBlocks(tabListClientId, migratedButtons, false);
+
+	tabPanels.forEach((panel) => {
+		if (panel.attributes.label) {
+			updateBlockAttributes(panel.clientId, {
+				label: undefined,
+			});
+		}
+	});
+}
+
+function insertMissingButton({
+	tabButtons,
+	tabPanels,
+	tabListClientId,
+	insertBlock,
+}) {
+	const insertAt = tabButtons.length;
+	const panel = tabPanels[insertAt];
+
+	return insertBlock(
+		createBlock('matter/tab-button', {
+			label: __('Tab', 'matter'),
+			tabPanelClientId: panel?.clientId,
+		}),
+		insertAt,
+		tabListClientId,
+		false
+	);
+}
+
+function findOrphanButton({
+	tabButtons,
+	prevPanelIds,
+	currentPanelIds,
+}) {
+	const panelClientIds = new Set(currentPanelIds);
+	const removedPanelIds = prevPanelIds.filter(
+		(id) => !currentPanelIds.includes(id)
+	);
+
+	for (const removedId of removedPanelIds) {
+		const linkedButton = tabButtons.find(
+			(button) => button.attributes.tabPanelClientId === removedId
+		);
+
+		if (linkedButton) {
+			return linkedButton;
+		}
+
+		const removedIndex = prevPanelIds.indexOf(removedId);
+
+		if (removedIndex >= 0 && tabButtons[removedIndex]) {
+			return tabButtons[removedIndex];
+		}
+	}
+
+	const unlinkedButton = tabButtons.find(
+		(button) =>
+			button.attributes.tabPanelClientId &&
+			!panelClientIds.has(button.attributes.tabPanelClientId)
+	);
+
+	if (unlinkedButton) {
+		return unlinkedButton;
+	}
+
+	// Last resort when panel links are stale after reorder/remove edge cases.
+	return tabButtons[tabButtons.length - 1] ?? null;
+}
+
+function relinkStaleButtons({ tabButtons, tabPanels, updateBlockAttributes }) {
+	tabButtons.forEach((button, index) => {
+		const panel = tabPanels[index];
+
+		if (
+			panel &&
+			button.attributes.tabPanelClientId !== panel.clientId
+		) {
+			updateBlockAttributes(button.clientId, {
+				tabPanelClientId: panel.clientId,
+			});
+		}
+	});
+}
+
+function reorderButtons({
+	tabButtons,
+	currentPanelIds,
+	tabListClientId,
+	moveBlockToPosition,
+}) {
+	const outOfOrderButton = tabButtons.find((button, index) => {
+		const expectedPanelId = currentPanelIds[index];
+		return button.attributes.tabPanelClientId !== expectedPanelId;
+	});
+
+	if (!outOfOrderButton) {
+		return null;
+	}
+
+	const targetIndex = currentPanelIds.indexOf(
+		outOfOrderButton.attributes.tabPanelClientId
+	);
+
+	if (targetIndex < 0) {
+		return null;
+	}
+
+	return moveBlockToPosition(
+		outOfOrderButton.clientId,
+		targetIndex,
+		tabListClientId
+	);
+}
+
+/**
  * Keep tab-list tab-button inner blocks in sync with tab-panels tab-panel blocks.
  *
  * @param {Object}      options
@@ -52,7 +186,7 @@ export function useTabButtonsSync({
 	const buttonIdsKey = tabButtons.map((block) => block.clientId).join('|');
 
 	useEffect(() => {
-		if ( ! enabled ) {
+		if (!enabled) {
 			return;
 		}
 
@@ -72,21 +206,11 @@ export function useTabButtonsSync({
 		if (tabButtons.length === 0 && tabPanels.length > 0) {
 			isSyncingRef.current = true;
 
-			const migratedButtons = tabPanels.map((panel) =>
-				createBlock('matter/tab-button', {
-					label: panel.attributes.label || '',
-					tabPanelClientId: panel.clientId,
-				})
-			);
-
-			replaceInnerBlocks(tabListClientId, migratedButtons, false);
-
-			tabPanels.forEach((panel) => {
-				if (panel.attributes.label) {
-					updateBlockAttributes(panel.clientId, {
-						label: undefined,
-					});
-				}
+			migrateLegacyButtons({
+				tabPanels,
+				tabListClientId,
+				replaceInnerBlocks,
+				updateBlockAttributes,
 			});
 
 			isSyncingRef.current = false;
@@ -96,63 +220,33 @@ export function useTabButtonsSync({
 
 		if (tabButtons.length < tabPanels.length) {
 			isSyncingRef.current = true;
-			const insertAt = tabButtons.length;
-			const panel = tabPanels[insertAt];
 
-			insertBlock(
-				createBlock('matter/tab-button', {
-					label: __('Tab'),
-					tabPanelClientId: panel?.clientId,
-				}),
-				insertAt,
+			insertMissingButton({
+				tabButtons,
+				tabPanels,
 				tabListClientId,
-				false
-			).finally(() => {
+				insertBlock,
+			}).finally(() => {
 				isSyncingRef.current = false;
 			});
+
 			prevPanelIdsRef.current = currentPanelIds;
 			return;
 		}
 
 		if (tabButtons.length > tabPanels.length) {
 			isSyncingRef.current = true;
-			const panelClientIds = new Set(currentPanelIds);
-			let orphanButton = null;
-			const removedPanelIds = prevPanelIds.filter(
-				(id) => !currentPanelIds.includes(id)
-			);
 
-			for (const removedId of removedPanelIds) {
-				const linkedButton = tabButtons.find(
-					(button) => button.attributes.tabPanelClientId === removedId
-				);
+			const orphanButton = findOrphanButton({
+				tabButtons,
+				prevPanelIds,
+				currentPanelIds,
+			});
 
-				if (linkedButton) {
-					orphanButton = linkedButton;
-					break;
-				}
-
-				const removedIndex = prevPanelIds.indexOf(removedId);
-
-				if (removedIndex >= 0 && tabButtons[removedIndex]) {
-					orphanButton = tabButtons[removedIndex];
-					break;
-				}
+			if (orphanButton) {
+				removeBlock(orphanButton.clientId, false);
 			}
 
-			if (!orphanButton) {
-				orphanButton = tabButtons.find(
-					(button) =>
-						button.attributes.tabPanelClientId &&
-						!panelClientIds.has(button.attributes.tabPanelClientId)
-				);
-			}
-
-			if (!orphanButton) {
-				orphanButton = tabButtons[tabButtons.length - 1];
-			}
-
-			removeBlock(orphanButton.clientId, false);
 			isSyncingRef.current = false;
 			prevPanelIdsRef.current = currentPanelIds;
 			return;
@@ -168,17 +262,10 @@ export function useTabButtonsSync({
 			if (hasStaleLink) {
 				isSyncingRef.current = true;
 
-				tabButtons.forEach((button, index) => {
-					const panel = tabPanels[index];
-
-					if (
-						panel &&
-						button.attributes.tabPanelClientId !== panel.clientId
-					) {
-						updateBlockAttributes(button.clientId, {
-							tabPanelClientId: panel.clientId,
-						});
-					}
+				relinkStaleButtons({
+					tabButtons,
+					tabPanels,
+					updateBlockAttributes,
 				});
 
 				isSyncingRef.current = false;
@@ -187,29 +274,18 @@ export function useTabButtonsSync({
 			}
 		}
 
-		const panelOrder = currentPanelIds;
-		const outOfOrderButton = tabButtons.find((button, index) => {
-			const expectedPanelId = panelOrder[index];
-			return button.attributes.tabPanelClientId !== expectedPanelId;
+		const reorderPromise = reorderButtons({
+			tabButtons,
+			currentPanelIds,
+			tabListClientId,
+			moveBlockToPosition,
 		});
 
-		if (outOfOrderButton) {
+		if (reorderPromise) {
 			isSyncingRef.current = true;
-			const targetIndex = panelOrder.indexOf(
-				outOfOrderButton.attributes.tabPanelClientId
-			);
-
-			if (targetIndex >= 0) {
-				moveBlockToPosition(
-					outOfOrderButton.clientId,
-					targetIndex,
-					tabListClientId
-				).finally(() => {
-					isSyncingRef.current = false;
-				});
-			} else {
+			reorderPromise.finally(() => {
 				isSyncingRef.current = false;
-			}
+			});
 		}
 
 		prevPanelIdsRef.current = currentPanelIds;
