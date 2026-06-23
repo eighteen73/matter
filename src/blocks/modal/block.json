@@ -21,6 +21,31 @@
 			"type": "boolean",
 			"default": false,
 			"role": "local"
+		},
+		"dismissedDuration": {
+			"type": "string"
+		},
+		"triggerOnLoad": {
+			"type": "boolean",
+			"default": false
+		},
+		"triggerDelay": {
+			"type": "string"
+		},
+		"triggerOnScroll": {
+			"type": "boolean",
+			"default": false
+		},
+		"scrollSelector": {
+			"type": "string"
+		},
+		"scrollThreshold": {
+			"type": "string",
+			"default": "10"
+		},
+		"urlTriggers": {
+			"type": "array",
+			"default": []
 		}
 	},
 	"providesContext": {
