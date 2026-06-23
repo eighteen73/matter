@@ -11,13 +11,12 @@ import {
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useCallback, useRef } from '@wordpress/element';
 import {
-	PanelBody,
 	ToggleControl,
 	Button,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToggleGroupControl as ToggleGroupControl,
+	__experimentalToolsPanel as ToolsPanel,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
@@ -25,7 +24,6 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import './editor.scss';
-import breakpoints from '../../constants/breakpoints';
 import { useTabButtonsSync, insertTabPair } from './utils/sync-tab-buttons';
 import {
 	buildTabsListFromPosts,
@@ -217,79 +215,139 @@ function Edit({ clientId, attributes, setAttributes }) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={__('Settings', 'matter')}>
-					<ToggleControl
+				<ToolsPanel label={__('Settings', 'matter')}>
+					<ToolsPanelItem
+						hasValue={() => !!collapses}
 						label={__('Collapse', 'matter')}
-						help={__('Collapse tabs on smaller screens.', 'matter')}
-						checked={collapses}
-						onChange={(value) =>
-							setAttributes({ collapses: value })
-						}
-					/>
+						onDeselect={() => setAttributes({ collapses: false })}
+						isShownByDefault
+					>
+						<ToggleControl
+							label={__('Collapse', 'matter')}
+							help={__(
+								'Collapse tabs on smaller screens.',
+								'matter'
+							)}
+							checked={collapses}
+							onChange={(value) =>
+								setAttributes({ collapses: value })
+							}
+						/>
+					</ToolsPanelItem>
 
 					{collapses && (
-						<BreakpointSelectorControl
-							value={collapsesOn}
-							onChange={(value) =>
-								setAttributes({ collapsesOn: value })
-							}
+						<ToolsPanelItem
+							hasValue={() => !!collapsesOn}
 							label={__('Collapse up to', 'matter')}
-						/>
+							onDeselect={() =>
+								setAttributes({ collapsesOn: 'lg' })
+							}
+							isShownByDefault
+						>
+							<BreakpointSelectorControl
+								value={collapsesOn}
+								onChange={(value) =>
+									setAttributes({ collapsesOn: value })
+								}
+								label={__('Collapse up to', 'matter')}
+							/>
+						</ToolsPanelItem>
 					)}
 
 					{layout.orientation === 'horizontal' && (
 						<>
-							<ToggleControl
+							<ToolsPanelItem
+								hasValue={() => !!stackOnMobile}
 								label={__('Stack on mobile', 'matter')}
-								help={__(
-									'Stack tabs on smaller screens.',
-									'matter'
-								)}
-								checked={stackOnMobile}
-								onChange={(value) => {
-									setAttributes({ stackOnMobile: value });
-								}}
-							/>
+								onDeselect={() =>
+									setAttributes({ stackOnMobile: false })
+								}
+								isShownByDefault
+							>
+								<ToggleControl
+									label={__('Stack on mobile', 'matter')}
+									help={__(
+										'Stack tabs on smaller screens.',
+										'matter'
+									)}
+									checked={stackOnMobile}
+									onChange={(value) => {
+										setAttributes({ stackOnMobile: value });
+									}}
+								/>
+							</ToolsPanelItem>
 
 							{stackOnMobile && (
-								<BreakpointSelectorControl
-									value={stackedBreakpoint}
-									onChange={(value) =>
+								<ToolsPanelItem
+									hasValue={() => !!stackedBreakpoint}
+									label={__('Stacked breakpoint', 'matter')}
+									onDeselect={() =>
 										setAttributes({
-											stackedBreakpoint: value,
+											stackedBreakpoint: 'lg',
 										})
 									}
-									label={__('Stacked breakpoint', 'matter')}
-								/>
+									isShownByDefault
+								>
+									<BreakpointSelectorControl
+										value={stackedBreakpoint}
+										onChange={(value) =>
+											setAttributes({
+												stackedBreakpoint: value,
+											})
+										}
+										label={__(
+											'Stacked breakpoint',
+											'matter'
+										)}
+									/>
+								</ToolsPanelItem>
 							)}
 						</>
 					)}
 
-					<ToggleControl
+					<ToolsPanelItem
+						hasValue={() => !!deepLinking}
 						label={__('Deep Linking', 'matter')}
-						help={__('Enable deep linking.', 'matter')}
-						checked={deepLinking}
-						onChange={(value) =>
-							setAttributes({ deepLinking: value })
-						}
-					/>
-
-					{deepLinking && (
+						onDeselect={() => setAttributes({ deepLinking: false })}
+						isShownByDefault
+					>
 						<ToggleControl
-							label={__('Update History', 'matter')}
-							help={__(
-								'Update history on deep linking. If enabled, the URL will be updated when the tab is changed.',
-								'matter'
-							)}
-							checked={deepLinkingUpdateHistory}
+							label={__('Deep Linking', 'matter')}
+							help={__('Enable deep linking.', 'matter')}
+							checked={deepLinking}
 							onChange={(value) =>
-								setAttributes({
-									deepLinkingUpdateHistory: value,
-								})
+								setAttributes({ deepLinking: value })
 							}
 						/>
+					</ToolsPanelItem>
+
+					{deepLinking && (
+						<ToolsPanelItem
+							hasValue={() => !!deepLinkingUpdateHistory}
+							label={__('Update History', 'matter')}
+							onDeselect={() =>
+								setAttributes({
+									deepLinkingUpdateHistory: false,
+								})
+							}
+							isShownByDefault
+						>
+							<ToggleControl
+								label={__('Update History', 'matter')}
+								help={__(
+									'Update history on deep linking. If enabled, the URL will be updated when the tab is changed.',
+									'matter'
+								)}
+								checked={deepLinkingUpdateHistory}
+								onChange={(value) =>
+									setAttributes({
+										deepLinkingUpdateHistory: value,
+									})
+								}
+							/>
+						</ToolsPanelItem>
 					)}
-				</PanelBody>
+				</ToolsPanel>
 			</InspectorControls>
 
 			<BlockContextProvider value={contextValue}>
