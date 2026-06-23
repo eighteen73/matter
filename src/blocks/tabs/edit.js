@@ -33,6 +33,7 @@ import {
 	findQueryBlock,
 	getEntityQueryArgs,
 } from './utils/query-tabs-list';
+import BlockVariationPicker from '../../components/block-variation-picker';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
@@ -202,6 +203,23 @@ function Edit({ clientId, attributes, setAttributes }) {
 		templateLock: 'all',
 		renderAppender: false,
 	});
+
+	const innerBlocks = useSelect((select) =>
+		select('core/block-editor').getBlock(clientId)
+			? select('core/block-editor').getBlock(clientId).innerBlocks
+			: []
+	);
+
+	if (innerBlocks.length === 0) {
+		return (
+			<BlockVariationPicker
+				blockName="matter/tabs"
+				setAttributes={setAttributes}
+				clientId={clientId}
+				defaultTemplate={TABS_TEMPLATE}
+			/>
+		);
+	}
 
 	return (
 		<>
