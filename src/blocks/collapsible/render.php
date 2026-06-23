@@ -49,6 +49,7 @@ wp_interactivity_state(
 				'id'                     => $collapsible_id,
 				'class'                  => "is-type-{$type}",
 				'data-wp-interactive'    => 'matter/overlay',
+				'data-wp-init'           => 'callbacks.onInit',
 				'data-wp-class--is-open' => 'state.item.isOpen',
 			]
 		)

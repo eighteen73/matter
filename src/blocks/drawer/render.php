@@ -45,6 +45,7 @@ wp_interactivity_state(
 		get_block_wrapper_attributes(
 			[
 				'data-wp-interactive' => 'matter/overlay',
+				'data-wp-init'        => 'callbacks.onInit',
 			]
 		)
 		. ' '
