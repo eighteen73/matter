@@ -7,7 +7,8 @@
 	"category": "design",
 	"textdomain": "default",
 	"parent": [ "matter/tabs" ],
-	"allowedBlocks": [ "matter/tab-panel" ],
+	"allowedBlocks": [ "matter/tab-panel", "core/query" ],
+	"usesContext": [ "matter/tabs-isQueryMode" ],
 	"attributes": {
 		"tabPanelActiveColor": {
 			"type": "string",

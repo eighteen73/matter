@@ -31,6 +31,10 @@
 		"collapsesOn": {
 			"type": "string",
 			"default": "lg"
+		},
+		"isQueryMode": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {
@@ -71,7 +75,8 @@
 		"matter/tabs-activeTabIndex": "activeTabIndex",
 		"matter/tabs-editorActiveTabIndex": "editorActiveTabIndex",
 		"matter/tabs-collapses": "collapses",
-		"matter/tabs-collapsesOn": "collapsesOn"
+		"matter/tabs-collapsesOn": "collapsesOn",
+		"matter/tabs-isQueryMode": "isQueryMode"
 	},
 	"usesContext": [ "matter/tabs-list", "matter/tabs-id" ],
 	"editorScript": "file:./index.js",

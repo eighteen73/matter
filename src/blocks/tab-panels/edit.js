@@ -12,8 +12,9 @@ import ColorControl from '../../components/color-control';
 
 const TAB_PANELS_TEMPLATE = [['matter/tab-panel'], ['matter/tab-panel']];
 
-export default function Edit({ attributes, setAttributes, clientId }) {
+export default function Edit({ attributes, setAttributes, clientId, context }) {
 	const { tabPanelActiveColor } = attributes;
+	const isQueryMode = context['matter/tabs-isQueryMode'] ?? false;
 
 	const colorStyles = getColorStyles(attributes, 'tabPanel');
 
@@ -22,7 +23,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	});
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		template: TAB_PANELS_TEMPLATE,
+		...(isQueryMode ? {} : { template: TAB_PANELS_TEMPLATE }),
+		allowedBlocks: isQueryMode ? ['core/query'] : ['matter/tab-panel'],
 		templateLock: false,
 		renderAppender: false,
 	});
