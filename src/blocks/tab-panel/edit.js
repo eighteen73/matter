@@ -8,7 +8,14 @@ import {
 	store as blockEditorStore,
 	InspectorControls,
 } from '@wordpress/block-editor';
-import { PanelBody, ToggleControl } from '@wordpress/components';
+import {
+	PanelBody,
+	ToggleControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useEffect } from '@wordpress/element';
 import clsx from 'clsx';
@@ -148,22 +155,38 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 		<section {...innerBlocksProps}>
 			{!inQueryLoop && !isQueryMode && (
 				<InspectorControls>
-					<PanelBody title={__('Settings', 'matter')}>
-						<ToggleControl
+					<ToolsPanel label={__('Settings', 'matter')}>
+						<ToolsPanelItem
+							hasValue={() => !!isDefaultTab}
 							label={__('Default tab', 'matter')}
-							help={__('Open this tab by default.', 'matter')}
-							checked={isDefaultTab}
-							onChange={(value) => {
-								if (!value || !tabsClientId) {
-									return;
-								}
-
+							onDeselect={() =>
 								updateBlockAttributes(tabsClientId, {
-									activeTabIndex: blockIndex,
-								});
-							}}
-						/>
-					</PanelBody>
+									activeTabIndex: 0,
+								})
+							}
+							isShownByDefault
+						>
+							<ToggleControl
+								label={__('Default tab', 'matter')}
+								help={__('Open this tab by default.', 'matter')}
+								checked={isDefaultTab}
+								onChange={(value) => {
+									if (!value || !tabsClientId) {
+										updateBlockAttributes(tabsClientId, {
+											activeTabIndex: 0,
+										});
+
+										return;
+									}
+
+									updateBlockAttributes(tabsClientId, {
+										activeTabIndex: blockIndex,
+									});
+								}}
+							/>
+						</ToolsPanelItem>
+					</ToolsPanel>
+					<PanelBody title={__('Settings', 'matter')}></PanelBody>
 				</InspectorControls>
 			)}
 
