@@ -1,0 +1,67 @@
+import { __ } from '@wordpress/i18n';
+import { createBlock } from '@wordpress/blocks';
+
+/**
+ * Extract button text from trigger inner blocks.
+ *
+ * @param {Array} innerBlocks Trigger inner blocks.
+ * @return {string|undefined} Button text if found.
+ */
+function getTriggerButtonText(innerBlocks) {
+	const buttonsBlock = innerBlocks?.[0];
+	const buttonBlock = buttonsBlock?.innerBlocks?.[0];
+
+	if (
+		buttonsBlock?.name !== 'core/buttons' ||
+		buttonBlock?.name !== 'core/button'
+	) {
+		return undefined;
+	}
+
+	return buttonBlock.attributes?.text;
+}
+
+/**
+ * Block transforms from matter/trigger to matter/menu-trigger.
+ *
+ * @return {Object} Transform definition.
+ */
+export function triggerToMenuTriggerTransform() {
+	return {
+		type: 'block',
+		blocks: ['matter/menu-trigger'],
+		transform: (attributes, innerBlocks) => {
+			const buttonText = getTriggerButtonText(innerBlocks);
+
+			return createBlock('matter/menu-trigger', {
+				label: buttonText || __('Open menu', 'matter'),
+				showLabel: false,
+			});
+		},
+	};
+}
+
+/**
+ * Block transforms from matter/menu-trigger to matter/trigger.
+ *
+ * @return {Object} Transform definition.
+ */
+export function menuTriggerToTriggerTransform() {
+	return {
+		type: 'block',
+		blocks: ['matter/trigger'],
+		transform: ({ label, showLabel }) => {
+			const buttonText =
+				showLabel && label ? label : __('Open', 'matter');
+
+			return createBlock('matter/trigger', {}, [
+				createBlock('core/buttons', {}, [
+					createBlock('core/button', {
+						text: buttonText,
+						tagName: 'button',
+					}),
+				]),
+			]);
+		},
+	};
+}

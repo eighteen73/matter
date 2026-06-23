@@ -1,0 +1,66 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/trigger-hamburger",
+	"version": "0.1.0",
+	"title": "Hamburger Trigger",
+	"keywords": [ "menu", "navigation", "hamburger", "trigger" ],
+	"category": "widgets",
+	"description": "A hamburger icon trigger to open a modal, drawer or collapsible block.",
+	"parent": [ "matter/modal", "matter/drawer", "matter/collapsible" ],
+	"attributes": {
+		"label": {
+			"type": "string",
+			"default": "Open menu"
+		},
+		"showLabel": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"styles": [
+		{
+			"name": "squeeze",
+			"label": "Squeeze",
+			"isDefault": false
+		},
+		{
+			"name": "spin",
+			"label": "Spin",
+			"isDefault": false
+		}
+	],
+	"supports": {
+		"border": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"color": {
+			"text": true,
+			"background": true,
+			"gradients": true
+		},
+		"html": false,
+		"interactivity": true,
+		"lock": false,
+		"reusable": false,
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": true
+			}
+		},
+		"typography": {
+			"fontSize": true
+		}
+	},
+	"usesContext": [ "matter/modal-id", "matter/drawer-id", "matter/collapsible-id" ],
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}
