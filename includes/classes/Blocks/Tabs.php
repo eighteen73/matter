@@ -11,7 +11,6 @@ use Eighteen73\Matter\Config;
 use Eighteen73\Matter\Singleton;
 use Eighteen73\Matter\Styling\Color;
 use WP_Block;
-use WP_HTML_Tag_Processor;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -155,67 +154,6 @@ class Tabs {
 		$context['matter/tabs-id']   = $tabs_id;
 
 		return $context;
-	}
-
-	/**
-	 * Render the tabs wrapper with interactivity directives.
-	 *
-	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param string               $content    Saved block content.
-	 * @param WP_Block             $block      Block instance.
-	 * @return string
-	 */
-	public static function render_tabs( array $attributes, string $content, WP_Block $block ): string {
-		$active_tab_index            = $attributes['activeTabIndex'] ?? 0;
-		$tabs_list                   = $block->context['matter/tabs-list'] ?? [];
-		$tabs_id                     = $block->context['matter/tabs-id'] ?? null;
-		$deep_linking                = $attributes['deepLinking'] ?? false;
-		$deep_linking_update_history = $attributes['deepLinkingUpdateHistory'] ?? false;
-
-		if ( empty( $tabs_id ) ) {
-			return $content;
-		}
-
-		$output = $content;
-
-		if ( false === strpos( $content, 'wp-block-matter-tabs' ) ) {
-			$output = sprintf(
-				'<div %1$s>%2$s</div>',
-				get_block_wrapper_attributes(),
-				$content
-			);
-		}
-
-		$tag_processor = new WP_HTML_Tag_Processor( $output );
-
-		if ( ! $tag_processor->next_tag( [ 'class_name' => 'wp-block-matter-tabs' ] ) ) {
-			return $output;
-		}
-
-		$tag_processor->set_attribute( 'data-wp-interactive', 'core/tabs/private' );
-		$tag_processor->set_attribute(
-			'data-wp-context',
-			(string) wp_json_encode(
-				[
-					'tabsId'                   => $tabs_id,
-					'activeTabIndex'           => $active_tab_index,
-					'deepLinking'              => (bool) $deep_linking,
-					'deepLinkingUpdateHistory' => (bool) $deep_linking_update_history,
-				]
-			)
-		);
-		$tag_processor->set_attribute( 'data-wp-init', 'callbacks.onTabsInit' );
-		$tag_processor->set_attribute( 'data-wp-on--keydown', 'actions.handleTabKeyDown' );
-		$tag_processor->set_attribute( 'data-wp-on-window--hashchange', 'actions.onHashChange' );
-
-		wp_interactivity_state(
-			'core/tabs/private',
-			[
-				$tabs_id => $tabs_list,
-			]
-		);
-
-		return $tag_processor->get_updated_html();
 	}
 
 	/**
@@ -446,17 +384,12 @@ class Tabs {
 	}
 
 	/**
-	 * Render a tab panel with interactivity and accessibility attributes.
+	 * Get the next tab panel index for a tabs instance during render.
 	 *
-	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param string               $content    Saved block content.
-	 * @param WP_Block             $block      Block instance.
-	 * @return string
+	 * @param string $tabs_id Unique ID for the tabs instance.
+	 * @return int
 	 */
-	public static function render_tab_panel( array $attributes, string $content, WP_Block $block ): string {
-		$tabs_id          = $block->context['matter/tabs-id'] ?? '';
-		$active_tab_index = (int) ( $block->context['matter/tabs-activeTabIndex'] ?? 0 );
-
+	public static function get_tab_panel_index( string $tabs_id ): int {
 		if ( ! isset( self::$tab_panel_counters[ $tabs_id ] ) ) {
 			self::$tab_panel_counters[ $tabs_id ] = 0;
 		}
@@ -464,58 +397,6 @@ class Tabs {
 		$tab_index = self::$tab_panel_counters[ $tabs_id ];
 		++self::$tab_panel_counters[ $tabs_id ];
 
-		$output = $content;
-
-		if ( false === strpos( $content, 'wp-block-matter-tab-panel' ) ) {
-			$output = sprintf(
-				'<section %1$s>%2$s</section>',
-				get_block_wrapper_attributes( [ 'role' => 'tabpanel' ] ),
-				$content
-			);
-		}
-
-		$tag_processor = new WP_HTML_Tag_Processor( $output );
-
-		if ( ! $tag_processor->next_tag( [ 'class_name' => 'wp-block-matter-tab-panel' ] ) ) {
-			return $output;
-		}
-
-		$tab_id = (string) $tag_processor->get_attribute( 'id' );
-
-		if ( '' === $tab_id ) {
-			$tab_id = ! empty( $tabs_id )
-				? $tabs_id . '-tab-' . $tab_index
-				: 'tab-' . $tab_index;
-			$tag_processor->set_attribute( 'id', $tab_id );
-		}
-
-		$tabs_list       = $block->context['matter/tabs-list'] ?? [];
-		$deep_linking_id = $tabs_list[ $tab_index ]['deepLinkingId'] ?? $tab_id;
-
-		$tag_processor->set_attribute( 'data-wp-interactive', 'core/tabs/private' );
-		$tag_processor->set_attribute(
-			'data-wp-context',
-			(string) wp_json_encode(
-				[
-					'tabsId'   => $tabs_id,
-					'tabIndex' => $tab_index,
-					'tab'      => [
-						'id' => $tab_id,
-					],
-				]
-			)
-		);
-		$tag_processor->set_attribute( 'role', 'tabpanel' );
-		$tag_processor->set_attribute( 'aria-labelledby', 'tab__' . $tab_id );
-		$tag_processor->set_attribute( 'data-deep-linking-id', $deep_linking_id );
-		$tag_processor->set_attribute( 'data-wp-bind--hidden', '!state.isActiveTab' );
-		$tag_processor->set_attribute( 'data-wp-class--is-active', 'state.isActiveTab' );
-		$tag_processor->set_attribute( 'tabindex', '0' );
-
-		if ( $tab_index !== $active_tab_index ) {
-			$tag_processor->set_attribute( 'hidden', true );
-		}
-
-		return $tag_processor->get_updated_html();
+		return $tab_index;
 	}
 }

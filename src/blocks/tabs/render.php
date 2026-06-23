@@ -5,8 +5,6 @@
  * @package Eighteen73\Matter
  */
 
-use Eighteen73\Matter\Blocks\Tabs;
-
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
@@ -19,5 +17,49 @@ if ( ! $block_instance instanceof \WP_Block ) {
 	return;
 }
 
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Block renderer returns complete escaped markup.
-echo Tabs::render_tabs( $block_attributes, $block_content, $block_instance );
+$tabs_id                     = $block_instance->context['matter/tabs-id'] ?? null;
+$tabs_list                   = $block_instance->context['matter/tabs-list'] ?? [];
+$active_tab_index            = $block_attributes['activeTabIndex'] ?? 0;
+$deep_linking                = $block_attributes['deepLinking'] ?? false;
+$deep_linking_update_history = $block_attributes['deepLinkingUpdateHistory'] ?? false;
+
+if ( empty( $tabs_id ) ) {
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Saved block markup.
+	echo $block_content;
+	return;
+}
+
+wp_interactivity_state(
+	'core/tabs/private',
+	[
+		$tabs_id => $tabs_list,
+	]
+);
+
+$tabs_context = [
+	'tabsId'                   => $tabs_id,
+	'activeTabIndex'           => $active_tab_index,
+	'deepLinking'              => (bool) $deep_linking,
+	'deepLinkingUpdateHistory' => (bool) $deep_linking_update_history,
+];
+
+$wrapper_attributes = [
+	'data-wp-interactive'           => 'core/tabs/private',
+	'data-wp-init'                  => 'callbacks.onTabsInit',
+	'data-wp-on--keydown'           => 'actions.handleTabKeyDown',
+	'data-wp-on-window--hashchange' => 'actions.onHashChange',
+];
+
+?>
+
+<div
+	<?php
+	echo wp_kses_data(
+		get_block_wrapper_attributes( $wrapper_attributes )
+		. ' '
+		. wp_interactivity_data_wp_context( $tabs_context )
+	);
+	?>
+>
+	<?php echo $block_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+</div>
