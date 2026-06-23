@@ -1,4 +1,5 @@
 .wp-block-matter-tab-button {
+	--_active-color: var(--matter-tab-button--active-color, currentcolor);
 	--_media-size: var(--matter-tab-button--media-size, 56px);
 	--_media-border-radius: var(--matter-tab-button--media-border-radius, 100%);
 	--_media-gap: var(--matter-tab-button--media-gap, 10px);

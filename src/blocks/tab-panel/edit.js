@@ -11,6 +11,7 @@ import {
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useMemo, useRef, useEffect } from '@wordpress/element';
+import clsx from 'clsx';
 
 const TEMPLATE = [
 	[
@@ -123,6 +124,7 @@ export default function Edit({ clientId, context, isSelected }) {
 	const blockProps = useBlockProps({
 		hidden: !isSelectedTab,
 		tabIndex: isSelectedTab ? 0 : -1,
+		className: clsx({ 'is-active': isActiveTab }),
 	});
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {

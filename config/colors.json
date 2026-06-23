@@ -15,5 +15,12 @@
 		"dotActiveColor": "--matter-carousel--dot--active-color",
 		"barColor": "--matter-carousel--progress--bar",
 		"iconColor": "--matter-carousel--button--icon-color"
+	},
+	"tabList": {
+		"tabBackgroundColor": "--matter-tab-button--background-color",
+		"tabActiveColor": "--matter-tab-button--active-color"
+	},
+	"tabPanel": {
+		"tabPanelActiveColor": "--matter-tab-panel--active-color"
 	}
 }

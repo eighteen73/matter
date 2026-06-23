@@ -1,4 +1,6 @@
 .wp-block-matter-tab-panel {
+	--_active-color: var(--matter-tab-panel--active-color, transparent);
+
 	box-sizing: border-box;
 	flex-basis: 100%;
 	flex-grow: 1;
