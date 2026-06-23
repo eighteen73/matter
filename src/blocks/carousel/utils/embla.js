@@ -129,17 +129,22 @@ export const addThumbsClickHandlers = (
 		thumbsEmblaApi.scrollTo(selected);
 
 		thumbNodes.forEach((thumbNode, index) => {
-			thumbNode.classList.toggle(
-				'embla__thumb--selected',
-				index === selected
-			);
+			const isSelected = index === selected;
+
+			thumbNode.classList.toggle('embla__thumb--selected', isSelected);
+
+			if (isSelected) {
+				thumbNode.setAttribute('aria-current', 'true');
+			} else {
+				thumbNode.removeAttribute('aria-current');
+			}
 		});
 	};
 
 	const addThumbBtnsWithClickHandlers = () => {
 		removeThumbClickHandlers();
 
-		const scrollTo = (index, event) => {
+		const activateThumb = (index, event) => {
 			if (
 				typeof thumbsEmblaApi.clickAllowed === 'function' &&
 				!thumbsEmblaApi.clickAllowed()
@@ -153,17 +158,29 @@ export const addThumbsClickHandlers = (
 
 		thumbNodes = getThumbNodes().slice(0, emblaApi.scrollSnapList().length);
 		const removers = thumbNodes.map((thumbNode, index) => {
-			const onClick = (event) => scrollTo(index, event);
+			const onClick = (event) => activateThumb(index, event);
+			const onKeyDown = (event) => {
+				if (event.key === 'Enter' || event.key === ' ') {
+					activateThumb(index, event);
+				}
+			};
 
 			thumbNode.classList.add('embla__thumb');
+			thumbNode.setAttribute('tabindex', '0');
+			thumbNode.setAttribute('role', 'button');
 			thumbNode.addEventListener('click', onClick, false);
+			thumbNode.addEventListener('keydown', onKeyDown, false);
 
 			return () => {
 				thumbNode.classList.remove(
 					'embla__thumb',
 					'embla__thumb--selected'
 				);
+				thumbNode.removeAttribute('tabindex');
+				thumbNode.removeAttribute('role');
+				thumbNode.removeAttribute('aria-current');
 				thumbNode.removeEventListener('click', onClick, false);
+				thumbNode.removeEventListener('keydown', onKeyDown, false);
 			};
 		});
 
