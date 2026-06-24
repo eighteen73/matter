@@ -1,0 +1,102 @@
+{
+	"navigation": {
+		"iconColor": {
+			"variable": "--matter-navigation--item--icon-color",
+			"type": "color"
+		},
+		"accentColor": {
+			"variable": "--matter-navigation--accent-color",
+			"type": "color"
+		},
+		"submenuTextColor": {
+			"variable": "--matter-navigation--submenu--color",
+			"type": "color"
+		},
+		"submenuBackgroundColor": {
+			"variable": "--matter-navigation--submenu--background-color",
+			"type": "color"
+		},
+		"submenuIconColor": {
+			"variable": "--matter-navigation--submenu--icon-color",
+			"type": "color"
+		},
+		"backTextColor": {
+			"variable": "--matter-navigation--submenu-header--color",
+			"type": "color"
+		},
+		"backBackgroundColor": {
+			"variable": "--matter-navigation--submenu-header--background-color",
+			"type": "color"
+		},
+		"backIconColor": {
+			"variable": "--matter-navigation--submenu-header--icon-color",
+			"type": "color"
+		},
+		"submenuDividerColor": {
+			"variable": "--matter-navigation--submenu--divider-color",
+			"type": "color"
+		}
+	},
+	"carousel": {
+		"dotColor": {
+			"variable": "--matter-carousel--dot--color",
+			"type": "color"
+		},
+		"dotActiveColor": {
+			"variable": "--matter-carousel--dot--active-color",
+			"type": "color"
+		},
+		"barColor": {
+			"variable": "--matter-carousel--progress--bar",
+			"type": "color"
+		},
+		"iconColor": {
+			"variable": "--matter-carousel--button--icon-color",
+			"type": "color"
+		}
+	},
+	"drawer-content": {
+		"backdropColor": {
+			"variable": "--matter-drawer-content--backdrop-color",
+			"type": "color"
+		},
+		"backdropOpacity": {
+			"variable": "--matter-drawer-content--backdrop-opacity",
+			"type": "number"
+		},
+		"backdropBlur": {
+			"variable": "--matter-drawer-content--backdrop-blur",
+			"type": "number"
+		},
+		"width": {
+			"variable": "--matter-drawer-content--width",
+			"type": "spacing"
+		},
+		"height": {
+			"variable": "--matter-drawer-content--height",
+			"type": "spacing"
+		}
+	},
+	"modal-content": {
+		"backdropColor": {
+			"variable": "--matter-modal-content--backdrop-color",
+			"type": "color"
+		},
+		"backdropOpacity": {
+			"variable": "--matter-modal-content--backdrop-opacity",
+			"type": "number"
+		},
+		"backdropBlur": {
+			"variable": "--matter-modal-content--backdrop-blur",
+			"type": "number"
+		},
+		"width": {
+			"variable": "--matter-modal-content--width",
+			"type": "spacing"
+		},
+		"height": {
+			"variable": "--matter-modal-content--height",
+			"type": "spacing"
+		}
+	}
+}

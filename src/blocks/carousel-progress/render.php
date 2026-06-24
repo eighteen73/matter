@@ -8,8 +8,7 @@
  * @package Eighteen73\Matter\CarouselProgress
  */
 
-use Eighteen73\Matter\Styling\Color;
-use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -18,7 +17,7 @@ $indicate_current_position = isset( $attributes['indicateCurrentPosition'] ) && 
 $wrapper_attributes = [
 	'class'                          => 'embla__progress',
 	'data-indicate-current-position' => $indicate_current_position,
-	'style'                          => Color::get_styles( $attributes, Config::get( 'colors', 'carousel' ) ),
+	'style'                          => BlockStyles::get_styles( 'carousel', $attributes ),
 ];
 
 ?>

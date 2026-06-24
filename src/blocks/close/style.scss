@@ -1,0 +1,34 @@
+.wp-block-matter-close {
+	--_background-color: var(--matter-close--background-color, var(--wp--custom--matter-close--background-color, transparent));
+	--_color: var(--matter-close--color, var(--wp--custom--matter-close--color, currentcolor));
+	--_icon-color: var(--matter-close--icon-color, var(--wp--custom--matter-close--icon-color, currentcolor));
+	--border-radius: var(--matter-close--border-radius, var(--wp--custom--matter-close--border-radius, 0));
+	--font-size: var(--matter-close--font-size, var(--wp--custom--matter-close--font-size, 32px));
+	--padding: var(--matter-close--padding, var(--wp--custom--matter-close--padding, 0));
+	--gap: var(--matter-close--gap, var(--wp--custom--matter-close--gap, 0.5em));
+
+	align-items: center;
+	background-color: var(--_background-color);
+	border: unset;
+	border-radius: var(--border-radius);
+	box-shadow: unset;
+	color: var(--_color);
+	cursor: pointer;
+	display: inline-flex;
+	font-size: var(--font-size);
+	gap: var(--gap);
+	line-height: 1;
+	padding: var(--padding);
+	z-index: 1;
+
+	&__icon {
+		background-color: var(--_icon-color);
+		content: "";
+		display: inline-block;
+		height: 1em; // Match the text size
+		mask-image: url("../../../assets/svg/x.svg");
+		mask-repeat: no-repeat;
+		mask-size: contain;
+		width: 1em; // Match the text size
+	}
+}

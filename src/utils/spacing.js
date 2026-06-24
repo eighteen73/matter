@@ -9,11 +9,23 @@ export function toCssSpacingValue(value) {
 		return '0';
 	}
 
-	if (/^(var\(|[\d.]+(px|rem|em|%|vh|vw)|clamp\()/i.test(value)) {
-		return value;
+	const stringValue = String(value);
+
+	if (stringValue === '0') {
+		return '0';
 	}
 
-	return `var(--wp--preset--spacing--${value})`;
+	const presetMatch = stringValue.match(/var:preset\|spacing\|(.+)/);
+
+	if (presetMatch) {
+		return `var(--wp--preset--spacing--${presetMatch[1]})`;
+	}
+
+	if (/^(var\(|[\d.]+(px|rem|em|%|vh|vw)|clamp\()/i.test(stringValue)) {
+		return stringValue;
+	}
+
+	return `var(--wp--preset--spacing--${stringValue})`;
 }
 
 /**

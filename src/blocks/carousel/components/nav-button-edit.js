@@ -8,12 +8,13 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import ColorControl from '../../../components/color-control';
-import { getColorStyles, storeColorValue } from '../../../utils/colors';
+import { getBlockStyles } from '../../../utils/block-styles';
+import { storeColorValue } from '../../../utils/colors';
 
 function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 	const { iconColor } = attributes;
 
-	const colorStyles = getColorStyles(attributes, 'carousel');
+	const colorStyles = getBlockStyles(attributes, 'carousel');
 
 	const isNext = direction === 'next';
 
@@ -33,6 +34,7 @@ function NavButtonEdit({ attributes, setAttributes, clientId, direction }) {
 				<ColorControl
 					label={__('Icon', 'matter')}
 					value={iconColor}
+					attributeName="iconColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							iconColor: storeColorValue(slug, value),

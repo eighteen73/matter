@@ -1,7 +1,7 @@
-import colors from '../../config/colors.json';
+import blockStyles from '../../config/block-styles.json';
 
 const configs = {
-	colors,
+	'block-styles': blockStyles,
 };
 
 /**

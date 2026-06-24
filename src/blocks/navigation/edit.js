@@ -23,7 +23,8 @@ import { useServerSideRender } from '@wordpress/server-side-render';
 import { __, sprintf } from '@wordpress/i18n';
 
 import ColorControl from '../../components/color-control';
-import { getColorStyles, storeColorValue } from '../../utils/colors';
+import { getBlockStyles } from '../../utils/block-styles';
+import { storeColorValue } from '../../utils/colors';
 
 /**
  * Extract menu list markup from the editor SSR response.
@@ -249,7 +250,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const { __unstableLayoutClassNames = '' } = useBlockEditContext();
 	const previewRef = useRef(null);
 	const customColorStyles = useMemo(
-		() => getColorStyles(attributes, 'navigation'),
+		() => getBlockStyles(attributes, 'navigation'),
 		[attributes]
 	);
 	const blockProps = useBlockProps({
