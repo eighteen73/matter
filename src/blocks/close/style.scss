@@ -19,6 +19,7 @@
 	gap: var(--gap);
 	line-height: 1;
 	padding: var(--padding);
+	z-index: 1;
 
 	&__icon {
 		background-color: var(--_icon-color);

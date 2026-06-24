@@ -10,6 +10,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use Eighteen73\Matter\Styling\BlockStyles;
+
 $target_contexts = [
 	'matter/modal-id',
 	'matter/drawer-id',
@@ -19,6 +21,8 @@ $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attribute
 $context          = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
 $label            = isset( $block_attributes['label'] ) ? trim( wp_strip_all_tags( $block_attributes['label'] ) ) : '';
 $show_label       = ! array_key_exists( 'showLabel', $block_attributes ) || (bool) $block_attributes['showLabel'];
+$position        = isset( $block_attributes['position'] ) ? (string) $block_attributes['position'] : 'inline';
+$position_offset = isset( $block_attributes['positionOffset'] ) ? (string) $block_attributes['positionOffset'] : '0';
 $target_id        = '';
 
 if ( '' === $label ) {
@@ -38,6 +42,12 @@ $button_attributes = [
 	'type'       => 'button',
 	'aria-label' => $label,
 ];
+
+$position_styles = BlockStyles::get_position_styles( $position, $position_offset );
+
+if ( '' !== $position_styles ) {
+	$button_attributes['style'] = $position_styles;
+}
 
 if ( ! empty( $target_id ) ) {
 	$button_attributes['aria-controls']       = $target_id;

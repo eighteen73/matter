@@ -16,6 +16,15 @@
 		"showLabel": {
 			"type": "boolean",
 			"default": false
+		},
+		"position": {
+			"type": "string",
+			"enum": [ "inline", "top-left", "top-right" ],
+			"default": "inline"
+		},
+		"positionOffset": {
+			"type": "string",
+			"default": "0"
 		}
 	},
 	"supports": {
@@ -39,6 +48,12 @@
 				"margin": false,
 				"padding": true
 			}
+		},
+		"dimensions": {
+			"width": false,
+			"height": false,
+			"aspectRatio": false,
+			"minHeight": false
 		},
 		"typography": {
 			"fontSize": true
