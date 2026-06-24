@@ -107,6 +107,115 @@ export const addDotBtnsAndClickHandlers = (emblaApi, dotsNode) => {
 	};
 };
 
+export const addThumbsClickHandlers = (
+	emblaApi,
+	thumbsEmblaApi,
+	thumbsContainerNode
+) => {
+	let thumbNodes = [];
+	let removeThumbClickHandlers = () => {};
+
+	const getThumbNodes = () =>
+		Array.from(thumbsContainerNode.children).filter(
+			(thumbNode) => !thumbNode.classList.contains('block-list-appender')
+		);
+
+	const toggleThumbBtnsActive = () => {
+		if (!thumbNodes.length) {
+			return;
+		}
+
+		const selected = emblaApi.selectedScrollSnap();
+		thumbsEmblaApi.scrollTo(selected);
+
+		thumbNodes.forEach((thumbNode, index) => {
+			const isSelected = index === selected;
+
+			thumbNode.classList.toggle('embla__thumb--selected', isSelected);
+
+			if (isSelected) {
+				thumbNode.setAttribute('aria-current', 'true');
+			} else {
+				thumbNode.removeAttribute('aria-current');
+			}
+		});
+	};
+
+	const addThumbBtnsWithClickHandlers = () => {
+		removeThumbClickHandlers();
+
+		const activateThumb = (index, event) => {
+			if (
+				typeof thumbsEmblaApi.clickAllowed === 'function' &&
+				!thumbsEmblaApi.clickAllowed()
+			) {
+				return;
+			}
+
+			event.preventDefault();
+			emblaApi.scrollTo(index);
+		};
+
+		thumbNodes = getThumbNodes().slice(0, emblaApi.scrollSnapList().length);
+		const removers = thumbNodes.map((thumbNode, index) => {
+			const onClick = (event) => activateThumb(index, event);
+			const onKeyDown = (event) => {
+				if (event.key === 'Enter' || event.key === ' ') {
+					activateThumb(index, event);
+				}
+			};
+
+			thumbNode.classList.add('embla__thumb');
+			thumbNode.setAttribute('tabindex', '0');
+			thumbNode.setAttribute('role', 'button');
+			thumbNode.addEventListener('click', onClick, false);
+			thumbNode.addEventListener('keydown', onKeyDown, false);
+
+			return () => {
+				thumbNode.classList.remove(
+					'embla__thumb',
+					'embla__thumb--selected'
+				);
+				thumbNode.removeAttribute('tabindex');
+				thumbNode.removeAttribute('role');
+				thumbNode.removeAttribute('aria-current');
+				thumbNode.removeEventListener('click', onClick, false);
+				thumbNode.removeEventListener('keydown', onKeyDown, false);
+			};
+		});
+
+		removeThumbClickHandlers = () => {
+			removers.forEach((remove) => remove());
+		};
+
+		toggleThumbBtnsActive();
+	};
+
+	emblaApi
+		.on('init', addThumbBtnsWithClickHandlers)
+		.on('reInit', addThumbBtnsWithClickHandlers)
+		.on('init', toggleThumbBtnsActive)
+		.on('reInit', toggleThumbBtnsActive)
+		.on('select', toggleThumbBtnsActive);
+	thumbsEmblaApi.on('reInit', addThumbBtnsWithClickHandlers);
+
+	if (emblaApi.scrollSnapList().length > 0) {
+		addThumbBtnsWithClickHandlers();
+	}
+
+	return () => {
+		emblaApi
+			.off('init', addThumbBtnsWithClickHandlers)
+			.off('reInit', addThumbBtnsWithClickHandlers)
+			.off('init', toggleThumbBtnsActive)
+			.off('reInit', toggleThumbBtnsActive)
+			.off('select', toggleThumbBtnsActive);
+		thumbsEmblaApi.off('reInit', addThumbBtnsWithClickHandlers);
+
+		removeThumbClickHandlers();
+	};
+};
+
 export const setupProgressBar = (emblaApi, progressNode) => {
 	const applyProgress = () => {
 		const indicateCurrentPosition =
