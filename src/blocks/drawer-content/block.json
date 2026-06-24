@@ -32,6 +32,14 @@
 		"height": {
 			"type": "string",
 			"default": ""
+		},
+		"layout": {
+			"type": "object",
+			"default": {
+				"type": "flex",
+				"orientation": "vertical",
+				"flexWrap": false
+			}
 		}
 	},
 	"supports": {
@@ -49,6 +57,7 @@
 			"allowSizingOnChildren": true,
 			"allowWrap": false,
 			"allowVerticalAlignment": true,
+			"allowJustification": true,
 			"allowOrientation": false
 		},
 		"lock": false,

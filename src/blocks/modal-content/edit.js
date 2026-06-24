@@ -175,9 +175,11 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 					panelId={clientId}
 				>
 					<UnitControl
+						__next40pxDefaultSize
 						label={__('Width', 'matter')}
 						value={width}
 						onChange={(value) => setAttributes({ width: value })}
+						onUnitChange={() => setAttributes({ width: '' })}
 						isResetValueOnUnitChange
 						min={0}
 						max={1000}

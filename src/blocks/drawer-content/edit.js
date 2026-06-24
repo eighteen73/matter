@@ -182,6 +182,7 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 					panelId={clientId}
 				>
 					<SelectControl
+						__next40pxDefaultSize
 						label={__('Position', 'matter')}
 						value={position}
 						onChange={(value) => setAttributes({ position: value })}
@@ -216,12 +217,14 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 						panelId={clientId}
 					>
 						<UnitControl
+							__next40pxDefaultSize
 							label={__('Width', 'matter')}
 							value={width}
 							onChange={(value) =>
 								setAttributes({ width: value })
 							}
-							unit="px"
+							onUnitChange={() => setAttributes({ width: '' })}
+							isResetValueOnUnitChange
 							min={0}
 							max={1000}
 							step={10}
@@ -239,12 +242,14 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 						panelId={clientId}
 					>
 						<UnitControl
+							__next40pxDefaultSize
 							label={__('Height', 'matter')}
 							value={height}
 							onChange={(value) =>
 								setAttributes({ height: value })
 							}
-							unit="px"
+							onUnitChange={() => setAttributes({ height: '' })}
+							isResetValueOnUnitChange
 							min={0}
 							max={1000}
 							step={10}

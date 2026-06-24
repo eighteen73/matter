@@ -326,9 +326,14 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		className: editorIsOpen ? 'is-open' : undefined,
 	});
 
-	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
-		template: TEMPLATE,
-	});
+	const innerBlocksProps = useInnerBlocksProps(
+		{},
+		{
+			template: TEMPLATE,
+			orientation: 'vertical',
+			renderAppender: false,
+		}
+	);
 
 	const toggleEditorPreview = () => {
 		__unstableMarkNextChangeAsNotPersistent();
@@ -397,6 +402,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						isShownByDefault
 					>
 						<UnitControl
+							__next40pxDefaultSize
 							label={__('Dismissed duration', 'matter')}
 							labelPosition="edge"
 							__unstableInputWidth="80px"
@@ -404,6 +410,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							onChange={(value) =>
 								setAttributes({ dismissedDuration: value })
 							}
+							onUnitChange={() =>
+								setAttributes({ dismissedDuration: '' })
+							}
+							isResetValueOnUnitChange
 							units={DISMISSED_DURATION_UNITS}
 							help={__(
 								'Duration before this modal will appear again via auto-triggers or hash links after being closed. Manual triggers are unaffected.',
@@ -435,6 +445,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 							{triggerOnLoad && (
 								<UnitControl
+									__next40pxDefaultSize
 									label={__('Delay', 'matter')}
 									labelPosition="edge"
 									__unstableInputWidth="80px"
@@ -442,6 +453,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 									onChange={(value) =>
 										setAttributes({ triggerDelay: value })
 									}
+									onUnitChange={() =>
+										setAttributes({ triggerDelay: '' })
+									}
+									isResetValueOnUnitChange
 									units={TRIGGER_DELAY_UNITS}
 									placeholder="0"
 								/>
@@ -505,6 +520,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								isShownByDefault
 							>
 								<UnitControl
+									__next40pxDefaultSize
 									label={__('Scroll threshold', 'matter')}
 									labelPosition="edge"
 									__unstableInputWidth="80px"
@@ -514,6 +530,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 											scrollThreshold: value,
 										})
 									}
+									onUnitChange={() =>
+										setAttributes({ scrollThreshold: '10' })
+									}
+									isResetValueOnUnitChange
 									units={SCROLL_THRESHOLD_UNITS}
 									min={0}
 									max={100}
@@ -569,7 +589,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				</BaseControl>
 			</InspectorControls>
 
-			<div {...innerBlocksProps}>
+			<div {...blockProps}>
 				{duplicateAnchor && (
 					<Notice status="warning" isDismissible={false}>
 						{__(
@@ -578,7 +598,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						)}
 					</Notice>
 				)}
-				{children}
+
+				<div {...innerBlocksProps} />
 			</div>
 		</>
 	);

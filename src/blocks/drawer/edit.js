@@ -106,9 +106,14 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		}),
 	});
 
-	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
-		template: TEMPLATE,
-	});
+	const innerBlocksProps = useInnerBlocksProps(
+		{},
+		{
+			template: TEMPLATE,
+			orientation: 'vertical',
+			renderAppender: false,
+		}
+	);
 
 	const toggleEditorPreview = () => {
 		__unstableMarkNextChangeAsNotPersistent();
@@ -129,7 +134,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				</ToolbarGroup>
 			</BlockControls>
 
-			<div {...innerBlocksProps}>
+			<div {...blockProps}>
 				{duplicateAnchor && (
 					<Notice status="warning" isDismissible={false}>
 						{__(
@@ -138,7 +143,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						)}
 					</Notice>
 				)}
-				{children}
+
+				<div {...innerBlocksProps} />
 			</div>
 		</>
 	);
