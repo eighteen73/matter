@@ -291,7 +291,7 @@ class Tabs {
 			$parsed_block['innerBlocks'] ?? [],
 			(string) $tabs_id
 		);
-		$context['matter/tabs-id'] = $tabs_id;
+		$context['matter/tabs-id']   = $tabs_id;
 
 		$tab_panels_inner = [];
 		foreach ( $parsed_block['innerBlocks'] ?? [] as $inner_block ) {
@@ -348,8 +348,8 @@ class Tabs {
 
 		$wrapper_attributes['style'] = BlockStyles::get_styles( 'tab-list', $attributes );
 
-		$orientation  = $attributes['layout']['orientation'] ?? 'horizontal';
-		$is_vertical  = 'vertical' === $orientation;
+		$orientation    = $attributes['layout']['orientation'] ?? 'horizontal';
+		$is_vertical    = 'vertical' === $orientation;
 		$buttons_markup = '';
 		$button_index   = 0;
 
