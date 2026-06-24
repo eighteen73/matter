@@ -1,0 +1,17 @@
+@use "../../constants/breakpoints" as bp;
+
+.wp-block-matter-tabs {
+	box-sizing: border-box;
+
+	&.is-stacked-on-mobile {
+		flex-direction: column;
+	}
+
+	@each $breakpoint-name, $breakpoint-size in bp.$breakpoints {
+		&.is-stacked-on-mobile-until-#{$breakpoint-name} {
+			@media (min-width: $breakpoint-size) {
+				flex-direction: row;
+			}
+		}
+	}
+}

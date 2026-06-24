@@ -16,7 +16,6 @@ $wrapper_attributes = [
 	'class' => 'embla__button embla__button--previous',
 	'style' => BlockStyles::get_styles( 'carousel', $attributes ),
 ];
-
 ?>
 
 <button <?php echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) ); ?>>

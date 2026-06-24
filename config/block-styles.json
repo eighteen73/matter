@@ -98,5 +98,21 @@
 			"variable": "--matter-modal-content--height",
 			"type": "spacing"
 		}
+	},
+	"tab-panel": {
+		"tabPanelActiveColor": {
+			"variable": "--matter-tab-panel--active-color",
+			"type": "color"
+		}
+	},
+	"tab-list": {
+		"tabActiveColor": {
+			"variable": "--matter-tab-button--active-color",
+			"type": "color"
+		},
+		"tabBackgroundColor": {
+			"variable": "--matter-tab-button--background-color",
+			"type": "color"
+		}
 	}
 }

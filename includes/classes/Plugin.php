@@ -8,6 +8,7 @@
 namespace Eighteen73\Matter;
 
 use Eighteen73\Matter\Blocks\Registry;
+use Eighteen73\Matter\Blocks\Tabs;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -30,6 +31,7 @@ class Plugin {
 
 		// Register blocks.
 		Registry::instance()->setup();
+		Tabs::instance()->setup();
 	}
 
 	/**

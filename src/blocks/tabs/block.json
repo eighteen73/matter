@@ -1,0 +1,95 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/tabs",
+	"title": "Tabs",
+	"description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
+	"category": "design",
+	"textdomain": "default",
+	"allowedBlocks": [ "matter/tab-list", "matter/tab-panels" ],
+	"attributes": {
+		"activeTabIndex": {
+			"type": "number",
+			"default": 0
+		},
+		"editorActiveTabIndex": {
+			"type": "number",
+			"role": "local"
+		},
+		"deepLinking": {
+			"type": "boolean",
+			"default": false
+		},
+		"deepLinkingUpdateHistory": {
+			"type": "boolean",
+			"default": false
+		},
+		"collapses": {
+			"type": "boolean",
+			"default": false
+		},
+		"collapsesOn": {
+			"type": "string",
+			"default": "lg"
+		},
+		"isQueryMode": {
+			"type": "boolean",
+			"default": false
+		},
+		"stackOnMobile": {
+			"type": "boolean",
+			"default": false
+		},
+		"stackedBreakpoint": {
+			"type": "string",
+			"default": "lg"
+		}
+	},
+	"supports": {
+		"align": true,
+		"anchor": true,
+		"color": {
+			"text": true,
+			"background": true
+		},
+		"layout": {
+			"default": {
+				"type": "flex",
+				"flexWrap": "nowrap",
+				"justifyContent": "stretch",
+				"verticalAlignment": "stretch",
+				"orientation": "vertical"
+			},
+			"allowSwitching": false,
+			"allowVerticalAlignment": true,
+			"allowJustification": false,
+			"allowOrientation": true,
+			"allowWrap": false,
+			"allowSizingOnChildren": true
+		},
+		"html": false,
+		"interactivity": true,
+		"spacing": {
+			"blockGap": true,
+			"margin": true,
+			"padding": true
+		},
+		"__experimentalBorder": {
+			"radius": true
+		},
+		"renaming": true
+	},
+	"providesContext": {
+		"matter/tabs-activeTabIndex": "activeTabIndex",
+		"matter/tabs-editorActiveTabIndex": "editorActiveTabIndex",
+		"matter/tabs-collapses": "collapses",
+		"matter/tabs-collapsesOn": "collapsesOn",
+		"matter/tabs-isQueryMode": "isQueryMode"
+	},
+	"usesContext": [ "matter/tabs-list", "matter/tabs-id" ],
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScriptModule": "file:./view.js",
+	"render": "file:./render.php"
+}
