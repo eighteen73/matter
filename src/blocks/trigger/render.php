@@ -20,7 +20,8 @@ if ( empty( $target_id ) || empty( $tag_markup ) ) {
 	return;
 }
 
-$toggle_attributes = Trigger::get_toggle_attributes( $target_id );
+$standalone        = ! Trigger::uses_context_target( $block );
+$toggle_attributes = Trigger::get_toggle_attributes( $target_id, $standalone );
 $tag_processor     = new WP_HTML_Tag_Processor( $tag_markup );
 
 while ( $tag_processor->next_tag() ) {

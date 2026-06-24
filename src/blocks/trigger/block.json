@@ -7,9 +7,13 @@
 	"keywords": [ "trigger", "button" ],
 	"category": "widgets",
 	"description": "An interactive trigger to open a modal, drawer or collapsible block.",
-	"parent": [ "matter/modal", "matter/drawer", "matter/collapsible" ],
 	"allowedBlocks": [ "core/buttons" ],
-	"attributes": {},
+	"attributes": {
+		"targetId": {
+			"type": "string",
+			"default": ""
+		}
+	},
 	"supports": {
 		"html": false,
 		"interactivity": true,

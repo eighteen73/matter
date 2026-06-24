@@ -1,34 +1,24 @@
 /**
  * WordPress dependencies
  */
-import { __, sprintf } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 import {
 	BlockControls,
+	InspectorControls,
 	useBlockProps,
 	useInnerBlocksProps,
-	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
-import { useSelect, useDispatch } from '@wordpress/data';
+import {
+	ToolbarButton,
+	ToolbarGroup,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
 
-const COMPONENT_CONTEXTS = [
-	{
-		type: 'modal',
-		id: 'matter/modal-id',
-		label: __('modal', 'matter'),
-	},
-	{
-		type: 'drawer',
-		id: 'matter/drawer-id',
-		label: __('drawer', 'matter'),
-	},
-	{
-		type: 'collapsible',
-		id: 'matter/collapsible-id',
-		label: __('collapsible', 'matter'),
-	},
-];
+import OverlayTargetControl from '../../components/overlay-target-control';
+import useOverlayTarget from '../../utils/use-overlay-target';
 
 const TEMPLATE = [
 	[
@@ -46,32 +36,27 @@ const TEMPLATE = [
 	],
 ];
 
-export default function Edit({ context, clientId }) {
-	const target = COMPONENT_CONTEXTS.find(
-		(component) => context[component.id]
-	);
-	const componentId = target ? context[target.id] : '';
-	const componentLabel = target?.label ?? __('component', 'matter');
-
-	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
-		useDispatch(blockEditorStore);
-
-	const { parentClientId, parentAttributes } = useSelect(
-		(select) => {
-			const blockEditor = select(blockEditorStore);
-			const rootClientId = blockEditor.getBlockRootClientId(clientId);
-
-			return {
-				parentClientId: rootClientId,
-				parentAttributes: rootClientId
-					? blockEditor.getBlockAttributes(rootClientId)
-					: {},
-			};
-		},
-		[clientId]
-	);
-
-	const isOpen = !!parentAttributes?.editorIsOpen;
+/**
+ * @param {Object}   props               Component props.
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Update block attributes.
+ * @param {Object}   props.context       Block context.
+ * @param {string}   props.clientId      Block client ID.
+ * @return {Element} Element to render.
+ */
+export default function Edit({ attributes, setAttributes, context, clientId }) {
+	const {
+		effectiveTargetId,
+		canPreview,
+		toggleComponent,
+		toolbarLabel,
+		isNested,
+		options,
+		isResolving,
+		selectedTargetMissing,
+		hasTargets,
+		showPreviewUnavailableNotice,
+	} = useOverlayTarget({ context, attributes, clientId });
 
 	const blockProps = useBlockProps();
 
@@ -81,50 +66,54 @@ export default function Edit({ context, clientId }) {
 		__experimentalCaptureToolbars: true,
 	});
 
-	const toggleComponent = () => {
-		if (!parentClientId) {
-			return;
-		}
-
-		__unstableMarkNextChangeAsNotPersistent();
-		updateBlockAttributes(parentClientId, {
-			editorIsOpen: !isOpen,
-		});
-	};
-
-	const buttonLabel = useMemo(
-		() =>
-			isOpen
-				? sprintf(
-						/* translators: %s: The component type, for example modal, drawer, or collapsible. */
-						__('Close %s', 'matter'),
-						componentLabel
-					)
-				: sprintf(
-						/* translators: %s: The component type, for example modal, drawer, or collapsible. */
-						__('Open %s', 'matter'),
-						componentLabel
-					),
-		[componentLabel, isOpen]
-	);
-
-	if (!componentId) {
-		return <div {...innerBlocksProps} />;
-	}
-
 	return (
 		<>
-			<BlockControls __experimentalShareWithChildBlocks>
-				<ToolbarGroup>
-					<ToolbarButton
-						label={buttonLabel}
-						aria-controls={componentId}
-						onClick={toggleComponent}
+			{!isNested && (
+				<InspectorControls>
+					<ToolsPanel
+						label={__('Target', 'matter')}
+						resetAll={() => setAttributes({ targetId: '' })}
 					>
-						{buttonLabel}
-					</ToolbarButton>
-				</ToolbarGroup>
-			</BlockControls>
+						<ToolsPanelItem
+							label={__('Target', 'matter')}
+							hasValue={() => !!attributes.targetId}
+							onDeselect={() => setAttributes({ targetId: '' })}
+							resetAllFilter={() => ({ targetId: '' })}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<OverlayTargetControl
+								value={attributes.targetId}
+								onChange={(targetId) =>
+									setAttributes({ targetId })
+								}
+								options={options}
+								isResolving={isResolving}
+								hasTargets={hasTargets}
+								selectedMissing={selectedTargetMissing}
+								showPreviewUnavailableNotice={
+									showPreviewUnavailableNotice
+								}
+							/>
+						</ToolsPanelItem>
+					</ToolsPanel>
+				</InspectorControls>
+			)}
+
+			{effectiveTargetId && canPreview && (
+				<BlockControls __experimentalShareWithChildBlocks>
+					<ToolbarGroup>
+						<ToolbarButton
+							label={toolbarLabel}
+							aria-controls={effectiveTargetId}
+							onClick={toggleComponent}
+						>
+							{toolbarLabel}
+						</ToolbarButton>
+					</ToolbarGroup>
+				</BlockControls>
+			)}
+
 			<div {...innerBlocksProps} />
 		</>
 	);

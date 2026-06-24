@@ -1,10 +1,8 @@
-import { __, sprintf } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 import {
 	BlockControls,
 	InspectorControls,
 	useBlockProps,
-	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import {
 	TextControl,
@@ -16,22 +14,9 @@ import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
-import { useDispatch, useSelect } from '@wordpress/data';
 
-const COMPONENT_CONTEXTS = [
-	{
-		id: 'matter/modal-id',
-		label: __('modal', 'matter'),
-	},
-	{
-		id: 'matter/drawer-id',
-		label: __('drawer', 'matter'),
-	},
-	{
-		id: 'matter/collapsible-id',
-		label: __('collapsible', 'matter'),
-	},
-];
+import OverlayTargetControl from '../../components/overlay-target-control';
+import useOverlayTarget from '../../utils/use-overlay-target';
 
 /**
  * @param {Object}   props               Component props.
@@ -43,64 +28,26 @@ const COMPONENT_CONTEXTS = [
  */
 export default function Edit({ attributes, setAttributes, context, clientId }) {
 	const { label, showLabel } = attributes;
-	const target = COMPONENT_CONTEXTS.find(
-		(component) => context[component.id]
-	);
-	const componentId = target ? context[target.id] : '';
-	const componentLabel = target?.label ?? __('component', 'matter');
 	const buttonLabel = label || __('Open menu', 'matter');
 
-	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
-		useDispatch(blockEditorStore);
-
-	const { parentClientId, parentAttributes } = useSelect(
-		(select) => {
-			const blockEditor = select(blockEditorStore);
-			const rootClientId = blockEditor.getBlockRootClientId(clientId);
-
-			return {
-				parentClientId: rootClientId,
-				parentAttributes: rootClientId
-					? blockEditor.getBlockAttributes(rootClientId)
-					: {},
-			};
-		},
-		[clientId]
-	);
-
-	const isOpen = !!parentAttributes?.editorIsOpen;
+	const {
+		effectiveTargetId,
+		canPreview,
+		isOpen,
+		toggleComponent,
+		toolbarLabel,
+		isNested,
+		options,
+		isResolving,
+		selectedTargetMissing,
+		hasTargets,
+		showPreviewUnavailableNotice,
+	} = useOverlayTarget({ context, attributes, clientId });
 
 	const blockProps = useBlockProps({
 		'aria-label': buttonLabel,
 		'aria-expanded': isOpen,
 	});
-
-	const toggleComponent = () => {
-		if (!parentClientId) {
-			return;
-		}
-
-		__unstableMarkNextChangeAsNotPersistent();
-		updateBlockAttributes(parentClientId, {
-			editorIsOpen: !isOpen,
-		});
-	};
-
-	const toolbarLabel = useMemo(
-		() =>
-			isOpen
-				? sprintf(
-						/* translators: %s: The component type, for example modal, drawer, or collapsible. */
-						__('Close %s', 'matter'),
-						componentLabel
-					)
-				: sprintf(
-						/* translators: %s: The component type, for example modal, drawer, or collapsible. */
-						__('Open %s', 'matter'),
-						componentLabel
-					),
-		[componentLabel, isOpen]
-	);
 
 	return (
 		<>
@@ -111,6 +58,31 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 						setAttributes({ label: 'Open menu', showLabel: false })
 					}
 				>
+					{!isNested && (
+						<ToolsPanelItem
+							label={__('Target', 'matter')}
+							hasValue={() => !!attributes.targetId}
+							onDeselect={() => setAttributes({ targetId: '' })}
+							resetAllFilter={() => ({ targetId: '' })}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<OverlayTargetControl
+								value={attributes.targetId}
+								onChange={(targetId) =>
+									setAttributes({ targetId })
+								}
+								options={options}
+								isResolving={isResolving}
+								hasTargets={hasTargets}
+								selectedMissing={selectedTargetMissing}
+								showPreviewUnavailableNotice={
+									showPreviewUnavailableNotice
+								}
+							/>
+						</ToolsPanelItem>
+					)}
+
 					<ToolsPanelItem
 						label={__('Label', 'matter')}
 						hasValue={() => !!label && label !== 'Open menu'}
@@ -143,12 +115,12 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 				</ToolsPanel>
 			</InspectorControls>
 
-			{componentId && (
+			{effectiveTargetId && canPreview && (
 				<BlockControls>
 					<ToolbarGroup>
 						<ToolbarButton
 							label={toolbarLabel}
-							aria-controls={componentId}
+							aria-controls={effectiveTargetId}
 							onClick={toggleComponent}
 						>
 							{toolbarLabel}

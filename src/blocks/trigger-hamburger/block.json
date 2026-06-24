@@ -7,8 +7,11 @@
 	"keywords": [ "menu", "navigation", "hamburger", "trigger" ],
 	"category": "widgets",
 	"description": "A hamburger icon trigger to open a modal, drawer or collapsible block.",
-	"parent": [ "matter/modal", "matter/drawer", "matter/collapsible" ],
 	"attributes": {
+		"targetId": {
+			"type": "string",
+			"default": ""
+		},
 		"label": {
 			"type": "string",
 			"default": "Open menu"

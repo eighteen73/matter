@@ -16,6 +16,7 @@ $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attribute
 $label            = isset( $block_attributes['label'] ) ? trim( wp_strip_all_tags( $block_attributes['label'] ) ) : '';
 $show_label       = ! empty( $block_attributes['showLabel'] );
 $target_id        = Trigger::resolve_target_id( $block );
+$standalone       = ! Trigger::uses_context_target( $block );
 
 if ( '' === $label ) {
 	$label = __( 'Open menu', 'matter' );
@@ -26,7 +27,7 @@ $button_attributes = array_merge(
 		'type'       => 'button',
 		'aria-label' => $label,
 	],
-	Trigger::get_toggle_attributes( $target_id )
+	Trigger::get_toggle_attributes( $target_id, $standalone )
 );
 ?>
 

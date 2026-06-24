@@ -36,6 +36,7 @@ export function triggerToTriggerHamburgerTransform() {
 			return createBlock('matter/trigger-hamburger', {
 				label: buttonText || __('Open menu', 'matter'),
 				showLabel: false,
+				targetId: attributes.targetId || '',
 			});
 		},
 	};
@@ -50,18 +51,24 @@ export function triggerHamburgerToTriggerTransform() {
 	return {
 		type: 'block',
 		blocks: ['matter/trigger'],
-		transform: ({ label, showLabel }) => {
+		transform: ({ label, showLabel, targetId }) => {
 			const buttonText =
 				showLabel && label ? label : __('Open', 'matter');
 
-			return createBlock('matter/trigger', {}, [
-				createBlock('core/buttons', {}, [
-					createBlock('core/button', {
-						text: buttonText,
-						tagName: 'button',
-					}),
-				]),
-			]);
+			return createBlock(
+				'matter/trigger',
+				{
+					targetId: targetId || '',
+				},
+				[
+					createBlock('core/buttons', {}, [
+						createBlock('core/button', {
+							text: buttonText,
+							tagName: 'button',
+						}),
+					]),
+				]
+			);
 		},
 	};
 }
