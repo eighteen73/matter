@@ -14,9 +14,10 @@ import {
 	InspectorControls,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useCallback, useEffect, useRef } from '@wordpress/element';
+import { useCallback, useEffect, useRef, useMemo } from '@wordpress/element';
 import ColorControl from '../../components/color-control';
-import { getColorStyles, storeColorValue } from '../../utils/colors';
+import { storeColorValue } from '../../utils/colors';
+import { getBlockStyles } from '../../utils/block-styles';
 import { useEffectiveActiveTabIndex } from '../tabs/utils/use-effective-active-tab-index';
 
 const EMPTY_ARRAY = [];
@@ -29,7 +30,10 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 	const collapsesOn = context['matter/tabs-collapsesOn'] || 'lg';
 	const isQueryMode = context['matter/tabs-isQueryMode'] ?? false;
 	const effectiveActiveIndex = useEffectiveActiveTabIndex(context);
-	const colorStyles = getColorStyles(attributes, 'tabList');
+	const cssVarStyles = useMemo(
+		() => getBlockStyles(attributes, 'tab-list'),
+		[attributes]
+	);
 
 	const { tabsClientId } = useSelect(
 		(select) => {
@@ -128,7 +132,9 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 			'is-collapsible': collapses,
 			[`is-collapsible-until-${collapsesOn}`]: collapses,
 		}),
-		style: colorStyles,
+		style: {
+			...cssVarStyles,
+		},
 		...(collapses
 			? {
 					'data-collapses': 'true',

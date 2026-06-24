@@ -8,14 +8,15 @@
  * @package Eighteen73\Matter
  */
 
-use Eighteen73\Matter\Styling\Color;
-use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
+do_action( 'qm/debug', BlockStyles::get_styles( 'tab-panels', $attributes ) );
+
 $wrapper_attributes = [
 	'class' => 'wp-block-matter-tab-panels',
-	'style' => Color::get_styles( $attributes, Config::get( 'colors', 'tabPanel' ) ),
+	'style' => BlockStyles::get_styles( 'tab-panel', $attributes ),
 ];
 ?>
 

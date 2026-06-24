@@ -9,7 +9,7 @@ namespace Eighteen73\Matter\Blocks;
 
 use Eighteen73\Matter\Config;
 use Eighteen73\Matter\Singleton;
-use Eighteen73\Matter\Styling\Color;
+use Eighteen73\Matter\Styling\BlockStyles;
 use WP_Block;
 use WP_Query;
 
@@ -346,7 +346,7 @@ class Tabs {
 			$wrapper_attributes['data-collapses-on'] = $collapses_on;
 		}
 
-		$wrapper_attributes['style'] = Color::get_styles( $attributes, Config::get( 'colors', 'tabList' ) );
+		$wrapper_attributes['style'] = BlockStyles::get_styles( 'tab-list', $attributes );
 
 		$orientation  = $attributes['layout']['orientation'] ?? 'horizontal';
 		$is_vertical  = 'vertical' === $orientation;
