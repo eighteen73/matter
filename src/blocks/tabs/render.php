@@ -46,7 +46,7 @@ if ( $stack_on_mobile && $is_horizontal ) {
 }
 
 wp_interactivity_state(
-	'core/tabs/private',
+	'matter/tabs/private',
 	[
 		$tabs_id => $tabs_list,
 	]
@@ -60,7 +60,7 @@ $tabs_context = [
 ];
 
 $wrapper_attributes = [
-	'data-wp-interactive'           => 'core/tabs/private',
+	'data-wp-interactive'           => 'matter/tabs/private',
 	'data-wp-init'                  => 'callbacks.onTabsInit',
 	'data-wp-on--keydown'           => 'actions.handleTabKeyDown',
 	'data-wp-on-window--hashchange' => 'actions.onHashChange',

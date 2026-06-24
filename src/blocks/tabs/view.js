@@ -45,7 +45,7 @@ function createReadOnlyProxy(obj) {
 
 // Private store for internal tabs functionality and security.
 const { actions: privateActions, state: privateState } = store(
-	'core/tabs/private',
+	'matter/tabs/private',
 	{
 		state: {
 			/**
@@ -370,7 +370,7 @@ const { actions: privateActions, state: privateState } = store(
 );
 
 // Public store for third-party extensibility.
-store('core/tabs', {
+store('matter/tabs', {
 	state: {
 		/**
 		 * Gets a contextually aware list of tabs for the current tabs block.
