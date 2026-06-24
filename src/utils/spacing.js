@@ -45,7 +45,7 @@ export function buildResponsiveSpacingCssVars({
 	breakpointTokens,
 }) {
 	const styles = {
-		[`${prefix}-base`]: toCssSpacingValue(baseValue),
+		[prefix]: toCssSpacingValue(baseValue),
 	};
 
 	for (const token of breakpointTokens) {

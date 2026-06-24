@@ -7,11 +7,11 @@
 	"category": "design",
 	"icon": "images-alt",
 	"description": "Carousel Viewport",
-	"parent": [
+	"ancestor": [
 		"matter/carousel"
 	],
 	"supports": {
-		"lock": false
+		"lock": true
 	},
 	"attributes": {
 		"allowedBlocks": {
