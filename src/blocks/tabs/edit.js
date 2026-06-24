@@ -254,7 +254,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 						</ToolsPanelItem>
 					)}
 
-					{layout.orientation === 'horizontal' && (
+					{layout?.orientation === 'horizontal' && (
 						<>
 							<ToolsPanelItem
 								hasValue={() => !!stackOnMobile}
