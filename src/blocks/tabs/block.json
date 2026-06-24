@@ -5,7 +5,7 @@
 	"title": "Tabs",
 	"description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
 	"category": "design",
-	"textdomain": "default",
+	"textdomain": "matter",
 	"allowedBlocks": [ "matter/tab-list", "matter/tab-panels" ],
 	"attributes": {
 		"activeTabIndex": {

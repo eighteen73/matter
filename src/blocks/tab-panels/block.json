@@ -5,7 +5,7 @@
 	"title": "Tab Panels",
 	"description": "Container for tab panel content in a tabbed interface.",
 	"category": "design",
-	"textdomain": "default",
+	"textdomain": "matter",
 	"parent": [ "matter/tabs" ],
 	"allowedBlocks": [ "matter/tab-panel", "core/query" ],
 	"usesContext": [ "matter/tabs-isQueryMode" ],

@@ -5,7 +5,7 @@
 	"title": "Tab Panel",
 	"description": "Content for a tab in a tabbed interface.",
 	"category": "design",
-	"textdomain": "default",
+	"textdomain": "matter",
 	"attributes": {
 		"inQueryLoop": {
 			"type": "boolean",

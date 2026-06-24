@@ -5,7 +5,7 @@
 	"title": "Tab Button",
 	"description": "A tab label button in a tabbed interface.",
 	"category": "design",
-	"textdomain": "default",
+	"textdomain": "matter",
 	"parent": [ "matter/tab-list" ],
 	"attributes": {
 		"label": {

@@ -5,7 +5,7 @@
 	"title": "Tab List",
 	"description": "Display the tab buttons for a tabbed interface.",
 	"category": "design",
-	"textdomain": "default",
+	"textdomain": "matter",
 	"parent": [ "matter/tabs" ],
 	"allowedBlocks": [ "matter/tab-button" ],
 	"usesContext": [
