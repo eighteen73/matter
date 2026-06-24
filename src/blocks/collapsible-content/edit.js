@@ -11,6 +11,8 @@ import { __ } from '@wordpress/i18n';
 
 import { useOpenParentOnSelection } from '../../utils/use-open-parent-on-selection';
 
+import './editor.scss';
+
 /**
  * @param {Object} props          Component props.
  * @param {Object} props.context  Block context.

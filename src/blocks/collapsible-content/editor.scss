@@ -1,0 +1,8 @@
+.wp-block-matter-collapsible-content {
+	.is-type-inline:not(.is-open) &,
+	.is-selected > & {
+		.block-list-appender {
+			display: none;
+		}
+	}
+}

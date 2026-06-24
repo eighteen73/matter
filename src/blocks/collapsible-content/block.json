@@ -37,6 +37,7 @@
 	"usesContext": [ "matter/collapsible-id", "matter/collapsible-is-open" ],
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
 	"render": "file:./render.php"
 }
