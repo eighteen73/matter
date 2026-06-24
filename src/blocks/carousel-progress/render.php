@@ -17,7 +17,7 @@ $indicate_current_position = isset( $attributes['indicateCurrentPosition'] ) && 
 $wrapper_attributes = [
 	'class'                          => 'embla__progress',
 	'data-indicate-current-position' => $indicate_current_position,
-	'style'                          => BlockStyles::get_styles( 'carousel', $attributes ),
+	'style'                          => BlockStyles::get_styles( 'carousel-progress', $attributes ),
 ];
 
 ?>

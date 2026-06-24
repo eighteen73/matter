@@ -1,6 +1,6 @@
 .wp-block-matter-carousel-thumbnails {
-	--_thumb--border-radius: var(--matter-carousel--thumbnails--border-radius, var(--wp--custom--matter-carousel--thumbnails--border-radius, 0));
-	--_thumb--active-color: var(--matter-carousel--thumbnails--active-color, var(--wp--custom--matter-carousel--thumbnails--active-color, currentcolor));
+	--_thumb--border-radius: var(--matter-carousel-thumbnails--border-radius, var(--wp--custom--matter-carousel-thumbnails--border-radius, 0));
+	--_thumb--active-color: var(--matter-carousel-thumbnails--active-color, var(--wp--custom--matter-carousel-thumbnails--active-color, currentcolor));
 
 	.embla__thumbs__viewport {
 		flex-direction: inherit;

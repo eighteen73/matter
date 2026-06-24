@@ -3,6 +3,7 @@
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -14,11 +15,14 @@ import { storeColorValue } from '../../utils/colors';
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const { dotColor, dotActiveColor } = attributes;
 
-	const colorStyles = getBlockStyles(attributes, 'carousel');
+	const cssVarStyles = useMemo(
+		() => getBlockStyles(attributes, 'carousel-dots'),
+		[attributes]
+	);
 
 	const blockProps = useBlockProps({
 		className: 'embla__dots',
-		style: colorStyles,
+		style: cssVarStyles,
 	});
 
 	return (

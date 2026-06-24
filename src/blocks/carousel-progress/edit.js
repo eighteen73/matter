@@ -4,6 +4,7 @@
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -15,11 +16,14 @@ import { storeColorValue } from '../../utils/colors';
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const { indicateCurrentPosition, barColor } = attributes;
 
-	const colorStyles = getBlockStyles(attributes, 'carousel');
+	const cssVarStyles = useMemo(
+		() => getBlockStyles(attributes, 'carousel-progress'),
+		[attributes]
+	);
 
 	const blockProps = useBlockProps({
 		className: 'embla__progress',
-		style: colorStyles,
+		style: cssVarStyles,
 	});
 
 	return (

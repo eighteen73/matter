@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 
 $wrapper_attributes = [
 	'class' => 'embla__thumbs',
-	'style' => BlockStyles::get_styles( 'carousel', $attributes ),
+	'style' => BlockStyles::get_styles( 'carousel-thumbnails', $attributes ),
 ];
 
 $thumb_content = CarouselThumbnails::render_inner_blocks( $block, $content );

@@ -11,6 +11,7 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
 
 import './editor.scss';
 
@@ -21,11 +22,14 @@ import { getBlockStyles } from '../../utils/block-styles';
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const { syncWithCarousel = true, activeThumbnailColor } = attributes;
 
-	const colorStyles = getBlockStyles(attributes, 'carousel');
+	const cssVarStyles = useMemo(
+		() => getBlockStyles(attributes, 'carousel-thumbnails'),
+		[attributes]
+	);
 
 	const blockProps = useBlockProps({
 		className: 'embla__thumbs',
-		style: colorStyles,
+		style: cssVarStyles,
 	});
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {

@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 
 $wrapper_attributes = [
 	'class' => 'embla__dots',
-	'style' => BlockStyles::get_styles( 'carousel', $attributes ),
+	'style' => BlockStyles::get_styles( 'carousel-dots', $attributes ),
 ];
 ?>
 

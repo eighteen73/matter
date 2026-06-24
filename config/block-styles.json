@@ -38,24 +38,30 @@
 		}
 	},
 	"carousel": {
-		"dotColor": {
-			"variable": "--matter-carousel--dot--color",
-			"type": "color"
-		},
-		"dotActiveColor": {
-			"variable": "--matter-carousel--dot--active-color",
-			"type": "color"
-		},
-		"barColor": {
-			"variable": "--matter-carousel--progress--bar",
-			"type": "color"
-		},
 		"iconColor": {
 			"variable": "--matter-carousel--button--icon-color",
 			"type": "color"
+		}
+	},
+	"carousel-dots": {
+		"dotColor": {
+			"variable": "--matter-carousel-dots--color",
+			"type": "color"
 		},
+		"dotActiveColor": {
+			"variable": "--matter-carousel-dots--active-color",
+			"type": "color"
+		}
+	},
+	"carousel-progress": {
+		"barColor": {
+			"variable": "--matter-carousel-progress--bar",
+			"type": "color"
+		}
+	},
+	"carousel-thumbnails": {
 		"activeThumbnailColor": {
-			"variable": "--matter-carousel--thumbnails--active-color",
+			"variable": "--matter-carousel-thumbnails--active-color",
 			"type": "color"
 		}
 	},
