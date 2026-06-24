@@ -8,37 +8,15 @@
  * @package Matter\\Collapsible
  */
 
+use Eighteen73\Matter\Blocks\Collapsible;
+
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$collapsible_id   = '';
+$collapsible_id   = Collapsible::resolve_id( $block_attributes );
+$type             = Collapsible::resolve_type( $block_attributes );
 
-foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
-	if ( empty( $block_attributes[ $id_attribute ] ) ) {
-		continue;
-	}
-
-	$collapsible_id = $block_attributes[ $id_attribute ];
-	break;
-}
-
-if ( empty( $collapsible_id ) ) {
-	$collapsible_id = wp_unique_id( 'matter-collapsible-' );
-}
-
-$type = ! empty( $block_attributes['type'] ) ? $block_attributes['type'] : 'popover';
-
-wp_interactivity_state(
-	'matter/overlay/private',
-	[
-		'items' => [
-			$collapsible_id => [
-				'isOpen' => false,
-				'type'   => 'collapsible',
-			],
-		],
-	]
-);
+Collapsible::register_state( $collapsible_id );
 ?>
 
 <div

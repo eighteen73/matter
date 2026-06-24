@@ -8,35 +8,14 @@
  * @package Matter\\Drawer
  */
 
+use Eighteen73\Matter\Blocks\Drawer;
+
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$drawer_id        = '';
+$drawer_id        = Drawer::resolve_id( $block_attributes );
 
-foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
-	if ( empty( $block_attributes[ $id_attribute ] ) ) {
-		continue;
-	}
-
-	$drawer_id = $block_attributes[ $id_attribute ];
-	break;
-}
-
-if ( empty( $drawer_id ) ) {
-	$drawer_id = wp_unique_id( 'matter-drawer-' );
-}
-
-wp_interactivity_state(
-	'matter/overlay/private',
-	[
-		'items' => [
-			$drawer_id => [
-				'isOpen' => false,
-				'type'   => 'drawer',
-			],
-		],
-	]
-);
+Drawer::register_state( $drawer_id );
 ?>
 
 <div
