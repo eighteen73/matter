@@ -12,8 +12,6 @@ use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
-do_action( 'qm/debug', BlockStyles::get_styles( 'tab-panels', $attributes ) );
-
 $wrapper_attributes = [
 	'class' => 'wp-block-matter-tab-panels',
 	'style' => BlockStyles::get_styles( 'tab-panel', $attributes ),
