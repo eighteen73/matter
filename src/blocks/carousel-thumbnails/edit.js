@@ -16,12 +16,16 @@ import './editor.scss';
 
 import ColorControl from '../../components/color-control';
 import { storeColorValue } from '../../utils/colors';
+import { getBlockStyles } from '../../utils/block-styles';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const { syncWithCarousel = true, activeThumbnailColor } = attributes;
 
+	const colorStyles = getBlockStyles(attributes, 'carousel');
+
 	const blockProps = useBlockProps({
 		className: 'embla__thumbs',
+		style: colorStyles,
 	});
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {

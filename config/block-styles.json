@@ -53,6 +53,10 @@
 		"iconColor": {
 			"variable": "--matter-carousel--button--icon-color",
 			"type": "color"
+		},
+		"activeThumbnailColor": {
+			"variable": "--matter-carousel--thumbnails--active-color",
+			"type": "color"
 		}
 	},
 	"drawer-content": {
