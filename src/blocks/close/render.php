@@ -21,8 +21,7 @@ $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attribute
 $context          = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
 $label            = isset( $block_attributes['label'] ) ? trim( wp_strip_all_tags( $block_attributes['label'] ) ) : '';
 $show_label       = ! array_key_exists( 'showLabel', $block_attributes ) || (bool) $block_attributes['showLabel'];
-$position        = isset( $block_attributes['position'] ) ? (string) $block_attributes['position'] : 'inline';
-$position_offset = isset( $block_attributes['positionOffset'] ) ? (string) $block_attributes['positionOffset'] : '0';
+$position         = isset( $block_attributes['position'] ) ? (string) $block_attributes['position'] : 'inline';
 $target_id        = '';
 
 if ( '' === $label ) {
@@ -43,10 +42,14 @@ $button_attributes = [
 	'aria-label' => $label,
 ];
 
-$position_styles = BlockStyles::get_position_styles( $position, $position_offset );
+if ( 'inline' !== $position ) {
+	$button_attributes['class'] = 'is-position-' . sanitize_html_class( $position );
 
-if ( '' !== $position_styles ) {
-	$button_attributes['style'] = $position_styles;
+	$inset_styles = BlockStyles::get_styles( 'close', $block_attributes );
+
+	if ( '' !== $inset_styles ) {
+		$button_attributes['style'] = $inset_styles;
+	}
 }
 
 if ( ! empty( $target_id ) ) {

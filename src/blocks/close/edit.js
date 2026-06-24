@@ -18,7 +18,9 @@ import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { arrowRight, arrowUpLeft, arrowUpRight } from '@wordpress/icons';
 
-import { getPositionStyles } from '../../utils/position';
+import clsx from 'clsx';
+
+import { getBlockStyles } from '../../utils/block-styles';
 
 const PLACEMENT_OPTIONS = [
 	{
@@ -52,13 +54,16 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		PLACEMENT_OPTIONS.find((option) => option.value === position) ??
 		PLACEMENT_OPTIONS[0];
 	const buttonLabel = label || __('Close', 'matter');
-	const positionStyles = useMemo(
-		() => getPositionStyles(position, positionOffset),
-		[position, positionOffset]
+	const cssVarStyles = useMemo(
+		() => (isPositioned ? getBlockStyles(attributes, 'close') : undefined),
+		[attributes, isPositioned]
 	);
 	const blockProps = useBlockProps({
+		className: clsx({
+			[`is-position-${position}`]: isPositioned,
+		}),
 		'aria-label': buttonLabel,
-		style: positionStyles,
+		style: cssVarStyles,
 	});
 
 	return (

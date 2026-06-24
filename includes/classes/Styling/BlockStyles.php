@@ -139,33 +139,4 @@ class BlockStyles {
 
 		return empty( $declarations ) ? '' : implode( '; ', $declarations ) . ';';
 	}
-
-	/**
-	 * Build inline position declarations for absolutely positioned blocks.
-	 *
-	 * @param string $position        Placement (`inline`, `top-left`, or `top-right`).
-	 * @param string $position_offset Inset value.
-	 * @return string
-	 */
-	public static function get_position_styles( string $position, string $position_offset = '0' ): string {
-		$corner_sides = [
-			'top-right' => [ 'top', 'right' ],
-			'top-left'  => [ 'top', 'left' ],
-		];
-
-		if ( 'inline' === $position || ! isset( $corner_sides[ $position ] ) ) {
-			return '';
-		}
-
-		$sides        = $corner_sides[ $position ];
-		$css_offset   = self::resolve_value( $position_offset, 'spacing' );
-		$declarations = [ 'position: absolute' ];
-
-		if ( '' !== $css_offset ) {
-			$declarations[] = "{$sides[0]}: {$css_offset}";
-			$declarations[] = "{$sides[1]}: {$css_offset}";
-		}
-
-		return implode( '; ', $declarations ) . ';';
-	}
 }
