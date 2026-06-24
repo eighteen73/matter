@@ -10,7 +10,6 @@ import {
 	ToolbarButton,
 	ToolbarGroup,
 	RangeControl,
-	SelectControl,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -37,14 +36,8 @@ const TEMPLATE = [['matter/close']];
  * @return {Element} Element to render.
  */
 export default function Edit({ context, clientId, attributes, setAttributes }) {
-	const {
-		backdropColor,
-		backdropOpacity,
-		backdropBlur,
-		position,
-		width,
-		height,
-	} = attributes;
+	const { backdropColor, backdropOpacity, backdropBlur, width, height } =
+		attributes;
 	const isOpen = !!context['matter/modal-is-open'];
 	useOpenParentOnSelection(clientId, isOpen);
 	const [portalRoot, setPortalRoot] = useState(getEditorPortalRoot);
@@ -180,6 +173,27 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 						value={width}
 						onChange={(value) => setAttributes({ width: value })}
 						onUnitChange={() => setAttributes({ width: '' })}
+						isResetValueOnUnitChange
+						min={0}
+						max={1000}
+						step={10}
+					/>
+				</ToolsPanelItem>
+
+				<ToolsPanelItem
+					hasValue={() => !!height}
+					label={__('Height', 'matter')}
+					onDeselect={() => setAttributes({ height: '' })}
+					resetAllFilter={() => ({ height: '' })}
+					isShownByDefault
+					panelId={clientId}
+				>
+					<UnitControl
+						__next40pxDefaultSize
+						label={__('Height', 'matter')}
+						value={height}
+						onChange={(value) => setAttributes({ height: value })}
+						onUnitChange={() => setAttributes({ height: '' })}
 						isResetValueOnUnitChange
 						min={0}
 						max={1000}
