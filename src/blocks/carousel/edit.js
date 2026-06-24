@@ -33,6 +33,7 @@ import {
 	normalizeEmblaConfig,
 	prepareEmblaBlockState,
 } from './utils/embla-block-config';
+import { findDescendantBlock } from './utils/block-tree';
 import { buildCarouselStylesheet } from './utils/styles';
 import { shouldReplaceThumbBlocks } from './utils/thumbnails-sync';
 import AdvancedControls from './components/advanced-controls';
@@ -206,9 +207,7 @@ export default function Edit({
 	);
 
 	const thumbsBlock =
-		innerBlocks.find(
-			(block) => block.name === 'matter/carousel-thumbnails'
-		) || false;
+		findDescendantBlock(innerBlocks, 'matter/carousel-thumbnails') || false;
 
 	const thumbsInnerBlocks = useSelect((select) =>
 		thumbsBlock &&
