@@ -23,6 +23,10 @@
 		"width": {
 			"type": "string",
 			"default": ""
+		},
+		"height": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

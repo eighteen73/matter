@@ -8,10 +8,13 @@ import { useEntityRecords } from '@wordpress/core-data';
 import {
 	ExternalLink,
 	SelectControl,
-	PanelBody,
 	Spinner,
 	ToggleControl,
 	ToolbarButton,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import {
 	createInterpolateElement,
@@ -362,106 +365,168 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			)}
 
 			<InspectorControls group="settings">
-				<PanelBody title={__('Settings', 'matter')}>
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() =>
+						setAttributes({
+							ref: 0,
+							type: 'simple',
+							submenuOpensOnClick: false,
+							showSubmenuLabel: false,
+							showSubmenuViewAll: false,
+						})
+					}
+				>
 					{!hasResolved && <Spinner />}
 					{hasResolved && (
-						<SelectControl
-							__next40pxDefaultSize
+						<ToolsPanelItem
 							label={__('Menu', 'matter')}
-							help={
-								ref
-									? createInterpolateElement(
-											__(
-												'Edit menu items in the <a>Navigation editor</a>',
-												'matter'
-											),
-											{
-												a: (
-													<ExternalLink
-														href={
-															navigationEditorUrl
-														}
-													/>
+							hasValue={() => !!ref}
+							onDeselect={() => setAttributes({ ref: 0 })}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Menu', 'matter')}
+								help={
+									ref
+										? createInterpolateElement(
+												__(
+													'Edit menu items in the <a>Navigation editor</a>',
+													'matter'
 												),
-											}
-										)
-									: __(
-											'Select a navigation menu to display.',
-											'matter'
-										)
-							}
-							options={menuOptions}
-							value={ref}
-							onChange={(value) =>
-								setAttributes({
-									ref: Number(value) || 0,
-								})
-							}
-						/>
-					)}
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Menu Type', 'matter')}
-						options={menuTypeOptions}
-						value={type}
-						onChange={(value) =>
-							setAttributes({
-								type: value || 'simple',
-							})
-						}
-					/>
-					{!!ref && (
-						<ToggleControl
-							__nextHasNoMarginBottom
-							label={__('Open submenus on click', 'matter')}
-							help={__(
-								'When disabled, simple menus can open on hover for pointer users.',
-								'matter'
-							)}
-							checked={submenuOpensOnClick}
-							onChange={(value) =>
-								setAttributes({
-									submenuOpensOnClick: !!value,
-								})
-							}
-						/>
-					)}
-					{type === 'drill-down' && (
-						<>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={__('Show submenu label', 'matter')}
-								help={__(
-									'Display the parent menu item name in the submenu.',
-									'matter'
-								)}
-								checked={showSubmenuLabel}
+												{
+													a: (
+														<ExternalLink
+															href={
+																navigationEditorUrl
+															}
+														/>
+													),
+												}
+											)
+										: __(
+												'Select a navigation menu to display.',
+												'matter'
+											)
+								}
+								options={menuOptions}
+								value={ref}
 								onChange={(value) =>
 									setAttributes({
-										showSubmenuLabel: !!value,
+										ref: Number(value) || 0,
 									})
 								}
 							/>
+						</ToolsPanelItem>
+					)}
+					<ToolsPanelItem
+						label={__('Menu Type', 'matter')}
+						hasValue={() => type !== 'simple'}
+						onDeselect={() => setAttributes({ type: 'simple' })}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<SelectControl
+							__next40pxDefaultSize
+							label={__('Menu Type', 'matter')}
+							options={menuTypeOptions}
+							value={type}
+							onChange={(value) =>
+								setAttributes({
+									type: value || 'simple',
+								})
+							}
+						/>
+					</ToolsPanelItem>
+					{!!ref && (
+						<ToolsPanelItem
+							label={__('Open submenus on click', 'matter')}
+							hasValue={() => !!submenuOpensOnClick}
+							onDeselect={() =>
+								setAttributes({ submenuOpensOnClick: false })
+							}
+							isShownByDefault
+							panelId={clientId}
+						>
 							<ToggleControl
 								__nextHasNoMarginBottom
+								label={__('Open submenus on click', 'matter')}
+								help={__(
+									'When disabled, simple menus can open on hover for pointer users.',
+									'matter'
+								)}
+								checked={submenuOpensOnClick}
+								onChange={(value) =>
+									setAttributes({
+										submenuOpensOnClick: !!value,
+									})
+								}
+							/>
+						</ToolsPanelItem>
+					)}
+					{type === 'drill-down' && (
+						<>
+							<ToolsPanelItem
+								label={__('Show submenu label', 'matter')}
+								hasValue={() => !!showSubmenuLabel}
+								onDeselect={() =>
+									setAttributes({ showSubmenuLabel: false })
+								}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<ToggleControl
+									__nextHasNoMarginBottom
+									label={__('Show submenu label', 'matter')}
+									help={__(
+										'Display the parent menu item name in the submenu.',
+										'matter'
+									)}
+									checked={showSubmenuLabel}
+									onChange={(value) =>
+										setAttributes({
+											showSubmenuLabel: !!value,
+										})
+									}
+								/>
+							</ToolsPanelItem>
+							<ToolsPanelItem
 								label={__(
 									'Show submenu view all link',
 									'matter'
 								)}
-								help={__(
-									'Display a link to the parent menu item in the submenu.',
-									'matter'
-								)}
-								checked={showSubmenuViewAll}
-								onChange={(value) =>
+								hasValue={() => !!showSubmenuViewAll}
+								onDeselect={() =>
 									setAttributes({
-										showSubmenuViewAll: !!value,
+										showSubmenuViewAll: false,
 									})
 								}
-							/>
+								isShownByDefault
+								panelId={clientId}
+							>
+								<ToggleControl
+									__nextHasNoMarginBottom
+									label={__(
+										'Show submenu view all link',
+										'matter'
+									)}
+									help={__(
+										'Display a link to the parent menu item in the submenu.',
+										'matter'
+									)}
+									checked={showSubmenuViewAll}
+									onChange={(value) =>
+										setAttributes({
+											showSubmenuViewAll: !!value,
+										})
+									}
+								/>
+							</ToolsPanelItem>
 						</>
 					)}
-				</PanelBody>
+				</ToolsPanel>
 			</InspectorControls>
 
 			<InspectorControls group="color">

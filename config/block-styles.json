@@ -124,5 +124,11 @@
 			"variable": "--matter-tab-button--background-color",
 			"type": "color"
 		}
+	},
+	"close": {
+		"positionOffset": {
+			"variable": "--matter-close--inset",
+			"type": "spacing"
+		}
 	}
 }
