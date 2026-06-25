@@ -16,7 +16,7 @@
 	--_submenu--padding: var(--matter-navigation--submenu--padding, var(--wp--custom--matter-navigation--submenu--padding, var(--wp--preset--spacing--sm, 8px)));
 	--_submenu--item-padding: var(--matter-navigation--submenu--item-padding, var(--wp--custom--matter-navigation--submenu--item-padding, 0px)); //stylelint-disable-line length-zero-no-unit
 	--_submenu--color: var(--matter-navigation--submenu--color, var(--wp--custom--matter-navigation--submenu--color, inherit));
-	--_submenu--background-color: var(--matter-navigation--submenu--background-color, var(--wp--custom--matter-navigation--submenu--background-color, var(--wp--preset--color--base, #fff)));
+	--_submenu--background-color: var(--matter-navigation--submenu--background-color, var(--wp--custom--matter-navigation--submenu--background-color, inherit));
 	--_submenu--icon-color: var(--matter-navigation--submenu--icon-color, var(--wp--custom--matter-navigation--submenu--icon-color, var(--wp--preset--color--contrast, #000)));
 	--_submenu--divider: 1px solid var(--matter-navigation--submenu--divider-color, transparent);
 
@@ -289,7 +289,7 @@
 			display: grid;
 			grid-template-rows: 0fr;
 			position: static;
-			transition: grid-template-rows var(--_transition-duration), opacity var(--_transition-duration), visibility var(--_transition-duration);
+			transition: grid-template-rows var(--_transition-duration);
 			width: 100%;
 
 			> .wp-block-navigation__submenu-items {

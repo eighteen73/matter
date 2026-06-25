@@ -23,11 +23,12 @@ import {
 	useRef,
 } from '@wordpress/element';
 import { useServerSideRender } from '@wordpress/server-side-render';
-import { __, sprintf } from '@wordpress/i18n';
+import { __ } from '@wordpress/i18n';
 
 import ColorControl from '../../components/color-control';
 import { getBlockStyles } from '../../utils/block-styles';
 import { storeColorValue } from '../../utils/colors';
+import { getMenuTitle } from '../../utils/navigation-menu-title';
 
 /**
  * Extract menu list markup from the editor SSR response.
@@ -48,20 +49,6 @@ function extractNavigationListMarkup(html) {
 	);
 
 	return match ? match[0] : html;
-}
-
-function getMenuTitle(menu) {
-	const renderedTitle = menu?.title?.rendered;
-
-	if (typeof renderedTitle === 'string' && renderedTitle.length) {
-		return renderedTitle;
-	}
-
-	return sprintf(
-		/* translators: %d: menu ID. */
-		__('Menu #%d', 'matter'),
-		menu?.id || 0
-	);
 }
 
 function useEditorPreviewInteractions(containerRef, options) {
