@@ -2,9 +2,10 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/tab-button",
+	"version": "0.1.0",
 	"title": "Tab Button",
 	"description": "A tab label button in a tabbed interface.",
-	"category": "design",
+	"category": "widgets",
 	"textdomain": "matter",
 	"parent": [ "matter/tab-list" ],
 	"attributes": {

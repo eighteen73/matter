@@ -13,10 +13,6 @@ import metadata from './block.json';
 import variations from './variations';
 import './style.scss';
 
-const { name } = metadata;
-
-export { metadata, name };
-
 registerBlockType(metadata.name, {
 	icon: tabs,
 	edit: Edit,

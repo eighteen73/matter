@@ -2,9 +2,10 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/tabs",
+	"version": "0.1.0",
 	"title": "Tabs",
 	"description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
-	"category": "design",
+	"category": "widgets",
 	"textdomain": "matter",
 	"allowedBlocks": [ "matter/tab-list", "matter/tab-panels" ],
 	"attributes": {
