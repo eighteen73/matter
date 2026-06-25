@@ -1,4 +1,5 @@
 import { registerBlockType } from '@wordpress/blocks';
+import { navigation } from '@wordpress/icons';
 
 import './style.scss';
 
@@ -7,4 +8,5 @@ import metadata from './block.json';
 
 registerBlockType(metadata.name, {
 	edit: Edit,
+	icon: navigation,
 });

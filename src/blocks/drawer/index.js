@@ -1,4 +1,5 @@
 import { registerBlockType } from '@wordpress/blocks';
+import { drawerLeft } from '@wordpress/icons';
 
 import './style.scss';
 
@@ -7,6 +8,7 @@ import Save from './save';
 import metadata from './block.json';
 
 registerBlockType(metadata.name, {
+	icon: drawerLeft,
 	edit: Edit,
 	save: Save,
 });

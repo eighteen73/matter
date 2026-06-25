@@ -1,4 +1,5 @@
 import { registerBlockType } from '@wordpress/blocks';
+import { contents } from '@wordpress/icons';
 
 import './style.scss';
 
@@ -9,4 +10,5 @@ import metadata from './block.json';
 registerBlockType(metadata.name, {
 	edit: Edit,
 	save: Save,
+	icon: contents,
 });

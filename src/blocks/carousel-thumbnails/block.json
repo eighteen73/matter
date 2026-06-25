@@ -5,7 +5,6 @@
 	"version": "0.1.0",
 	"title": "Thumbnails",
 	"category": "design",
-	"icon": "grid-view",
 	"description": "Displays thumbnail blocks to navigate between carousel slides.",
 	"ancestor": [
 		"matter/carousel"
