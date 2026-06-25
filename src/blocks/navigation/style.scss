@@ -271,7 +271,7 @@
 		// Items
 		.wp-block-navigation-item {
 			flex-wrap: wrap;
-			transition: row-gap var(--_transition-duration);
+			transition: row-gap var(--_transition-duration) ease-in-out;
 			width: 100%;
 
 			&:where(:not(.has-open-submenu)) {
@@ -289,7 +289,7 @@
 			display: grid;
 			grid-template-rows: 0fr;
 			position: static;
-			transition: grid-template-rows var(--_transition-duration);
+			transition: grid-template-rows var(--_transition-duration) ease-in-out;
 			width: 100%;
 
 			> .wp-block-navigation__submenu-items {
@@ -401,7 +401,7 @@
 			overflow: hidden;
 			position: absolute;
 			transform: translateX(-100%);
-			transition: transform var(--_transition-duration), visibility var(--_transition-duration);
+			transition: transform var(--_transition-duration) ease-in-out, visibility var(--_transition-duration) ease-in-out;
 			visibility: hidden;
 			width: 100%;
 			z-index: 15;

@@ -5,7 +5,7 @@
 	--_backdrop-background: rgb(from var(--_backdrop-color) r g b / var(--_backdrop-opacity));
 	--_width: var(--matter-drawer-content--width, var(--wp--custom--matter-drawer-content--width, 320px));
 	--_height: var(--matter-drawer-content--height, var(--wp--custom--matter-drawer-content--height, 320px));
-	--_transition: var(--matter-drawer-content--transition, var(--wp--custom--matter-drawer-content--transition, 300ms ease-in-out));
+	--_transition-duration: var(--matter-drawer-content--transition-duration, var(--wp--custom--matter-drawer-content--transition-duration, 300ms));
 
 	border: unset;
 	margin: 0;
@@ -15,20 +15,24 @@
 	overflow-y: auto;
 	position: fixed;
 	transition:
-		transform var(--_transition),
-		overlay var(--_transition) allow-discrete,
-		display var(--_transition) allow-discrete;
+		transform var(--_transition-duration) ease-in-out,
+		overlay var(--_transition-duration) ease-in-out allow-discrete,
+		display var(--_transition-duration) ease-in-out allow-discrete;
 	will-change: transform;
 	z-index: 99999; // Above the admin toolbar.
+
+	@media (prefers-reduced-motion: reduce) {
+		--_transition-duration: 0ms;
+	}
 
 	&::backdrop {
 		backdrop-filter: blur(0);
 		background-color: transparent;
 		transition:
-			background-color var(--_transition),
-			backdrop-filter var(--_transition),
-			overlay var(--_transition) allow-discrete,
-			display var(--_transition) allow-discrete;
+			background-color var(--_transition-duration) ease-in-out,
+			backdrop-filter var(--_transition-duration) ease-in-out,
+			overlay var(--_transition-duration) ease-in-out allow-discrete,
+			display var(--_transition-duration) ease-in-out allow-discrete;
 	}
 
 	&[open]::backdrop {

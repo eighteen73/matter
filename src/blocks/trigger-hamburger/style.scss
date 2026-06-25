@@ -11,8 +11,10 @@
 	--_bar-gap: var(--matter-trigger-hamburger--bar-gap, var(--wp--custom--matter-trigger-hamburger--bar-gap, 0.375em));
 	--_bar-radius: var(--matter-trigger-hamburger--bar-radius, var(--wp--custom--matter-trigger-hamburger--bar-radius, 0));
 	--_transition-duration: var(--matter-trigger-hamburger--transition-duration, var(--wp--custom--matter-trigger-hamburger--transition-duration, 300ms));
-	--_transition-timing: var(--matter-trigger-hamburger--transition-timing, var(--wp--custom--matter-trigger-hamburger--transition-timing, ease-in-out));
-	--_transition: var(--matter-trigger-hamburger--transition, var(--wp--custom--matter-trigger-hamburger--transition, var(--_transition-duration) var(--_transition-timing)));
+
+	@media (prefers-reduced-motion: reduce) {
+		--_transition-duration: 0ms;
+	}
 
 	align-items: center;
 	background-color: var(--_background-color);
@@ -34,7 +36,7 @@
 		display: block;
 		height: var(--_bar-height);
 		position: relative;
-		transition: background-color var(--_transition);
+		transition: background-color var(--_transition-duration) ease-in-out;
 		width: 1em;
 
 		&::before,
@@ -45,7 +47,7 @@
 			height: var(--_bar-height);
 			left: 0;
 			position: absolute;
-			transition: transform var(--_transition);
+			transition: transform var(--_transition-duration) ease-in-out;
 			width: 100%;
 		}
 
@@ -129,10 +131,6 @@
 		}
 	}
 
-	/*
-	 * Spin — https://github.com/jonsuh/hamburgers/blob/master/_sass/hamburgers/types/_spin.scss
-	 * Timings scale from --_transition-duration (220ms / 100ms / 250ms / 120ms at the 300ms default).
-	 */
 	&.is-style-spin {
 		--_spin-duration: calc(var(--_transition-duration) * 11 / 15);
 		--_spin-position-duration: calc(var(--_transition-duration) / 3);
