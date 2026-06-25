@@ -9,6 +9,7 @@ import {
 const PRIVATE_STORE = 'matter/overlay/private';
 const PUBLIC_STORE = 'matter/overlay';
 const STORAGE_KEY_PREFIX = 'matter_overlay_';
+const OVERLAY_TYPES = ['modal', 'drawer', 'collapsible'];
 
 let publicState; // eslint-disable-line prefer-const -- assigned after store creation.
 let didRegisterEscapeListener = false;
@@ -66,6 +67,32 @@ const getOpenCollapsibles = () =>
 	Object.entries(privateState.items).filter(
 		([, item]) => item?.type === 'collapsible' && item.isOpen
 	);
+
+const getOpenOverlayTypes = () => {
+	const openTypes = new Set();
+
+	Object.values(privateState.items).forEach((item) => {
+		if (item?.isOpen && item?.type) {
+			openTypes.add(item.type);
+		}
+	});
+
+	return openTypes;
+};
+
+/**
+ * Toggle `has-{type}-open` classes on the document root for each overlay type.
+ *
+ * @return {void}
+ */
+const syncOpenClasses = () => {
+	const openTypes = getOpenOverlayTypes();
+	const { classList } = document.documentElement;
+
+	OVERLAY_TYPES.forEach((type) => {
+		classList.toggle(`has-${type}-open`, openTypes.has(type));
+	});
+};
 
 /**
  * Close open collapsibles when Escape is pressed.
@@ -452,6 +479,7 @@ const { actions: privateActions, state: privateState } = store(
 
 				addIdToUrl(id);
 				syncDialogElement(id);
+				syncOpenClasses();
 			},
 			close: (passthroughId = false) => {
 				const id = resolveId(passthroughId);
@@ -469,6 +497,7 @@ const { actions: privateActions, state: privateState } = store(
 
 				removeIdFromUrl(id);
 				syncDialogElement(id);
+				syncOpenClasses();
 
 				if (item.type === 'collapsible') {
 					focusTrigger(id);
@@ -548,6 +577,7 @@ const { actions: privateActions, state: privateState } = store(
 
 				removeIdFromUrl(id);
 				focusTrigger(id);
+				syncOpenClasses();
 			}),
 			onCancel: withSyncEvent((event) => {
 				const { id } = privateState;
@@ -660,6 +690,7 @@ const publicStore = store(PUBLIC_STORE, {
 
 			removeIdFromUrl(id);
 			focusTrigger(id);
+			syncOpenClasses();
 		},
 		onCancel(event) {
 			const id = getContextId();
