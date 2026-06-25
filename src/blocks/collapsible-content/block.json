@@ -12,7 +12,7 @@
 			"text": true,
 			"background": true,
 			"gradients": true,
-			"link": true
+			"link": false
 		},
 		"html": false,
 		"lock": false,

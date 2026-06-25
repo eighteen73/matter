@@ -46,7 +46,8 @@
 		"color": {
 			"text": true,
 			"background": true,
-			"gradients": false
+			"gradients": true,
+			"link": false
 		},
 		"html": false,
 		"layout": {
