@@ -11,6 +11,7 @@ const PUBLIC_STORE = 'matter/overlay';
 const STORAGE_KEY_PREFIX = 'matter_overlay_';
 
 let publicState; // eslint-disable-line prefer-const -- assigned after store creation.
+let didRegisterEscapeListener = false;
 
 const createReadOnlyProxy = (object) =>
 	new Proxy(object, {
@@ -57,6 +58,57 @@ const canClose = (id) => {
 	const item = getItem(id);
 
 	return item?.preventClose !== true;
+};
+
+const hasOpenDialog = () => document.querySelector('dialog[open]') !== null;
+
+const getOpenCollapsibles = () =>
+	Object.entries(privateState.items).filter(
+		([, item]) => item?.type === 'collapsible' && item.isOpen
+	);
+
+/**
+ * Close open collapsibles when Escape is pressed.
+ *
+ * Modal and drawer overlays rely on the native dialog cancel event instead.
+ *
+ * @param {KeyboardEvent} event Keydown event.
+ * @return {void}
+ */
+const handleEscapeKey = (event) => {
+	if (event.key !== 'Escape' || hasOpenDialog()) {
+		return;
+	}
+
+	const openCollapsibles = getOpenCollapsibles();
+
+	if (openCollapsibles.length === 0) {
+		return;
+	}
+
+	const { activeElement } = document;
+
+	for (const [id] of openCollapsibles) {
+		if (!canClose(id)) {
+			continue;
+		}
+
+		const element = document.getElementById(id);
+
+		if (element?.contains(activeElement)) {
+			event.preventDefault();
+			privateActions.close(id);
+			return;
+		}
+	}
+
+	event.preventDefault();
+
+	openCollapsibles.forEach(([id]) => {
+		if (canClose(id)) {
+			privateActions.close(id);
+		}
+	});
 };
 
 /**
@@ -294,6 +346,11 @@ const runGlobalInit = () => {
 
 	privateState.didGlobalInit = true;
 
+	if (!didRegisterEscapeListener) {
+		didRegisterEscapeListener = true;
+		document.addEventListener('keydown', handleEscapeKey);
+	}
+
 	const { items } = privateState;
 	const searchParams = new URLSearchParams(window.location.search);
 	const hash = window.location.hash.replace('#', '');
@@ -412,6 +469,10 @@ const { actions: privateActions, state: privateState } = store(
 
 				removeIdFromUrl(id);
 				syncDialogElement(id);
+
+				if (item.type === 'collapsible') {
+					focusTrigger(id);
+				}
 			},
 			toggle: (passthroughId = false) => {
 				const id = resolveId(passthroughId);
