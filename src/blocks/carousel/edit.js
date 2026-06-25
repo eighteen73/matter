@@ -441,9 +441,7 @@ export default function Edit({
 						onResetLayer={resetLayer}
 					/>
 				</PanelBody>
-			</InspectorControls>
 
-			<InspectorControls group="advanced">
 				<AdvancedControls
 					advancedEmblaConfig={advancedEmblaConfig}
 					advancedEmblaConfigMerge={advancedEmblaConfigMerge}

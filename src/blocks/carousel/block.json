@@ -40,7 +40,7 @@
 		},
 		"advancedEmblaConfig": {
 			"type": "object",
-			"default": {}
+			"default": null
 		},
 		"advancedEmblaConfigMerge": {
 			"type": "boolean",

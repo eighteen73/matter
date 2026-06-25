@@ -1,6 +1,24 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Notice, TextareaControl, ToggleControl } from '@wordpress/components';
+import {
+	Notice,
+	TextareaControl,
+	ToggleControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
+
+const isEmptyAdvancedConfig = (config) =>
+	config === null ||
+	config === undefined ||
+	(typeof config === 'object' &&
+		!Array.isArray(config) &&
+		Object.keys(config).length === 0);
+
+const serializeAdvancedConfig = (config) =>
+	isEmptyAdvancedConfig(config) ? '' : JSON.stringify(config, null, 2);
 
 export default function AdvancedControls({
 	advancedEmblaConfig,
@@ -10,21 +28,25 @@ export default function AdvancedControls({
 	const mergeWithUi = advancedEmblaConfigMerge === true;
 
 	const [advancedJsonDraft, setAdvancedJsonDraft] = useState(() =>
-		JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
+		serializeAdvancedConfig(advancedEmblaConfig)
 	);
 	const [advancedJsonError, setAdvancedJsonError] = useState('');
 
 	useEffect(() => {
-		const next = JSON.stringify(advancedEmblaConfig ?? {}, null, 2);
+		const next = serializeAdvancedConfig(advancedEmblaConfig);
 		setAdvancedJsonDraft((prev) => (prev === next ? prev : next));
 	}, [advancedEmblaConfig]);
+
+	const clearAdvancedConfig = () => {
+		setAdvancedJsonError('');
+		setAdvancedJsonDraft('');
+		setAttributes({ advancedEmblaConfig: null });
+	};
 
 	const handleAdvancedJsonBlur = () => {
 		const trimmed = advancedJsonDraft.trim();
 		if (!trimmed) {
-			setAdvancedJsonError('');
-			setAttributes({ advancedEmblaConfig: {} });
-			setAdvancedJsonDraft('{}');
+			clearAdvancedConfig();
 			return;
 		}
 		try {
@@ -38,8 +60,12 @@ export default function AdvancedControls({
 					__('Value must be a JSON object.', 'matter')
 				);
 				setAdvancedJsonDraft(
-					JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
+					serializeAdvancedConfig(advancedEmblaConfig)
 				);
+				return;
+			}
+			if (isEmptyAdvancedConfig(parsed)) {
+				clearAdvancedConfig();
 				return;
 			}
 			setAdvancedJsonError('');
@@ -47,51 +73,63 @@ export default function AdvancedControls({
 			setAdvancedJsonDraft(JSON.stringify(parsed, null, 2));
 		} catch {
 			setAdvancedJsonError(__('Invalid JSON.', 'matter'));
-			setAdvancedJsonDraft(
-				JSON.stringify(advancedEmblaConfig ?? {}, null, 2)
-			);
+			setAdvancedJsonDraft(serializeAdvancedConfig(advancedEmblaConfig));
 		}
 	};
 
 	return (
-		<>
+		<ToolsPanel label={__('Advanced Carousel Settings', 'matter')}>
 			{advancedJsonError ? (
 				<Notice status="error" isDismissible={false}>
 					{advancedJsonError}
 				</Notice>
 			) : null}
 
-			<TextareaControl
-				help={__(
-					'Enter a JSON object to override the carousel settings. Use the same shape as the block config: nest core options under "options" and plugin options under "plugins" (for example, {"options":{"loop":true},"plugins":{"autoplay":{"active":true,"type":"scroll"}}}).',
-					'matter'
-				)}
+			<ToolsPanelItem
 				label={__('Advanced Carousel Config', 'matter')}
-				value={advancedJsonDraft}
-				onChange={(value) => {
-					setAdvancedJsonDraft(value);
-					if (advancedJsonError) {
-						setAdvancedJsonError('');
-					}
-				}}
-				onBlur={handleAdvancedJsonBlur}
-				rows={12}
-				style={{ fontFamily: 'monospace' }}
-			/>
+				hasValue={() => advancedJsonDraft.trim() !== ''}
+				onDeselect={clearAdvancedConfig}
+			>
+				<TextareaControl
+					help={__(
+						'Enter a JSON object to override the carousel settings. Use the same shape as the block config: nest core options under "options" and plugin options under "plugins" (for example, {"options":{"loop":true},"plugins":{"autoplay":{"active":true,"type":"scroll"}}}).',
+						'matter'
+					)}
+					label={__('Advanced Carousel Config', 'matter')}
+					value={advancedJsonDraft}
+					onChange={(value) => {
+						setAdvancedJsonDraft(value);
+						if (advancedJsonError) {
+							setAdvancedJsonError('');
+						}
+					}}
+					onBlur={handleAdvancedJsonBlur}
+					rows={12}
+					style={{ fontFamily: 'monospace' }}
+				/>
+			</ToolsPanelItem>
 
-			<ToggleControl
+			<ToolsPanelItem
 				label={__('Merge with carousel settings', 'matter')}
-				help={__(
-					'When enabled, Settings apply first; keys in the JSON below override them.',
-					'matter'
-				)}
-				checked={mergeWithUi}
-				onChange={(value) =>
-					setAttributes({
-						advancedEmblaConfigMerge: value,
-					})
+				hasValue={() => !!mergeWithUi}
+				onDeselect={() =>
+					setAttributes({ advancedEmblaConfigMerge: false })
 				}
-			/>
-		</>
+			>
+				<ToggleControl
+					label={__('Merge with carousel settings', 'matter')}
+					help={__(
+						'When enabled, Settings apply first; keys in the JSON below override them.',
+						'matter'
+					)}
+					checked={mergeWithUi}
+					onChange={(value) =>
+						setAttributes({
+							advancedEmblaConfigMerge: value,
+						})
+					}
+				/>
+			</ToolsPanelItem>
+		</ToolsPanel>
 	);
 }
