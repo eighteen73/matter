@@ -8,6 +8,10 @@ import {
 	__experimentalToggleGroupControlOptionIcon as ToggleGroupControlOptionIcon,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -209,74 +213,116 @@ export default function CarouselControls({
 	onChangeLayerOption,
 	onChangeLayerAutoplay,
 	onResetLayer,
+	emblaConfig,
+	setAttributes,
 }) {
 	const tabs = useMemo(() => buildTabs(), []);
 
 	return (
-		<TabPanel
-			className="matter-carousel__settings-tabs"
-			initialTabName={BASE_TAB}
-			tabs={tabs}
-		>
-			{(tab) => {
-				const layer = breakpointLayers?.[tab.name] || {};
-				const layerOptions = layer.options || {};
-				const layerAutoplay = layer.plugins?.autoplay || {};
-				const hasLayer = !!breakpointLayers?.[tab.name];
-
-				const effectiveOptions = {
-					loop: layerOptions.loop ?? baseOptions.loop,
-					axis: layerOptions.axis ?? baseOptions.axis,
-					slidesToScroll:
-						layerOptions.slidesToScroll ??
-						baseOptions.slidesToScroll,
-					slidesToShow:
-						layerOptions.slidesToShow ?? baseOptions.slidesToShow,
-					slideGap: layerOptions.slideGap ?? baseOptions.slideGap,
-					active: layerOptions.active ?? baseOptions.active,
-				};
-				const effectiveAutoplay = {
-					active: layerAutoplay.active ?? baseAutoplay.active,
-					type: layerAutoplay.type ?? baseAutoplay.type,
-				};
-
-				if (tab.name === BASE_TAB) {
-					return (
-						<CarouselFields
-							options={baseOptions}
-							autoplay={baseAutoplay}
-							onChangeOption={onChangeBaseOption}
-							onChangeAutoplay={onChangeBaseAutoplay}
-						/>
-					);
+		<ToolsPanel label={__('Settings', 'matter')}>
+			<ToolsPanelItem
+				label={__('Settings', 'matter')}
+				hasValue={() => Object.keys(emblaConfig ?? {}).length > 0}
+				isShownByDefault
+				onDeselect={() =>
+					setAttributes({
+						emblaConfig: {
+							options: {
+								loop: false,
+								axis: 'x',
+								slidesToScroll: 1,
+								active: true,
+								slidesToShow: 1,
+								slideGap: '',
+							},
+							plugins: {
+								autoplay: {
+									active: false,
+									type: 'slide',
+									speed: 1,
+								},
+							},
+							breakpointLayers: {},
+						},
+					})
 				}
+			>
+				<TabPanel
+					className="matter-carousel__settings-tabs"
+					initialTabName={BASE_TAB}
+					tabs={tabs}
+				>
+					{(tab) => {
+						const layer = breakpointLayers?.[tab.name] || {};
+						const layerOptions = layer.options || {};
+						const layerAutoplay = layer.plugins?.autoplay || {};
+						const hasLayer = !!breakpointLayers?.[tab.name];
 
-				return (
-					<>
-						<CarouselFields
-							options={effectiveOptions}
-							autoplay={effectiveAutoplay}
-							onChangeOption={(key, value) =>
-								onChangeLayerOption(tab.name, key, value)
-							}
-							onChangeAutoplay={(key, value) =>
-								onChangeLayerAutoplay(tab.name, key, value)
-							}
-						/>
+						const effectiveOptions = {
+							loop: layerOptions.loop ?? baseOptions.loop,
+							axis: layerOptions.axis ?? baseOptions.axis,
+							slidesToScroll:
+								layerOptions.slidesToScroll ??
+								baseOptions.slidesToScroll,
+							slidesToShow:
+								layerOptions.slidesToShow ??
+								baseOptions.slidesToShow,
+							slideGap:
+								layerOptions.slideGap ?? baseOptions.slideGap,
+							active: layerOptions.active ?? baseOptions.active,
+						};
+						const effectiveAutoplay = {
+							active: layerAutoplay.active ?? baseAutoplay.active,
+							type: layerAutoplay.type ?? baseAutoplay.type,
+						};
 
-						{hasLayer && (
-							<Button
-								variant="secondary"
-								isDestructive
-								onClick={() => onResetLayer(tab.name)}
-								style={{ marginTop: '16px' }}
-							>
-								{__('Reset breakpoint', 'matter')}
-							</Button>
-						)}
-					</>
-				);
-			}}
-		</TabPanel>
+						if (tab.name === BASE_TAB) {
+							return (
+								<CarouselFields
+									options={baseOptions}
+									autoplay={baseAutoplay}
+									onChangeOption={onChangeBaseOption}
+									onChangeAutoplay={onChangeBaseAutoplay}
+								/>
+							);
+						}
+
+						return (
+							<>
+								<CarouselFields
+									options={effectiveOptions}
+									autoplay={effectiveAutoplay}
+									onChangeOption={(key, value) =>
+										onChangeLayerOption(
+											tab.name,
+											key,
+											value
+										)
+									}
+									onChangeAutoplay={(key, value) =>
+										onChangeLayerAutoplay(
+											tab.name,
+											key,
+											value
+										)
+									}
+								/>
+
+								{hasLayer && (
+									<Button
+										variant="secondary"
+										isDestructive
+										onClick={() => onResetLayer(tab.name)}
+										style={{ marginTop: '16px' }}
+									>
+										{__('Reset breakpoint', 'matter')}
+									</Button>
+								)}
+							</>
+						);
+					}}
+				</TabPanel>
+			</ToolsPanelItem>
+		</ToolsPanel>
 	);
 }

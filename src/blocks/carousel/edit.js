@@ -429,18 +429,18 @@ export default function Edit({
 			{carouselStylesheet && <style>{carouselStylesheet}</style>}
 
 			<InspectorControls group="settings">
-				<PanelBody title={__('Settings', 'matter')}>
-					<CarouselControls
-						baseOptions={uiOptions}
-						baseAutoplay={uiAutoplay}
-						breakpointLayers={resolvedConfig.breakpointLayers}
-						onChangeBaseOption={setOption}
-						onChangeBaseAutoplay={setAutoplay}
-						onChangeLayerOption={setLayerOption}
-						onChangeLayerAutoplay={setLayerAutoplay}
-						onResetLayer={resetLayer}
-					/>
-				</PanelBody>
+				<CarouselControls
+					baseOptions={uiOptions}
+					baseAutoplay={uiAutoplay}
+					breakpointLayers={resolvedConfig.breakpointLayers}
+					onChangeBaseOption={setOption}
+					onChangeBaseAutoplay={setAutoplay}
+					onChangeLayerOption={setLayerOption}
+					onChangeLayerAutoplay={setLayerAutoplay}
+					onResetLayer={resetLayer}
+					emblaConfig={resolvedConfig}
+					setAttributes={setAttributes}
+				/>
 
 				<AdvancedControls
 					advancedEmblaConfig={advancedEmblaConfig}
