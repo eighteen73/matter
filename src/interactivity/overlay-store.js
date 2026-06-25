@@ -233,37 +233,6 @@ const setDismissed = (id) => {
 };
 
 /**
- * @param {string} id Overlay id.
- * @return {void}
- */
-const addIdToUrl = (id) => {
-	if (!id) {
-		return;
-	}
-
-	const url = new URL(window.location.href);
-
-	url.hash = id;
-	window.history.replaceState({}, '', url);
-};
-
-/**
- * @param {string} id Overlay id.
- * @return {void}
- */
-const removeIdFromUrl = (id) => {
-	const url = new URL(window.location.href);
-	const currentHash = url.hash.replace('#', '');
-
-	if (currentHash !== id) {
-		return;
-	}
-
-	url.hash = '';
-	window.history.replaceState({}, '', url);
-};
-
-/**
  * @param {Object}          rule         URL trigger rule.
  * @param {URLSearchParams} searchParams Current query string.
  * @return {boolean} Whether the rule matches.
@@ -477,7 +446,6 @@ const { actions: privateActions, state: privateState } = store(
 					return;
 				}
 
-				addIdToUrl(id);
 				syncDialogElement(id);
 				syncOpenClasses();
 			},
@@ -495,7 +463,6 @@ const { actions: privateActions, state: privateState } = store(
 					setDismissed(id);
 				}
 
-				removeIdFromUrl(id);
 				syncDialogElement(id);
 				syncOpenClasses();
 
@@ -575,7 +542,6 @@ const { actions: privateActions, state: privateState } = store(
 					setDismissed(id);
 				}
 
-				removeIdFromUrl(id);
 				focusTrigger(id);
 				syncOpenClasses();
 			}),
@@ -688,7 +654,6 @@ const publicStore = store(PUBLIC_STORE, {
 				setDismissed(id);
 			}
 
-			removeIdFromUrl(id);
 			focusTrigger(id);
 			syncOpenClasses();
 		},
