@@ -2,7 +2,13 @@
  * WordPress dependencies
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, ToggleControl } from '@wordpress/components';
+import {
+	PanelBody,
+	ToggleControl, // eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useMemo } from '@wordpress/element';
 
@@ -28,19 +34,27 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<>
-			<InspectorControls>
-				<PanelBody title={__('Settings', 'matter')} initialOpen={true}>
-					<ToggleControl
+			<InspectorControls group="settings">
+				<ToolsPanel label={__('Settings', 'matter')}>
+					<ToolsPanelItem
 						label={__('Indicate current position', 'matter')}
-						checked={indicateCurrentPosition}
-						onChange={() =>
-							setAttributes({
-								indicateCurrentPosition:
-									!indicateCurrentPosition,
-							})
+						hasValue={() => !!indicateCurrentPosition}
+						onDeselect={() =>
+							setAttributes({ indicateCurrentPosition: false })
 						}
-					/>
-				</PanelBody>
+						isShownByDefault
+					>
+						<ToggleControl
+							label={__('Indicate current position', 'matter')}
+							checked={!!indicateCurrentPosition}
+							onChange={(value) =>
+								setAttributes({
+									indicateCurrentPosition: value,
+								})
+							}
+						/>
+					</ToolsPanelItem>
+				</ToolsPanel>
 			</InspectorControls>
 
 			<InspectorControls group="color">
