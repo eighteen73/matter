@@ -40,7 +40,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<>
-			<InspectorControls>
+			<InspectorControls group="settings">
 				<ToolsPanel
 					label={__('Settings', 'matter')}
 					resetAll={() => setAttributes({ syncWithCarousel: true })}
@@ -74,6 +74,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<ColorControl
 					label={__('Active thumbnail', 'matter')}
 					value={activeThumbnailColor}
+					attributeName="activeThumbnailColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							activeThumbnailColor: storeColorValue(slug, value),

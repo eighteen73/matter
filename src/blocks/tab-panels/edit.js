@@ -43,6 +43,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				<ColorControl
 					label={__('Tab panel active', 'matter')}
 					value={tabPanelActiveColor}
+					attributeName="tabPanelActiveColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							tabPanelActiveColor: storeColorValue(slug, value),

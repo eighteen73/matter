@@ -189,6 +189,7 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 				<ColorControl
 					label={__('Tab background', 'matter')}
 					value={tabBackgroundColor}
+					attributeName="tabBackgroundColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							tabBackgroundColor: storeColorValue(slug, value),
@@ -200,6 +201,7 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 				<ColorControl
 					label={__('Tab active', 'matter')}
 					value={tabActiveColor}
+					attributeName="tabActiveColor"
 					onChange={(value, slug) =>
 						setAttributes({
 							tabActiveColor: storeColorValue(slug, value),
