@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/trigger",
+	"version": "0.1.0",
+	"title": "Trigger",
+	"keywords": [ "trigger", "button" ],
+	"category": "widgets",
+	"description": "An interactive trigger to open a modal, drawer or collapsible block.",
+	"allowedBlocks": [ "core/buttons" ],
+	"attributes": {
+		"targetId": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"interactivity": true,
+		"lock": false,
+		"reusable": false
+	},
+	"usesContext": [ "matter/modal-id", "matter/drawer-id", "matter/collapsible-id" ],
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

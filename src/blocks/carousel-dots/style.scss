@@ -1,0 +1,37 @@
+// CSS variable pattern: see src/constants/css-variables-pattern.scss
+
+.wp-block-matter-carousel-dots {
+	--_dot--size: var(--matter-carousel-dots--size, var(--wp--custom--matter-carousel-dots--size, 12px));
+	--_dot--gap: var(--matter-carousel-dots--gap, var(--wp--custom--matter-carousel-dots--gap, var(--wp--preset--spacing--xs, 8px)));
+	--_dot--color: var(--matter-carousel-dots--color, var(--wp--custom--matter-carousel-dots--color, var(--wp--preset--color--accent-primary, currentcolor)));
+	--_dot--active-color: var(--matter-carousel-dots--active-color, var(--wp--custom--matter-carousel-dots--active-color, var(--wp--preset--color--accent-secondary, #7378cc)));
+	--_dot--border-radius: var(--matter-carousel-dots--border-radius, var(--wp--custom--matter-carousel-dots--border-radius, 50%));
+
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--_dot--gap);
+	justify-content: center;
+	margin-top: var(--_dot--gap);
+
+	.embla__dot {
+		align-items: center;
+		appearance: none;
+		background-color: var(--_dot--color);
+		border: 0;
+		border-radius: var(--_dot--border-radius);
+		cursor: pointer;
+		display: flex;
+		height: var(--_dot--size);
+		justify-content: center;
+		margin: 0;
+		padding: 0;
+		text-decoration: none;
+		touch-action: manipulation;
+		width: var(--_dot--size);
+	}
+
+	.embla__dot--selected {
+		background-color: var(--_dot--active-color);
+	}
+}

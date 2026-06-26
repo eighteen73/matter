@@ -1,0 +1,22 @@
+{
+	"xs": {
+		"label": "XS",
+		"value": "480px"
+	},
+	"sm": {
+		"label": "SM",
+		"value": "640px"
+	},
+	"md": {
+		"label": "MD",
+		"value": "768px"
+	},
+	"lg": {
+		"label": "LG",
+		"value": "1024px"
+	},
+	"xl": {
+		"label": "XL",
+		"value": "1280px"
+	}
+}

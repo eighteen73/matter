@@ -1,0 +1,47 @@
+.wp-block-matter-collapsible-content {
+	--_transition-duration: var(--matter-collapsible-content--transition-duration, var(--wp--custom--matter-collapsible-content--transition-duration, 300ms));
+
+	@media (prefers-reduced-motion: reduce) {
+		--_transition-duration: 0ms;
+	}
+
+	.is-type-popover & {
+		left: 0;
+		opacity: 0;
+		position: absolute;
+		top: 100%;
+		transition: opacity var(--_transition-duration) ease-in-out, visibility var(--_transition-duration) ease-in-out;
+		visibility: hidden;
+		z-index: 50;
+	}
+
+	.is-type-inline & {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--_transition-duration) ease-in-out, padding-block var(--_transition-duration) ease-in-out;
+
+		&__container {
+			overflow: hidden;
+		}
+	}
+
+	.is-type-inline:not(.is-open) & {
+		padding-block: 0 !important; // stylelint-disable-line declaration-no-important -- Required so content takes up no space when closed.
+	}
+
+	&__container {
+		> :first-child {
+			margin-top: 0;
+		}
+
+		> :last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	.is-open & {
+		grid-template-rows: 1fr;
+		opacity: 1;
+		visibility: visible;
+	}
+}

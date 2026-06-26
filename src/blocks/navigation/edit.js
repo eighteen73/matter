@@ -1,66 +1,266 @@
 import {
-	InnerBlocks,
+	BlockControls,
 	InspectorControls,
+	useBlockEditContext,
 	useBlockProps,
-	useInnerBlocksProps,
 } from '@wordpress/block-editor';
+import { useEntityRecords } from '@wordpress/core-data';
 import {
-	EntityProvider,
-	useEntityBlockEditor,
-	useEntityRecords,
-} from '@wordpress/core-data';
-import { SelectControl, PanelBody, Spinner } from '@wordpress/components';
-import { __, sprintf } from '@wordpress/i18n';
+	ExternalLink,
+	SelectControl,
+	Spinner,
+	ToggleControl,
+	ToolbarButton,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
+import {
+	createInterpolateElement,
+	useEffect,
+	useMemo,
+	useRef,
+} from '@wordpress/element';
+import { useServerSideRender } from '@wordpress/server-side-render';
+import { __ } from '@wordpress/i18n';
 
-function getMenuTitle(menu) {
-	const renderedTitle = menu?.title?.rendered;
+import ColorControl from '../../components/color-control';
+import { getBlockStyles } from '../../utils/block-styles';
+import { storeColorValue } from '../../utils/colors';
+import { getMenuTitle } from '../../utils/navigation-menu-title';
 
-	if (typeof renderedTitle === 'string' && renderedTitle.length) {
-		return renderedTitle;
+/**
+ * Extract menu list markup from the editor SSR response.
+ *
+ * Core layout support adds classes to the first tag in rendered block HTML.
+ * We wrap the list in a throwaway div server-side so layout classes stay off the ul.
+ *
+ * @param {string} html Server-rendered block HTML.
+ * @return {string} List markup for the nav wrapper.
+ */
+function extractNavigationListMarkup(html) {
+	if (!html) {
+		return '';
 	}
 
-	return sprintf(
-		/* translators: %d: menu ID. */
-		__('Menu #%d', 'eighteen73-blocks'),
-		menu?.id || 0
+	const match = html.match(
+		/<ul\s+class="wp-block-matter-navigation__items"[^>]*>[\s\S]*<\/ul>/
 	);
+
+	return match ? match[0] : html;
 }
 
-const ALLOWED_BLOCKS = [
-	'core/navigation-link',
-	'core/navigation-submenu',
-	'core/page-list',
-	'core/search',
-	'core/social-links',
-	'core/spacer',
-	'core/buttons',
-];
+function useEditorPreviewInteractions(containerRef, options) {
+	const { type, submenuOpensOnClick, previewSignature } = options;
 
-function EditableNavigationEntityBlocks() {
-	const [blocks, onInput, onChange] = useEntityBlockEditor(
-		'postType',
-		'wp_navigation'
-	);
+	useEffect(() => {
+		const container = containerRef.current;
 
-	const innerBlocksProps = useInnerBlocksProps(
-		{
-			className: 'wp-block-eighteen73-navigation__container',
-		},
-		{
-			value: blocks,
-			onInput,
-			onChange,
-			allowedBlocks: ALLOWED_BLOCKS,
-			renderAppender: InnerBlocks.ButtonBlockAppender,
+		if (!container) {
+			return undefined;
 		}
-	);
 
-	return <div {...innerBlocksProps} />;
+		const setSubmenuOpen = (menuItem, isOpen) => {
+			if (!menuItem) {
+				return;
+			}
+
+			menuItem.classList.toggle('has-open-submenu', isOpen);
+
+			const toggle = menuItem.querySelector(
+				'.wp-block-matter-navigation__submenu-toggle'
+			);
+			const submenu = menuItem.querySelector(
+				'.wp-block-matter-navigation__submenu'
+			);
+
+			if (toggle) {
+				toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+			}
+
+			if (submenu) {
+				submenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+			}
+		};
+
+		const closeAllSubmenus = () => {
+			container
+				.querySelectorAll('.wp-block-navigation-item.has-child')
+				.forEach((menuItem) => {
+					setSubmenuOpen(menuItem, false);
+				});
+		};
+
+		closeAllSubmenus();
+
+		const handleClick = (event) => {
+			const target = event.target;
+
+			if (!target || target.nodeType !== 1) {
+				return;
+			}
+
+			const link = target.closest(
+				'.wp-block-navigation-item__content, .wp-block-matter-navigation__view-all'
+			);
+			if (link) {
+				event.preventDefault();
+			}
+
+			const toggle = target.closest(
+				'.wp-block-matter-navigation__submenu-toggle'
+			);
+			if (toggle) {
+				event.preventDefault();
+				const menuItem = toggle.closest(
+					'.wp-block-navigation-item.has-child'
+				);
+
+				if (!menuItem) {
+					return;
+				}
+
+				setSubmenuOpen(
+					menuItem,
+					!menuItem.classList.contains('has-open-submenu')
+				);
+				return;
+			}
+
+			const backButton = target.closest(
+				'.wp-block-matter-navigation__back'
+			);
+			if (!backButton) {
+				return;
+			}
+
+			event.preventDefault();
+			const submenu = backButton.closest(
+				'.wp-block-matter-navigation__submenu'
+			);
+
+			if (!submenu) {
+				return;
+			}
+
+			const menuItem = submenu.closest(
+				'.wp-block-navigation-item.has-child'
+			);
+			setSubmenuOpen(menuItem, false);
+		};
+
+		const shouldUseHover = type === 'simple' && !submenuOpensOnClick;
+
+		const handleMouseOver = (event) => {
+			if (
+				!shouldUseHover ||
+				!event.target ||
+				event.target.nodeType !== 1
+			) {
+				return;
+			}
+
+			const menuItem = event.target.closest(
+				'.wp-block-navigation-item.has-child'
+			);
+
+			if (!menuItem || !container.contains(menuItem)) {
+				return;
+			}
+
+			if (
+				event.relatedTarget &&
+				event.relatedTarget.nodeType === 1 &&
+				menuItem.contains(event.relatedTarget)
+			) {
+				return;
+			}
+
+			setSubmenuOpen(menuItem, true);
+		};
+
+		const handleMouseOut = (event) => {
+			if (
+				!shouldUseHover ||
+				!event.target ||
+				event.target.nodeType !== 1
+			) {
+				return;
+			}
+
+			const menuItem = event.target.closest(
+				'.wp-block-navigation-item.has-child'
+			);
+
+			if (!menuItem || !container.contains(menuItem)) {
+				return;
+			}
+
+			if (
+				event.relatedTarget &&
+				event.relatedTarget.nodeType === 1 &&
+				menuItem.contains(event.relatedTarget)
+			) {
+				return;
+			}
+
+			setSubmenuOpen(menuItem, false);
+		};
+
+		container.addEventListener('click', handleClick);
+		container.addEventListener('mouseover', handleMouseOver);
+		container.addEventListener('mouseout', handleMouseOut);
+
+		return () => {
+			container.removeEventListener('click', handleClick);
+			container.removeEventListener('mouseover', handleMouseOver);
+			container.removeEventListener('mouseout', handleMouseOut);
+		};
+	}, [containerRef, previewSignature, submenuOpensOnClick, type]);
 }
 
-export default function Edit({ attributes, setAttributes }) {
-	const { ref, type = 'simple' } = attributes;
-	const blockProps = useBlockProps();
+export default function Edit({ attributes, setAttributes, clientId }) {
+	const {
+		ref,
+		type = 'simple',
+		submenuOpensOnClick,
+		showSubmenuLabel,
+		showSubmenuViewAll,
+		iconColor,
+		accentColor,
+		submenuTextColor,
+		submenuBackgroundColor,
+		backTextColor,
+		backBackgroundColor,
+		submenuIconColor,
+		backIconColor,
+		submenuDividerColor,
+	} = attributes;
+	const { __unstableLayoutClassNames = '' } = useBlockEditContext();
+	const previewRef = useRef(null);
+	const customColorStyles = useMemo(
+		() => getBlockStyles(attributes, 'navigation'),
+		[attributes]
+	);
+	const blockProps = useBlockProps({
+		ref: previewRef,
+		style: customColorStyles,
+	});
+	const editorNavClassName = [
+		blockProps.className,
+		__unstableLayoutClassNames,
+		`is-menu-type-${type}`,
+		submenuOpensOnClick
+			? 'is-submenu-opens-on-click'
+			: 'is-submenu-opens-on-hover',
+		type === 'drill-down' && showSubmenuLabel ? 'has-submenu-label' : '',
+		type === 'drill-down' && showSubmenuViewAll
+			? 'has-submenu-view-all'
+			: '',
+	]
+		.filter(Boolean)
+		.join(' ');
 	const { records: menus, hasResolved } = useEntityRecords(
 		'postType',
 		'wp_navigation',
@@ -72,11 +272,14 @@ export default function Edit({ attributes, setAttributes }) {
 			status: ['publish', 'draft'],
 		}
 	);
+	const navigationEditorUrl = ref
+		? `site-editor.php?postType=wp_navigation&postId=${ref}`
+		: 'site-editor.php?postType=wp_navigation';
 
 	const menuOptions = [
 		{
 			value: '0',
-			label: __('Select a menu', 'eighteen73-blocks'),
+			label: __('Select a menu', 'matter'),
 		},
 		...(menus || []).map((menu) => ({
 			value: String(menu.id),
@@ -84,75 +287,424 @@ export default function Edit({ attributes, setAttributes }) {
 		})),
 	];
 	const menuTypeOptions = [
-		{ value: 'simple', label: __('Simple', 'eighteen73-blocks') },
-		{ value: 'accordion', label: __('Accordion', 'eighteen73-blocks') },
-		{ value: 'drill-down', label: __('Drill-down', 'eighteen73-blocks') },
+		{ value: 'simple', label: __('Simple', 'matter') },
+		{ value: 'accordion', label: __('Accordion', 'matter') },
+		{ value: 'drill-down', label: __('Drill-down', 'matter') },
 	];
+	const serverSideAttributes = useMemo(
+		() => ({
+			ref: attributes.ref,
+			type: attributes.type,
+			submenuOpensOnClick: attributes.submenuOpensOnClick,
+			showSubmenuLabel: attributes.showSubmenuLabel,
+			showSubmenuViewAll: attributes.showSubmenuViewAll,
+		}),
+		[
+			attributes.ref,
+			attributes.type,
+			attributes.submenuOpensOnClick,
+			attributes.showSubmenuLabel,
+			attributes.showSubmenuViewAll,
+		]
+	);
+	const { content: serverRenderedPreview = '', status: serverRenderStatus } =
+		useServerSideRender({
+			block: 'matter/navigation',
+			attributes: serverSideAttributes,
+			skipBlockSupportAttributes: true,
+		});
+	const menuListMarkup = useMemo(
+		() => extractNavigationListMarkup(serverRenderedPreview),
+		[serverRenderedPreview]
+	);
+	const hasServerRenderedPreview =
+		typeof menuListMarkup === 'string' && menuListMarkup.length > 0;
+	const previewSignature = useMemo(
+		() =>
+			JSON.stringify({
+				serverSideAttributes,
+				serverRenderedPreview,
+			}),
+		[serverSideAttributes, serverRenderedPreview]
+	);
+
+	useEditorPreviewInteractions(previewRef, {
+		type,
+		submenuOpensOnClick,
+		previewSignature,
+	});
 
 	return (
 		<>
+			{!!ref && (
+				<BlockControls group="block">
+					<ToolbarButton
+						as="a"
+						href={navigationEditorUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						showTooltip
+						label={__('Edit navigation', 'matter')}
+					>
+						{__('Edit navigation', 'matter')}
+					</ToolbarButton>
+				</BlockControls>
+			)}
+
 			<InspectorControls group="settings">
-				<PanelBody title={__('Settings', 'eighteen73-blocks')}>
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() =>
+						setAttributes({
+							ref: 0,
+							type: 'simple',
+							submenuOpensOnClick: false,
+							showSubmenuLabel: false,
+							showSubmenuViewAll: false,
+						})
+					}
+				>
 					{!hasResolved && <Spinner />}
 					{hasResolved && (
+						<ToolsPanelItem
+							label={__('Menu', 'matter')}
+							hasValue={() => !!ref}
+							onDeselect={() => setAttributes({ ref: 0 })}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Menu', 'matter')}
+								help={
+									ref
+										? createInterpolateElement(
+												__(
+													'Edit menu items in the <a>Navigation editor</a>',
+													'matter'
+												),
+												{
+													a: (
+														<ExternalLink
+															href={
+																navigationEditorUrl
+															}
+														/>
+													),
+												}
+											)
+										: __(
+												'Select a navigation menu to display.',
+												'matter'
+											)
+								}
+								options={menuOptions}
+								value={ref}
+								onChange={(value) =>
+									setAttributes({
+										ref: Number(value) || 0,
+									})
+								}
+							/>
+						</ToolsPanelItem>
+					)}
+					<ToolsPanelItem
+						label={__('Menu Type', 'matter')}
+						hasValue={() => type !== 'simple'}
+						onDeselect={() => setAttributes({ type: 'simple' })}
+						isShownByDefault
+						panelId={clientId}
+					>
 						<SelectControl
 							__next40pxDefaultSize
-							label={__('Menu', 'eighteen73-blocks')}
-							options={menuOptions}
-							value={ref}
+							label={__('Menu Type', 'matter')}
+							options={menuTypeOptions}
+							value={type}
 							onChange={(value) =>
 								setAttributes({
-									ref: Number(value) || 0,
+									type: value || 'simple',
 								})
 							}
 						/>
+					</ToolsPanelItem>
+					{!!ref && (
+						<ToolsPanelItem
+							label={__('Open submenus on click', 'matter')}
+							hasValue={() => !!submenuOpensOnClick}
+							onDeselect={() =>
+								setAttributes({ submenuOpensOnClick: false })
+							}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								__nextHasNoMarginBottom
+								label={__('Open submenus on click', 'matter')}
+								help={__(
+									'When disabled, simple menus can open on hover for pointer users.',
+									'matter'
+								)}
+								checked={submenuOpensOnClick}
+								onChange={(value) =>
+									setAttributes({
+										submenuOpensOnClick: !!value,
+									})
+								}
+							/>
+						</ToolsPanelItem>
 					)}
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Menu Type', 'eighteen73-blocks')}
-						options={menuTypeOptions}
-						value={type}
-						onChange={(value) =>
-							setAttributes({
-								type: value || 'simple',
-							})
-						}
-					/>
-				</PanelBody>
+					{type === 'drill-down' && (
+						<>
+							<ToolsPanelItem
+								label={__('Show submenu label', 'matter')}
+								hasValue={() => !!showSubmenuLabel}
+								onDeselect={() =>
+									setAttributes({ showSubmenuLabel: false })
+								}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<ToggleControl
+									__nextHasNoMarginBottom
+									label={__('Show submenu label', 'matter')}
+									help={__(
+										'Display the parent menu item name in the submenu.',
+										'matter'
+									)}
+									checked={showSubmenuLabel}
+									onChange={(value) =>
+										setAttributes({
+											showSubmenuLabel: !!value,
+										})
+									}
+								/>
+							</ToolsPanelItem>
+							<ToolsPanelItem
+								label={__(
+									'Show submenu view all link',
+									'matter'
+								)}
+								hasValue={() => !!showSubmenuViewAll}
+								onDeselect={() =>
+									setAttributes({
+										showSubmenuViewAll: false,
+									})
+								}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<ToggleControl
+									__nextHasNoMarginBottom
+									label={__(
+										'Show submenu view all link',
+										'matter'
+									)}
+									help={__(
+										'Display a link to the parent menu item in the submenu.',
+										'matter'
+									)}
+									checked={showSubmenuViewAll}
+									onChange={(value) =>
+										setAttributes({
+											showSubmenuViewAll: !!value,
+										})
+									}
+								/>
+							</ToolsPanelItem>
+						</>
+					)}
+				</ToolsPanel>
 			</InspectorControls>
 
-			<div {...blockProps}>
-				{!ref && (
-					<p className="wp-block-eighteen73-navigation__empty">
-						{__(
-							'Select a menu from the block settings.',
-							'eighteen73-blocks'
-						)}
-					</p>
-				)}
-				{!!ref && !hasResolved && <Spinner />}
-				{!!ref && hasResolved && (
+			<InspectorControls group="color">
+				<ColorControl
+					label={__('Icon', 'matter')}
+					value={iconColor}
+					attributeName="iconColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							iconColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Accent', 'matter')}
+					value={accentColor}
+					attributeName="accentColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							accentColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Submenu text', 'matter')}
+					value={submenuTextColor}
+					attributeName="submenuTextColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							submenuTextColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Submenu background', 'matter')}
+					value={submenuBackgroundColor}
+					attributeName="submenuBackgroundColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							submenuBackgroundColor: storeColorValue(
+								slug,
+								value
+							),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				<ColorControl
+					label={__('Submenu icon', 'matter')}
+					value={submenuIconColor}
+					attributeName="submenuIconColor"
+					onChange={(value, slug) =>
+						setAttributes({
+							submenuIconColor: storeColorValue(slug, value),
+						})
+					}
+					panelId={clientId}
+				/>
+
+				{type === 'drill-down' && (
 					<>
-						{!ref && (
-							<p className="wp-block-eighteen73-navigation__empty">
-								{__(
-									'The selected menu could not be loaded.',
-									'eighteen73-blocks'
-								)}
-							</p>
-						)}
-						{!!ref && (
-							<EntityProvider
-								kind="postType"
-								type="wp_navigation"
-								id={ref}
-							>
-								<EditableNavigationEntityBlocks />
-							</EntityProvider>
-						)}
+						<ColorControl
+							label={__('Submenu divider', 'matter')}
+							value={submenuDividerColor}
+							attributeName="submenuDividerColor"
+							onChange={(value, slug) =>
+								setAttributes({
+									submenuDividerColor: storeColorValue(
+										slug,
+										value
+									),
+								})
+							}
+							panelId={clientId}
+						/>
+
+						<ColorControl
+							label={__('Back text', 'matter')}
+							value={backTextColor}
+							attributeName="backTextColor"
+							onChange={(value, slug) =>
+								setAttributes({
+									backTextColor: storeColorValue(slug, value),
+								})
+							}
+							panelId={clientId}
+						/>
+
+						<ColorControl
+							label={__('Back background', 'matter')}
+							value={backBackgroundColor}
+							attributeName="backBackgroundColor"
+							onChange={(value, slug) =>
+								setAttributes({
+									backBackgroundColor: storeColorValue(
+										slug,
+										value
+									),
+								})
+							}
+							panelId={clientId}
+						/>
+
+						<ColorControl
+							label={__('Back icon', 'matter')}
+							value={backIconColor}
+							attributeName="backIconColor"
+							onChange={(value, slug) =>
+								setAttributes({
+									backIconColor: storeColorValue(slug, value),
+								})
+							}
+							panelId={clientId}
+						/>
 					</>
 				)}
-			</div>
+			</InspectorControls>
+
+			{!ref && (
+				<nav
+					{...blockProps}
+					className={editorNavClassName || undefined}
+				>
+					<p className="wp-block-matter-navigation__empty">
+						{__('Select a menu from the block settings.', 'matter')}
+					</p>
+				</nav>
+			)}
+			{!!ref && !hasResolved && (
+				<nav
+					{...blockProps}
+					className={editorNavClassName || undefined}
+				>
+					<Spinner />
+				</nav>
+			)}
+			{!!ref && hasResolved && serverRenderStatus === 'loading' && (
+				<nav
+					{...blockProps}
+					className={editorNavClassName || undefined}
+				>
+					<Spinner />
+				</nav>
+			)}
+			{!!ref && hasResolved && serverRenderStatus === 'error' && (
+				<nav
+					{...blockProps}
+					className={editorNavClassName || undefined}
+				>
+					<p className="wp-block-matter-navigation__empty">
+						{__(
+							'The selected menu could not be loaded. Please reselect it from block settings.',
+							'matter'
+						)}
+					</p>
+				</nav>
+			)}
+			{!!ref &&
+				hasResolved &&
+				serverRenderStatus !== 'loading' &&
+				serverRenderStatus !== 'error' &&
+				!hasServerRenderedPreview && (
+					<nav
+						{...blockProps}
+						className={editorNavClassName || undefined}
+					>
+						<p className="wp-block-matter-navigation__empty">
+							{__('This menu has no items yet.', 'matter')}
+						</p>
+					</nav>
+				)}
+			{!!ref &&
+				hasResolved &&
+				serverRenderStatus !== 'loading' &&
+				serverRenderStatus !== 'error' &&
+				hasServerRenderedPreview && (
+					<nav
+						{...blockProps}
+						className={editorNavClassName || undefined}
+						dangerouslySetInnerHTML={{
+							__html: menuListMarkup,
+						}}
+					/>
+				)}
 		</>
 	);
 }

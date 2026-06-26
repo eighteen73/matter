@@ -1,0 +1,151 @@
+@use "../../constants/breakpoints" as bp;
+
+@mixin carousel-controls-hidden {
+	.wp-block-matter-carousel-previous-button,
+	.wp-block-matter-carousel-next-button,
+	.wp-block-matter-carousel-dots,
+	.wp-block-matter-carousel-progress,
+	.wp-block-matter-carousel-thumbs {
+		display: none;
+	}
+}
+
+@mixin carousel-controls-visible {
+	.wp-block-matter-carousel-previous-button,
+	.wp-block-matter-carousel-next-button {
+		display: inline-flex;
+	}
+
+	.wp-block-matter-carousel-dots {
+		display: flex;
+	}
+
+	.wp-block-matter-carousel-progress {
+		display: block;
+	}
+
+	.wp-block-matter-carousel-thumbs {
+		display: block;
+	}
+}
+
+.wp-block-matter-carousel {
+	--_slides-to-show: var(--matter-carousel--slides-to-show, var(--wp--custom--matter-carousel--slides-to-show-base, 1));
+	--_slide--gap: var(--matter-carousel--slide--gap, var(--wp--custom--matter-carousel--slide--gap-base, 0));
+	--_slide--gap-left: var(--matter-carousel--slide--gap-left, var(--wp--custom--matter-carousel--slide--gap-left-base, 0));
+	--_slide--gap-top: var(--matter-carousel--slide--gap-top, var(--wp--custom--matter-carousel--slide--gap-top-base, 0));
+	--_slide--width: calc(100% / var(--_slides-to-show));
+	--_direction: var(--matter-carousel--direction, var(--wp--custom--matter-carousel--direction-base, row));
+	--_container-height: var(--matter-carousel--container-height, var(--wp--custom--matter-carousel--container-height-base, auto));
+
+	&.carousel-disabled {
+		@include carousel-controls-hidden;
+	}
+
+	@each $name, $size in bp.$breakpoints {
+		@media (--#{$name}) {
+			&.carousel-disabled-on-#{$name} {
+				@include carousel-controls-hidden;
+			}
+
+			&.carousel-enabled-on-#{$name} {
+				@include carousel-controls-visible;
+			}
+		}
+	}
+
+	.embla {
+		overflow: hidden;
+		position: relative;
+
+		.embla__viewport {
+			overflow: hidden;
+		}
+
+		.embla__container {
+			flex-direction: var(--_direction);
+			height: var(--_container-height);
+			margin-left: calc(var(--_slide--gap-left) * -1);
+			margin-top: calc(var(--_slide--gap-top) * -1);
+		}
+
+		.embla__container:has(> *:not(.wp-block-query, .wp-block-woocommerce-product-collection)),
+		.wp-block-post-template,
+		.wp-block-woocommerce-product-template {
+			display: flex;
+			touch-action: pan-y pinch-zoom;
+
+			> * {
+				flex: 0 0 var(--_slide--width);
+				margin: 0;
+				min-width: 0;
+				padding-left: var(--_slide--gap-left);
+				padding-top: var(--_slide--gap-top);
+				transform: translate3d(0, 0, 0);
+			}
+		}
+	}
+
+	.wp-block-matter-carousel-next-button,
+	.wp-block-matter-carousel-previous-button {
+		--wp--custom--matter-carousel--button--size: 32px;
+		--wp--custom--matter-carousel--button--icon-size: 50%;
+		--wp--custom--matter-carousel--button--gap: var(--wp--preset--spacing--md, 12px);
+		--wp--custom--matter-carousel--button--background-color: transparent;
+		--wp--custom--matter-carousel--button--border-radius: 50%;
+		--_button-icon-color: var(--matter-carousel--button--icon-color, var(--wp--custom--matter-carousel--button--icon-color, currentcolor));
+
+		align-items: center;
+		appearance: none;
+		background-color: var(--wp--custom--matter-carousel--button--background-color);
+		border: 0;
+		border-radius: var(--wp--custom--matter-carousel--button--border-radius);
+		cursor: pointer;
+		display: inline-flex;
+		height: var(--wp--custom--matter-carousel--button--size);
+		justify-content: center;
+		margin: 0;
+		padding: 0;
+		position: relative;
+		text-decoration: none;
+		touch-action: manipulation;
+		width: var(--wp--custom--matter-carousel--button--size);
+
+		&:where(.has-background) {
+			background-color: var(--wp--style--color--background);
+		}
+
+		&:disabled {
+			opacity: 0.3;
+		}
+
+		.embla__button-label {
+			text-indent: -9999px;
+
+			&::after {
+				background-color: var(--_button-icon-color);
+				border-radius: inherit;
+				content: "";
+				inset: 0;
+				mask-position: center;
+				mask-repeat: no-repeat;
+				mask-size: var(--wp--custom--matter-carousel--button--icon-size);
+				position: absolute;
+			}
+		}
+
+		&:where(.embla__button--previous) {
+			.embla__button-label::after {
+				mask-image: url("../../../assets/svg/arrow-left.svg");
+			}
+		}
+
+		&:where(.embla__button--next) {
+			justify-self: flex-end;
+
+			.embla__button-label::after {
+				mask-image: url("../../../assets/svg/arrow-right.svg");
+			}
+		}
+	}
+}

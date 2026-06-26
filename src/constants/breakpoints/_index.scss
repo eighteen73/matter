@@ -1,0 +1,17 @@
+/// Map of breakpoints.
+/// Keep these values in sync with `../../../config/breakpoints.json` so SCSS
+/// media queries and JS/PHP consumers use the same breakpoint values.
+/// See `src/constants/css-variables-pattern.scss` for the Matter CSS variable pattern.
+$breakpoints: (
+	xs: 480px,
+	sm: 640px,
+	md: 768px,
+	lg: 1024px,
+	xl: 1280px,
+);
+
+/// Generate a min-width and max-width query for each size.
+@each $breakpoint-name, $breakpoint-size in $breakpoints {
+	@custom-media --#{$breakpoint-name} (min-width: #{$breakpoint-size});
+	@custom-media --#{$breakpoint-name}-down (max-width: #{$breakpoint-size - 1});
+}

@@ -1,7 +1,7 @@
 {
-	"name": "eighteen73-blocks",
+	"name": "matter",
 	"version": "0.1.0",
-	"description": "A clean foundation for eighteen73 agency blocks.",
+	"description": "A collections of expertly crafted blocks for WordPress.",
 	"author": "eighteen73",
 	"license": "GPL-2.0-or-later",
 	"keywords": [
@@ -12,24 +12,26 @@
 	"homepage": "https://eighteen73.co.uk",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/eighteen73/eighteen73-blocks.git"
+		"url": "https://github.com/eighteen73/matter.git"
 	},
 	"bugs": {
-		"url": "https://github.com/eighteen73/eighteen73-blocks/issues"
+		"url": "https://github.com/eighteen73/matter/issues"
 	},
 	"devDependencies": {
+		"@10up/block-components": "^1.22.2",
 		"@eighteen73/eslint-config-wordpress": "latest",
 		"@eighteen73/stylelint-config-wordpress": "latest",
-		"@wordpress/browserslist-config": "latest",
-		"@wordpress/prettier-config": "latest",
+		"@humanmade/block-editor-components": "^0.11.0",
+		"@wordpress/browserslist-config": "^6.49.0",
+		"@wordpress/prettier-config": "^4.49.0",
 		"@wordpress/scripts": "latest",
 		"lefthook": "latest",
 		"postcss-preset-env": "latest"
 	},
 	"scripts": {
 		"postinstall": "composer install -o",
-		"start": "wp-scripts start --webpack-copy-php --blocks-manifest",
-		"build": "wp-scripts build --webpack-copy-php --blocks-manifest",
+		"start": "wp-scripts start --webpack-copy-php --blocks-manifest --experimental-modules",
+		"build": "wp-scripts build --webpack-copy-php --blocks-manifest --experimental-modules",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
 		"format": "npm run format:css && npm run format:js && npm run format:php",
@@ -44,6 +46,17 @@
 		"lint:pkg-json": "wp-scripts lint-pkg-json",
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip",
-		"pot": "wp i18n make-pot . languages/eighteen73-blocks.pot --domain=eighteen73-blocks --exclude=node_modules,vendor,.git"
+		"pot": "wp i18n make-pot . languages/matter.pot --domain=matter --exclude=node_modules,vendor,.git"
+	},
+	"dependencies": {
+		"@wordpress/icons": "^15.0.0",
+		"clsx": "^2.1.1",
+		"embla-carousel": "^8.6.0",
+		"embla-carousel-auto-scroll": "^8.6.0",
+		"embla-carousel-autoplay": "^8.6.0",
+		"embla-carousel-class-names": "^8.6.0",
+		"embla-carousel-fade": "^8.6.0",
+		"embla-carousel-react": "^8.6.0",
+		"focus-trap": "^7.6.4"
 	}
 }

@@ -1,0 +1,41 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/tab-panels",
+	"version": "0.1.0",
+	"title": "Tab Panels",
+	"description": "Container for tab panel content in a tabbed interface.",
+	"category": "widgets",
+	"textdomain": "matter",
+	"parent": [ "matter/tabs" ],
+	"allowedBlocks": [ "matter/tab-panel", "core/query" ],
+	"usesContext": [ "matter/tabs-isQueryMode" ],
+	"attributes": {
+		"tabPanelActiveColor": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"anchor": false,
+		"html": false,
+		"reusable": false,
+		"visibility": false,
+		"lock": false,
+		"color": {
+			"background": true,
+			"text": true
+		},
+		"spacing": {
+			"blockGap": false,
+			"padding": true,
+			"margin": true
+		},
+		"__experimentalBorder": {
+			"radius": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}

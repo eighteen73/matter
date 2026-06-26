@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/carousel-viewport",
+	"version": "0.1.0",
+	"title": "Viewport",
+	"category": "design",
+	"icon": "images-alt",
+	"description": "Carousel Viewport",
+	"ancestor": [
+		"matter/carousel"
+	],
+	"supports": {
+		"lock": true
+	},
+	"attributes": {
+		"allowedBlocks": {
+			"type": "array"
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"render": "file:./render.php"
+}

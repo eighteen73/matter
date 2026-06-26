@@ -1,0 +1,41 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/carousel-progress",
+	"version": "0.1.0",
+	"title": "Progress",
+	"category": "design",
+	"icon": "minus",
+	"description": "Shows the progress of the carousel.",
+	"ancestor": [
+		"matter/carousel"
+	],
+	"attributes": {
+		"indicateCurrentPosition": {
+			"type": "boolean",
+			"default": false
+		},
+		"barColor": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"color": {
+			"text": false,
+			"background": true,
+			"gradients": false,
+			"link": false
+		},
+		"dimensions": {
+			"height": true
+		},
+		"__experimentalBorder": {
+			"radius": true
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}

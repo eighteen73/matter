@@ -1,0 +1,63 @@
+.wp-block-matter-modal__content {
+	--_backdrop-color: var(--matter-modal-content--backdrop-color, var(--wp--custom--matter-modal-content--backdrop-color, transparent));
+	--_backdrop-opacity: calc(var(--matter-modal-content--backdrop-opacity, var(--wp--custom--matter-modal-content--backdrop-opacity, 50), 100) / 100);
+	--_backdrop-blur: calc(var(--matter-modal-content--backdrop-blur, var(--wp--custom--matter-modal-content--backdrop-blur, 0)) * 1px);
+	--_backdrop-background: rgb(from var(--_backdrop-color) r g b / var(--_backdrop-opacity));
+	--_width: var(--matter-modal-content--width, var(--wp--custom--matter-modal-content--width, var(--wp--style--global--content-size)));
+	--_height: var(--matter-modal-content--height, var(--wp--custom--matter-modal-content--height, fit-content));
+	--_transition-duration: var(--matter-modal-content--transition-duration, var(--wp--custom--matter-modal-content--transition-duration, 300ms));
+
+	border: unset;
+	height: var(--_height);
+	inset: 0;
+	max-height: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	position: fixed;
+	transition:
+		transform var(--_transition-duration) ease-in-out,
+		overlay var(--_transition-duration) ease-in-out allow-discrete,
+		display var(--_transition-duration) ease-in-out allow-discrete;
+	width: var(--_width);
+	will-change: transform;
+	z-index: 99999; // Above the admin toolbar.
+
+	@media (prefers-reduced-motion: reduce) {
+		--_transition-duration: 0ms;
+	}
+
+	&::backdrop {
+		backdrop-filter: blur(0);
+		background-color: transparent;
+		transition:
+			background-color var(--_transition-duration) ease-in-out,
+			backdrop-filter var(--_transition-duration) ease-in-out,
+			overlay var(--_transition-duration) ease-in-out allow-discrete,
+			display var(--_transition-duration) ease-in-out allow-discrete;
+	}
+
+	&[open]::backdrop {
+		backdrop-filter: blur(var(--_backdrop-blur));
+		background-color: var(--_backdrop-background);
+	}
+
+	&[open] {
+		transform: translate(0, 0);
+	}
+
+	// When a group block is set to stack, allow it to scroll.
+	> .is-vertical {
+		flex-wrap: nowrap;
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
+}
+
+// stylelint-disable-next-line
+@starting-style {
+	.wp-block-matter-modal__content[open]::backdrop {
+		backdrop-filter: blur(0);
+		background-color: transparent;
+	}
+}

@@ -1,0 +1,27 @@
+// CSS variable pattern: see src/constants/css-variables-pattern.scss
+
+.wp-block-matter-carousel-progress {
+	--_progress--background: var(--matter-carousel-progress--background, var(--wp--custom--matter-carousel-progress--background, var(--wp--preset--color--accent-primary, currentcolor)));
+	--_progress--bar: var(--matter-carousel-progress--bar, var(--wp--custom--matter-carousel-progress--bar, var(--wp--preset--color--accent-secondary, #7378cc)));
+	--_progress--height: var(--matter-carousel-progress--height, var(--wp--custom--matter-carousel-progress--height, 10px));
+
+	background-color: var(--_progress--background);
+	height: var(--_progress--height);
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+
+	&.has-background {
+		background-color: var(--wp--style--color--background);
+	}
+
+	.embla__progress__bar {
+		background-color: var(--_progress--bar);
+		bottom: 0;
+		left: -100%;
+		position: absolute;
+		top: 0;
+		transition: transform 200ms ease-out;
+		width: 100%;
+	}
+}
