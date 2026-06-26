@@ -91,9 +91,9 @@ class Registry {
 			 * Allow blocks to be conditionally registered.
 			 *
 			 * Usage:
-			 * add_filter( 'eighteen73_blocks_register_{$block_slug}', function( $should_register, $block_folder ) { ... }, 10, 2 );
+			 * add_filter( 'matter_register_{$block_slug}', function( $should_register, $block_folder ) { ... }, 10, 2 );
 			 */
-			$should_register = apply_filters( "eighteen73_blocks_register_{$block_slug}", true, $block_folder );
+			$should_register = apply_filters( "matter_register_{$block_slug}", true, $block_folder );
 
 			if ( ! $should_register ) {
 				continue;
