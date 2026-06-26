@@ -22,9 +22,9 @@
 		"@eighteen73/eslint-config-wordpress": "latest",
 		"@eighteen73/stylelint-config-wordpress": "latest",
 		"@humanmade/block-editor-components": "^0.11.0",
-		"@wordpress/browserslist-config": "latest",
-		"@wordpress/prettier-config": "latest",
-		"@wordpress/scripts": "^31.1.0",
+		"@wordpress/browserslist-config": "^6.49.0",
+		"@wordpress/prettier-config": "^4.49.0",
+		"@wordpress/scripts": "latest",
 		"lefthook": "latest",
 		"postcss-preset-env": "latest"
 	},
@@ -49,7 +49,7 @@
 		"pot": "wp i18n make-pot . languages/matter.pot --domain=matter --exclude=node_modules,vendor,.git"
 	},
 	"dependencies": {
-		"@wordpress/icons": "^13.1.0",
+		"@wordpress/icons": "^15.0.0",
 		"clsx": "^2.1.1",
 		"embla-carousel": "^8.6.0",
 		"embla-carousel-auto-scroll": "^8.6.0",
