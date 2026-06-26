@@ -24,7 +24,7 @@ import {
  * @param {boolean}  props.clearable      Show per-control reset button when set.
  * @param {Object}   props.props          Additional props to pass to ColorGradientSettingsDropdown.
  *
- * @return {JSX.Element} The ColorControl component.
+ * @return {Element} The ColorControl component.
  */
 const ColorControl = ({
 	label,

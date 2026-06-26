@@ -29,7 +29,7 @@ const getSlugFromIndex = (index, presets) => presets[index]?.slug ?? '';
  * @param {string}   props.label    Label for the control.
  * @param {string}   props.value    Current spacing slug value.
  * @param {Function} props.onChange Callback when value changes.
- * @return {JSX.Element} The SpacingControl component.
+ * @return {Element} The SpacingControl component.
  */
 const SpacingControl = ({ label, value, onChange }) => {
 	const [spacingPresets] = useSettings([

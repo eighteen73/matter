@@ -9,13 +9,13 @@ import OverlayTargetOption from './overlay-target-option';
 import { filterOverlayTargetOptions } from '../utils/overlay-targets';
 
 /**
- * @param {Object}   props               Component props.
- * @param {string}   props.value         Selected target ID.
- * @param {Function} props.onChange      Change handler.
- * @param {Array}    props.options       All overlay target options.
- * @param {boolean}  props.isResolving   Whether options are loading.
- * @param {boolean}  props.hasTargets    Whether any targets exist.
- * @param {boolean}  props.showPreviewUnavailableNotice Show preview unavailable notice.
+ * @param {Object}   props                 Component props.
+ * @param {string}   props.value           Selected target ID.
+ * @param {Function} props.onChange        Change handler.
+ * @param {Array}    props.options         All overlay target options.
+ * @param {boolean}  props.isResolving     Whether options are loading.
+ * @param {boolean}  props.hasTargets      Whether any targets exist.
+ * @param {boolean}  props.selectedMissing Whether the selected target is missing.
  * @return {Element} Element to render.
  */
 export default function OverlayTargetControl({
@@ -25,7 +25,6 @@ export default function OverlayTargetControl({
 	isResolving,
 	hasTargets,
 	selectedMissing,
-	showPreviewUnavailableNotice,
 }) {
 	const [filteredOptions, setFilteredOptions] = useState(options);
 	const [filterValue, setFilterValue] = useState('');

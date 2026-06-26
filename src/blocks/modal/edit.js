@@ -104,7 +104,6 @@ const isValidRegex = (pattern) => {
 	}
 
 	try {
-		// eslint-disable-next-line no-new
 		new RegExp(pattern);
 		return true;
 	} catch {

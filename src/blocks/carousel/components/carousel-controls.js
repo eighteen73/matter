@@ -203,6 +203,8 @@ function CarouselFields({
  * @param {Function} root0.onChangeLayerOption   - The onChangeLayerOption function.
  * @param {Function} root0.onChangeLayerAutoplay - The onChangeLayerAutoplay function.
  * @param {Function} root0.onResetLayer          - The onResetLayer function.
+ * @param {Object}   root0.emblaConfig           - The embla config.
+ * @param {Function} root0.setAttributes         - The setAttributes function.
  */
 export default function CarouselControls({
 	baseOptions,

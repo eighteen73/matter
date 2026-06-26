@@ -8,7 +8,6 @@ import {
 	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { PanelBody } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';

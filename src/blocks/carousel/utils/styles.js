@@ -98,6 +98,7 @@ function getResolvedValues({ slidesToShow, axis, slideGap }) {
 /**
  * Build CSS rules from resolved breakpoint values.
  *
+ * @param {Object} params                  Params object.
  * @param {string} params.selector         CSS selector.
  * @param {Object} params.resolvedValues   Resolved values by breakpoint.
  * @param {Object} params.breakpointConfig Breakpoint config.

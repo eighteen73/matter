@@ -151,13 +151,12 @@ export const prepareEmblaBlockState = ({
 /**
  * Register ClassNames plus Autoplay and AutoScroll (mutually exclusive via
  * `active` / per-breakpoint `type`) so responsive autoplay type can switch.
- * @param {Object}  pluginState                 - The plugin state.
- * @param {boolean} [pluginState.forceInactive] - The force inactive flag.
+ * @param {Object}  pluginState             - The plugin state.
+ * @param {Object}  [options]               - Build options.
+ * @param {boolean} [options.forceInactive] - The force inactive flag.
  */
-export const buildEmblaPlugins = (
-	pluginState,
-	{ forceInactive = false } = {}
-) => {
+export const buildEmblaPlugins = (pluginState, options = {}) => {
+	const { forceInactive = false } = options;
 	const plugins = [ClassNames()];
 	const autoplay = isPlainObject(pluginState?.autoplay)
 		? pluginState.autoplay

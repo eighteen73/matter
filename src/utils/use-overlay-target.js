@@ -6,17 +6,14 @@ import { useMemo } from '@wordpress/element';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { useDispatch, useSelect } from '@wordpress/data';
 
-import {
-	OVERLAY_BLOCK_TYPES,
-	OVERLAY_CONTEXT_KEYS,
-} from './overlay-targets';
+import { OVERLAY_BLOCK_TYPES, OVERLAY_CONTEXT_KEYS } from './overlay-targets';
 import useOverlayTargets from './use-overlay-targets';
 
 /**
- * @param {Object}   params               Hook params.
- * @param {Object}   params.context       Block context.
- * @param {Object}   params.attributes    Block attributes.
- * @param {string}   params.clientId      Block client ID.
+ * @param {Object} params            Hook params.
+ * @param {Object} params.context    Block context.
+ * @param {Object} params.attributes Block attributes.
+ * @param {string} params.clientId   Block client ID.
  * @return {Object} Overlay target state and actions.
  */
 export default function useOverlayTarget({ context, attributes, clientId }) {
@@ -32,8 +29,11 @@ export default function useOverlayTarget({ context, attributes, clientId }) {
 	const externalTarget = findTargetById(attributes.targetId);
 	const remoteClientId = externalTarget?.clientId;
 
-	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent, selectBlock } =
-		useDispatch(blockEditorStore);
+	const {
+		updateBlockAttributes,
+		__unstableMarkNextChangeAsNotPersistent,
+		selectBlock,
+	} = useDispatch(blockEditorStore);
 
 	const { parentClientId, parentAttributes, remoteAttributes } = useSelect(
 		(select) => {
@@ -50,7 +50,7 @@ export default function useOverlayTarget({ context, attributes, clientId }) {
 					: {},
 			};
 		},
-		[clientId, attributes.targetId, remoteClientId]
+		[clientId, remoteClientId]
 	);
 
 	const previewClientId = isNested ? parentClientId : remoteClientId;

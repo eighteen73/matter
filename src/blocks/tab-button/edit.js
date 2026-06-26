@@ -31,13 +31,12 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				select(blockEditorStore);
 
 			const tabListClientId = getBlockRootClientId(clientId);
-			const tabsClientId = tabListClientId
-				? getBlockRootClientId(tabListClientId)
-				: null;
 
 			return {
 				blockIndex: getBlockIndex(clientId),
-				tabsClientId,
+				tabsClientId: tabListClientId
+					? getBlockRootClientId(tabListClientId)
+					: null,
 			};
 		},
 		[clientId]

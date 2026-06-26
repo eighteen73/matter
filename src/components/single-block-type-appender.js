@@ -12,8 +12,8 @@ import { compose } from '@wordpress/compose';
  * @param {Object}       props
  * @param {Function}     props.onClick
  * @param {Function}     props.onClickAfter
- * @param {string|null}  props.clientId         Parent block to insert into.
- * @param {string|Array} props.allowedBlock     Block name (or array with one name).
+ * @param {string|null}  props.clientId        Parent block to insert into.
+ * @param {string|Array} props.allowedBlock    Block name (or array with one name).
  * @param {Object}       props.blockAttributes Attributes for the new block.
  * @param {boolean}      props.isEnabled
  */

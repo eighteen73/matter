@@ -3,7 +3,6 @@
  */
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
-	PanelBody,
 	ToggleControl,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,

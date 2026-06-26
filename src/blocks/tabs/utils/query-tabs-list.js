@@ -90,9 +90,9 @@ export function getQueryPostsForEditor(queryAttributes, select) {
 /**
  * Build tabs list entries from query post records for the editor.
  *
- * @param {Array<Object>} posts   Post entity records.
- * @param {string}        tabsId  Tabs block anchor or fallback ID.
- * @return {Array<Object>} Tabs list context entries.
+ * @param {Array<Object>} posts  Post entity records.
+ * @param {string}        tabsId Tabs block anchor or fallback ID.
+ * @return {Array<Object>}         Tabs list context entries.
  */
 export function buildTabsListFromPosts(posts, tabsId) {
 	const baseId = tabsId || 'tabs';
@@ -102,7 +102,7 @@ export function buildTabsListFromPosts(posts, tabsId) {
 		const title =
 			typeof post.title === 'object'
 				? post.title?.rendered
-				: post.title ?? '';
+				: (post.title ?? '');
 
 		return {
 			id: `${baseId}-tab-${postId}`,
@@ -123,24 +123,23 @@ export function buildTabsListFromPosts(posts, tabsId) {
  * @param {Object|null} options.panel  Tab panel block.
  * @param {number}      options.index  Tab index.
  * @param {string}      options.tabsId Tabs block anchor.
- * @return {Object} Tabs list context entry.
+ * @return {Object}                    Tabs list context entry.
  */
 export function buildManualTabEntry({ button, panel, index, tabsId }) {
 	const label = button?.attributes?.label || '';
 	const anchor = panel?.attributes?.anchor;
 	const baseId = tabsId || '';
 
-	const id = anchor
-		? anchor
-		: baseId
-			? `${baseId}-tab-${index}`
-			: `tab-${index}`;
+	let id;
+	if (anchor) {
+		id = anchor;
+	} else if (baseId) {
+		id = `${baseId}-tab-${index}`;
+	} else {
+		id = `tab-${index}`;
+	}
 
-	const deepLinkingId = anchor
-		? anchor
-		: label
-			? cleanForSlug(label)
-			: id;
+	const deepLinkingId = anchor || (label ? cleanForSlug(label) : id);
 
 	return {
 		id,
@@ -156,21 +155,19 @@ export function buildManualTabEntry({ button, panel, index, tabsId }) {
  * Find the core/query block inside tab-panels inner blocks.
  *
  * @param {Array<Object>} innerBlocks Tab panels inner blocks.
- * @return {Object|null} Query block or null.
+ * @return {Object|null}              Query block or null.
  */
 export function findQueryBlock(innerBlocks) {
-	return (
-		innerBlocks?.find((block) => block.name === 'core/query') ?? null
-	);
+	return innerBlocks?.find((block) => block.name === 'core/query') ?? null;
 }
 
 /**
  * Walk up the block tree to find the ancestor matter/tabs block client ID.
  *
- * @param {string} clientId Starting block client ID.
- * @param {Function} getBlock Get block by client ID.
+ * @param {string}   clientId             Starting block client ID.
+ * @param {Function} getBlock             Get block by client ID.
  * @param {Function} getBlockRootClientId Get parent client ID.
- * @return {string|null} Tabs block client ID.
+ * @return {string|null}                  Tabs block client ID.
  */
 export function findTabsClientId(clientId, getBlock, getBlockRootClientId) {
 	let currentId = clientId;
@@ -191,10 +188,10 @@ export function findTabsClientId(clientId, getBlock, getBlockRootClientId) {
 /**
  * Walk up the block tree to find the ancestor matter/tab-panels block client ID.
  *
- * @param {string} clientId Starting block client ID.
- * @param {Function} getBlock Get block by client ID.
+ * @param {string}   clientId             Starting block client ID.
+ * @param {Function} getBlock             Get block by client ID.
  * @param {Function} getBlockRootClientId Get parent client ID.
- * @return {string|null} Tab panels block client ID.
+ * @return {string|null}                  Tab panels block client ID.
  */
 export function findTabPanelsClientId(
 	clientId,
@@ -219,11 +216,11 @@ export function findTabPanelsClientId(
 /**
  * Get the block index of a tab panel relative to its tab-panels ancestor.
  *
- * @param {string} clientId Tab panel client ID.
- * @param {Function} getBlock Get block by client ID.
+ * @param {string}   clientId             Tab panel client ID.
+ * @param {Function} getBlock             Get block by client ID.
  * @param {Function} getBlockRootClientId Get parent client ID.
- * @param {Function} getBlocks Get inner blocks of a block.
- * @return {number} Tab panel index or 0.
+ * @param {Function} getBlocks            Get inner blocks of a block.
+ * @return {number}                       Tab panel index or 0.
  */
 export function getTabPanelIndex(
 	clientId,

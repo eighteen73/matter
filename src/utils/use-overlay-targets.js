@@ -2,11 +2,14 @@
  * WordPress dependencies
  */
 import { parse } from '@wordpress/blocks';
-import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
-import { store as coreStore } from '@wordpress/core-data';
 import { store as editorStore } from '@wordpress/editor';
-import { useEntityRecord, useEntityRecords } from '@wordpress/core-data';
+import {
+	useEntityRecord,
+	useEntityRecords,
+	useSelect,
+	store as coreStore,
+} from '@wordpress/core-data';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
@@ -35,8 +38,7 @@ export default function useOverlayTargets() {
 		return {
 			blocks: blockEditor.getBlocks(),
 			documentHint:
-				postTypeObject?.labels?.singular_name ||
-				__('Page', 'matter'),
+				postTypeObject?.labels?.singular_name || __('Page', 'matter'),
 			templateId:
 				templateSlug && theme ? `${theme}//${templateSlug}` : null,
 		};
@@ -49,11 +51,7 @@ export default function useOverlayTargets() {
 		});
 
 	const { record: templateRecord, isResolving: isResolvingTemplate } =
-		useEntityRecord(
-			'postType',
-			'wp_template',
-			templateId || undefined
-		);
+		useEntityRecord('postType', 'wp_template', templateId || undefined);
 
 	const { targets, options } = useMemo(() => {
 		const documentTargets = extractOverlayTargetsFromBlocks(blocks, {
@@ -62,7 +60,10 @@ export default function useOverlayTargets() {
 		});
 
 		const templatePartTargets = (templateParts || []).flatMap((part) => {
-			const hint = getEntityTitle(part) || part.slug || __('Template part', 'matter');
+			const hint =
+				getEntityTitle(part) ||
+				part.slug ||
+				__('Template part', 'matter');
 			const content = part?.content?.raw;
 
 			if (!content) {
@@ -83,8 +84,7 @@ export default function useOverlayTargets() {
 			}
 
 			const hint =
-				getEntityTitle(templateRecord) ||
-				__('Template', 'matter');
+				getEntityTitle(templateRecord) || __('Template', 'matter');
 
 			return extractOverlayTargetsFromBlocks(parse(content), {
 				hint,

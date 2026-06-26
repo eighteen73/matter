@@ -56,11 +56,7 @@ function insertMissingButton({
 	);
 }
 
-function findOrphanButton({
-	tabButtons,
-	prevPanelIds,
-	currentPanelIds,
-}) {
+function findOrphanButton({ tabButtons, prevPanelIds, currentPanelIds }) {
 	const panelClientIds = new Set(currentPanelIds);
 	const removedPanelIds = prevPanelIds.filter(
 		(id) => !currentPanelIds.includes(id)
@@ -100,10 +96,7 @@ function relinkStaleButtons({ tabButtons, tabPanels, updateBlockAttributes }) {
 	tabButtons.forEach((button, index) => {
 		const panel = tabPanels[index];
 
-		if (
-			panel &&
-			button.attributes.tabPanelClientId !== panel.clientId
-		) {
+		if (panel && button.attributes.tabPanelClientId !== panel.clientId) {
 			updateBlockAttributes(button.clientId, {
 				tabPanelClientId: panel.clientId,
 			});

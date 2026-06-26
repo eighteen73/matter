@@ -45,9 +45,9 @@ export const getOverlayTargetIdFromBlock = (block) => {
 };
 
 /**
- * @param {Array}  blocks            Block tree.
- * @param {Object} options           Extraction options.
- * @param {string} options.hint       Source hint for the combobox.
+ * @param {Array}   blocks                   Block tree.
+ * @param {Object}  options                  Extraction options.
+ * @param {string}  options.hint             Source hint for the combobox.
  * @param {boolean} options.includeClientIds Whether to include editor client IDs.
  * @return {Array<Object>} Overlay targets.
  */
