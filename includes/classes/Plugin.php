@@ -9,6 +9,7 @@ namespace Eighteen73\Matter;
 
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
+use Eighteen73\Matter\Icons\Bootstrap;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -29,8 +30,8 @@ class Plugin {
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
 
-		// Register blocks.
 		Registry::instance()->setup();
+		Bootstrap::instance()->setup();
 		Tabs::instance()->setup();
 	}
 

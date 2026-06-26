@@ -1,0 +1,34 @@
+/**
+ * Editor and frontend styles for the Icon block.
+ */
+
+.wp-block-matter-icon {
+	line-height: 0;
+
+	&.aligncenter {
+		display: flex;
+		justify-content: center;
+	}
+
+	svg {
+		box-sizing: border-box;
+		fill: currentColor;
+
+		&.is-flip-horizontal {
+			transform: scaleX(-1);
+		}
+
+		&.is-flip-vertical {
+			transform: scaleY(-1);
+		}
+
+		&.is-flip-horizontal.is-flip-vertical {
+			transform: scaleX(-1) scaleY(-1);
+		}
+	}
+}
+
+:where(.wp-block-matter-icon) svg {
+	width: 100%;
+	height: 100%;
+}
