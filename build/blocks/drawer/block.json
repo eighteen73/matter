@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/drawer",
+  "version": "0.1.0",
+  "title": "Drawer",
+  "keywords": [
+    "drawer",
+    "sidebar"
+  ],
+  "category": "widgets",
+  "description": "An interactive drawer to display content without leaving the page.",
+  "allowedBlocks": [
+    "matter/trigger",
+    "matter/trigger-hamburger",
+    "matter/drawer-content"
+  ],
+  "attributes": {
+    "generatedId": {
+      "type": "string",
+      "default": ""
+    },
+    "targetId": {
+      "type": "string",
+      "default": ""
+    },
+    "editorIsOpen": {
+      "type": "boolean",
+      "default": false,
+      "role": "local"
+    }
+  },
+  "providesContext": {
+    "matter/drawer-id": "targetId",
+    "matter/drawer-is-open": "editorIsOpen"
+  },
+  "supports": {
+    "anchor": true,
+    "html": false,
+    "interactivity": true
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php",
+  "viewScriptModule": "matter/overlay-store"
+}

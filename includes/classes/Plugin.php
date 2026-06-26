@@ -2,10 +2,13 @@
 /**
  * Main plugin class.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks;
+namespace Eighteen73\Matter;
+
+use Eighteen73\Matter\Blocks\Registry;
+use Eighteen73\Matter\Blocks\Tabs;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -25,7 +28,10 @@ class Plugin {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
-		add_action( 'init', [ $this, 'register_blocks' ] );
+
+		// Register blocks.
+		Registry::instance()->setup();
+		Tabs::instance()->setup();
 	}
 
 	/**
@@ -35,9 +41,9 @@ class Plugin {
 	 */
 	public function load_textdomain(): void {
 		load_plugin_textdomain(
-			'eighteen73-blocks',
+			'matter',
 			false,
-			EIGHTEEN73_BLOCKS_PATH . '/languages'
+			MATTER_PATH . '/languages'
 		);
 	}
 
@@ -68,16 +74,4 @@ class Plugin {
 	 * @return void
 	 */
 	public function enqueue_admin_scripts(): void {}
-
-	/**
-	 * Register blocks.
-	 *
-	 * @return void
-	 */
-	public function register_blocks(): void {
-		wp_register_block_types_from_metadata_collection(
-			EIGHTEEN73_BLOCKS_PATH . 'build/blocks',
-			EIGHTEEN73_BLOCKS_PATH . 'build/blocks-manifest.php',
-		);
-	}
 }

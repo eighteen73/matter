@@ -1,0 +1,126 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/navigation",
+  "version": "0.1.0",
+  "title": "Navigation",
+  "category": "theme",
+  "description": "Select and render an existing Navigation menu as a simplified, read-only block.",
+  "attributes": {
+    "ref": {
+      "type": "number",
+      "default": 0
+    },
+    "type": {
+      "type": "string",
+      "default": "simple",
+      "enum": [
+        "simple",
+        "accordion",
+        "drill-down"
+      ]
+    },
+    "submenuOpensOnClick": {
+      "type": "boolean",
+      "default": false
+    },
+    "showSubmenuLabel": {
+      "type": "boolean",
+      "default": false
+    },
+    "showSubmenuViewAll": {
+      "type": "boolean",
+      "default": false
+    },
+    "layout": {
+      "type": "object",
+      "default": {
+        "type": "flex",
+        "orientation": "vertical"
+      }
+    },
+    "iconColor": {
+      "type": "string",
+      "default": ""
+    },
+    "accentColor": {
+      "type": "string",
+      "default": ""
+    },
+    "submenuTextColor": {
+      "type": "string",
+      "default": ""
+    },
+    "submenuBackgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "submenuIconColor": {
+      "type": "string",
+      "default": ""
+    },
+    "backTextColor": {
+      "type": "string",
+      "default": ""
+    },
+    "backBackgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "backIconColor": {
+      "type": "string",
+      "default": ""
+    },
+    "submenuDividerColor": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "interactivity": true,
+    "html": false,
+    "anchor": true,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "lock": false,
+    "layout": {
+      "default": {
+        "type": "flex"
+      },
+      "allowSwitching": false,
+      "allowInheriting": false,
+      "allowVerticalAlignment": true,
+      "allowSizingOnChildren": true
+    },
+    "color": {
+      "text": true,
+      "background": true,
+      "gradients": false,
+      "link": false
+    },
+    "typography": {
+      "textAlign": true,
+      "fontSize": true,
+      "__experimentalDefaultControls": {
+        "fontSize": false
+      }
+    },
+    "spacing": {
+      "blockGap": true,
+      "margin": true,
+      "padding": true,
+      "__experimentalDefaultControls": {
+        "blockGap": false,
+        "margin": false,
+        "padding": false
+      }
+    }
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "viewScriptModule": "file:./view.js",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

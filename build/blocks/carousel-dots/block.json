@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/carousel-dots",
+  "version": "0.1.0",
+  "title": "Dots",
+  "category": "design",
+  "icon": "ellipsis",
+  "description": "Displays pagination dots to navigate between slides.",
+  "ancestor": [
+    "matter/carousel"
+  ],
+  "attributes": {
+    "dotColor": {
+      "type": "string",
+      "default": ""
+    },
+    "dotActiveColor": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "color": {
+      "text": false,
+      "background": true,
+      "gradients": false,
+      "link": false
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "__experimentalDefaultControls": {
+        "margin": true,
+        "padding": true
+      }
+    },
+    "__experimentalBorder": {
+      "radius": true
+    }
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

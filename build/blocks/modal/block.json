@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/modal",
+  "version": "0.1.0",
+  "title": "Modal",
+  "keywords": [
+    "dialog",
+    "modal",
+    "popup"
+  ],
+  "category": "widgets",
+  "description": "An interactive modal dialog to display content without leaving the page.",
+  "allowedBlocks": [
+    "matter/trigger",
+    "matter/trigger-hamburger",
+    "matter/modal-content"
+  ],
+  "attributes": {
+    "generatedId": {
+      "type": "string",
+      "default": ""
+    },
+    "targetId": {
+      "type": "string",
+      "default": ""
+    },
+    "editorIsOpen": {
+      "type": "boolean",
+      "default": false,
+      "role": "local"
+    },
+    "dismissedDuration": {
+      "type": "string"
+    },
+    "triggerOnLoad": {
+      "type": "boolean",
+      "default": false
+    },
+    "triggerDelay": {
+      "type": "string"
+    },
+    "triggerOnScroll": {
+      "type": "boolean",
+      "default": false
+    },
+    "scrollSelector": {
+      "type": "string"
+    },
+    "scrollThreshold": {
+      "type": "string",
+      "default": "10"
+    },
+    "urlTriggers": {
+      "type": "array",
+      "default": []
+    }
+  },
+  "providesContext": {
+    "matter/modal-id": "targetId",
+    "matter/modal-is-open": "editorIsOpen"
+  },
+  "supports": {
+    "anchor": true,
+    "html": false,
+    "interactivity": true
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php",
+  "viewScriptModule": "matter/overlay-store"
+}

@@ -2,10 +2,10 @@
 /**
  * Singleton trait.
  *
- * @package Eighteen73\Blocks
+ * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Blocks;
+namespace Eighteen73\Matter;
 
 trait Singleton {
 
@@ -20,14 +20,14 @@ trait Singleton {
 	 * Cloning is forbidden.
 	 */
 	public function __clone() {
-		_doing_it_wrong( __FUNCTION__, esc_html__( 'Cloning is forbidden.', 'eighteen73-blocks' ), false );
+		_doing_it_wrong( __FUNCTION__, esc_html__( 'Cloning is forbidden.', 'matter' ), false );
 	}
 
 	/**
 	 * Unserializing instances of this class is forbidden.
 	 */
 	public function __wakeup() {
-		_doing_it_wrong( __FUNCTION__, esc_html__( 'Unserializing instances of this class is forbidden.', 'eighteen73-blocks' ), false );
+		_doing_it_wrong( __FUNCTION__, esc_html__( 'Unserializing instances of this class is forbidden.', 'matter' ), false );
 	}
 
 	/**
