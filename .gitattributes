@@ -24,3 +24,4 @@
 /README.md export-ignore
 /tsconfig.json export-ignore
 /webpack.config.js export-ignore
+/eslint.config.mjs export-ignore
