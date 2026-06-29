@@ -3,7 +3,7 @@
         'name' => 'eighteen73/matter',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'b93ca0c5cb6096a05c782e5a20d27ccc965942b1',
+        'reference' => 'ae59be5e2192c6e1cae86a54d66b28f2f84819e0',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'eighteen73/matter' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'b93ca0c5cb6096a05c782e5a20d27ccc965942b1',
+            'reference' => 'ae59be5e2192c6e1cae86a54d66b28f2f84819e0',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

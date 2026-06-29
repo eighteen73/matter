@@ -947,12 +947,19 @@ return array(
 			'lock' => false,
 			'layout' => array(
 				'default' => array(
-					'type' => 'flex'
+					'type' => 'flex',
+					'flexWrap' => 'wrap',
+					'justifyContent' => 'left',
+					'verticalAlignment' => 'center',
+					'orientation' => 'vertical'
 				),
 				'allowSwitching' => false,
 				'allowInheriting' => false,
 				'allowVerticalAlignment' => true,
-				'allowSizingOnChildren' => true
+				'allowSizingOnChildren' => true,
+				'allowOrientation' => true,
+				'allowWrap' => true,
+				'allowJustification' => true
 			),
 			'color' => array(
 				'text' => true,
