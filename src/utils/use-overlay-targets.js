@@ -7,9 +7,9 @@ import { store as editorStore } from '@wordpress/editor';
 import {
 	useEntityRecord,
 	useEntityRecords,
-	useSelect,
 	store as coreStore,
 } from '@wordpress/core-data';
+import { useSelect } from '@wordpress/data';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
