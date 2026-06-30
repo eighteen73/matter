@@ -92,8 +92,9 @@ class Navigation {
 			'<nav %1$s data-wp-interactive="matter/navigation" %2$s data-wp-class--is-touch-enabled="state.isTouchEnabled" data-wp-on--keydown="actions.handleNavKeydown" data-wp-on--focusout="actions.handleNavFocusOut"><ul class="wp-block-matter-navigation__items">%3$s</ul></nav>',
 			get_block_wrapper_attributes(
 				[
-					'class' => implode( ' ', $nav_classes ),
-					'style' => $color_style,
+					'class'      => implode( ' ', $nav_classes ),
+					'style'      => $color_style,
+					'aria-label' => $menu_post->post_title,
 				],
 			),
 			$data_wp_context,
