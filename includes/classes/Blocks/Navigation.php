@@ -168,9 +168,10 @@ class Navigation {
 
 				$item_context          = wp_interactivity_data_wp_context( $item_context_data );
 				$submenu_tabindex_attr = 'drill-down' === $type ? ' tabindex="-1"' : '';
+				$item_classes          = self::get_item_classes( $item_attributes, $children_markup, true );
 
 				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item has-child" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-matter-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-matter-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-matter-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
+					'<li class="%13$s" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-matter-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-matter-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-matter-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
 					$item_context,
 					$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
 					'' !== $url ? $url : '#',
@@ -190,7 +191,8 @@ class Navigation {
 					'drill-down' === $type
 						? self::render_drill_down_submenu_header( $label, $url, $target, $rel_attr )
 						: '',
-					$children_markup
+					$children_markup,
+					esc_attr( $item_classes )
 				);
 				continue;
 			}
@@ -266,14 +268,74 @@ class Navigation {
 			$rel = trim( $rel . ' noopener noreferrer' );
 		}
 
-		$rel_attr = '' !== $rel ? ' rel="' . esc_attr( $rel ) . '"' : '';
+		$rel_attr     = '' !== $rel ? ' rel="' . esc_attr( $rel ) . '"' : '';
+		$item_classes = self::get_item_classes( $item_attributes );
 
 		return sprintf(
-			'<li class="wp-block-navigation-item"><a class="wp-block-navigation-item__content" href="%1$s"%2$s%3$s>%4$s</a></li>',
+			'<li class="%5$s"><a class="wp-block-navigation-item__content" href="%1$s"%2$s%3$s>%4$s</a></li>',
 			'' !== $url ? $url : '#',
 			$target,
 			$rel_attr,
-			esc_html( $label )
+			esc_html( $label ),
+			esc_attr( $item_classes )
 		);
+	}
+
+	/**
+	 * Determine whether a navigation item matches the current request.
+	 *
+	 * Mirrors core navigation-link and navigation-submenu render logic.
+	 *
+	 * @param array<string, mixed> $attributes Item attributes.
+	 * @return bool
+	 */
+	private static function is_navigation_item_active( array $attributes ): bool {
+		$kind           = empty( $attributes['kind'] ) ? 'post_type' : str_replace( '-', '_', (string) $attributes['kind'] );
+		$queried_object = get_queried_object();
+
+		$is_active = ! empty( $attributes['id'] )
+			&& get_queried_object_id() === (int) $attributes['id']
+			&& is_object( $queried_object )
+			&& ! empty( $queried_object->$kind );
+
+		if ( is_post_type_archive() && ! empty( $attributes['url'] ) ) {
+			$queried_object_for_archive = get_queried_object();
+
+			if ( $queried_object_for_archive instanceof \WP_Post_Type ) {
+				$queried_archive_link = get_post_type_archive_link( $queried_object_for_archive->name );
+
+				if ( false !== $queried_archive_link && $attributes['url'] === $queried_archive_link ) {
+					$is_active = true;
+				}
+			}
+		}
+
+		return $is_active;
+	}
+
+	/**
+	 * Build navigation item class list matching core navigation link/submenu behavior.
+	 *
+	 * @param array<string, mixed> $item_attributes Item attributes.
+	 * @param string               $children_markup Rendered child items markup.
+	 * @param bool                 $has_child       Whether the item has a submenu.
+	 * @return string
+	 */
+	private static function get_item_classes( array $item_attributes, string $children_markup = '', bool $has_child = false ): string {
+		$classes = [ 'wp-block-navigation-item' ];
+
+		if ( $has_child ) {
+			$classes[] = 'has-child';
+		}
+
+		if ( self::is_navigation_item_active( $item_attributes ) ) {
+			$classes[] = 'current-menu-item';
+		}
+
+		if ( '' !== $children_markup && str_contains( $children_markup, 'current-menu-item' ) ) {
+			$classes[] = 'current-menu-ancestor';
+		}
+
+		return implode( ' ', $classes );
 	}
 }
