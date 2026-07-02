@@ -270,14 +270,16 @@ class Navigation {
 
 		$rel_attr     = '' !== $rel ? ' rel="' . esc_attr( $rel ) . '"' : '';
 		$item_classes = self::get_item_classes( $item_attributes );
+		$aria_current = self::is_navigation_item_active( $item_attributes ) ? ' aria-current="page"' : '';
 
 		return sprintf(
-			'<li class="%5$s"><a class="wp-block-navigation-item__content" href="%1$s"%2$s%3$s>%4$s</a></li>',
+			'<li class="%5$s"><a class="wp-block-navigation-item__content" href="%1$s"%2$s%3$s %6$s>%4$s</a></li>',
 			'' !== $url ? $url : '#',
 			$target,
 			$rel_attr,
 			esc_html( $label ),
-			esc_attr( $item_classes )
+			esc_attr( $item_classes ),
+			$aria_current
 		);
 	}
 
