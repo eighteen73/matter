@@ -3,8 +3,8 @@
  * Plugin Name:       Matter
  * Plugin URI:        https://eighteen73.co.uk
  * Update URI:        https://eighteen73.co.uk
- * Description:       A collections of expertly crafted blocks for WordPress.
- * Version:           0.1.4
+ * Description:       A collection of expertly crafted blocks for WordPress.
+ * Version:           0.1.5
  * Requires at least: 6.8
  * Requires PHP:      7.4
  * Requires Plugins:
