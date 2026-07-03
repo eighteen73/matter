@@ -53,6 +53,57 @@ const focusTrigger = (id) => {
 	document.querySelector(`[aria-controls="${id}"]`)?.focus();
 };
 
+/**
+ * Initialise Gravity Forms inside a dialog once it becomes visible.
+ *
+ * Forms rendered inside a closed <dialog> are hidden on load. GF's visibility
+ * observer does not react to the dialog open attribute, so submission handlers
+ * are never bound until we trigger post-render manually.
+ *
+ * @param {HTMLDialogElement|null} dialogElement Dialog element.
+ * @return {void}
+ */
+const initGravityFormsInDialog = (dialogElement) => {
+	if (!dialogElement) {
+		return;
+	}
+
+	const triggerPostRender = () => {
+		if (!window.gform?.core?.triggerPostRenderEvents) {
+			return;
+		}
+
+		dialogElement
+			.querySelectorAll('[id^="gform_wrapper_"]')
+			.forEach((wrapper) => {
+				const formId = Number.parseInt(
+					wrapper.id.replace('gform_wrapper_', ''),
+					10
+				);
+
+				if (!formId) {
+					return;
+				}
+
+				const pageInput = wrapper.querySelector(
+					'input[name="gform_source_page_number"]'
+				);
+				const currentPage = pageInput
+					? Number.parseInt(pageInput.value, 10) || 1
+					: 1;
+
+				window.gform.core.triggerPostRenderEvents(formId, currentPage);
+			});
+	};
+
+	if (window.gform?.initializeOnLoaded) {
+		window.gform.initializeOnLoaded(triggerPostRender);
+		return;
+	}
+
+	triggerPostRender();
+};
+
 const getItem = (id) => privateState.items[id];
 
 const canClose = (id) => {
@@ -520,6 +571,7 @@ const { actions: privateActions, state: privateState } = store(
 
 				if (item.isOpen && !dialogElement.open) {
 					dialogElement.showModal();
+					initGravityFormsInDialog(dialogElement);
 					return;
 				}
 
@@ -632,6 +684,7 @@ const publicStore = store(PUBLIC_STORE, {
 
 			if (item.isOpen && !dialogElement.open) {
 				dialogElement.showModal();
+				initGravityFormsInDialog(dialogElement);
 				return;
 			}
 
