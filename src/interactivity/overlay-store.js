@@ -104,6 +104,36 @@ const initGravityFormsInDialog = (dialogElement) => {
 	triggerPostRender();
 };
 
+/**
+ * Runs when the dialog is opened inside syncDialog.
+ *
+ * @param {HTMLDialogElement} dialogElement Dialog element.
+ * @return {void}
+ */
+const whenOpened = (dialogElement) => {
+	if (!dialogElement) {
+		return;
+	}
+
+	dialogElement.addEventListener('DOMContentLoaded', () => {
+		initGravityFormsInDialog(dialogElement);
+	});
+};
+
+/**
+ * Runs when the dialog is closed inside syncDialog.
+ *
+ * @param {HTMLDialogElement} dialogElement Dialog element.
+ * @return {void}
+ */
+const whenClosed = (dialogElement) => {
+	if (!dialogElement) {
+		return;
+	}
+
+	dialogElement.addEventListener('DOMContentLoaded', () => {});
+};
+
 const getItem = (id) => privateState.items[id];
 
 const canClose = (id) => {
@@ -571,12 +601,13 @@ const { actions: privateActions, state: privateState } = store(
 
 				if (item.isOpen && !dialogElement.open) {
 					dialogElement.showModal();
-					initGravityFormsInDialog(dialogElement);
+					whenOpened(dialogElement);
 					return;
 				}
 
 				if (!item.isOpen && dialogElement.open) {
 					dialogElement.close();
+					whenClosed(dialogElement);
 					focusTrigger(id);
 				}
 			},
@@ -684,12 +715,13 @@ const publicStore = store(PUBLIC_STORE, {
 
 			if (item.isOpen && !dialogElement.open) {
 				dialogElement.showModal();
-				initGravityFormsInDialog(dialogElement);
+				whenOpened(dialogElement);
 				return;
 			}
 
 			if (!item.isOpen && dialogElement.open) {
 				dialogElement.close();
+				whenClosed(dialogElement);
 				focusTrigger(id);
 			}
 		},
