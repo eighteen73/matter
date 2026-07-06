@@ -110,7 +110,7 @@ const initGravityFormsInDialog = (dialogElement) => {
  * @param {HTMLDialogElement} dialogElement Dialog element.
  * @return {void}
  */
-const whenOpened = (dialogElement) => {
+const onOpen = (dialogElement) => {
 	if (!dialogElement) {
 		return;
 	}
@@ -126,7 +126,7 @@ const whenOpened = (dialogElement) => {
  * @param {HTMLDialogElement} dialogElement Dialog element.
  * @return {void}
  */
-const whenClosed = (dialogElement) => {
+const onClose = (dialogElement) => {
 	if (!dialogElement) {
 		return;
 	}
@@ -601,13 +601,13 @@ const { actions: privateActions, state: privateState } = store(
 
 				if (item.isOpen && !dialogElement.open) {
 					dialogElement.showModal();
-					whenOpened(dialogElement);
+					onOpen(dialogElement);
 					return;
 				}
 
 				if (!item.isOpen && dialogElement.open) {
 					dialogElement.close();
-					whenClosed(dialogElement);
+					onClose(dialogElement);
 					focusTrigger(id);
 				}
 			},
@@ -715,13 +715,13 @@ const publicStore = store(PUBLIC_STORE, {
 
 			if (item.isOpen && !dialogElement.open) {
 				dialogElement.showModal();
-				whenOpened(dialogElement);
+				onOpen(dialogElement);
 				return;
 			}
 
 			if (!item.isOpen && dialogElement.open) {
 				dialogElement.close();
-				whenClosed(dialogElement);
+				onClose(dialogElement);
 				focusTrigger(id);
 			}
 		},
