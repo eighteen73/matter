@@ -5,6 +5,10 @@ import {
 	withSyncEvent,
 } from '@wordpress/interactivity';
 import { createFocusTrap } from 'focus-trap';
+import {
+	clearSubmenuPositioning,
+	scheduleSubmenuPositioning,
+} from '../../utils/navigation-submenu-positioning';
 
 const SELECTORS = {
 	navigation: '.wp-block-matter-navigation',
@@ -15,7 +19,7 @@ const SELECTORS = {
 	focusableSubmenuItems:
 		'.wp-block-navigation-item__content, .wp-block-matter-navigation__back, .wp-block-matter-navigation__view-all, .wp-block-matter-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
-		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle',
+		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle, :scope > .wp-block-navigation__submenu-items > .is-submenu-label > .wp-block-matter-navigation__submenu > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content',
 };
 
 const CLICK_OPEN_MODE = 'click';
@@ -85,7 +89,7 @@ const getTopLevelControlsForItem = (item) => {
 	const link = getTopLevelLink(item);
 	const toggle = item.querySelector(SELECTORS.toggle);
 
-	if (link && isVisibleElement(link)) {
+	if (link && link.tagName === 'A' && isVisibleElement(link)) {
 		controls.push(link);
 	}
 
@@ -187,7 +191,11 @@ const moveFocusInList = (elements, currentElement, step) => {
 	return true;
 };
 
-const openSubmenu = (context, submenuId, openMode) => {
+const openSubmenu = (context, submenuId, openMode, menuItem = null) => {
+	if (context.menuType === 'simple' && menuItem) {
+		scheduleSubmenuPositioning(menuItem, getNavigationElement(menuItem));
+	}
+
 	if (!context.openSubmenus.includes(submenuId)) {
 		context.openSubmenus = [...context.openSubmenus, submenuId];
 	}
@@ -280,12 +288,25 @@ const closeSubmenu = (context, submenuId, menuItem = null) => {
 	const descendantIds = resolvedMenuItem
 		? getDescendantSubmenuIds(resolvedMenuItem)
 		: [];
+	const navigationElement = getNavigationElement(resolvedMenuItem);
 
 	[...descendantIds].reverse().forEach((id) => {
+		const descendantMenuItem = navigationElement
+			? getMenuItemForSubmenuId(navigationElement, id)
+			: null;
+
+		if (descendantMenuItem) {
+			clearSubmenuPositioning(descendantMenuItem);
+		}
+
 		deactivateTrap(id);
 		removeSubmenu(context, id);
 		delete context.openModes[id];
 	});
+
+	if (resolvedMenuItem) {
+		clearSubmenuPositioning(resolvedMenuItem);
+	}
 
 	deactivateTrap(submenuId);
 	removeSubmenu(context, submenuId);
@@ -500,8 +521,17 @@ const { state } = store(
 				}
 
 				const submenuId = context.submenuId;
+				const { ref } = getElement();
+				const menuItem =
+					ref?.nodeType === 1
+						? ref.closest(SELECTORS.menuItemWithChild)
+						: null;
 
-				openSubmenu(context, submenuId, HOVER_OPEN_MODE);
+				if (!menuItem) {
+					return;
+				}
+
+				openSubmenu(context, submenuId, HOVER_OPEN_MODE, menuItem);
 			},
 			closeSubmenuOnHover: () => {
 				const context = getContext();
@@ -540,7 +570,7 @@ const { state } = store(
 					return;
 				}
 
-				openSubmenu(context, submenuId, CLICK_OPEN_MODE);
+				openSubmenu(context, submenuId, CLICK_OPEN_MODE, menuItem);
 
 				if ('drill-down' === context.menuType && menuItem) {
 					activateDrillDownSubmenuTrap(context, submenuId, menuItem);

@@ -29,6 +29,10 @@ import ColorControl from '../../components/color-control';
 import { getBlockStyles } from '../../utils/block-styles';
 import { storeColorValue } from '../../utils/colors';
 import { getMenuTitle } from '../../utils/navigation-menu-title';
+import {
+	clearSubmenuPositioning,
+	scheduleSubmenuPositioning,
+} from '../../utils/navigation-submenu-positioning';
 
 /**
  * Extract menu list markup from the editor SSR response.
@@ -66,14 +70,21 @@ function useEditorPreviewInteractions(containerRef, options) {
 				return;
 			}
 
-			menuItem.classList.toggle('has-open-submenu', isOpen);
-
 			const toggle = menuItem.querySelector(
 				'.wp-block-matter-navigation__submenu-toggle'
 			);
 			const submenu = menuItem.querySelector(
 				'.wp-block-matter-navigation__submenu'
 			);
+			const navigationElement = menuItem.closest(
+				'.wp-block-matter-navigation'
+			);
+
+			if (type === 'simple' && isOpen) {
+				scheduleSubmenuPositioning(menuItem, navigationElement);
+			}
+
+			menuItem.classList.toggle('has-open-submenu', isOpen);
 
 			if (toggle) {
 				toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -81,12 +92,28 @@ function useEditorPreviewInteractions(containerRef, options) {
 
 			if (submenu) {
 				submenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+				if (isOpen) {
+					submenu.removeAttribute('inert');
+				} else {
+					submenu.inert = true;
+				}
+			}
+
+			if (type !== 'simple') {
+				return;
+			}
+
+			if (!isOpen) {
+				clearSubmenuPositioning(menuItem);
 			}
 		};
 
 		const closeAllSubmenus = () => {
 			container
-				.querySelectorAll('.wp-block-navigation-item.has-child')
+				.querySelectorAll(
+					'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
+				)
 				.forEach((menuItem) => {
 					setSubmenuOpen(menuItem, false);
 				});
@@ -114,7 +141,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			if (toggle) {
 				event.preventDefault();
 				const menuItem = toggle.closest(
-					'.wp-block-navigation-item.has-child'
+					'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
 				);
 
 				if (!menuItem) {
@@ -162,7 +189,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			}
 
 			const menuItem = event.target.closest(
-				'.wp-block-navigation-item.has-child'
+				'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
 			);
 
 			if (!menuItem || !container.contains(menuItem)) {
@@ -190,7 +217,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			}
 
 			const menuItem = event.target.closest(
-				'.wp-block-navigation-item.has-child'
+				'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
 			);
 
 			if (!menuItem || !container.contains(menuItem)) {
