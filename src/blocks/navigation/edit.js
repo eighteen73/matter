@@ -92,6 +92,12 @@ function useEditorPreviewInteractions(containerRef, options) {
 
 			if (submenu) {
 				submenu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+				if (isOpen) {
+					submenu.removeAttribute('inert');
+				} else {
+					submenu.inert = true;
+				}
 			}
 
 			if (type !== 'simple') {
@@ -105,7 +111,9 @@ function useEditorPreviewInteractions(containerRef, options) {
 
 		const closeAllSubmenus = () => {
 			container
-				.querySelectorAll('.wp-block-navigation-item.has-child')
+				.querySelectorAll(
+					'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
+				)
 				.forEach((menuItem) => {
 					setSubmenuOpen(menuItem, false);
 				});
@@ -133,7 +141,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			if (toggle) {
 				event.preventDefault();
 				const menuItem = toggle.closest(
-					'.wp-block-navigation-item.has-child'
+					'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
 				);
 
 				if (!menuItem) {
@@ -181,7 +189,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			}
 
 			const menuItem = event.target.closest(
-				'.wp-block-navigation-item.has-child'
+				'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
 			);
 
 			if (!menuItem || !container.contains(menuItem)) {
@@ -209,7 +217,7 @@ function useEditorPreviewInteractions(containerRef, options) {
 			}
 
 			const menuItem = event.target.closest(
-				'.wp-block-navigation-item.has-child'
+				'.wp-block-navigation-item.has-child:not(.is-submenu-label)'
 			);
 
 			if (!menuItem || !container.contains(menuItem)) {

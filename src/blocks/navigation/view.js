@@ -19,7 +19,7 @@ const SELECTORS = {
 	focusableSubmenuItems:
 		'.wp-block-navigation-item__content, .wp-block-matter-navigation__back, .wp-block-matter-navigation__view-all, .wp-block-matter-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
-		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle',
+		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle, :scope > .wp-block-navigation__submenu-items > .is-submenu-label > .wp-block-matter-navigation__submenu > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content',
 };
 
 const CLICK_OPEN_MODE = 'click';
@@ -89,7 +89,7 @@ const getTopLevelControlsForItem = (item) => {
 	const link = getTopLevelLink(item);
 	const toggle = item.querySelector(SELECTORS.toggle);
 
-	if (link && isVisibleElement(link)) {
+	if (link && link.tagName === 'A' && isVisibleElement(link)) {
 		controls.push(link);
 	}
 

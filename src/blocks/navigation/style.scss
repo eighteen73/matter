@@ -189,7 +189,7 @@
 
 		// Submenu opens on click
 		&.is-submenu-opens-on-click {
-			.has-child > .wp-block-navigation-item__content {
+			.has-child:not(.is-submenu-label) > .wp-block-navigation-item__content {
 				display: none;
 			}
 		}
@@ -293,6 +293,28 @@
 				mask-image: url("../../../assets/svg/caret-right.svg");
 			}
 		}
+
+		// Column label items (nested, non-interactive submenu parents).
+		.is-submenu-label {
+			align-items: flex-start;
+			flex-direction: column;
+
+			> .wp-block-navigation-item__content::after,
+			> .wp-block-matter-navigation__submenu-toggle {
+				display: none;
+			}
+
+			> .wp-block-matter-navigation__submenu {
+				bottom: auto;
+				left: auto;
+				opacity: 1;
+				pointer-events: auto;
+				position: static;
+				right: auto;
+				top: auto;
+				visibility: visible;
+			}
+		}
 	}
 
 	// Accordion menu type
@@ -360,7 +382,7 @@
 		&.is-submenu-opens-on-click {
 
 			// Link - hidden in this context
-			.has-child > .wp-block-navigation-item__content {
+			.has-child:not(.is-submenu-label) > .wp-block-navigation-item__content {
 				display: none;
 			}
 
