@@ -14,7 +14,7 @@
 	// Submenus.
 	--_submenu--gap: var(--matter-navigation--submenu--gap, var(--wp--custom--matter-navigation--submenu--gap, inherit));
 	--_submenu--padding: var(--matter-navigation--submenu--padding, var(--wp--custom--matter-navigation--submenu--padding, var(--wp--preset--spacing--sm, 8px)));
-	--_submenu--item-padding: var(--matter-navigation--submenu--item-padding, var(--wp--custom--matter-navigation--submenu--item-padding, 0px)); //stylelint-disable-line length-zero-no-unit
+	--_submenu--item--padding: var(--matter-navigation--submenu--item--padding, var(--wp--custom--matter-navigation--submenu--item--padding, 0px)); //stylelint-disable-line length-zero-no-unit
 	--_submenu--color: var(--matter-navigation--submenu--color, var(--wp--custom--matter-navigation--submenu--color, inherit));
 	--_submenu--background-color: var(--matter-navigation--submenu--background-color, var(--wp--custom--matter-navigation--submenu--background-color, inherit));
 	--_submenu--icon-color: var(--matter-navigation--submenu--icon-color, var(--wp--custom--matter-navigation--submenu--icon-color, var(--wp--preset--color--contrast, #000)));
@@ -124,7 +124,7 @@
 
 		// Submenu item
 		.wp-block-navigation-item__content {
-			padding: var(--_submenu--item-padding);
+			padding: var(--_submenu--item--padding);
 		}
 	}
 
