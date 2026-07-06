@@ -5,6 +5,10 @@ import {
 	withSyncEvent,
 } from '@wordpress/interactivity';
 import { createFocusTrap } from 'focus-trap';
+import {
+	clearSubmenuPositioning,
+	scheduleSubmenuPositioning,
+} from '../../utils/navigation-submenu-positioning';
 
 const SELECTORS = {
 	navigation: '.wp-block-matter-navigation',
@@ -187,7 +191,11 @@ const moveFocusInList = (elements, currentElement, step) => {
 	return true;
 };
 
-const openSubmenu = (context, submenuId, openMode) => {
+const openSubmenu = (context, submenuId, openMode, menuItem = null) => {
+	if (context.menuType === 'simple' && menuItem) {
+		scheduleSubmenuPositioning(menuItem, getNavigationElement(menuItem));
+	}
+
 	if (!context.openSubmenus.includes(submenuId)) {
 		context.openSubmenus = [...context.openSubmenus, submenuId];
 	}
@@ -280,12 +288,25 @@ const closeSubmenu = (context, submenuId, menuItem = null) => {
 	const descendantIds = resolvedMenuItem
 		? getDescendantSubmenuIds(resolvedMenuItem)
 		: [];
+	const navigationElement = getNavigationElement(resolvedMenuItem);
 
 	[...descendantIds].reverse().forEach((id) => {
+		const descendantMenuItem = navigationElement
+			? getMenuItemForSubmenuId(navigationElement, id)
+			: null;
+
+		if (descendantMenuItem) {
+			clearSubmenuPositioning(descendantMenuItem);
+		}
+
 		deactivateTrap(id);
 		removeSubmenu(context, id);
 		delete context.openModes[id];
 	});
+
+	if (resolvedMenuItem) {
+		clearSubmenuPositioning(resolvedMenuItem);
+	}
 
 	deactivateTrap(submenuId);
 	removeSubmenu(context, submenuId);
@@ -500,8 +521,17 @@ const { state } = store(
 				}
 
 				const submenuId = context.submenuId;
+				const { ref } = getElement();
+				const menuItem =
+					ref?.nodeType === 1
+						? ref.closest(SELECTORS.menuItemWithChild)
+						: null;
 
-				openSubmenu(context, submenuId, HOVER_OPEN_MODE);
+				if (!menuItem) {
+					return;
+				}
+
+				openSubmenu(context, submenuId, HOVER_OPEN_MODE, menuItem);
 			},
 			closeSubmenuOnHover: () => {
 				const context = getContext();
@@ -540,7 +570,7 @@ const { state } = store(
 					return;
 				}
 
-				openSubmenu(context, submenuId, CLICK_OPEN_MODE);
+				openSubmenu(context, submenuId, CLICK_OPEN_MODE, menuItem);
 
 				if ('drill-down' === context.menuType && menuItem) {
 					activateDrillDownSubmenuTrap(context, submenuId, menuItem);
