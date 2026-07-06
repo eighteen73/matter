@@ -109,13 +109,15 @@ class Navigation {
 	 * @param string                           $type Menu type.
 	 * @param bool                             $submenu_opens_on_click Whether submenus open on click.
 	 * @param int                              &$submenu_index Submenu index.
+	 * @param int                              $depth          Current nesting depth.
 	 * @return string
 	 */
 	private static function render_items(
 		array $parsed_blocks,
 		string $type,
 		bool $submenu_opens_on_click,
-		int &$submenu_index
+		int &$submenu_index,
+		int $depth = 0
 	): string {
 		$items_markup = '';
 
@@ -132,7 +134,8 @@ class Navigation {
 				$item_attributes = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
 				$children        = isset( $parsed_block['innerBlocks'] ) && is_array( $parsed_block['innerBlocks'] ) ? $parsed_block['innerBlocks'] : [];
 				$label           = isset( $item_attributes['label'] ) ? wp_strip_all_tags( (string) $item_attributes['label'] ) : '';
-				$url             = isset( $item_attributes['url'] ) ? esc_url( (string) $item_attributes['url'] ) : '';
+				$raw_url         = isset( $item_attributes['url'] ) ? trim( (string) $item_attributes['url'] ) : '';
+				$url             = '' !== $raw_url ? esc_url( $raw_url ) : '';
 				$target          = ! empty( $item_attributes['opensInNewTab'] ) ? ' target="_blank"' : '';
 				$rel             = isset( $item_attributes['rel'] ) ? trim( (string) $item_attributes['rel'] ) : '';
 
@@ -145,7 +148,8 @@ class Navigation {
 					$children,
 					$type,
 					$submenu_opens_on_click,
-					$submenu_index
+					$submenu_index,
+					$depth + 1
 				);
 
 				if ( '' === $children_markup ) {
@@ -155,6 +159,16 @@ class Navigation {
 
 				if ( '' === $label ) {
 					$label = __( 'Untitled menu item', 'matter' );
+				}
+
+				if ( self::is_label_only_parent_url( $raw_url ) && $depth > 0 ) {
+					$items_markup .= sprintf(
+						'<li class="%1$s is-submenu-label">%2$s<div class="wp-block-matter-navigation__submenu"><ul class="wp-block-navigation__submenu-items">%3$s</ul></div></li>',
+						esc_attr( self::get_item_classes( $item_attributes, $children_markup, true ) ),
+						self::render_submenu_parent_content( $raw_url, $label, $target, $rel_attr ),
+						$children_markup
+					);
+					continue;
 				}
 
 				++$submenu_index;
@@ -169,15 +183,13 @@ class Navigation {
 				$item_context          = wp_interactivity_data_wp_context( $item_context_data );
 				$submenu_tabindex_attr = 'drill-down' === $type ? ' tabindex="-1"' : '';
 				$item_classes          = self::get_item_classes( $item_attributes, $children_markup, true );
+				$parent_content        = self::render_submenu_parent_content( $raw_url, $label, $target, $rel_attr );
 
 				$items_markup .= sprintf(
-					'<li class="%13$s" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s><a class="wp-block-navigation-item__content" href="%3$s"%4$s%5$s>%6$s</a><button type="button" class="wp-block-matter-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%7$s" aria-label="%8$s"><span class="wp-block-matter-navigation__submenu-toggle-text">%9$s</span></button><div id="%7$s" class="wp-block-matter-navigation__submenu"%10$s data-wp-bind--aria-hidden="!state.isSubmenuOpen">%11$s<ul class="wp-block-navigation__submenu-items">%12$s</ul></div></li>',
+					'<li class="%9$s" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s>%3$s<button type="button" class="wp-block-matter-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%4$s" aria-label="%5$s"><span class="wp-block-matter-navigation__submenu-toggle-text">%6$s</span></button><div id="%4$s" class="wp-block-matter-navigation__submenu"%7$s inert data-wp-bind--aria-hidden="!state.isSubmenuOpen" data-wp-bind--inert="!state.isSubmenuOpen">%8$s<ul class="wp-block-navigation__submenu-items">%10$s</ul></div></li>',
 					$item_context,
 					$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
-					'' !== $url ? $url : '#',
-					$target,
-					$rel_attr,
-					esc_html( $label ),
+					$parent_content,
 					esc_attr( $submenu_dom_id ),
 					esc_attr(
 						sprintf(
@@ -191,8 +203,8 @@ class Navigation {
 					'drill-down' === $type
 						? self::render_drill_down_submenu_header( $label, $url, $target, $rel_attr )
 						: '',
-					$children_markup,
-					esc_attr( $item_classes )
+					esc_attr( $item_classes ),
+					$children_markup
 				);
 				continue;
 			}
@@ -206,6 +218,62 @@ class Navigation {
 		}
 
 		return $items_markup;
+	}
+
+	/**
+	 * Whether a submenu parent URL is a non-navigating label placeholder.
+	 *
+	 * @param string $url Raw or escaped submenu parent URL.
+	 * @return bool
+	 */
+	private static function is_label_only_parent_url( string $url ): bool {
+		$url = trim( $url );
+
+		if ( '' === $url || '#' === $url ) {
+			return true;
+		}
+
+		$parsed = wp_parse_url( $url );
+
+		// #section and other named fragments are real in-page links.
+		if ( ! empty( $parsed['fragment'] ) ) {
+			return false;
+		}
+
+		// WordPress may persist placeholders as the site URL with a trailing hash.
+		return str_ends_with( $url, '#' );
+	}
+
+	/**
+	 * Render submenu parent label markup as a link or non-interactive label.
+	 *
+	 * @param string $url      Raw or escaped submenu parent URL.
+	 * @param string $label    Parent menu item label.
+	 * @param string $target   Parent menu item target attribute.
+	 * @param string $rel_attr Parent menu item rel attribute.
+	 * @return string
+	 */
+	private static function render_submenu_parent_content( string $url, string $label, string $target, string $rel_attr ): string {
+		$class = 'wp-block-navigation-item__content';
+
+		if ( self::is_label_only_parent_url( $url ) ) {
+			return sprintf(
+				'<span class="%1$s">%2$s</span>',
+				esc_attr( $class ),
+				esc_html( $label )
+			);
+		}
+
+		$href = esc_url( $url );
+
+		return sprintf(
+			'<a class="%1$s" href="%2$s"%3$s%4$s>%5$s</a>',
+			esc_attr( $class ),
+			$href,
+			$target,
+			$rel_attr,
+			esc_html( $label )
+		);
 	}
 
 	/**
