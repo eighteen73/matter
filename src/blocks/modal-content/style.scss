@@ -61,3 +61,11 @@
 		background-color: transparent;
 	}
 }
+
+.is-modal-group-navigating {
+	.wp-block-matter-modal__content,
+	.wp-block-matter-modal__content::backdrop {
+		// stylelint-disable-next-line declaration-no-important
+		transition: none !important;
+	}
+}
