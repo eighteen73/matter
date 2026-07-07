@@ -708,7 +708,9 @@ return array(
 		),
 		'usesContext' => array(
 			'matter/drawer-id',
-			'matter/drawer-is-open'
+			'matter/drawer-is-open',
+			'postId',
+			'queryId'
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
@@ -869,7 +871,9 @@ return array(
 		),
 		'usesContext' => array(
 			'matter/modal-id',
-			'matter/modal-is-open'
+			'matter/modal-is-open',
+			'postId',
+			'queryId'
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',

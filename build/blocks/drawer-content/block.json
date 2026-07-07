@@ -95,7 +95,9 @@
   },
   "usesContext": [
     "matter/drawer-id",
-    "matter/drawer-is-open"
+    "matter/drawer-is-open",
+    "postId",
+    "queryId"
   ],
   "textdomain": "matter",
   "editorScript": "file:./index.js",

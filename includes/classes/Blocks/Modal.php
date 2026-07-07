@@ -55,7 +55,7 @@ class Modal {
 			return sanitize_title( (string) $attributes['groupId'] );
 		}
 
-		if ( ! empty( $context['postId'] ) ) {
+		if ( Overlay::is_query_loop_context( $context ) ) {
 			return $base_id;
 		}
 
