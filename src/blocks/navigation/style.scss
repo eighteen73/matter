@@ -54,10 +54,10 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+	}
 
-		.is-content-justification-space-between > & {
-			flex-grow: 1;
-		}
+	&:where(.is-content-justification-space-between) > .wp-block-matter-navigation__items {
+		flex-grow: 1;
 	}
 
 	// Navigation item
