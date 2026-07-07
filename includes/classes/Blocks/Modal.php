@@ -15,6 +15,17 @@ defined( 'ABSPATH' ) || exit;
 class Modal {
 
 	/**
+	 * Resolve the modal ID from block attributes and context.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array<string, mixed> $context    Block context.
+	 * @return string
+	 */
+	public static function resolve_id( array $attributes, array $context = [] ): string {
+		return Overlay::resolve_id( $attributes, $context, 'matter-modal-' );
+	}
+
+	/**
 	 * Sanitize URL trigger rules for interactivity state.
 	 *
 	 * @param mixed $url_triggers Raw urlTriggers attribute.

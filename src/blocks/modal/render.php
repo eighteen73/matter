@@ -13,20 +13,8 @@ use Eighteen73\Matter\Blocks\Modal;
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$modal_id         = '';
-
-foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
-	if ( empty( $block_attributes[ $id_attribute ] ) ) {
-		continue;
-	}
-
-	$modal_id = $block_attributes[ $id_attribute ];
-	break;
-}
-
-if ( empty( $modal_id ) ) {
-	$modal_id = wp_unique_id( 'matter-modal-' );
-}
+$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
+$modal_id         = Modal::resolve_id( $block_attributes, $block_context );
 
 $dismissed_duration = ! empty( $block_attributes['dismissedDuration'] )
 	? sanitize_text_field( (string) $block_attributes['dismissedDuration'] )

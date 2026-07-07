@@ -13,7 +13,8 @@ use Eighteen73\Matter\Blocks\Collapsible;
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$collapsible_id   = Collapsible::resolve_id( $block_attributes );
+$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
+$collapsible_id   = Collapsible::resolve_id( $block_attributes, $block_context );
 $type             = Collapsible::resolve_type( $block_attributes );
 
 Collapsible::register_state( $collapsible_id );
