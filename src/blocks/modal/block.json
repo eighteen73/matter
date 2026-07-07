@@ -52,6 +52,11 @@
 		"matter/modal-id": "targetId",
 		"matter/modal-is-open": "editorIsOpen"
 	},
+	"usesContext": [
+		"postId",
+		"postType",
+		"queryId"
+	],
 	"supports": {
 		"anchor": true,
 		"html": false,

@@ -583,6 +583,14 @@ const { actions: privateActions, state: privateState } = store(
 				event.preventDefault();
 				privateActions.close();
 			}),
+			onKeydownToggle: withSyncEvent((event) => {
+				if (event.key !== 'Enter' && event.key !== ' ') {
+					return;
+				}
+
+				event.preventDefault();
+				privateActions.toggle();
+			}),
 		},
 		callbacks: {
 			onInit: () => {
@@ -694,6 +702,14 @@ const publicStore = store(PUBLIC_STORE, {
 		},
 		closeAll() {
 			privateActions.closeAll();
+		},
+		onKeydownToggle(event) {
+			if (event.key !== 'Enter' && event.key !== ' ') {
+				return;
+			}
+
+			event.preventDefault();
+			privateActions.toggle(resolvePublicId());
 		},
 	},
 	callbacks: {

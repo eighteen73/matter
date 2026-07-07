@@ -12,37 +12,25 @@ use Eighteen73\Matter\Blocks\Trigger;
 
 defined( 'ABSPATH' ) || exit;
 
-$target_id  = Trigger::resolve_target_id( $block );
-$tag_markup = isset( $content ) && is_string( $content ) ? $content : '';
+$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
+$target_id        = Trigger::resolve_target_id( $block );
+$tag_markup       = isset( $content ) && is_string( $content ) ? $content : '';
+$accessible_label = isset( $block_attributes['accessibleLabel'] )
+	? trim( wp_strip_all_tags( (string) $block_attributes['accessibleLabel'] ) )
+	: '';
 
 if ( empty( $target_id ) || empty( $tag_markup ) ) {
 	echo $tag_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	return;
 }
 
-$standalone        = ! Trigger::uses_context_target( $block );
-$toggle_attributes = Trigger::get_toggle_attributes( $target_id, $standalone );
-$tag_processor     = new WP_HTML_Tag_Processor( $tag_markup );
+$standalone = ! Trigger::uses_context_target( $block );
 
-while ( $tag_processor->next_tag() ) {
-	$tag_name = strtolower( $tag_processor->get_tag() );
+$updated_html = Trigger::apply_toggle_attributes_to_markup(
+	$tag_markup,
+	$target_id,
+	$standalone,
+	$accessible_label
+);
 
-	if ( ! in_array( $tag_name, [ 'button', 'a' ], true ) ) {
-		continue;
-	}
-
-	$tag_processor->add_class( 'wp-block-matter-trigger' );
-	$tag_processor->add_class( 'wp-block-matter-trigger__control' );
-
-	foreach ( $toggle_attributes as $attribute => $value ) {
-		$tag_processor->set_attribute( $attribute, $value );
-	}
-
-	if ( 'button' === $tag_name && ! $tag_processor->get_attribute( 'type' ) ) {
-		$tag_processor->set_attribute( 'type', 'button' );
-	}
-
-	break;
-}
-
-echo $tag_processor->get_updated_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+echo $updated_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
