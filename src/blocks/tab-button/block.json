@@ -45,7 +45,6 @@
 			"link": false
 		},
 		"spacing": {
-			"blockGap": true,
 			"padding": true,
 			"margin": false
 		},
