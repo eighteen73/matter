@@ -105,6 +105,7 @@
 			background-color: var(--_item--icon-color);
 			content: "";
 			display: inline-block;
+			mask-position: center;
 			mask-repeat: no-repeat;
 			mask-size: contain;
 		}
@@ -513,6 +514,7 @@
 				display: inline-block;
 				height: var(--_icon-size);
 				mask-image: url("../../../assets/svg/caret-left.svg");
+				mask-position: center;
 				mask-repeat: no-repeat;
 				mask-size: contain;
 				width: var(--_icon-size);
