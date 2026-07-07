@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/modal-navigation",
+  "version": "0.1.0",
+  "title": "Modal Navigation",
+  "keywords": [
+    "modal",
+    "previous",
+    "next",
+    "navigation"
+  ],
+  "category": "widgets",
+  "description": "A previous or next button for grouped modals.",
+  "ancestor": [
+    "matter/modal-content"
+  ],
+  "attributes": {
+    "direction": {
+      "type": "string",
+      "enum": [
+        "previous",
+        "next"
+      ],
+      "default": "next"
+    },
+    "label": {
+      "type": "string",
+      "default": "Next"
+    },
+    "showLabel": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "supports": {
+    "border": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true
+    },
+    "color": {
+      "text": true,
+      "background": true,
+      "gradients": true
+    },
+    "html": false,
+    "reusable": false,
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "__experimentalDefaultControls": {
+        "margin": false,
+        "padding": true
+      }
+    },
+    "dimensions": {
+      "width": false,
+      "height": false,
+      "aspectRatio": false,
+      "minHeight": false
+    },
+    "typography": {
+      "fontSize": true
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": false,
+        "radius": false,
+        "style": false,
+        "width": false
+      }
+    }
+  },
+  "usesContext": [
+    "matter/modal-id"
+  ],
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

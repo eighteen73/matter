@@ -18,18 +18,11 @@ class Drawer {
 	 * Resolve the drawer ID from block attributes.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array<string, mixed> $context    Block context.
 	 * @return string
 	 */
-	public static function resolve_id( array $attributes ): string {
-		foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
-			if ( empty( $attributes[ $id_attribute ] ) ) {
-				continue;
-			}
-
-			return (string) $attributes[ $id_attribute ];
-		}
-
-		return wp_unique_id( 'matter-drawer-' );
+	public static function resolve_id( array $attributes, array $context = [] ): string {
+		return Overlay::resolve_id( $attributes, $context, 'matter-drawer-' );
 	}
 
 	/**

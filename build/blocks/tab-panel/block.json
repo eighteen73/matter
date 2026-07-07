@@ -39,7 +39,9 @@
     "reusable": false,
     "color": {
       "background": true,
-      "text": true
+      "text": true,
+      "gradients": true,
+      "link": false
     },
     "spacing": {
       "blockGap": true,
@@ -53,7 +55,16 @@
       "allowSwitching": false
     },
     "__experimentalBorder": {
-      "radius": true
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": false,
+        "radius": false,
+        "style": false,
+        "width": false
+      }
     },
     "renaming": true,
     "visibility": false

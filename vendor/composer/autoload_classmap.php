@@ -13,6 +13,7 @@ return array(
     'Eighteen73\\Matter\\Blocks\\Drawer' => $baseDir . '/includes/classes/Blocks/Drawer.php',
     'Eighteen73\\Matter\\Blocks\\Modal' => $baseDir . '/includes/classes/Blocks/Modal.php',
     'Eighteen73\\Matter\\Blocks\\Navigation' => $baseDir . '/includes/classes/Blocks/Navigation.php',
+    'Eighteen73\\Matter\\Blocks\\Overlay' => $baseDir . '/includes/classes/Blocks/Overlay.php',
     'Eighteen73\\Matter\\Blocks\\Registry' => $baseDir . '/includes/classes/Blocks/Registry.php',
     'Eighteen73\\Matter\\Blocks\\Tabs' => $baseDir . '/includes/classes/Blocks/Tabs.php',
     'Eighteen73\\Matter\\Blocks\\Trigger' => $baseDir . '/includes/classes/Blocks/Trigger.php',

@@ -494,6 +494,11 @@ return array(
 			'matter/collapsible-id' => 'targetId',
 			'matter/collapsible-is-open' => 'editorIsOpen'
 		),
+		'usesContext' => array(
+			'postId',
+			'postType',
+			'queryId'
+		),
 		'supports' => array(
 			'anchor' => true,
 			'html' => false,
@@ -588,6 +593,11 @@ return array(
 		'providesContext' => array(
 			'matter/drawer-id' => 'targetId',
 			'matter/drawer-is-open' => 'editorIsOpen'
+		),
+		'usesContext' => array(
+			'postId',
+			'postType',
+			'queryId'
 		),
 		'supports' => array(
 			'anchor' => true,
@@ -764,11 +774,20 @@ return array(
 				'default' => array(
 					
 				)
+			),
+			'groupId' => array(
+				'type' => 'string',
+				'default' => ''
 			)
 		),
 		'providesContext' => array(
 			'matter/modal-id' => 'targetId',
 			'matter/modal-is-open' => 'editorIsOpen'
+		),
+		'usesContext' => array(
+			'postId',
+			'postType',
+			'queryId'
 		),
 		'supports' => array(
 			'anchor' => true,
@@ -855,6 +874,93 @@ return array(
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
+		'style' => 'file:./style-index.css',
+		'render' => 'file:./render.php'
+	),
+	'modal-navigation' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/modal-navigation',
+		'version' => '0.1.0',
+		'title' => 'Modal Navigation',
+		'keywords' => array(
+			'modal',
+			'previous',
+			'next',
+			'navigation'
+		),
+		'category' => 'widgets',
+		'description' => 'A previous or next button for grouped modals.',
+		'ancestor' => array(
+			'matter/modal-content'
+		),
+		'attributes' => array(
+			'direction' => array(
+				'type' => 'string',
+				'enum' => array(
+					'previous',
+					'next'
+				),
+				'default' => 'next'
+			),
+			'label' => array(
+				'type' => 'string',
+				'default' => 'Next'
+			),
+			'showLabel' => array(
+				'type' => 'boolean',
+				'default' => false
+			)
+		),
+		'supports' => array(
+			'border' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true
+			),
+			'color' => array(
+				'text' => true,
+				'background' => true,
+				'gradients' => true
+			),
+			'html' => false,
+			'reusable' => false,
+			'spacing' => array(
+				'margin' => true,
+				'padding' => true,
+				'__experimentalDefaultControls' => array(
+					'margin' => false,
+					'padding' => true
+				)
+			),
+			'dimensions' => array(
+				'width' => false,
+				'height' => false,
+				'aspectRatio' => false,
+				'minHeight' => false
+			),
+			'typography' => array(
+				'fontSize' => true
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
+			)
+		),
+		'usesContext' => array(
+			'matter/modal-id'
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
 		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
@@ -1035,15 +1141,25 @@ return array(
 			'inserter' => false,
 			'color' => array(
 				'background' => true,
-				'text' => true
+				'text' => true,
+				'gradients' => true,
+				'link' => false
 			),
 			'spacing' => array(
-				'blockGap' => true,
 				'padding' => true,
 				'margin' => false
 			),
 			'__experimentalBorder' => array(
-				'radius' => true
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
 			)
 		),
 		'editorScript' => 'file:./index.js'
@@ -1090,10 +1206,21 @@ return array(
 			'lock' => false,
 			'color' => array(
 				'background' => true,
-				'text' => true
+				'text' => true,
+				'gradients' => true,
+				'link' => false
 			),
 			'__experimentalBorder' => array(
-				'radius' => true
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
 			),
 			'layout' => array(
 				'default' => array(
@@ -1160,7 +1287,9 @@ return array(
 			'reusable' => false,
 			'color' => array(
 				'background' => true,
-				'text' => true
+				'text' => true,
+				'gradients' => true,
+				'link' => false
 			),
 			'spacing' => array(
 				'blockGap' => true,
@@ -1174,7 +1303,16 @@ return array(
 				'allowSwitching' => false
 			),
 			'__experimentalBorder' => array(
-				'radius' => true
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
 			),
 			'renaming' => true,
 			'visibility' => false
@@ -1216,7 +1354,9 @@ return array(
 			'lock' => false,
 			'color' => array(
 				'background' => true,
-				'text' => true
+				'text' => true,
+				'gradients' => true,
+				'link' => false
 			),
 			'spacing' => array(
 				'blockGap' => false,
@@ -1224,7 +1364,16 @@ return array(
 				'margin' => true
 			),
 			'__experimentalBorder' => array(
-				'radius' => true
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
 			)
 		),
 		'editorScript' => 'file:./index.js',
@@ -1287,7 +1436,9 @@ return array(
 			'anchor' => true,
 			'color' => array(
 				'text' => true,
-				'background' => true
+				'background' => true,
+				'gradients' => true,
+				'link' => false
 			),
 			'layout' => array(
 				'default' => array(
@@ -1312,7 +1463,16 @@ return array(
 				'padding' => true
 			),
 			'__experimentalBorder' => array(
-				'radius' => true
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
 			),
 			'renaming' => true
 		),
@@ -1346,10 +1506,23 @@ return array(
 		'category' => 'widgets',
 		'description' => 'An interactive trigger to open a modal, drawer or collapsible block.',
 		'allowedBlocks' => array(
-			'core/buttons'
+			'core/buttons',
+			'core/group'
 		),
 		'attributes' => array(
 			'targetId' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'triggerType' => array(
+				'type' => 'string',
+				'enum' => array(
+					'button',
+					'content'
+				),
+				'default' => 'button'
+			),
+			'accessibleLabel' => array(
 				'type' => 'string',
 				'default' => ''
 			)
@@ -1367,6 +1540,7 @@ return array(
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
 	'trigger-hamburger' => array(

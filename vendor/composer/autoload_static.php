@@ -28,6 +28,7 @@ class ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24
         'Eighteen73\\Matter\\Blocks\\Drawer' => __DIR__ . '/../..' . '/includes/classes/Blocks/Drawer.php',
         'Eighteen73\\Matter\\Blocks\\Modal' => __DIR__ . '/../..' . '/includes/classes/Blocks/Modal.php',
         'Eighteen73\\Matter\\Blocks\\Navigation' => __DIR__ . '/../..' . '/includes/classes/Blocks/Navigation.php',
+        'Eighteen73\\Matter\\Blocks\\Overlay' => __DIR__ . '/../..' . '/includes/classes/Blocks/Overlay.php',
         'Eighteen73\\Matter\\Blocks\\Registry' => __DIR__ . '/../..' . '/includes/classes/Blocks/Registry.php',
         'Eighteen73\\Matter\\Blocks\\Tabs' => __DIR__ . '/../..' . '/includes/classes/Blocks/Tabs.php',
         'Eighteen73\\Matter\\Blocks\\Trigger' => __DIR__ . '/../..' . '/includes/classes/Blocks/Trigger.php',

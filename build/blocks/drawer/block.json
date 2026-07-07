@@ -34,6 +34,11 @@
     "matter/drawer-id": "targetId",
     "matter/drawer-is-open": "editorIsOpen"
   },
+  "usesContext": [
+    "postId",
+    "postType",
+    "queryId"
+  ],
   "supports": {
     "anchor": true,
     "html": false,

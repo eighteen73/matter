@@ -54,7 +54,9 @@
     "anchor": true,
     "color": {
       "text": true,
-      "background": true
+      "background": true,
+      "gradients": true,
+      "link": false
     },
     "layout": {
       "default": {
@@ -79,7 +81,16 @@
       "padding": true
     },
     "__experimentalBorder": {
-      "radius": true
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": false,
+        "radius": false,
+        "style": false,
+        "width": false
+      }
     },
     "renaming": true
   },
