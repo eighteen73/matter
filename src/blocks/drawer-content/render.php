@@ -8,12 +8,14 @@
  * @package Matter\\DrawerContent
  */
 
+use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
 $context   = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
-$drawer_id = ! empty( $context['matter/drawer-id'] ) ? $context['matter/drawer-id'] : wp_unique_id( 'matter-drawer-' );
+$base_id   = ! empty( $context['matter/drawer-id'] ) ? (string) $context['matter/drawer-id'] : wp_unique_id( 'matter-drawer-' );
+$drawer_id = Overlay::resolve_contextual_id( $base_id, $context );
 $position  = ! empty( $attributes['position'] ) ? $attributes['position'] : 'left';
 
 $wrapper_attributes = [
