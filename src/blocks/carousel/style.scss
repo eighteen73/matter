@@ -88,31 +88,31 @@
 
 	.wp-block-matter-carousel-next-button,
 	.wp-block-matter-carousel-previous-button {
-		--wp--custom--matter-carousel--button--size: 32px;
-		--wp--custom--matter-carousel--button--icon-size: 50%;
-		--wp--custom--matter-carousel--button--gap: var(--wp--preset--spacing--md, 12px);
-		--wp--custom--matter-carousel--button--background-color: transparent;
-		--wp--custom--matter-carousel--button--border-radius: 50%;
-		--_button-icon-color: var(--matter-carousel--button--icon-color, var(--wp--custom--matter-carousel--button--icon-color, currentcolor));
+		--_size: var(--matter-carousel--button--size, var(--wp--custom--matter-carousel--button--size, 32px));
+		--_icon-size: var(--matter-carousel--button--icon-size, var(--wp--custom--matter-carousel--button--icon-size, 50%));
+		--_gap: var(--matter-carousel--button--gap, var(--wp--preset--spacing--md, 12px));
+		--_background-color: var(--matter-carousel--button--background-color, var(--wp--custom--matter-carousel--button--background-color, transparent));
+		--_border-radius: var(--matter-carousel--button--border-radius, var(--wp--custom--matter-carousel--button--border-radius, 50%));
+		--_icon-color: var(--matter-carousel--button--icon-color, var(--wp--custom--matter-carousel--button--icon-color, currentcolor));
 
 		align-items: center;
 		appearance: none;
-		background-color: var(--wp--custom--matter-carousel--button--background-color);
+		background-color: var(--_background-color);
 		border: 0;
-		border-radius: var(--wp--custom--matter-carousel--button--border-radius);
+		border-radius: var(--_border-radius);
 		cursor: pointer;
 		display: inline-flex;
-		height: var(--wp--custom--matter-carousel--button--size);
+		height: var(--_size);
 		justify-content: center;
 		margin: 0;
 		padding: 0;
 		position: relative;
 		text-decoration: none;
 		touch-action: manipulation;
-		width: var(--wp--custom--matter-carousel--button--size);
+		width: var(--_size);
 
 		&:where(.has-background) {
-			background-color: var(--wp--style--color--background);
+			background-color: var(--_background-color);
 		}
 
 		&:disabled {
@@ -123,13 +123,13 @@
 			text-indent: -9999px;
 
 			&::after {
-				background-color: var(--_button-icon-color);
+				background-color: var(--_icon-color);
 				border-radius: inherit;
 				content: "";
 				inset: 0;
 				mask-position: center;
 				mask-repeat: no-repeat;
-				mask-size: var(--wp--custom--matter-carousel--button--icon-size);
+				mask-size: var(--_icon-size);
 				position: absolute;
 			}
 		}

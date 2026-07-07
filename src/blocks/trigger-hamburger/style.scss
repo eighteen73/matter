@@ -5,6 +5,7 @@
 	--_color: var(--matter-trigger-hamburger--color, var(--wp--custom--matter-trigger-hamburger--color, currentcolor));
 	--_border-radius: var(--matter-trigger-hamburger--border-radius, var(--wp--custom--matter-trigger-hamburger--border-radius, 0));
 	--_font-size: var(--matter-trigger-hamburger--font-size, var(--wp--custom--matter-trigger-hamburger--font-size, 32px));
+	--_size: var(--matter-trigger-hamburger--size, var(--wp--custom--matter-trigger-hamburger--size, 42px));
 	--_padding: var(--matter-trigger-hamburger--padding, var(--wp--custom--matter-trigger-hamburger--padding, 0));
 	--_gap: var(--matter-trigger-hamburger--gap, var(--wp--custom--matter-trigger-hamburger--gap, 0.5em));
 	--_bar-height: var(--matter-trigger-hamburger--bar-height, var(--wp--custom--matter-trigger-hamburger--bar-height, 0.125em));
@@ -26,9 +27,10 @@
 	display: inline-flex;
 	font-size: var(--_font-size);
 	gap: var(--_gap);
-	height: calc(var(--_bar-height) * 3 + var(--_bar-gap) * 2);
+	height: var(--_size);
 	line-height: 1;
 	padding: var(--_padding);
+	width: var(--_size);
 
 	&__icon {
 		background-color: currentcolor;
