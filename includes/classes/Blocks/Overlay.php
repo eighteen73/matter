@@ -104,7 +104,7 @@ class Overlay {
 	 * @param string               $fallback_prefix Prefix for generated fallback IDs.
 	 * @return string
 	 */
-	private static function resolve_base_id( array $attributes, string $fallback_prefix ): string {
+	public static function resolve_base_id( array $attributes, string $fallback_prefix ): string {
 		foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
 			if ( empty( $attributes[ $id_attribute ] ) ) {
 				continue;

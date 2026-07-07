@@ -46,6 +46,10 @@
 		"urlTriggers": {
 			"type": "array",
 			"default": []
+		},
+		"groupId": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"providesContext": {

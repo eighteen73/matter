@@ -13,6 +13,7 @@ const OVERLAY_TYPES = ['modal', 'drawer', 'collapsible'];
 
 let publicState; // eslint-disable-line prefer-const -- assigned after store creation.
 let didRegisterEscapeListener = false;
+let isGroupNavigating = false;
 
 const createReadOnlyProxy = (object) =>
 	new Proxy(object, {
@@ -135,6 +136,57 @@ const onClose = (dialogElement) => {
 };
 
 const getItem = (id) => privateState.items[id];
+
+const getNavigationDirection = () => {
+	const context = getContext(PUBLIC_STORE);
+
+	return context?.direction === 'previous' ? 'previous' : 'next';
+};
+
+const getModalGroupItems = (id) => {
+	const item = getItem(id);
+
+	if (!item || item.type !== 'modal' || !item.groupId) {
+		return [];
+	}
+
+	return Object.entries(privateState.items)
+		.filter(
+			([, groupItem]) =>
+				groupItem?.type === 'modal' &&
+				groupItem.groupId === item.groupId
+		)
+		.sort(([, itemA], [, itemB]) => {
+			const indexA = Number.isFinite(itemA.groupIndex)
+				? itemA.groupIndex
+				: Number.MAX_SAFE_INTEGER;
+			const indexB = Number.isFinite(itemB.groupIndex)
+				? itemB.groupIndex
+				: Number.MAX_SAFE_INTEGER;
+
+			return indexA - indexB;
+		});
+};
+
+const getAdjacentModalId = (id, direction) => {
+	const groupItems = getModalGroupItems(id);
+	const currentIndex = groupItems.findIndex(([groupItemId]) => {
+		return groupItemId === id;
+	});
+
+	if (currentIndex === -1) {
+		return null;
+	}
+
+	const adjacentIndex =
+		direction === 'previous' ? currentIndex - 1 : currentIndex + 1;
+
+	return groupItems[adjacentIndex]?.[0] || null;
+};
+
+const hasAdjacentModal = (id, direction) => {
+	return getAdjacentModalId(id, direction) !== null;
+};
 
 const canClose = (id) => {
 	const item = getItem(id);
@@ -488,8 +540,39 @@ const syncDialogElement = (id) => {
 
 	if (!item.isOpen && dialogElement.open) {
 		dialogElement.close();
-		focusTrigger(id);
+
+		if (!isGroupNavigating) {
+			focusTrigger(id);
+		}
 	}
+};
+
+const navigateModalGroup = (id, direction) => {
+	const targetId = getAdjacentModalId(id, direction);
+	const item = getItem(id);
+
+	if (!targetId || !item || !tryOpen(targetId, 'manual')) {
+		return;
+	}
+
+	const { classList } = document.documentElement;
+
+	isGroupNavigating = true;
+	classList.add('is-modal-group-navigating');
+
+	// Open the target before closing the current dialog so the backdrop
+	// stays present while switching grouped modals.
+	syncDialogElement(targetId);
+
+	item.isOpen = false;
+
+	syncDialogElement(id);
+	syncOpenClasses();
+
+	window.requestAnimationFrame(() => {
+		isGroupNavigating = false;
+		classList.remove('is-modal-group-navigating');
+	});
 };
 
 const { actions: privateActions, state: privateState } = store(
@@ -566,6 +649,24 @@ const { actions: privateActions, state: privateState } = store(
 
 				privateActions.open(id, { source: 'manual' });
 			},
+			openNext: (passthroughId = false) => {
+				const id = resolveId(passthroughId);
+
+				if (!id) {
+					return;
+				}
+
+				navigateModalGroup(id, 'next');
+			},
+			openPrevious: (passthroughId = false) => {
+				const id = resolveId(passthroughId);
+
+				if (!id) {
+					return;
+				}
+
+				navigateModalGroup(id, 'previous');
+			},
 			closeAll: () => {
 				Object.keys(privateState.items).forEach((id) => {
 					privateActions.close(id);
@@ -616,7 +717,10 @@ const { actions: privateActions, state: privateState } = store(
 				if (!item.isOpen && dialogElement.open) {
 					dialogElement.close();
 					onClose(dialogElement);
-					focusTrigger(id);
+
+					if (!isGroupNavigating) {
+						focusTrigger(id);
+					}
 				}
 			},
 			onNativeClose: withScope(() => {
@@ -687,6 +791,15 @@ const publicStore = store(PUBLIC_STORE, {
 
 			return createReadOnlyProxy(item);
 		},
+		get hasNext() {
+			return hasAdjacentModal(getContextId(), 'next');
+		},
+		get hasPrevious() {
+			return hasAdjacentModal(getContextId(), 'previous');
+		},
+		get isNavigationDisabled() {
+			return !hasAdjacentModal(getContextId(), getNavigationDirection());
+		},
 	},
 	actions: {
 		open(id = false, options = {}) {
@@ -699,6 +812,12 @@ const publicStore = store(PUBLIC_STORE, {
 		},
 		toggle(id = false) {
 			privateActions.toggle(resolvePublicId(id));
+		},
+		openNext(id = false) {
+			privateActions.openNext(resolvePublicId(id));
+		},
+		openPrevious(id = false) {
+			privateActions.openPrevious(resolvePublicId(id));
 		},
 		closeAll() {
 			privateActions.closeAll();
@@ -738,7 +857,10 @@ const publicStore = store(PUBLIC_STORE, {
 			if (!item.isOpen && dialogElement.open) {
 				dialogElement.close();
 				onClose(dialogElement);
-				focusTrigger(id);
+
+				if (!isGroupNavigating) {
+					focusTrigger(id);
+				}
 			}
 		},
 		onNativeClose() {

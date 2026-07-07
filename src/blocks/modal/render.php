@@ -14,7 +14,10 @@ defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
 $block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
+$base_id          = Modal::resolve_base_id( $block_attributes );
 $modal_id         = Modal::resolve_id( $block_attributes, $block_context );
+$group_id         = Modal::resolve_group_id( $block_attributes, $block_context, $base_id );
+$group_index      = Modal::resolve_group_index( $group_id );
 
 $dismissed_duration = ! empty( $block_attributes['dismissedDuration'] )
 	? sanitize_text_field( (string) $block_attributes['dismissedDuration'] )
@@ -39,6 +42,9 @@ wp_interactivity_state(
 			$modal_id => [
 				'isOpen'            => false,
 				'type'              => 'modal',
+				'baseId'            => $base_id,
+				'groupId'           => $group_id,
+				'groupIndex'        => $group_index,
 				'dismissedDuration' => $dismissed_duration,
 				'triggerOnLoad'     => $trigger_on_load,
 				'triggerDelay'      => $trigger_delay,

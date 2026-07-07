@@ -19,6 +19,7 @@
 
 	&__editor-preview {
 		isolation: isolate;
+		position: fixed;
 		z-index: 99999;
 	}
 }

@@ -245,6 +245,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		dismissedDuration,
 		editorIsOpen,
 		generatedId,
+		groupId,
 		scrollSelector,
 		scrollThreshold,
 		targetId,
@@ -352,6 +353,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const resetAllSettings = () => {
 		setAttributes({
 			dismissedDuration: undefined,
+			groupId: '',
 			triggerOnLoad: false,
 			triggerDelay: undefined,
 			triggerOnScroll: false,
@@ -418,6 +420,26 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								'Duration before this modal will appear again via auto-triggers or hash links after being closed. Manual triggers are unaffected.',
 								'matter'
 							)}
+						/>
+					</ToolsPanelItem>
+
+					<ToolsPanelItem
+						hasValue={() => !!groupId}
+						label={__('Group ID', 'matter')}
+						onDeselect={() => setAttributes({ groupId: '' })}
+						isShownByDefault
+					>
+						<TextControl
+							label={__('Group ID', 'matter')}
+							value={groupId || ''}
+							onChange={(value) =>
+								setAttributes({ groupId: value })
+							}
+							help={__(
+								'Optional. Modals with the same group ID can navigate between each other. Query Loop modals are grouped automatically when this is empty.',
+								'matter'
+							)}
+							__nextHasNoMarginBottom
 						/>
 					</ToolsPanelItem>
 
