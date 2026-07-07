@@ -62,7 +62,12 @@
 			}
 		}
 	},
-	"usesContext": [ "matter/modal-id", "matter/modal-is-open" ],
+	"usesContext": [
+		"matter/modal-id",
+		"matter/modal-is-open",
+		"postId",
+		"queryId"
+	],
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",

@@ -117,13 +117,25 @@ class Overlay {
 	}
 
 	/**
+	 * Whether the current block context represents a Query Loop post iteration.
+	 *
+	 * Requires both postId and queryId so singular pages do not receive loop suffixes.
+	 *
+	 * @param array<string, mixed> $context Block context.
+	 * @return bool
+	 */
+	public static function is_query_loop_context( array $context ): bool {
+		return ! empty( $context['postId'] ) && isset( $context['queryId'] );
+	}
+
+	/**
 	 * Resolve a query-loop-specific ID when post template context is present.
 	 *
 	 * @param string               $base_id Overlay base ID.
 	 * @param array<string, mixed> $context Block context.
 	 * @return string
 	 */
-	private static function resolve_contextual_id( string $base_id, array $context ): string {
+	public static function resolve_contextual_id( string $base_id, array $context ): string {
 		if ( ! self::is_query_loop_context( $context ) ) {
 			return $base_id;
 		}
@@ -135,16 +147,6 @@ class Overlay {
 		}
 
 		return $base_id . $suffix;
-	}
-
-	/**
-	 * Whether the current block context represents a Query Loop post iteration.
-	 *
-	 * @param array<string, mixed> $context Block context.
-	 * @return bool
-	 */
-	private static function is_query_loop_context( array $context ): bool {
-		return ! empty( $context['postId'] );
 	}
 
 	/**

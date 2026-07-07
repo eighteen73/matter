@@ -8,12 +8,14 @@
  * @package Matter\\ModalContent
  */
 
+use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
 $context  = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
-$modal_id = ! empty( $context['matter/modal-id'] ) ? $context['matter/modal-id'] : wp_unique_id( 'matter-modal-' );
+$base_id  = ! empty( $context['matter/modal-id'] ) ? (string) $context['matter/modal-id'] : wp_unique_id( 'matter-modal-' );
+$modal_id = Overlay::resolve_contextual_id( $base_id, $context );
 
 $wrapper_attributes = [
 	'id'                 => $modal_id,
