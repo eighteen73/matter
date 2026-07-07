@@ -368,7 +368,7 @@ class Tabs {
 			$tab['posterId']   = $inner_block->attributes['posterId'] ?? null;
 			$tab['focalPoint'] = $inner_block->attributes['focalPoint'] ?? null;
 
-			$buttons_markup .= self::render_tab_button( $tab, $button_index, $is_vertical );
+			$buttons_markup .= self::render_tab_button( $tab, $button_index, $is_vertical, $inner_block->attributes );
 			++$button_index;
 		}
 
@@ -391,12 +391,13 @@ class Tabs {
 	/**
 	 * Render a single tab button.
 	 *
-	 * @param array<string, mixed> $tab         Tab data.
-	 * @param int                  $tab_index   Tab index.
-	 * @param bool                 $is_vertical Whether the tab list is vertical.
+	 * @param array<string, mixed>      $tab              Tab data.
+	 * @param int                       $tab_index        Tab index.
+	 * @param bool                      $is_vertical      Whether the tab list is vertical.
+	 * @param array<string, mixed>|null $block_attributes Tab button block attributes.
 	 * @return string
 	 */
-	private static function render_tab_button( array $tab, int $tab_index, bool $is_vertical = false ): string {
+	private static function render_tab_button( array $tab, int $tab_index, bool $is_vertical = false, ?array $block_attributes = null ): string {
 		$tab_id      = $tab['id'] ?? 'tab-' . $tab_index;
 		$label       = $tab['label'] ?? '';
 		$media_id    = isset( $tab['mediaId'] ) ? (int) $tab['mediaId'] : 0;
@@ -410,20 +411,56 @@ class Tabs {
 			esc_html( (string) $label )
 		);
 
-		return sprintf(
-			'<button type="button" class="wp-block-matter-tab-button" role="tab" id="%1$s" aria-controls="%2$s" data-wp-on--click="actions.handleTabClick" data-wp-on--keydown="actions.handleTabKeyDown" data-wp-bind--aria-selected="state.isActiveTab" data-wp-class--is-active="state.isActiveTab" data-wp-bind--tabindex="state.tabIndexAttribute" data-wp-context="%3$s">%4$s</button>',
-			esc_attr( 'tab__' . $tab_id ),
-			esc_attr( (string) $tab_id ),
-			esc_attr(
-				(string) wp_json_encode(
-					[
-						'tabIndex'   => $tab_index,
-						'isVertical' => $is_vertical,
-					]
-				)
+		$button_attributes = [
+			'type'                      => 'button',
+			'role'                      => 'tab',
+			'id'                        => 'tab__' . $tab_id,
+			'aria-controls'             => (string) $tab_id,
+			'data-wp-on--click'         => 'actions.handleTabClick',
+			'data-wp-on--keydown'       => 'actions.handleTabKeyDown',
+			'data-wp-bind--aria-selected' => 'state.isActiveTab',
+			'data-wp-class--is-active'  => 'state.isActiveTab',
+			'data-wp-bind--tabindex'    => 'state.tabIndexAttribute',
+			'data-wp-context'           => (string) wp_json_encode(
+				[
+					'tabIndex'   => $tab_index,
+					'isVertical' => $is_vertical,
+				]
 			),
+		];
+
+		$wrapper_attributes = self::get_tab_button_wrapper_attributes(
+			$button_attributes,
+			is_array( $block_attributes ) ? $block_attributes : []
+		);
+
+		return sprintf(
+			'<button %1$s>%2$s</button>',
+			$wrapper_attributes,
 			$button_content
 		);
+	}
+
+	/**
+	 * Build tab button wrapper attributes with block supports applied.
+	 *
+	 * @param array<string, mixed> $button_attributes Button HTML attributes.
+	 * @param array<string, mixed> $block_attributes  Tab button block attributes.
+	 * @return string
+	 */
+	private static function get_tab_button_wrapper_attributes( array $button_attributes, array $block_attributes ): string {
+		$parent_block_to_render = \WP_Block_Supports::$block_to_render;
+
+		\WP_Block_Supports::$block_to_render = [
+			'blockName' => 'matter/tab-button',
+			'attrs'     => $block_attributes,
+		];
+
+		$wrapper_attributes = get_block_wrapper_attributes( $button_attributes );
+
+		\WP_Block_Supports::$block_to_render = $parent_block_to_render;
+
+		return $wrapper_attributes;
 	}
 
 	/**

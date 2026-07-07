@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter;
 
+use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
 
@@ -31,6 +32,7 @@ class Plugin {
 
 		// Register blocks.
 		Registry::instance()->setup();
+		Overlay::instance()->setup();
 		Tabs::instance()->setup();
 	}
 

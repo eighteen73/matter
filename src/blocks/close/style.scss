@@ -3,23 +3,23 @@
 	--_color: var(--matter-close--color, var(--wp--custom--matter-close--color, currentcolor));
 	--_icon-color: var(--matter-close--icon-color, var(--wp--custom--matter-close--icon-color, currentcolor));
 	--_inset: var(--matter-close--inset, var(--wp--custom--matter-close--inset, 0));
-	--border-radius: var(--matter-close--border-radius, var(--wp--custom--matter-close--border-radius, 0));
-	--font-size: var(--matter-close--font-size, var(--wp--custom--matter-close--font-size, 32px));
-	--padding: var(--matter-close--padding, var(--wp--custom--matter-close--padding, 0));
-	--gap: var(--matter-close--gap, var(--wp--custom--matter-close--gap, 0.5em));
+	--_border-radius: var(--matter-close--border-radius, var(--wp--custom--matter-close--border-radius, 0));
+	--_font-size: var(--matter-close--font-size, var(--wp--custom--matter-close--font-size, inherit));
+	--_padding: var(--matter-close--padding, var(--wp--custom--matter-close--padding, 0));
+	--_gap: var(--matter-close--gap, var(--wp--custom--matter-close--gap, 0.5em));
 
 	align-items: center;
 	background-color: var(--_background-color);
 	border: unset;
-	border-radius: var(--border-radius);
+	border-radius: var(--_border-radius);
 	box-shadow: unset;
 	color: var(--_color);
 	cursor: pointer;
 	display: inline-flex;
-	font-size: var(--font-size);
-	gap: var(--gap);
+	font-size: var(--_font-size);
+	gap: var(--_gap);
 	line-height: 1;
-	padding: var(--padding);
+	padding: var(--_padding);
 	z-index: 1;
 
 	&.is-position-top-left {

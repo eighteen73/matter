@@ -5,10 +5,13 @@ import { __ } from '@wordpress/i18n';
 import {
 	BlockControls,
 	InspectorControls,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
+import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
 import {
+	TextControl,
 	ToolbarButton,
 	ToolbarGroup,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -16,11 +19,13 @@ import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useEffect } from '@wordpress/element';
 
 import OverlayTargetControl from '../../components/overlay-target-control';
 import useOverlayTarget from '../../utils/use-overlay-target';
 
-const TEMPLATE = [
+const BUTTON_TEMPLATE = [
 	[
 		'core/buttons',
 		{},
@@ -35,6 +40,18 @@ const TEMPLATE = [
 		],
 	],
 ];
+
+const CONTENT_TEMPLATE = [['core/group', {}, []]];
+
+const CONTENT_TRIGGER_TYPE = 'content';
+
+/**
+ * @param {Array} innerBlocks Trigger inner blocks.
+ * @return {string|undefined} First inner block name.
+ */
+function getFirstInnerBlockName(innerBlocks) {
+	return innerBlocks?.[0]?.name;
+}
 
 /**
  * @param {Object}   props               Component props.
@@ -58,18 +75,66 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 		showPreviewUnavailableNotice,
 	} = useOverlayTarget({ context, attributes, clientId });
 
+	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const innerBlocks = useSelect(
+		(select) =>
+			select(blockEditorStore).getBlock(clientId)?.innerBlocks ?? [],
+		[clientId]
+	);
+
+	const isContentTrigger = attributes.triggerType === CONTENT_TRIGGER_TYPE;
+	const template = isContentTrigger ? CONTENT_TEMPLATE : BUTTON_TEMPLATE;
+	const templateLock = isContentTrigger ? false : 'insert';
+	const allowedBlocks = isContentTrigger ? ['core/group'] : ['core/buttons'];
+
+	useEffect(() => {
+		const firstInnerBlockName = getFirstInnerBlockName(innerBlocks);
+		const expectedInnerBlockName = isContentTrigger
+			? 'core/group'
+			: 'core/buttons';
+
+		if (
+			!firstInnerBlockName ||
+			firstInnerBlockName === expectedInnerBlockName
+		) {
+			return;
+		}
+
+		replaceInnerBlocks(
+			clientId,
+			createBlocksFromInnerBlocksTemplate(template),
+			false
+		);
+	}, [clientId, innerBlocks, isContentTrigger, replaceInnerBlocks, template]);
+
 	const blockProps = useBlockProps();
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		template: TEMPLATE,
-		templateLock: 'insert',
+		allowedBlocks,
+		template,
+		templateLock,
+		renderAppender: isContentTrigger ? false : undefined,
 		__experimentalCaptureToolbars: true,
 	});
 
 	return (
 		<>
-			{!isNested && (
-				<InspectorControls>
+			{effectiveTargetId && canPreview && (
+				<BlockControls __experimentalShareWithChildBlocks>
+					<ToolbarGroup>
+						<ToolbarButton
+							label={toolbarLabel}
+							aria-controls={effectiveTargetId}
+							onClick={toggleComponent}
+						>
+							{toolbarLabel}
+						</ToolbarButton>
+					</ToolbarGroup>
+				</BlockControls>
+			)}
+
+			<InspectorControls>
+				{!isNested && (
 					<ToolsPanel
 						label={__('Target', 'matter')}
 						resetAll={() => setAttributes({ targetId: '' })}
@@ -97,22 +162,40 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 							/>
 						</ToolsPanelItem>
 					</ToolsPanel>
-				</InspectorControls>
-			)}
+				)}
 
-			{effectiveTargetId && canPreview && (
-				<BlockControls __experimentalShareWithChildBlocks>
-					<ToolbarGroup>
-						<ToolbarButton
-							label={toolbarLabel}
-							aria-controls={effectiveTargetId}
-							onClick={toggleComponent}
+				{isContentTrigger && (
+					<ToolsPanel
+						label={__('Accessibility', 'matter')}
+						resetAll={() => setAttributes({ accessibleLabel: '' })}
+					>
+						<ToolsPanelItem
+							label={__('Accessible label', 'matter')}
+							hasValue={() => !!attributes.accessibleLabel}
+							onDeselect={() =>
+								setAttributes({ accessibleLabel: '' })
+							}
+							resetAllFilter={() => ({
+								accessibleLabel: '',
+							})}
+							isShownByDefault
+							panelId={`${clientId}-accessible-label`}
 						>
-							{toolbarLabel}
-						</ToolbarButton>
-					</ToolbarGroup>
-				</BlockControls>
-			)}
+							<TextControl
+								label={__('Accessible label', 'matter')}
+								help={__(
+									'Used when the wrapped content does not provide a clear accessible name, such as a decorative image.',
+									'matter'
+								)}
+								value={attributes.accessibleLabel}
+								onChange={(accessibleLabel) =>
+									setAttributes({ accessibleLabel })
+								}
+							/>
+						</ToolsPanelItem>
+					</ToolsPanel>
+				)}
+			</InspectorControls>
 
 			<div {...innerBlocksProps} />
 		</>

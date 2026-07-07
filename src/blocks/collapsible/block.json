@@ -32,6 +32,11 @@
 		"matter/collapsible-id": "targetId",
 		"matter/collapsible-is-open": "editorIsOpen"
 	},
+	"usesContext": [
+		"postId",
+		"postType",
+		"queryId"
+	],
 	"supports": {
 		"anchor": true,
 		"html": false,

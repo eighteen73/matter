@@ -13,7 +13,8 @@ use Eighteen73\Matter\Blocks\Drawer;
 defined( 'ABSPATH' ) || exit;
 
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$drawer_id        = Drawer::resolve_id( $block_attributes );
+$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
+$drawer_id        = Drawer::resolve_id( $block_attributes, $block_context );
 
 Drawer::register_state( $drawer_id );
 ?>
