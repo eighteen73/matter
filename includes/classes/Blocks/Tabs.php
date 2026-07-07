@@ -412,16 +412,16 @@ class Tabs {
 		);
 
 		$button_attributes = [
-			'type'                      => 'button',
-			'role'                      => 'tab',
-			'id'                        => 'tab__' . $tab_id,
-			'aria-controls'             => (string) $tab_id,
-			'data-wp-on--click'         => 'actions.handleTabClick',
-			'data-wp-on--keydown'       => 'actions.handleTabKeyDown',
+			'type'                        => 'button',
+			'role'                        => 'tab',
+			'id'                          => 'tab__' . $tab_id,
+			'aria-controls'               => (string) $tab_id,
+			'data-wp-on--click'           => 'actions.handleTabClick',
+			'data-wp-on--keydown'         => 'actions.handleTabKeyDown',
 			'data-wp-bind--aria-selected' => 'state.isActiveTab',
-			'data-wp-class--is-active'  => 'state.isActiveTab',
-			'data-wp-bind--tabindex'    => 'state.tabIndexAttribute',
-			'data-wp-context'           => (string) wp_json_encode(
+			'data-wp-class--is-active'    => 'state.isActiveTab',
+			'data-wp-bind--tabindex'      => 'state.tabIndexAttribute',
+			'data-wp-context'             => (string) wp_json_encode(
 				[
 					'tabIndex'   => $tab_index,
 					'isVertical' => $is_vertical,
