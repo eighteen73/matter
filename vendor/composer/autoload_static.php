@@ -25,6 +25,7 @@ class ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24
         'Eighteen73\\Matter\\Blocks\\Carousel' => __DIR__ . '/../..' . '/includes/classes/Blocks/Carousel.php',
         'Eighteen73\\Matter\\Blocks\\CarouselThumbnails' => __DIR__ . '/../..' . '/includes/classes/Blocks/CarouselThumbnails.php',
         'Eighteen73\\Matter\\Blocks\\Collapsible' => __DIR__ . '/../..' . '/includes/classes/Blocks/Collapsible.php',
+        'Eighteen73\\Matter\\Blocks\\Context' => __DIR__ . '/../..' . '/includes/classes/Blocks/Context.php',
         'Eighteen73\\Matter\\Blocks\\Drawer' => __DIR__ . '/../..' . '/includes/classes/Blocks/Drawer.php',
         'Eighteen73\\Matter\\Blocks\\Modal' => __DIR__ . '/../..' . '/includes/classes/Blocks/Modal.php',
         'Eighteen73\\Matter\\Blocks\\Navigation' => __DIR__ . '/../..' . '/includes/classes/Blocks/Navigation.php',

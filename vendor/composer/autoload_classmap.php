@@ -10,6 +10,7 @@ return array(
     'Eighteen73\\Matter\\Blocks\\Carousel' => $baseDir . '/includes/classes/Blocks/Carousel.php',
     'Eighteen73\\Matter\\Blocks\\CarouselThumbnails' => $baseDir . '/includes/classes/Blocks/CarouselThumbnails.php',
     'Eighteen73\\Matter\\Blocks\\Collapsible' => $baseDir . '/includes/classes/Blocks/Collapsible.php',
+    'Eighteen73\\Matter\\Blocks\\Context' => $baseDir . '/includes/classes/Blocks/Context.php',
     'Eighteen73\\Matter\\Blocks\\Drawer' => $baseDir . '/includes/classes/Blocks/Drawer.php',
     'Eighteen73\\Matter\\Blocks\\Modal' => $baseDir . '/includes/classes/Blocks/Modal.php',
     'Eighteen73\\Matter\\Blocks\\Navigation' => $baseDir . '/includes/classes/Blocks/Navigation.php',
