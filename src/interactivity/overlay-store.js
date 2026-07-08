@@ -34,6 +34,34 @@ const createReadOnlyProxy = (object) =>
 		},
 	});
 
+const isPlainObject = (value) =>
+	value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const normalizeOverlayContext = (context) => {
+	if (!isPlainObject(context)) {
+		return {};
+	}
+
+	return Object.entries(context).reduce((normalized, [key, value]) => {
+		if (
+			typeof value === 'string' ||
+			typeof value === 'number' ||
+			typeof value === 'boolean' ||
+			value === null
+		) {
+			normalized[key] = value;
+		}
+
+		return normalized;
+	}, {});
+};
+
+const getCurrentOverlayContext = () => {
+	const context = getContext(PUBLIC_STORE);
+
+	return normalizeOverlayContext(context?.overlayContext);
+};
+
 const getContextId = () => {
 	const context = getContext(PUBLIC_STORE);
 
@@ -225,6 +253,25 @@ const syncOpenClasses = () => {
 	OVERLAY_TYPES.forEach((type) => {
 		classList.toggle(`has-${type}-open`, openTypes.has(type));
 	});
+};
+
+const dispatchOverlayOpen = (id) => {
+	const item = getItem(id);
+
+	if (!id || !item) {
+		return;
+	}
+
+	document.dispatchEvent(
+		new window.CustomEvent('matter/overlay/open', {
+			detail: {
+				id,
+				source: item.lastOpenSource || 'manual',
+				type: item.type,
+				overlayContext: normalizeOverlayContext(item.overlayContext),
+			},
+		})
+	);
 };
 
 /**
@@ -503,7 +550,7 @@ const runGlobalInit = () => {
 	});
 };
 
-const tryOpen = (id, source = 'manual') => {
+const tryOpen = (id, source = 'manual', overlayContext = {}) => {
 	const item = getItem(id);
 
 	if (!item) {
@@ -516,6 +563,7 @@ const tryOpen = (id, source = 'manual') => {
 
 	item.isOpen = true;
 	item.lastOpenSource = source;
+	item.overlayContext = normalizeOverlayContext(overlayContext);
 
 	return true;
 };
@@ -568,6 +616,7 @@ const navigateModalGroup = (id, direction) => {
 
 	syncDialogElement(id);
 	syncOpenClasses();
+	dispatchOverlayOpen(targetId);
 
 	window.requestAnimationFrame(() => {
 		isGroupNavigating = false;
@@ -606,12 +655,17 @@ const { actions: privateActions, state: privateState } = store(
 					return;
 				}
 
-				if (!tryOpen(id, source)) {
+				const overlayContext = normalizeOverlayContext(
+					options.overlayContext
+				);
+
+				if (!tryOpen(id, source, overlayContext)) {
 					return;
 				}
 
 				syncDialogElement(id);
 				syncOpenClasses();
+				dispatchOverlayOpen(id);
 			},
 			close: (passthroughId = false) => {
 				const id = resolveId(passthroughId);
@@ -634,7 +688,7 @@ const { actions: privateActions, state: privateState } = store(
 					focusTrigger(id);
 				}
 			},
-			toggle: (passthroughId = false) => {
+			toggle: (passthroughId = false, options = {}) => {
 				const id = resolveId(passthroughId);
 				const item = getItem(id);
 
@@ -647,7 +701,10 @@ const { actions: privateActions, state: privateState } = store(
 					return;
 				}
 
-				privateActions.open(id, { source: 'manual' });
+				privateActions.open(id, {
+					source: 'manual',
+					overlayContext: options.overlayContext,
+				});
 			},
 			openNext: (passthroughId = false) => {
 				const id = resolveId(passthroughId);
@@ -674,11 +731,16 @@ const { actions: privateActions, state: privateState } = store(
 			},
 			onClickToggle: withSyncEvent((event) => {
 				event.preventDefault();
-				privateActions.toggle();
+				privateActions.toggle(false, {
+					overlayContext: getCurrentOverlayContext(),
+				});
 			}),
 			onClickOpen: withSyncEvent((event) => {
 				event.preventDefault();
-				privateActions.open(false, { source: 'manual' });
+				privateActions.open(false, {
+					source: 'manual',
+					overlayContext: getCurrentOverlayContext(),
+				});
 			}),
 			onClickClose: withSyncEvent((event) => {
 				event.preventDefault();
@@ -690,7 +752,9 @@ const { actions: privateActions, state: privateState } = store(
 				}
 
 				event.preventDefault();
-				privateActions.toggle();
+				privateActions.toggle(false, {
+					overlayContext: getCurrentOverlayContext(),
+				});
 			}),
 		},
 		callbacks: {
@@ -805,13 +869,17 @@ const publicStore = store(PUBLIC_STORE, {
 		open(id = false, options = {}) {
 			privateActions.open(resolvePublicId(id), {
 				source: options.source || 'manual',
+				overlayContext:
+					options.overlayContext || getCurrentOverlayContext(),
 			});
 		},
 		close(id = false) {
 			privateActions.close(resolvePublicId(id));
 		},
 		toggle(id = false) {
-			privateActions.toggle(resolvePublicId(id));
+			privateActions.toggle(resolvePublicId(id), {
+				overlayContext: getCurrentOverlayContext(),
+			});
 		},
 		openNext(id = false) {
 			privateActions.openNext(resolvePublicId(id));
@@ -828,7 +896,9 @@ const publicStore = store(PUBLIC_STORE, {
 			}
 
 			event.preventDefault();
-			privateActions.toggle(resolvePublicId());
+			privateActions.toggle(resolvePublicId(), {
+				overlayContext: getCurrentOverlayContext(),
+			});
 		},
 	},
 	callbacks: {
