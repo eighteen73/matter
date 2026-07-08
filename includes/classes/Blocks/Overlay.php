@@ -43,7 +43,7 @@ class Overlay {
 	 * @return void
 	 */
 	public function setup(): void {
-		add_filter( 'render_block_context', [ $this, 'provide_context' ], 10, 2 );
+		add_filter( 'render_block_context', [ $this, 'provide_context' ], 10, 3 );
 	}
 
 	/**
@@ -65,10 +65,13 @@ class Overlay {
 	 *
 	 * @param array<string, mixed> $context      Default block context.
 	 * @param array<string, mixed> $parsed_block The block being rendered.
+	 * @param \WP_Block|null       $parent_block Parent block instance.
 	 * @return array<string, mixed>
 	 */
-	public function provide_context( array $context, array $parsed_block ): array {
+	public function provide_context( array $context, array $parsed_block, $parent_block = null ): array {
 		$block_name = $parsed_block['blockName'] ?? '';
+
+		$context = Context::provide( $context, $parent_block );
 
 		if ( is_string( $block_name ) && isset( self::BLOCKS[ $block_name ] ) ) {
 			$block_config = self::BLOCKS[ $block_name ];
@@ -119,13 +122,20 @@ class Overlay {
 	/**
 	 * Whether the current block context represents a Query Loop post iteration.
 	 *
-	 * Requires both postId and queryId so singular pages do not receive loop suffixes.
+	 * Query Loop descendants do not always receive queryId during server render,
+	 * so Matter marks repeated item descendants with matter/in-query-loop.
 	 *
 	 * @param array<string, mixed> $context Block context.
 	 * @return bool
 	 */
 	public static function is_query_loop_context( array $context ): bool {
-		return ! empty( $context['postId'] ) && isset( $context['queryId'] );
+		$post_id = empty( $context['postId'] ) ? 0 : (int) $context['postId'];
+
+		if ( $post_id <= 0 ) {
+			return false;
+		}
+
+		return Context::is_in_query_loop( $context ) || isset( $context['queryId'] );
 	}
 
 	/**
