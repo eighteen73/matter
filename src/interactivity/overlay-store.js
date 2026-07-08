@@ -255,7 +255,7 @@ const syncOpenClasses = () => {
 	});
 };
 
-const dispatchOverlayOpen = (id) => {
+const dispatchOverlayEvent = (id, eventName) => {
 	const item = getItem(id);
 
 	if (!id || !item) {
@@ -263,7 +263,7 @@ const dispatchOverlayOpen = (id) => {
 	}
 
 	document.dispatchEvent(
-		new window.CustomEvent('matter/overlay/open', {
+		new window.CustomEvent(`matter/overlay/${eventName}`, {
 			detail: {
 				id,
 				source: item.lastOpenSource || 'manual',
@@ -273,6 +273,10 @@ const dispatchOverlayOpen = (id) => {
 		})
 	);
 };
+
+const dispatchOverlayOpen = (id) => dispatchOverlayEvent(id, 'open');
+
+const dispatchOverlayClose = (id) => dispatchOverlayEvent(id, 'close');
 
 /**
  * Close open collapsibles when Escape is pressed.
@@ -683,6 +687,7 @@ const { actions: privateActions, state: privateState } = store(
 
 				syncDialogElement(id);
 				syncOpenClasses();
+				dispatchOverlayClose(id);
 
 				if (item.type === 'collapsible') {
 					focusTrigger(id);
