@@ -1,6 +1,7 @@
 import ClassNames from 'embla-carousel-class-names';
 import Autoplay from 'embla-carousel-autoplay';
 import AutoScroll from 'embla-carousel-auto-scroll';
+import Fade from 'embla-carousel-fade';
 
 import breakpoints, {
 	breakpointTokens,
@@ -17,10 +18,13 @@ export const DEFAULT_EMBLA_CONFIG = {
 		active: true,
 	},
 	plugins: {
+		fade: {
+			active: false,
+		},
 		autoplay: {
 			active: false,
 			type: 'slide',
-			speed: 1,
+			delay: 4000,
 		},
 	},
 	breakpointLayers: {},
@@ -149,8 +153,9 @@ export const prepareEmblaBlockState = ({
 };
 
 /**
- * Register ClassNames plus Autoplay and AutoScroll (mutually exclusive via
- * `active` / per-breakpoint `type`) so responsive autoplay type can switch.
+ * Register ClassNames, optional Fade, plus Autoplay and AutoScroll
+ * (mutually exclusive via `active` / per-breakpoint `type`) so responsive
+ * autoplay type can switch.
  * @param {Object}  pluginState             - The plugin state.
  * @param {Object}  [options]               - Build options.
  * @param {boolean} [options.forceInactive] - The force inactive flag.
@@ -158,6 +163,7 @@ export const prepareEmblaBlockState = ({
 export const buildEmblaPlugins = (pluginState, options = {}) => {
 	const { forceInactive = false } = options;
 	const plugins = [ClassNames()];
+	const fade = isPlainObject(pluginState?.fade) ? pluginState.fade : {};
 	const autoplay = isPlainObject(pluginState?.autoplay)
 		? pluginState.autoplay
 		: {};
@@ -171,6 +177,12 @@ export const buildEmblaPlugins = (pluginState, options = {}) => {
 	const wantBaseActive = !forceInactive && !!baseActive;
 	const autoplayBaseActive = wantBaseActive && baseType !== 'scroll';
 	const autoScrollBaseActive = wantBaseActive && baseType === 'scroll';
+	const fadeActive = !forceInactive && !!fade.active;
+
+	if (fadeActive) {
+		const { active: _fadeActive, ...fadeOptions } = fade;
+		plugins.push(Fade(fadeOptions));
+	}
 
 	const autoplayBreakpoints = {};
 	const autoScrollBreakpoints = {};
