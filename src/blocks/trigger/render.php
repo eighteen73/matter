@@ -18,6 +18,7 @@ $tag_markup       = isset( $content ) && is_string( $content ) ? $content : '';
 $accessible_label = isset( $block_attributes['accessibleLabel'] )
 	? trim( wp_strip_all_tags( (string) $block_attributes['accessibleLabel'] ) )
 	: '';
+$overlay_context  = Trigger::sanitize_overlay_context( $block_attributes['overlayContext'] ?? [] );
 
 if ( empty( $target_id ) || empty( $tag_markup ) ) {
 	echo $tag_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -30,7 +31,8 @@ $updated_html = Trigger::apply_toggle_attributes_to_markup(
 	$tag_markup,
 	$target_id,
 	$standalone,
-	$accessible_label
+	$accessible_label,
+	$overlay_context
 );
 
 echo $updated_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
