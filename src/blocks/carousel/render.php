@@ -12,8 +12,9 @@ use Eighteen73\Matter\Blocks\Carousel;
 
 defined( 'ABSPATH' ) || exit;
 
-$carousel_id      = wp_unique_id( 'matter-carousel-' );
 $block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
+$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
+$carousel_id      = Carousel::resolve_id( $block_attributes, $block_context );
 
 $carousel_classes = implode( ' ', Carousel::generate_carousel_classes( $block_attributes ) );
 $carousel_context = Carousel::build_carousel_context( $carousel_id, $block_attributes );
@@ -22,6 +23,17 @@ $generated_styles = Carousel::generate_styles( $carousel_id, $block_attributes )
 if ( ! empty( $generated_styles ) ) {
 	wp_enqueue_block_support_styles( $generated_styles, 10 );
 }
+
+wp_interactivity_state(
+	'matter/carousel/private',
+	[
+		'items' => [
+			$carousel_id => [
+				'instance' => null,
+			],
+		],
+	]
+);
 ?>
 
 <div
@@ -31,7 +43,7 @@ if ( ! empty( $generated_styles ) ) {
 			[
 				'id'                  => $carousel_id,
 				'data-wp-interactive' => 'matter/carousel',
-				'data-wp-init'        => 'callbacks.loadEmblaCarousel',
+				'data-wp-init'        => 'callbacks.loadCarousel',
 				'class'               => $carousel_classes,
 			]
 		)

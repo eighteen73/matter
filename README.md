@@ -109,7 +109,7 @@ An interactive section that reveals content when triggered. Useful for toggles a
 #### Attributes
 
 - type (popover or inline)
-- targetId
+- generatedId (auto-managed; prefer a custom anchor)
 
 #### Child blocks
 
@@ -125,7 +125,7 @@ A modal dialog for displaying content without leaving the page. Supports automat
 
 #### Attributes
 
-- targetId
+- generatedId (auto-managed; prefer a custom anchor)
 - triggerOnLoad
 - triggerDelay
 - triggerOnScroll
@@ -154,7 +154,7 @@ A slide-in panel for off-canvas content, ideal for sidebars, filters, and mobile
 
 #### Attributes
 
-- targetId
+- generatedId (auto-managed; prefer a custom anchor)
 
 #### Child blocks
 

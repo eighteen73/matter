@@ -39,6 +39,7 @@ import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
 import BlockVariationPicker from '../../components/block-variation-picker';
+import useBlockId from '../../utils/use-block-id';
 
 import './editor.scss';
 
@@ -70,6 +71,15 @@ export default function Edit({
 }) {
 	const { emblaConfig, advancedEmblaConfig, advancedEmblaConfigMerge } =
 		attributes;
+
+	useBlockId({
+		blockName: 'matter/carousel',
+		prefix: 'matter-carousel',
+		attributes,
+		setAttributes,
+		clientId,
+	});
+
 	const resolvedConfig = useMemo(
 		() => normalizeEmblaConfig(emblaConfig),
 		[emblaConfig]

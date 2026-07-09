@@ -40,7 +40,7 @@ export const getOverlayTargetIdFromBlock = (block) => {
 	const attributes = block?.attributes ?? {};
 
 	return (
-		attributes.targetId || attributes.anchor || attributes.generatedId || ''
+		attributes.anchor || attributes.generatedId || attributes.targetId || ''
 	);
 };
 

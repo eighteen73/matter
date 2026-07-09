@@ -1,18 +1,16 @@
 import {
 	BlockControls,
+	BlockContextProvider,
 	useBlockProps,
 	useInnerBlocksProps,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { Notice, ToolbarButton, ToolbarGroup } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import {
-	generateBlockId,
-	hasDuplicateAttributeValue,
-} from '../../utils/block-ids';
+import useBlockId from '../../utils/use-block-id';
 
 import clsx from 'clsx';
 
@@ -31,16 +29,15 @@ const TEMPLATE = [
  * @return {Element} Element to render.
  */
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { anchor, editorIsOpen, generatedId, targetId } = attributes;
+	const { editorIsOpen } = attributes;
 	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch(blockEditorStore);
 
-	const { blocks, hasSelection } = useSelect(
+	const { hasSelection } = useSelect(
 		(select) => {
 			const blockEditor = select(blockEditorStore);
 
 			return {
-				blocks: blockEditor.getBlocks(),
 				hasSelection:
 					blockEditor.isBlockSelected(clientId) ||
 					blockEditor.hasSelectedInnerBlock(clientId, true),
@@ -49,39 +46,21 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[clientId]
 	);
 
-	const duplicateGeneratedId = hasDuplicateAttributeValue(
-		blocks,
+	const { duplicateAnchor, blockId } = useBlockId({
+		blockName: 'matter/drawer',
+		prefix: 'matter-drawer',
+		attributes,
+		setAttributes,
 		clientId,
-		'matter/drawer',
-		'generatedId',
-		generatedId
+	});
+
+	const contextValue = useMemo(
+		() => ({
+			'matter/drawer-id': blockId,
+			'matter/drawer-is-open': editorIsOpen,
+		}),
+		[blockId, editorIsOpen]
 	);
-
-	const duplicateAnchor = hasDuplicateAttributeValue(
-		blocks,
-		clientId,
-		'matter/drawer',
-		'anchor',
-		anchor
-	);
-
-	useEffect(() => {
-		if (!generatedId || (!anchor && duplicateGeneratedId)) {
-			const nextGeneratedId = generateBlockId('matter-drawer');
-
-			setAttributes({
-				generatedId: nextGeneratedId,
-				targetId: anchor || nextGeneratedId,
-			});
-			return;
-		}
-
-		const nextTargetId = anchor || generatedId;
-
-		if (targetId !== nextTargetId) {
-			setAttributes({ targetId: nextTargetId });
-		}
-	}, [anchor, duplicateGeneratedId, generatedId, setAttributes, targetId]);
 
 	useEffect(() => {
 		if (hasSelection || !editorIsOpen) {
@@ -144,7 +123,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					</Notice>
 				)}
 
-				<div {...innerBlocksProps} />
+				<BlockContextProvider value={contextValue}>
+					<div {...innerBlocksProps} />
+				</BlockContextProvider>
 			</div>
 		</>
 	);

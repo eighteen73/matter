@@ -55,13 +55,15 @@ class Overlay {
 	 * @return string
 	 */
 	public static function resolve_id( array $attributes, array $context = [], string $fallback_prefix = 'matter-overlay-' ): string {
-		$base_id = self::resolve_base_id( $attributes, $fallback_prefix );
-
-		return self::resolve_contextual_id( $base_id, $context );
+		return BlockId::resolve_id( $attributes, $context, $fallback_prefix );
 	}
 
 	/**
 	 * Provide computed overlay IDs to descendant blocks during server rendering.
+	 *
+	 * Overlay IDs are computed from anchor / generatedId (and legacy targetId),
+	 * so they cannot be mapped via providesContext alone. Setting the value on
+	 * the overlay block context lets WordPress refresh descendants with it.
 	 *
 	 * @param array<string, mixed> $context      Default block context.
 	 * @param array<string, mixed> $parsed_block The block being rendered.
@@ -91,7 +93,7 @@ class Overlay {
 				continue;
 			}
 
-			$context[ $context_key ] = self::resolve_contextual_id(
+			$context[ $context_key ] = BlockId::resolve_contextual_id(
 				(string) $context[ $context_key ],
 				$context
 			);
@@ -108,34 +110,17 @@ class Overlay {
 	 * @return string
 	 */
 	public static function resolve_base_id( array $attributes, string $fallback_prefix ): string {
-		foreach ( [ 'anchor', 'targetId', 'generatedId' ] as $id_attribute ) {
-			if ( empty( $attributes[ $id_attribute ] ) ) {
-				continue;
-			}
-
-			return (string) $attributes[ $id_attribute ];
-		}
-
-		return wp_unique_id( $fallback_prefix );
+		return BlockId::resolve_base_id( $attributes, $fallback_prefix );
 	}
 
 	/**
 	 * Whether the current block context represents a Query Loop post iteration.
 	 *
-	 * Query Loop descendants do not always receive queryId during server render,
-	 * so Matter marks repeated item descendants with matter/in-query-loop.
-	 *
 	 * @param array<string, mixed> $context Block context.
 	 * @return bool
 	 */
 	public static function is_query_loop_context( array $context ): bool {
-		$post_id = empty( $context['postId'] ) ? 0 : (int) $context['postId'];
-
-		if ( $post_id <= 0 ) {
-			return false;
-		}
-
-		return Context::is_in_query_loop( $context ) || isset( $context['queryId'] );
+		return BlockId::is_query_loop_context( $context );
 	}
 
 	/**
@@ -146,17 +131,7 @@ class Overlay {
 	 * @return string
 	 */
 	public static function resolve_contextual_id( string $base_id, array $context ): string {
-		if ( ! self::is_query_loop_context( $context ) ) {
-			return $base_id;
-		}
-
-		$suffix = '-post-' . (int) $context['postId'];
-
-		if ( substr( $base_id, -strlen( $suffix ) ) === $suffix ) {
-			return $base_id;
-		}
-
-		return $base_id . $suffix;
+		return BlockId::resolve_contextual_id( $base_id, $context );
 	}
 
 	/**

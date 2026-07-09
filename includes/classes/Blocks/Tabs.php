@@ -285,7 +285,12 @@ class Tabs {
 			return $context;
 		}
 
-		$tabs_id = $parsed_block['attrs']['anchor'] ?? wp_unique_id( 'tabs_' );
+		$tabs_id = BlockId::resolve_base_id(
+			isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] )
+				? $parsed_block['attrs']
+				: [],
+			'matter-tabs-'
+		);
 
 		$context['matter/tabs-list'] = self::generate_tabs_list(
 			$parsed_block['innerBlocks'] ?? [],
