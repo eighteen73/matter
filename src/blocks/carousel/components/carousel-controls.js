@@ -12,6 +12,8 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -44,20 +46,24 @@ const buildTabs = () => [
  * @param {Object}   root0                  - The root object.
  * @param {Object}   root0.options          - The options.
  * @param {Object}   root0.autoplay         - The autoplay.
+ * @param {Object}   root0.fade             - The fade.
  * @param {Function} root0.onChangeOption   - The onChangeOption function.
  * @param {Function} root0.onChangeAutoplay - The onChangeAutoplay function.
+ * @param {Function} root0.onChangeFade     - The onChangeFade function.
  */
 function CarouselFields({
 	options,
 	autoplay,
+	fade,
 	onChangeOption,
 	onChangeAutoplay,
+	onChangeFade,
 }) {
 	return (
-		<div style={{ marginTop: '16px' }}>
+		<VStack spacing={4} style={{ marginTop: '16px' }}>
 			<RangeControl
 				label={__('Slides to show', 'matter')}
-				value={options.slidesToShow}
+				value={fade.active ? 1 : options.slidesToShow}
 				onChange={(value) =>
 					onChangeOption(
 						'slidesToShow',
@@ -69,6 +75,7 @@ function CarouselFields({
 				min={1}
 				max={10}
 				step={1}
+				disabled={!!fade.active}
 			/>
 
 			<RangeControl
@@ -150,6 +157,22 @@ function CarouselFields({
 				/>
 			</ToggleGroupControl>
 
+			<ToggleGroupControl
+				label={__('Transition', 'matter')}
+				value={!!fade.active}
+				onChange={(value) => onChangeFade('active', value)}
+				isBlock
+			>
+				<ToggleGroupControlOption
+					value={false}
+					label={__('Slide', 'matter')}
+				/>
+				<ToggleGroupControlOption
+					value={true}
+					label={__('Fade', 'matter')}
+				/>
+			</ToggleGroupControl>
+
 			{autoplay.active && (
 				<ToggleGroupControl
 					label={__('Autoplay Type', 'matter')}
@@ -183,7 +206,7 @@ function CarouselFields({
 					label={__('Yes', 'matter')}
 				/>
 			</ToggleGroupControl>
-		</div>
+		</VStack>
 	);
 }
 
@@ -197,11 +220,14 @@ function CarouselFields({
  * @param {Object}   root0                       - The root object.
  * @param {Object}   root0.baseOptions           - The base options.
  * @param {Object}   root0.baseAutoplay          - The base autoplay.
+ * @param {Object}   root0.baseFade              - The base fade.
  * @param {Object}   root0.breakpointLayers      - The breakpoint layers.
  * @param {Function} root0.onChangeBaseOption    - The onChangeBaseOption function.
  * @param {Function} root0.onChangeBaseAutoplay  - The onChangeBaseAutoplay function.
+ * @param {Function} root0.onChangeBaseFade      - The onChangeBaseFade function.
  * @param {Function} root0.onChangeLayerOption   - The onChangeLayerOption function.
  * @param {Function} root0.onChangeLayerAutoplay - The onChangeLayerAutoplay function.
+ * @param {Function} root0.onChangeLayerFade     - The onChangeLayerFade function.
  * @param {Function} root0.onResetLayer          - The onResetLayer function.
  * @param {Object}   root0.emblaConfig           - The embla config.
  * @param {Function} root0.setAttributes         - The setAttributes function.
@@ -209,11 +235,14 @@ function CarouselFields({
 export default function CarouselControls({
 	baseOptions,
 	baseAutoplay,
+	baseFade,
 	breakpointLayers,
 	onChangeBaseOption,
 	onChangeBaseAutoplay,
 	onChangeLayerOption,
 	onChangeLayerAutoplay,
+	onChangeBaseFade,
+	onChangeLayerFade,
 	onResetLayer,
 	emblaConfig,
 	setAttributes,
@@ -243,6 +272,9 @@ export default function CarouselControls({
 									type: 'slide',
 									speed: 1,
 								},
+								fade: {
+									active: false,
+								},
 							},
 							breakpointLayers: {},
 						},
@@ -258,6 +290,7 @@ export default function CarouselControls({
 						const layer = breakpointLayers?.[tab.name] || {};
 						const layerOptions = layer.options || {};
 						const layerAutoplay = layer.plugins?.autoplay || {};
+						const layerFade = layer.plugins?.fade || {};
 						const hasLayer = !!breakpointLayers?.[tab.name];
 
 						const effectiveOptions = {
@@ -278,13 +311,19 @@ export default function CarouselControls({
 							type: layerAutoplay.type ?? baseAutoplay.type,
 						};
 
+						const effectiveFade = {
+							active: layerFade.active ?? baseFade.active,
+						};
+
 						if (tab.name === BASE_TAB) {
 							return (
 								<CarouselFields
 									options={baseOptions}
 									autoplay={baseAutoplay}
+									fade={baseFade}
 									onChangeOption={onChangeBaseOption}
 									onChangeAutoplay={onChangeBaseAutoplay}
+									onChangeFade={onChangeBaseFade}
 								/>
 							);
 						}
@@ -294,6 +333,7 @@ export default function CarouselControls({
 								<CarouselFields
 									options={effectiveOptions}
 									autoplay={effectiveAutoplay}
+									fade={effectiveFade}
 									onChangeOption={(key, value) =>
 										onChangeLayerOption(
 											tab.name,
@@ -307,6 +347,9 @@ export default function CarouselControls({
 											key,
 											value
 										)
+									}
+									onChangeFade={(key, value) =>
+										onChangeLayerFade(tab.name, key, value)
 									}
 								/>
 
