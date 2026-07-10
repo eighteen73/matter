@@ -175,8 +175,14 @@ if ( $is_carousel ) {
 	echo '</div></div>';
 
 	echo '<div class="matter-gallery__controls">';
-	echo '<button type="button" class="matter-gallery__nav matter-gallery__nav--prev" aria-label="' . esc_attr__( 'Previous image', 'matter' ) . '">&#10094;</button>';
-	echo '<button type="button" class="matter-gallery__nav matter-gallery__nav--next" aria-label="' . esc_attr__( 'Next image', 'matter' ) . '">&#10095;</button>';
+	printf(
+		'<button type="button" class="matter-gallery__nav matter-gallery__nav--prev" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		esc_attr__( 'Previous image', 'matter' )
+	);
+	printf(
+		'<button type="button" class="matter-gallery__nav matter-gallery__nav--next" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		esc_attr__( 'Next image', 'matter' )
+	);
 	echo '</div>';
 	echo '</div>';
 

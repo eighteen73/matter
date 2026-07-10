@@ -1289,7 +1289,10 @@ export default function Edit(props) {
 									ref={prevButtonRef}
 									aria-label={__('Previous image', 'matter')}
 								>
-									&#10094;
+									<span
+										className="matter-gallery__icon"
+										aria-hidden="true"
+									/>
 								</button>
 								<button
 									type="button"
@@ -1297,7 +1300,10 @@ export default function Edit(props) {
 									ref={nextButtonRef}
 									aria-label={__('Next image', 'matter')}
 								>
-									&#10095;
+									<span
+										className="matter-gallery__icon"
+										aria-hidden="true"
+									/>
 								</button>
 							</div>
 						)}

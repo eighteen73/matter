@@ -144,6 +144,7 @@
 			"allowInheriting": false,
 			"allowEditing": true,
 			"allowSizingOnChildren": true,
+
 			"default": {
 				"type": "grid",
 				"columnCount": 3

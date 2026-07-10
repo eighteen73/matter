@@ -20,6 +20,22 @@
 		}
 	}
 
+	&:where(.has-lightbox) {
+		&::after {
+			background: #fff;
+			content: "";
+			height: 32px;
+			mask-image: url("../../../assets/svg/corners-out.svg");
+			mask-position: center;
+			mask-repeat: no-repeat;
+			mask-size: contain;
+			position: absolute;
+			right: 1rem;
+			top: 1rem;
+			width: 32px;
+		}
+	}
+
 	&.matter-gallery--carousel {
 		--_slides-to-show: var(--matter-carousel--slides-to-show, 1);
 		--_slide--gap: var(--matter-carousel--slide--gap, 0);
@@ -80,17 +96,27 @@
 		}
 
 		.matter-gallery__nav {
+			--_size: var(--matter-gallery--nav--size, 2.5rem);
+			--_icon-size: var(--matter-gallery--nav--icon-size, 50%);
+			--_background-color: var(--matter-gallery--nav--background-color, rgba(0, 0, 0, 0.5));
+			--_icon-color: var(--matter-gallery--nav--icon-color, #fff);
+			--_border-radius: var(--matter-gallery--nav--border-radius, 0);
+
+			align-items: center;
 			appearance: none;
-			background: rgba(0, 0, 0, 0.5);
+			background-color: var(--_background-color);
 			border: 0;
-			color: #fff;
+			border-radius: var(--_border-radius);
 			cursor: pointer;
-			height: 2.5rem;
+			display: inline-flex;
+			height: var(--_size);
+			justify-content: center;
+			padding: 0;
 			pointer-events: auto;
 			position: absolute;
 			top: 50%;
 			transform: translateY(-50%);
-			width: 2.5rem;
+			width: var(--_size);
 
 			&:disabled {
 				cursor: default;
@@ -99,11 +125,29 @@
 
 			&--prev {
 				left: 0.5rem;
+
+				.matter-gallery__icon {
+					mask-image: url("../../../assets/svg/arrow-left.svg");
+				}
 			}
 
 			&--next {
 				right: 0.5rem;
+
+				.matter-gallery__icon {
+					mask-image: url("../../../assets/svg/arrow-right.svg");
+				}
 			}
+		}
+
+		.matter-gallery__icon {
+			background-color: var(--_icon-color);
+			display: block;
+			height: var(--_icon-size);
+			mask-position: center;
+			mask-repeat: no-repeat;
+			mask-size: contain;
+			width: var(--_icon-size);
 		}
 
 		.matter-gallery__thumbs {
@@ -233,22 +277,44 @@
 
 	&__close,
 	&__nav {
+		align-items: center;
 		appearance: none;
-		background: rgba(255, 255, 255, 0.15);
+		background-color: var(--_background-color);
 		border: 0;
-		color: #fff;
+		border-radius: var(--_border-radius);
 		cursor: pointer;
+		display: inline-flex;
+		height: var(--_size);
+		justify-content: center;
+		padding: 0;
+		width: var(--_size);
+	}
+
+	&__icon {
+		background-color: var(--_icon-color);
+		display: block;
+		height: var(--_icon-size);
+		mask-position: center;
+		mask-repeat: no-repeat;
+		mask-size: contain;
+		width: var(--_icon-size);
 	}
 
 	&__close {
-		font-size: 1.5rem;
-		height: 2.5rem;
-		line-height: 1;
+		--_size: var(--matter-lightbox--close--size, 2.5rem);
+		--_icon-size: var(--matter-lightbox--close--icon-size, 50%);
+		--_background-color: var(--matter-lightbox--close--background-color, rgba(255, 255, 255, 0.15));
+		--_icon-color: var(--matter-lightbox--close--icon-color, #fff);
+		--_border-radius: var(--matter-lightbox--close--border-radius, 0);
+
 		position: absolute;
 		right: 0.5rem;
 		top: 0.5rem;
-		width: 2.5rem;
 		z-index: 2;
+
+		.matter-lightbox__icon {
+			mask-image: url("../../../assets/svg/x.svg");
+		}
 	}
 
 	&__controls {
@@ -263,19 +329,31 @@
 	}
 
 	&__nav {
-		height: 2.5rem;
+		--_size: var(--matter-lightbox--nav--size, 2.5rem);
+		--_icon-size: var(--matter-lightbox--nav--icon-size, 50%);
+		--_background-color: var(--matter-lightbox--nav--background-color, rgba(255, 255, 255, 0.15));
+		--_icon-color: var(--matter-lightbox--nav--icon-color, #fff);
+		--_border-radius: var(--matter-lightbox--nav--border-radius, 0);
+
 		pointer-events: auto;
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
-		width: 2.5rem;
 
 		&--prev {
 			left: 0.5rem;
+
+			.matter-lightbox__icon {
+				mask-image: url("../../../assets/svg/arrow-left.svg");
+			}
 		}
 
 		&--next {
 			right: 0.5rem;
+
+			.matter-lightbox__icon {
+				mask-image: url("../../../assets/svg/arrow-right.svg");
+			}
 		}
 	}
 
@@ -283,7 +361,7 @@
 		display: flex;
 		flex-wrap: nowrap;
 		gap: var(--_thumb-gap);
-		justify-content: flex-start;
+		justify-content: center;
 		max-width: min(96vw, 1200px);
 		overflow-x: auto;
 		width: 100%;

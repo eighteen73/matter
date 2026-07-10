@@ -90,7 +90,7 @@ class Gallery {
 					data-wp-on--click="actions.close"
 					aria-label="<?php esc_attr_e( 'Close lightbox', 'matter' ); ?>"
 				>
-					&times;
+					<span class="matter-lightbox__icon" aria-hidden="true"></span>
 				</button>
 				<figure class="matter-lightbox__figure">
 					<img
@@ -116,7 +116,7 @@ class Gallery {
 						data-wp-on--click="actions.showPrevious"
 						aria-label="<?php esc_attr_e( 'Previous image', 'matter' ); ?>"
 					>
-						&#10094;
+						<span class="matter-lightbox__icon" aria-hidden="true"></span>
 					</button>
 					<button
 						type="button"
@@ -124,7 +124,7 @@ class Gallery {
 						data-wp-on--click="actions.showNext"
 						aria-label="<?php esc_attr_e( 'Next image', 'matter' ); ?>"
 					>
-						&#10095;
+						<span class="matter-lightbox__icon" aria-hidden="true"></span>
 					</button>
 				</div>
 				<div
