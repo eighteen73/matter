@@ -132,6 +132,7 @@ export const addThumbsClickHandlers = (
 			const isSelected = index === selected;
 
 			thumbNode.classList.toggle('embla__thumb--selected', isSelected);
+			thumbNode.classList.toggle('is-selected', isSelected);
 
 			if (isSelected) {
 				thumbNode.setAttribute('aria-current', 'true');
@@ -177,7 +178,8 @@ export const addThumbsClickHandlers = (
 			return () => {
 				thumbNode.classList.remove(
 					'embla__thumb',
-					'embla__thumb--selected'
+					'embla__thumb--selected',
+					'is-selected'
 				);
 				thumbNode.removeAttribute('tabindex');
 				thumbNode.removeAttribute('role');

@@ -1,13 +1,149 @@
 .wp-block-matter-gallery {
-	.matter-gallery__thumbs-note {
-		font-size: 0.75rem;
-		margin: 0.5rem 0 0;
-		opacity: 0.7;
+	&.matter-gallery--grid {
+		// Wrappers exist so InnerBlocks can stay mounted when switching types.
+		// Layout classnames live on the InnerBlocks host, so these can be transparent.
+		.matter-gallery__grid,
+		.matter-gallery__stage,
+		.matter-gallery__viewport {
+			display: contents;
+		}
+
+		.block-editor-block-list__layout > .wp-block-image,
+		.block-editor-block-list__layout > .wp-block[data-type="core/image"] {
+			margin: 0;
+			min-width: 0;
+			width: 100%;
+
+			img {
+				display: block;
+				height: auto;
+				max-width: 100%;
+				width: 100%;
+			}
+		}
+
+		&.is-cropped {
+			.block-editor-block-list__layout > .wp-block-image,
+			.block-editor-block-list__layout > .wp-block[data-type="core/image"] {
+				height: 100%;
+
+				img {
+					height: 100%;
+					object-fit: cover;
+				}
+			}
+		}
 	}
 
 	&.matter-gallery--carousel {
-		.block-editor-block-list__layout {
+		// Neutralise any leftover grid layout styles from block supports.
+		.matter-gallery__track.block-editor-block-list__layout,
+		.matter-gallery__track {
+			display: flex !important; // stylelint-disable-line declaration-no-important
+			flex-direction: row;
+			gap: 0 !important; // stylelint-disable-line declaration-no-important
+			grid-template-columns: none !important; // stylelint-disable-line declaration-no-important
+			grid-template-rows: none !important; // stylelint-disable-line declaration-no-important
+		}
+
+		.matter-gallery__carousel {
 			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			position: relative;
+		}
+
+		.matter-gallery__stage {
+			overflow: hidden;
+			position: relative;
+		}
+
+		.matter-gallery__viewport {
+			overflow: hidden;
+		}
+
+		.matter-gallery__track > .wp-block-image,
+		.matter-gallery__track > .wp-block[data-type="core/image"] {
+			flex: 0 0 100%;
+			margin: 0;
+			min-width: 0;
+			width: 100%;
+
+			img {
+				display: block;
+				height: auto;
+				max-width: 100%;
+				width: 100%;
+			}
+		}
+
+		&.has-aspect-ratio {
+			.matter-gallery__track > .wp-block-image,
+			.matter-gallery__track > .wp-block[data-type="core/image"] {
+				img {
+					height: 100%;
+					object-fit: cover;
+				}
+			}
+		}
+
+		.matter-gallery__nav {
+			appearance: none;
+			background: rgba(0, 0, 0, 0.5);
+			border: 0;
+			color: #fff;
+			cursor: pointer;
+			font-size: 1rem;
+			height: 2.5rem;
+			line-height: 1;
+			pointer-events: auto;
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 2.5rem;
+			z-index: 3;
+
+			&:disabled {
+				cursor: default;
+				opacity: 0.35;
+			}
+
+			&--prev {
+				left: 0.5rem;
+			}
+
+			&--next {
+				right: 0.5rem;
+			}
+		}
+
+		.matter-gallery__controls {
+			inset: 0;
+			pointer-events: none;
+			position: absolute;
+			z-index: 2;
+		}
+
+		.matter-gallery__thumbs {
+			--_thumb-basis: 4rem;
+			--_thumb-gap: var(--matter-gallery--thumbnail-gap, 0.5rem);
+
+			&.has-visible-count {
+				--_thumb-basis: calc((100% - (var(--_thumb-gap) * (var(--matter-gallery--thumbs-visible, 1) - 1))) / var(--matter-gallery--thumbs-visible, 1));
+			}
+
+			.matter-gallery__thumbs-track {
+				gap: var(--_thumb-gap);
+			}
+
+			.matter-gallery__thumb {
+				flex: 0 0 var(--_thumb-basis);
+				width: var(--_thumb-basis);
+			}
+		}
+
+		.matter-gallery__thumb img {
+			pointer-events: none;
 		}
 	}
 }

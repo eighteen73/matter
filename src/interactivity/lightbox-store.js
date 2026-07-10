@@ -1,9 +1,16 @@
-import { store, getContext, withSyncEvent } from '@wordpress/interactivity';
+import {
+	store,
+	getContext,
+	getElement,
+	withSyncEvent,
+} from '@wordpress/interactivity';
 
 const STORE = 'matter/lightbox';
 
+const getGallery = (state, galleryId) => state.galleries?.[galleryId] || null;
+
 const getGalleryImages = (state, galleryId) => {
-	const gallery = state.galleries?.[galleryId];
+	const gallery = getGallery(state, galleryId);
 	if (!gallery?.images?.length) {
 		return [];
 	}
@@ -46,6 +53,9 @@ const { state, actions } = store(STORE, {
 		selectedGalleryId: null,
 		selectedIndex: 0,
 		galleries: {},
+		get currentGallery() {
+			return getGallery(state, state.selectedGalleryId);
+		},
 		get currentImages() {
 			if (!state.selectedGalleryId) {
 				return [];
@@ -75,21 +85,87 @@ const { state, actions } = store(STORE, {
 		get hasNavigation() {
 			return state.currentImages.length > 1;
 		},
+		get showThumbnails() {
+			const gallery = state.currentGallery;
+			if (!gallery) {
+				return false;
+			}
+			if (gallery.lightboxThumbnails === false) {
+				return false;
+			}
+			return state.hasNavigation;
+		},
 		get currentThumbs() {
 			return state.currentImages.map((image, index) => ({
-				src: image.thumbSrc || image.src || '',
+				src:
+					image.lightboxThumbSrc || image.thumbSrc || image.src || '',
 				alt: image.alt || '',
 				index,
 				isActive: index === state.selectedIndex,
 			}));
 		},
 		get currentThumbAspectRatio() {
-			const gallery = state.galleries?.[state.selectedGalleryId];
-			return gallery?.thumbnailAspectRatio || '1';
+			return state.currentGallery?.lightboxThumbnailAspectRatio || '1';
 		},
 		get currentThumbImageStyle() {
 			const ratio = state.currentThumbAspectRatio;
 			return `aspect-ratio:${ratio};object-fit:cover;`;
+		},
+		get thumbsVisible() {
+			return Number(state.currentGallery?.lightboxThumbnailsVisible) || 0;
+		},
+		get thumbsClassName() {
+			const visible = state.thumbsVisible;
+			return visible > 0
+				? 'matter-lightbox__thumbs has-visible-count'
+				: 'matter-lightbox__thumbs';
+		},
+		get thumbsStyle() {
+			const gallery = state.currentGallery;
+			const visible = state.thumbsVisible;
+			const parts = [];
+
+			if (visible > 0) {
+				parts.push(`--matter-lightbox--thumbs-visible:${visible}`);
+			}
+			if (gallery?.thumbnailGap) {
+				parts.push(
+					`--matter-lightbox--thumbnail-gap:${gallery.thumbnailGap}`
+				);
+			}
+			return parts.join(';');
+		},
+		get backdropStyle() {
+			const gallery = state.currentGallery;
+			if (!gallery) {
+				return '';
+			}
+
+			const parts = [];
+			if (gallery.backdropColor) {
+				parts.push(
+					`--matter-lightbox--backdrop-color:${gallery.backdropColor}`
+				);
+			}
+			if (
+				gallery.backdropOpacity !== undefined &&
+				gallery.backdropOpacity !== null &&
+				gallery.backdropOpacity !== ''
+			) {
+				parts.push(
+					`--matter-lightbox--backdrop-opacity:${gallery.backdropOpacity}`
+				);
+			}
+			if (
+				gallery.backdropBlur !== undefined &&
+				gallery.backdropBlur !== null &&
+				gallery.backdropBlur !== ''
+			) {
+				parts.push(
+					`--matter-lightbox--backdrop-blur:${gallery.backdropBlur}`
+				);
+			}
+			return parts.join(';');
 		},
 	},
 	actions: {
@@ -123,6 +199,34 @@ const { state, actions } = store(STORE, {
 				'has-matter-lightbox-open'
 			);
 		},
+		onNativeClose: () => {
+			if (!state.isOpen) {
+				return;
+			}
+			actions.close();
+		},
+		onCancel: withSyncEvent((event) => {
+			if (!state.isOpen) {
+				return;
+			}
+			event.preventDefault();
+			actions.close();
+		}),
+		onBackdropClick: withSyncEvent((event) => {
+			const { ref } = getElement();
+			if (!state.isOpen || !ref) {
+				return;
+			}
+
+			// Dialog is fullscreen; ::backdrop shows through transparent areas.
+			// Clicks land on the dialog or the content shell, not interactive children.
+			if (
+				event.target === ref ||
+				event.target?.classList?.contains('matter-lightbox__content')
+			) {
+				actions.close();
+			}
+		}),
 		showNext: () => {
 			if (!state.hasNavigation) {
 				return;
@@ -154,13 +258,28 @@ const { state, actions } = store(STORE, {
 			if (!state.isOpen) {
 				return;
 			}
-			if (event.key === 'Escape') {
-				actions.close();
-			} else if (event.key === 'ArrowRight') {
+			if (event.key === 'ArrowRight') {
 				actions.showNext();
 			} else if (event.key === 'ArrowLeft') {
 				actions.showPrevious();
 			}
 		}),
+	},
+	callbacks: {
+		syncDialog: () => {
+			const { ref } = getElement();
+			if (!ref || typeof ref.showModal !== 'function') {
+				return;
+			}
+
+			if (state.isOpen && !ref.open) {
+				ref.showModal();
+				return;
+			}
+
+			if (!state.isOpen && ref.open) {
+				ref.close();
+			}
+		},
 	},
 });

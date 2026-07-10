@@ -29,11 +29,43 @@
 		},
 		"lightbox": {
 			"type": "boolean",
-			"default": false
+			"default": true
 		},
 		"lightboxSizeSlug": {
 			"type": "string",
 			"default": "large"
+		},
+		"lightboxThumbnails": {
+			"type": "boolean",
+			"default": true
+		},
+		"lightboxThumbnailSizeSlug": {
+			"type": "string",
+			"default": "thumbnail"
+		},
+		"lightboxThumbnailAspectRatio": {
+			"type": "string",
+			"default": "1"
+		},
+		"lightboxThumbnailsVisible": {
+			"type": "number",
+			"default": 0
+		},
+		"lightboxThumbnailGap": {
+			"type": "string",
+			"default": ""
+		},
+		"lightboxBackdropColor": {
+			"type": "string",
+			"default": ""
+		},
+		"lightboxBackdropOpacity": {
+			"type": "number",
+			"default": 85
+		},
+		"lightboxBackdropBlur": {
+			"type": "number",
+			"default": 0
 		},
 		"imageLimit": {
 			"type": "number",
@@ -46,6 +78,14 @@
 		"thumbnailAspectRatio": {
 			"type": "string",
 			"default": "1"
+		},
+		"thumbnailsVisible": {
+			"type": "number",
+			"default": 0
+		},
+		"thumbnailGap": {
+			"type": "string",
+			"default": ""
 		},
 		"imageCrop": {
 			"type": "boolean",
@@ -91,7 +131,7 @@
 		"interactivity": true,
 		"spacing": {
 			"margin": true,
-			"padding": true,
+			"padding": false,
 			"blockGap": true,
 			"__experimentalDefaultControls": {
 				"margin": false,
@@ -108,6 +148,18 @@
 				"type": "grid",
 				"columnCount": 3
 			}
+		},
+		"dimensions": {
+			"width": false,
+			"height": false,
+			"aspectRatio": false,
+			"minHeight": false
+		}
+	},
+	"selectors": {
+		"root": ".wp-block-matter-gallery",
+		"spacing": {
+			"blockGap": ".wp-block-matter-gallery.matter-gallery--grid.is-layout-grid, .wp-block-matter-gallery.matter-gallery--grid .block-editor-block-list__layout.is-layout-grid, .wp-block-matter-gallery.matter-gallery--carousel .matter-gallery__carousel"
 		}
 	},
 	"textdomain": "matter",

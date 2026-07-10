@@ -22,8 +22,8 @@ store(STORE, {
 			}
 
 			const { ref } = getElement();
-			const viewportNode = ref.querySelector('.embla__viewport');
-			const containerNode = ref.querySelector('.embla__container');
+			const viewportNode = ref.querySelector('.matter-gallery__viewport');
+			const containerNode = ref.querySelector('.matter-gallery__track');
 
 			if (!viewportNode || !containerNode) {
 				return;
@@ -41,6 +41,7 @@ store(STORE, {
 				{
 					...carouselOptions,
 					container: containerNode,
+					slides: '.matter-gallery__slide',
 				},
 				buildCarouselPlugins(pluginState)
 			);
@@ -48,14 +49,16 @@ store(STORE, {
 			context.carouselApi = carouselApi;
 
 			const prevButtonNode = ref.querySelector(
-				'.embla__button--previous'
+				'.matter-gallery__nav--prev'
 			);
-			const nextButtonNode = ref.querySelector('.embla__button--next');
+			const nextButtonNode = ref.querySelector(
+				'.matter-gallery__nav--next'
+			);
 			const thumbsViewportNode = ref.querySelector(
-				'.embla__thumbs__viewport'
+				'.matter-gallery__thumbs-viewport'
 			);
 			const thumbsContainerNode = ref.querySelector(
-				'.embla__thumbs__container'
+				'.matter-gallery__thumbs-track'
 			);
 
 			if (prevButtonNode && nextButtonNode) {

@@ -9,6 +9,10 @@ import {
 	useInnerBlocksProps,
 	store as blockEditorStore,
 	useSettings,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalSpacingSizesControl as SpacingSizesControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import {
 	SelectControl,
@@ -23,18 +27,34 @@ import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
-import { useMemo } from '@wordpress/element';
+import { useEffect, useMemo, useRef } from '@wordpress/element';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { createBlobURL } from '@wordpress/blob';
 import { store as noticesStore } from '@wordpress/notices';
+import useEmblaCarousel from 'embla-carousel-react';
 
-import { normalizeCarouselConfig } from '../../utils/carousel/config';
+import {
+	normalizeCarouselConfig,
+	prepareCarouselBlockState,
+	buildCarouselPlugins,
+} from '../../utils/carousel/config';
+import {
+	addPrevNextBtnsClickHandlers,
+	addThumbsClickHandlers,
+} from '../../utils/carousel/handlers';
 import { Gallery as GalleryIcon } from '../../components/icons/gallery';
+import ColorControl from '../../components/color-control';
+import { storeColorValue } from '../../utils/colors';
+import { getBlockStyles } from '../../utils/block-styles';
 
 const ALLOWED_MEDIA_TYPES = ['image'];
 const DEFAULT_BLOCK = { name: 'core/image' };
 const EMPTY_ARRAY = [];
+const DEFAULT_GRID_LAYOUT = { type: 'grid', columnCount: 3 };
+const DEFAULT_FLOW_LAYOUT = { type: 'default' };
+const EDITOR_SLIDES_SELECTOR =
+	':scope > .block-editor-block-list__block:not(.block-list-appender), :scope > .wp-block:not(.block-list-appender)';
 const PLACEHOLDER_TEXT = __(
 	'Drag and drop images, upload, or choose from your library.',
 	'matter'
@@ -59,17 +79,66 @@ export default function Edit(props) {
 		thumbnailSizeSlug,
 		lightbox,
 		lightboxSizeSlug,
+		lightboxThumbnails,
+		lightboxThumbnailSizeSlug,
+		lightboxThumbnailAspectRatio,
+		lightboxThumbnailsVisible,
+		lightboxThumbnailGap,
+		lightboxBackdropColor,
+		lightboxBackdropOpacity,
+		lightboxBackdropBlur,
 		imageLimit,
 		includeThumbnails,
 		thumbnailAspectRatio,
+		thumbnailsVisible,
+		thumbnailGap,
 		imageCrop,
 		carouselConfig,
+		layout,
+		style,
 	} = attributes;
 
 	const isCarousel = type === 'carousel';
 	const isGrid = !isCarousel;
 	const hasImageLimit = isGrid && imageLimit > 0;
 	const lightboxEnabled = lightbox || hasImageLimit;
+	const columnCount = layout?.columnCount || DEFAULT_GRID_LAYOUT.columnCount;
+
+	const setGalleryType = (nextType) => {
+		if (nextType === 'carousel') {
+			setAttributes({
+				type: 'carousel',
+				layout: DEFAULT_FLOW_LAYOUT,
+			});
+			return;
+		}
+
+		setAttributes({
+			type: 'grid',
+			layout: {
+				type: 'grid',
+				columnCount:
+					layout?.columnCount || DEFAULT_GRID_LAYOUT.columnCount,
+			},
+		});
+	};
+
+	// Carousel must not keep a grid layout — core layout styles break Embla.
+	useEffect(() => {
+		if (isCarousel && layout?.type === 'grid') {
+			setAttributes({ layout: DEFAULT_FLOW_LAYOUT });
+		}
+	}, [isCarousel, layout?.type, setAttributes]);
+
+	// Keep image limit at least one full row when columns change.
+	useEffect(() => {
+		if (!isGrid || imageLimit <= 0) {
+			return;
+		}
+		if (imageLimit < columnCount) {
+			setAttributes({ imageLimit: columnCount });
+		}
+	}, [isGrid, imageLimit, columnCount, setAttributes]);
 
 	const [defaultRatios, themeRatios, showDefaultRatios] = useSettings(
 		'dimensions.aspectRatios.default',
@@ -103,6 +172,7 @@ export default function Edit(props) {
 				clientId: block.clientId,
 				id: block.attributes.id,
 				url: block.attributes.url,
+				alt: block.attributes.alt,
 				attributes: block.attributes,
 			})),
 		[innerBlockImages]
@@ -150,6 +220,93 @@ export default function Edit(props) {
 		() => normalizeCarouselConfig(carouselConfig),
 		[carouselConfig]
 	);
+
+	const { carouselOptions, pluginState } = useMemo(
+		() =>
+			prepareCarouselBlockState({
+				carouselConfig: resolvedCarouselConfig,
+			}),
+		[resolvedCarouselConfig]
+	);
+
+	const emblaPlugins = useMemo(
+		() => buildCarouselPlugins(pluginState, { forceInactive: true }),
+		[pluginState]
+	);
+
+	// Matter-only keys — Embla ignores unknown options, but strip to be safe.
+	const emblaInitOptions = useMemo(() => {
+		const {
+			slidesToShow: _slidesToShow,
+			slideGap: _slideGap,
+			...options
+		} = carouselOptions || {};
+		return options;
+	}, [carouselOptions]);
+
+	const [emblaRef, emblaApi] = useEmblaCarousel(
+		{
+			...emblaInitOptions,
+			// Track is the first child of the viewport (Embla default container).
+			slides: EDITOR_SLIDES_SELECTOR,
+			watchFocus: false,
+			active: isCarousel,
+		},
+		emblaPlugins
+	);
+
+	const [thumbsRef, thumbsApi] = useEmblaCarousel({
+		containScroll: 'keepSnaps',
+		dragFree: true,
+		watchFocus: false,
+		active: isCarousel && includeThumbnails,
+	});
+
+	const prevButtonRef = useRef(null);
+	const nextButtonRef = useRef(null);
+
+	useEffect(() => {
+		if (!emblaApi || !isCarousel) {
+			return;
+		}
+		emblaApi.reInit();
+	}, [
+		emblaApi,
+		isCarousel,
+		images.length,
+		carouselOptions,
+		includeThumbnails,
+	]);
+
+	useEffect(() => {
+		if (
+			!emblaApi ||
+			!isCarousel ||
+			!prevButtonRef.current ||
+			!nextButtonRef.current
+		) {
+			return;
+		}
+
+		return addPrevNextBtnsClickHandlers(
+			emblaApi,
+			prevButtonRef.current,
+			nextButtonRef.current
+		);
+	}, [emblaApi, isCarousel, images.length]);
+
+	useEffect(() => {
+		if (!emblaApi || !thumbsApi || !isCarousel || !includeThumbnails) {
+			return;
+		}
+
+		const thumbsNode = thumbsApi.containerNode();
+		if (!thumbsNode) {
+			return;
+		}
+
+		return addThumbsClickHandlers(emblaApi, thumbsApi, thumbsNode);
+	}, [emblaApi, thumbsApi, isCarousel, includeThumbnails, images.length]);
 
 	const setFadeActive = (active) => {
 		setAttributes({
@@ -333,19 +490,24 @@ export default function Edit(props) {
 		className: clsx(className, 'matter-gallery', {
 			'matter-gallery--grid': isGrid,
 			'matter-gallery--carousel': isCarousel,
+			'has-lightbox': lightboxEnabled,
 			'is-cropped':
 				isGrid &&
 				(imageCrop || (aspectRatio && aspectRatio !== 'auto')),
-			[layoutClassNames]: isGrid && layoutClassNames,
+			'has-aspect-ratio': !!(aspectRatio && aspectRatio !== 'auto'),
 		}),
 	});
 
+	// Keep a stable InnerBlocks host across grid/carousel so blocks stay mounted.
+	// Layout classnames must live here (not on the figure) so grid columns apply
+	// to the element that actually contains the images.
 	const innerBlocksProps = useInnerBlocksProps(
-		isCarousel
-			? {
-					className: 'embla__container matter-gallery__slides',
-				}
-			: blockProps,
+		{
+			className: clsx({
+				'matter-gallery__track': isCarousel,
+				[layoutClassNames]: isGrid && layoutClassNames,
+			}),
+		},
 		{
 			defaultBlock: DEFAULT_BLOCK,
 			directInsert: true,
@@ -359,10 +521,33 @@ export default function Edit(props) {
 		(img) => !img.id && img.url?.indexOf('blob:') === 0
 	);
 
+	const fadeActive = !!resolvedCarouselConfig.plugins?.fade?.active;
+	const showCropControl = isGrid && (!aspectRatio || aspectRatio === 'auto');
+	const showCarouselThumbControls = isCarousel && includeThumbnails;
+	const showLightboxThumbControls =
+		lightboxEnabled && lightboxThumbnails !== false;
+	const thumbStyle =
+		thumbnailAspectRatio && thumbnailAspectRatio !== 'auto'
+			? {
+					aspectRatio: thumbnailAspectRatio,
+					objectFit: 'cover',
+				}
+			: undefined;
+	const carouselThumbStyles = {
+		...getBlockStyles({ thumbnailGap }, 'gallery'),
+		...(thumbnailsVisible > 0
+			? { '--matter-gallery--thumbs-visible': thumbnailsVisible }
+			: {}),
+	};
+
+	const carouselGap = isCarousel
+		? getGapCSSValue(style?.spacing?.blockGap)
+		: null;
+	const carouselStyles = carouselGap ? { gap: carouselGap } : undefined;
+
 	if (!hasImages) {
 		return (
 			<figure {...blockProps}>
-				{innerBlocksProps.children}
 				<MediaPlaceholder
 					icon={GalleryIcon}
 					labels={{
@@ -381,27 +566,22 @@ export default function Edit(props) {
 		);
 	}
 
-	const fadeActive = !!resolvedCarouselConfig.plugins?.fade?.active;
-	const showCropControl = isGrid && (!aspectRatio || aspectRatio === 'auto');
-	const showThumbnailControls =
-		lightboxEnabled || (isCarousel && includeThumbnails);
-
 	return (
 		<>
 			<InspectorControls>
 				<ToolsPanel
 					label={__('Settings', 'matter')}
 					resetAll={() => {
+						setGalleryType('grid');
 						setAttributes({
-							type: 'grid',
 							aspectRatio: 'auto',
 							sizeSlug: 'large',
 							thumbnailSizeSlug: 'thumbnail',
-							lightbox: false,
-							lightboxSizeSlug: 'large',
 							imageLimit: 0,
 							includeThumbnails: false,
 							thumbnailAspectRatio: '1',
+							thumbnailsVisible: 0,
+							thumbnailGap: '',
 							imageCrop: true,
 							carouselConfig: {
 								...resolvedCarouselConfig,
@@ -424,13 +604,13 @@ export default function Edit(props) {
 					<ToolsPanelItem
 						hasValue={() => type !== 'grid'}
 						label={__('Type', 'matter')}
-						onDeselect={() => setAttributes({ type: 'grid' })}
+						onDeselect={() => setGalleryType('grid')}
 						isShownByDefault
 					>
 						<ToggleGroupControl
 							label={__('Type', 'matter')}
 							value={type}
-							onChange={(value) => setAttributes({ type: value })}
+							onChange={setGalleryType}
 							isBlock
 							__nextHasNoMarginBottom
 							__next40pxDefaultSize
@@ -473,32 +653,6 @@ export default function Edit(props) {
 										label={__('Fade', 'matter')}
 									/>
 								</ToggleGroupControl>
-							</ToolsPanelItem>
-
-							<ToolsPanelItem
-								hasValue={() => !!includeThumbnails}
-								label={__(
-									'Enable carousel thumbnails',
-									'matter'
-								)}
-								onDeselect={() =>
-									setAttributes({ includeThumbnails: false })
-								}
-								isShownByDefault
-							>
-								<ToggleControl
-									label={__(
-										'Enable carousel thumbnails',
-										'matter'
-									)}
-									checked={!!includeThumbnails}
-									onChange={(value) =>
-										setAttributes({
-											includeThumbnails: value,
-										})
-									}
-									__nextHasNoMarginBottom
-								/>
 							</ToolsPanelItem>
 						</>
 					)}
@@ -562,36 +716,218 @@ export default function Edit(props) {
 					)}
 
 					{isGrid && (
+						<>
+							<ToolsPanelItem
+								hasValue={() => imageLimit > 0}
+								label={__('Limit visible images', 'matter')}
+								onDeselect={() =>
+									setAttributes({ imageLimit: 0 })
+								}
+								isShownByDefault
+							>
+								<ToggleControl
+									label={__('Limit visible images', 'matter')}
+									checked={imageLimit > 0}
+									onChange={(enabled) => {
+										if (enabled) {
+											setAttributes({
+												imageLimit: columnCount,
+												lightbox: true,
+											});
+											return;
+										}
+										setAttributes({ imageLimit: 0 });
+									}}
+									help={__(
+										'Show a full grid of images, then open the rest in the lightbox.',
+										'matter'
+									)}
+									__nextHasNoMarginBottom
+								/>
+							</ToolsPanelItem>
+
+							{imageLimit > 0 && (
+								<ToolsPanelItem
+									hasValue={() => imageLimit > columnCount}
+									label={__('Visible image count', 'matter')}
+									onDeselect={() =>
+										setAttributes({
+											imageLimit: columnCount,
+										})
+									}
+									isShownByDefault
+								>
+									<RangeControl
+										label={__(
+											'Visible image count',
+											'matter'
+										)}
+										help={sprintf(
+											/* translators: %d: column count */
+											__(
+												'Minimum is %d (one full row). Remaining images open in the lightbox.',
+												'matter'
+											),
+											columnCount
+										)}
+										value={Math.max(
+											imageLimit,
+											columnCount
+										)}
+										onChange={(value) => {
+											const nextLimit = Math.max(
+												value ?? columnCount,
+												columnCount
+											);
+											setAttributes({
+												imageLimit: nextLimit,
+												lightbox: true,
+											});
+										}}
+										min={columnCount}
+										max={Math.max(
+											images.length,
+											columnCount,
+											12
+										)}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+								</ToolsPanelItem>
+							)}
+						</>
+					)}
+
+					{isCarousel && (
 						<ToolsPanelItem
-							hasValue={() => imageLimit > 0}
-							label={__('Image limit', 'matter')}
-							onDeselect={() => setAttributes({ imageLimit: 0 })}
+							hasValue={() => !!includeThumbnails}
+							label={__('Enable thumbnails', 'matter')}
+							onDeselect={() =>
+								setAttributes({ includeThumbnails: false })
+							}
+							isShownByDefault
+						>
+							<ToggleControl
+								label={__('Enable thumbnails', 'matter')}
+								checked={!!includeThumbnails}
+								onChange={(value) =>
+									setAttributes({
+										includeThumbnails: value,
+									})
+								}
+								__nextHasNoMarginBottom
+							/>
+						</ToolsPanelItem>
+					)}
+
+					{showCarouselThumbControls &&
+						imageSizeOptions.length > 0 && (
+							<ToolsPanelItem
+								hasValue={() =>
+									thumbnailSizeSlug !== 'thumbnail'
+								}
+								label={__('Thumbnail size', 'matter')}
+								onDeselect={() =>
+									setAttributes({
+										thumbnailSizeSlug: 'thumbnail',
+									})
+								}
+								isShownByDefault
+							>
+								<SelectControl
+									label={__('Thumbnail size', 'matter')}
+									value={thumbnailSizeSlug}
+									options={imageSizeOptions}
+									onChange={(value) =>
+										setAttributes({
+											thumbnailSizeSlug: value,
+										})
+									}
+									__nextHasNoMarginBottom
+									__next40pxDefaultSize
+								/>
+							</ToolsPanelItem>
+						)}
+
+					{showCarouselThumbControls &&
+						aspectRatioOptions.length > 1 && (
+							<ToolsPanelItem
+								hasValue={() =>
+									thumbnailAspectRatio &&
+									thumbnailAspectRatio !== '1'
+								}
+								label={__('Thumbnail aspect ratio', 'matter')}
+								onDeselect={() =>
+									setAttributes({
+										thumbnailAspectRatio: '1',
+									})
+								}
+								isShownByDefault
+							>
+								<SelectControl
+									label={__(
+										'Thumbnail aspect ratio',
+										'matter'
+									)}
+									value={thumbnailAspectRatio || '1'}
+									options={aspectRatioOptions.filter(
+										(option) => option.value !== 'auto'
+									)}
+									onChange={(value) =>
+										setAttributes({
+											thumbnailAspectRatio: value,
+										})
+									}
+									__nextHasNoMarginBottom
+									__next40pxDefaultSize
+								/>
+							</ToolsPanelItem>
+						)}
+
+					{showCarouselThumbControls && (
+						<ToolsPanelItem
+							hasValue={() => thumbnailsVisible > 0}
+							label={__('Thumbnails visible', 'matter')}
+							onDeselect={() =>
+								setAttributes({ thumbnailsVisible: 0 })
+							}
 							isShownByDefault
 						>
 							<RangeControl
-								label={__('Image limit', 'matter')}
+								label={__('Thumbnails visible', 'matter')}
 								help={__(
-									'Limit visible images in the grid. Remaining images open in the lightbox. 0 shows all.',
+									'0 uses a fixed thumbnail width. Set a number to show that many across the strip.',
 									'matter'
 								)}
-								value={imageLimit}
-								onChange={(value) => {
-									const nextLimit = value ?? 0;
+								value={thumbnailsVisible}
+								onChange={(value) =>
 									setAttributes({
-										imageLimit: nextLimit,
-										...(nextLimit > 0
-											? { lightbox: true }
-											: {}),
-									});
-								}}
+										thumbnailsVisible: value ?? 0,
+									})
+								}
 								min={0}
-								max={Math.max(images.length, 12)}
+								max={12}
 								__nextHasNoMarginBottom
 								__next40pxDefaultSize
 							/>
 						</ToolsPanelItem>
 					)}
+				</ToolsPanel>
 
+				<ToolsPanel
+					label={__('Lightbox', 'matter')}
+					resetAll={() => {
+						setAttributes({
+							lightbox: true,
+							lightboxSizeSlug: 'large',
+							lightboxThumbnails: true,
+							lightboxThumbnailSizeSlug: 'thumbnail',
+							lightboxThumbnailAspectRatio: '1',
+							lightboxThumbnailsVisible: 0,
+							lightboxThumbnailGap: '',
+						});
+					}}
+				>
 					<ToolsPanelItem
 						hasValue={() => !!lightbox}
 						label={__('Enable lightbox', 'matter')}
@@ -625,14 +961,14 @@ export default function Edit(props) {
 					{lightboxEnabled && imageSizeOptions.length > 0 && (
 						<ToolsPanelItem
 							hasValue={() => lightboxSizeSlug !== 'large'}
-							label={__('Lightbox image size', 'matter')}
+							label={__('Image size', 'matter')}
 							onDeselect={() =>
 								setAttributes({ lightboxSizeSlug: 'large' })
 							}
 							isShownByDefault
 						>
 							<SelectControl
-								label={__('Lightbox image size', 'matter')}
+								label={__('Image size', 'matter')}
 								value={lightboxSizeSlug}
 								options={imageSizeOptions}
 								onChange={(value) =>
@@ -644,73 +980,117 @@ export default function Edit(props) {
 						</ToolsPanelItem>
 					)}
 
-					{showThumbnailControls && imageSizeOptions.length > 0 && (
+					{lightboxEnabled && (
 						<ToolsPanelItem
-							hasValue={() => thumbnailSizeSlug !== 'thumbnail'}
-							label={__('Thumbnail size', 'matter')}
+							hasValue={() => lightboxThumbnails === false}
+							label={__('Show thumbnails', 'matter')}
 							onDeselect={() =>
-								setAttributes({
-									thumbnailSizeSlug: 'thumbnail',
-								})
+								setAttributes({ lightboxThumbnails: true })
 							}
 							isShownByDefault
 						>
-							<SelectControl
-								label={__('Thumbnail size', 'matter')}
-								help={
-									isCarousel
-										? __(
-												'Lightbox and carousel thumbnails.',
-												'matter'
-											)
-										: undefined
-								}
-								value={thumbnailSizeSlug}
-								options={imageSizeOptions}
+							<ToggleControl
+								label={__('Show thumbnails', 'matter')}
+								checked={lightboxThumbnails !== false}
 								onChange={(value) =>
 									setAttributes({
-										thumbnailSizeSlug: value,
+										lightboxThumbnails: value,
 									})
 								}
 								__nextHasNoMarginBottom
-								__next40pxDefaultSize
 							/>
 						</ToolsPanelItem>
 					)}
 
-					{showThumbnailControls && aspectRatioOptions.length > 1 && (
+					{showLightboxThumbControls &&
+						imageSizeOptions.length > 0 && (
+							<ToolsPanelItem
+								hasValue={() =>
+									lightboxThumbnailSizeSlug !== 'thumbnail'
+								}
+								label={__('Thumbnail size', 'matter')}
+								onDeselect={() =>
+									setAttributes({
+										lightboxThumbnailSizeSlug: 'thumbnail',
+									})
+								}
+								isShownByDefault
+							>
+								<SelectControl
+									label={__('Thumbnail size', 'matter')}
+									value={lightboxThumbnailSizeSlug}
+									options={imageSizeOptions}
+									onChange={(value) =>
+										setAttributes({
+											lightboxThumbnailSizeSlug: value,
+										})
+									}
+									__nextHasNoMarginBottom
+									__next40pxDefaultSize
+								/>
+							</ToolsPanelItem>
+						)}
+
+					{showLightboxThumbControls &&
+						aspectRatioOptions.length > 1 && (
+							<ToolsPanelItem
+								hasValue={() =>
+									lightboxThumbnailAspectRatio &&
+									lightboxThumbnailAspectRatio !== '1'
+								}
+								label={__('Thumbnail aspect ratio', 'matter')}
+								onDeselect={() =>
+									setAttributes({
+										lightboxThumbnailAspectRatio: '1',
+									})
+								}
+								isShownByDefault
+							>
+								<SelectControl
+									label={__(
+										'Thumbnail aspect ratio',
+										'matter'
+									)}
+									value={lightboxThumbnailAspectRatio || '1'}
+									options={aspectRatioOptions.filter(
+										(option) => option.value !== 'auto'
+									)}
+									onChange={(value) =>
+										setAttributes({
+											lightboxThumbnailAspectRatio: value,
+										})
+									}
+									__nextHasNoMarginBottom
+									__next40pxDefaultSize
+								/>
+							</ToolsPanelItem>
+						)}
+
+					{showLightboxThumbControls && (
 						<ToolsPanelItem
-							hasValue={() =>
-								thumbnailAspectRatio &&
-								thumbnailAspectRatio !== '1'
-							}
-							label={__('Thumbnail aspect ratio', 'matter')}
+							hasValue={() => lightboxThumbnailsVisible > 0}
+							label={__('Thumbnails visible', 'matter')}
 							onDeselect={() =>
 								setAttributes({
-									thumbnailAspectRatio: '1',
+									lightboxThumbnailsVisible: 0,
 								})
 							}
 							isShownByDefault
 						>
-							<SelectControl
-								label={__('Thumbnail aspect ratio', 'matter')}
-								help={
-									isCarousel
-										? __(
-												'Lightbox and carousel thumbnails.',
-												'matter'
-											)
-										: undefined
-								}
-								value={thumbnailAspectRatio || '1'}
-								options={aspectRatioOptions.filter(
-									(option) => option.value !== 'auto'
+							<RangeControl
+								label={__('Thumbnails visible', 'matter')}
+								help={__(
+									'0 uses a fixed thumbnail width. Set a number to show that many across the strip.',
+									'matter'
 								)}
+								value={lightboxThumbnailsVisible}
 								onChange={(value) =>
 									setAttributes({
-										thumbnailAspectRatio: value,
+										lightboxThumbnailsVisible: value ?? 0,
 									})
 								}
+								min={0}
+								max={12}
 								__nextHasNoMarginBottom
 								__next40pxDefaultSize
 							/>
@@ -719,54 +1099,258 @@ export default function Edit(props) {
 				</ToolsPanel>
 			</InspectorControls>
 
-			{hasImages && (
-				<BlockControls group="other">
-					<MediaReplaceFlow
-						mediaIds={images
-							.filter((image) => image.id)
-							.map((image) => image.id)}
-						allowedTypes={ALLOWED_MEDIA_TYPES}
-						accept="image/*"
-						onSelect={updateImages}
-						name={__('Edit gallery', 'matter')}
-						onError={onUploadError}
-						addToGallery={hasImageIds}
+			{lightboxEnabled && (
+				<InspectorControls group="color">
+					<ColorControl
+						label={__('Backdrop', 'matter')}
+						value={lightboxBackdropColor}
+						attributeName="lightboxBackdropColor"
+						onChange={(value, slug) =>
+							setAttributes({
+								lightboxBackdropColor: storeColorValue(
+									slug,
+									value
+								),
+							})
+						}
+						panelId={clientId}
 					/>
-				</BlockControls>
+
+					{lightboxBackdropColor && (
+						<>
+							<ToolsPanelItem
+								hasValue={() => lightboxBackdropOpacity !== 85}
+								label={__('Backdrop opacity', 'matter')}
+								onDeselect={() =>
+									setAttributes({
+										lightboxBackdropOpacity: 85,
+									})
+								}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<RangeControl
+									label={__('Backdrop opacity', 'matter')}
+									value={lightboxBackdropOpacity}
+									onChange={(value) =>
+										setAttributes({
+											lightboxBackdropOpacity: value,
+										})
+									}
+									min={0}
+									max={100}
+									step={10}
+									required
+									__next40pxDefaultSize
+								/>
+							</ToolsPanelItem>
+
+							<ToolsPanelItem
+								hasValue={() => !!lightboxBackdropBlur}
+								label={__('Backdrop blur', 'matter')}
+								onDeselect={() =>
+									setAttributes({
+										lightboxBackdropBlur: 0,
+									})
+								}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<RangeControl
+									label={__('Backdrop blur', 'matter')}
+									value={lightboxBackdropBlur}
+									onChange={(value) =>
+										setAttributes({
+											lightboxBackdropBlur: value,
+										})
+									}
+									min={0}
+									max={10}
+									step={1}
+									required
+									__next40pxDefaultSize
+								/>
+							</ToolsPanelItem>
+						</>
+					)}
+				</InspectorControls>
 			)}
 
-			{isCarousel ? (
-				<figure {...blockProps}>
-					<div className="embla matter-gallery__carousel">
-						<div className="embla__viewport">
+			{(showCarouselThumbControls || showLightboxThumbControls) && (
+				<InspectorControls group="dimensions">
+					{showCarouselThumbControls && (
+						<ToolsPanelItem
+							hasValue={() => !!thumbnailGap}
+							label={__('Thumbnail spacing', 'matter')}
+							onDeselect={() =>
+								setAttributes({ thumbnailGap: '' })
+							}
+							resetAllFilter={() => ({
+								thumbnailGap: '',
+							})}
+							panelId={clientId}
+						>
+							<SpacingSizesControl
+								label={__('Thumbnail spacing', 'matter')}
+								values={{
+									top: thumbnailGap || undefined,
+								}}
+								onChange={({ top }) =>
+									setAttributes({
+										thumbnailGap: top || '',
+									})
+								}
+								sides={['top']}
+								showSideInLabel={false}
+							/>
+						</ToolsPanelItem>
+					)}
+
+					{showLightboxThumbControls && (
+						<ToolsPanelItem
+							hasValue={() => !!lightboxThumbnailGap}
+							label={__('Lightbox thumbnail spacing', 'matter')}
+							onDeselect={() =>
+								setAttributes({ lightboxThumbnailGap: '' })
+							}
+							resetAllFilter={() => ({
+								lightboxThumbnailGap: '',
+							})}
+							panelId={clientId}
+						>
+							<SpacingSizesControl
+								label={__(
+									'Lightbox thumbnail spacing',
+									'matter'
+								)}
+								values={{
+									top: lightboxThumbnailGap || undefined,
+								}}
+								onChange={({ top }) =>
+									setAttributes({
+										lightboxThumbnailGap: top || '',
+									})
+								}
+								sides={['top']}
+								showSideInLabel={false}
+							/>
+						</ToolsPanelItem>
+					)}
+				</InspectorControls>
+			)}
+
+			<BlockControls group="other">
+				<MediaReplaceFlow
+					allowedTypes={ALLOWED_MEDIA_TYPES}
+					handleUpload={false}
+					onSelect={updateImages}
+					name={__('Add', 'matter')}
+					multiple
+					mediaIds={images
+						.filter((image) => image.id)
+						.map((image) => image.id)}
+					addToGallery={hasImageIds}
+					onError={onUploadError}
+				/>
+			</BlockControls>
+
+			{hasImageLimit && (
+				<style>
+					{`
+						.block-editor-block-list__block[data-block="${clientId}"] .block-editor-block-list__layout > .wp-block:nth-child(n + ${imageLimit + 1}) {
+							display: none !important;
+						}
+					`}
+				</style>
+			)}
+
+			<figure {...blockProps}>
+				<div
+					className={
+						isCarousel
+							? 'matter-gallery__carousel'
+							: 'matter-gallery__grid'
+					}
+					style={isCarousel ? carouselStyles : undefined}
+				>
+					<div className="matter-gallery__stage">
+						<div
+							className="matter-gallery__viewport"
+							ref={isCarousel ? emblaRef : undefined}
+						>
 							<div {...innerBlocksProps} />
 						</div>
-						{includeThumbnails && (
-							<div className="matter-gallery__thumbs embla__thumbs">
-								<p className="matter-gallery__thumbs-note">
-									{__(
-										'Thumbnails are generated on the front end.',
-										'matter'
-									)}
-								</p>
+
+						{isCarousel && (
+							<div className="matter-gallery__controls">
+								<button
+									type="button"
+									className="matter-gallery__nav matter-gallery__nav--prev"
+									ref={prevButtonRef}
+									aria-label={__('Previous image', 'matter')}
+								>
+									&#10094;
+								</button>
+								<button
+									type="button"
+									className="matter-gallery__nav matter-gallery__nav--next"
+									ref={nextButtonRef}
+									aria-label={__('Next image', 'matter')}
+								>
+									&#10095;
+								</button>
 							</div>
 						)}
 					</div>
-					{hasImageLimit && (
-						<div className="matter-gallery__view-all">
-							{__('View gallery', 'matter')}
+
+					{isCarousel && includeThumbnails && (
+						<div
+							className={clsx('matter-gallery__thumbs', {
+								'has-visible-count': thumbnailsVisible > 0,
+							})}
+							style={carouselThumbStyles}
+						>
+							<div
+								className="matter-gallery__thumbs-viewport"
+								ref={thumbsRef}
+							>
+								<div className="matter-gallery__thumbs-track">
+									{images.map((image, index) => (
+										<button
+											key={
+												image.clientId ||
+												image.id ||
+												index
+											}
+											type="button"
+											className="matter-gallery__thumb"
+											aria-label={sprintf(
+												/* translators: %d: image number */
+												__('Go to image %d', 'matter'),
+												index + 1
+											)}
+										>
+											{image.url ? (
+												<img
+													src={image.url}
+													alt={image.alt || ''}
+													style={thumbStyle}
+												/>
+											) : null}
+										</button>
+									))}
+								</div>
+							</div>
 						</div>
 					)}
-				</figure>
-			) : (
-				<figure {...innerBlocksProps}>
-					{hasImageLimit && images.length > imageLimit && (
-						<div className="matter-gallery__view-all">
-							{__('View gallery', 'matter')}
-						</div>
-					)}
-				</figure>
-			)}
+				</div>
+
+				{hasImageLimit && images.length > imageLimit && (
+					<div className="matter-gallery__view-all">
+						{__('View gallery', 'matter')}
+					</div>
+				)}
+			</figure>
 		</>
 	);
 }

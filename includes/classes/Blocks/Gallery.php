@@ -72,25 +72,18 @@ class Gallery {
 	 */
 	public static function print_lightbox_overlay(): void {
 		?>
-		<div
+		<dialog
 			class="matter-lightbox"
 			data-wp-interactive="matter/lightbox"
-			data-wp-bind--hidden="!state.isOpen"
-			data-wp-class--is-open="state.isOpen"
+			data-wp-watch="callbacks.syncDialog"
+			data-wp-on--close="actions.onNativeClose"
+			data-wp-on--cancel="actions.onCancel"
+			data-wp-on--click="actions.onBackdropClick"
 			data-wp-on--keydown="actions.handleKeydown"
-			tabindex="-1"
-			hidden
+			data-wp-bind--style="state.backdropStyle"
+			aria-label="<?php esc_attr_e( 'Image lightbox', 'matter' ); ?>"
 		>
-			<div
-				class="matter-lightbox__backdrop"
-				data-wp-on--click="actions.close"
-			></div>
-			<div
-				class="matter-lightbox__dialog"
-				role="dialog"
-				aria-modal="true"
-				aria-label="<?php esc_attr_e( 'Image lightbox', 'matter' ); ?>"
-			>
+			<div class="matter-lightbox__content">
 				<button
 					type="button"
 					class="matter-lightbox__close"
@@ -98,15 +91,6 @@ class Gallery {
 					aria-label="<?php esc_attr_e( 'Close lightbox', 'matter' ); ?>"
 				>
 					&times;
-				</button>
-				<button
-					type="button"
-					class="matter-lightbox__nav matter-lightbox__nav--prev"
-					data-wp-on--click="actions.showPrevious"
-					data-wp-bind--hidden="!state.hasNavigation"
-					aria-label="<?php esc_attr_e( 'Previous image', 'matter' ); ?>"
-				>
-					&#10094;
 				</button>
 				<figure class="matter-lightbox__figure">
 					<img
@@ -122,18 +106,31 @@ class Gallery {
 						data-wp-text="state.currentCaption"
 					></figcaption>
 				</figure>
-				<button
-					type="button"
-					class="matter-lightbox__nav matter-lightbox__nav--next"
-					data-wp-on--click="actions.showNext"
-					data-wp-bind--hidden="!state.hasNavigation"
-					aria-label="<?php esc_attr_e( 'Next image', 'matter' ); ?>"
-				>
-					&#10095;
-				</button>
 				<div
-					class="matter-lightbox__thumbs"
+					class="matter-lightbox__controls"
 					data-wp-bind--hidden="!state.hasNavigation"
+				>
+					<button
+						type="button"
+						class="matter-lightbox__nav matter-lightbox__nav--prev"
+						data-wp-on--click="actions.showPrevious"
+						aria-label="<?php esc_attr_e( 'Previous image', 'matter' ); ?>"
+					>
+						&#10094;
+					</button>
+					<button
+						type="button"
+						class="matter-lightbox__nav matter-lightbox__nav--next"
+						data-wp-on--click="actions.showNext"
+						aria-label="<?php esc_attr_e( 'Next image', 'matter' ); ?>"
+					>
+						&#10095;
+					</button>
+				</div>
+				<div
+					data-wp-bind--class="state.thumbsClassName"
+					data-wp-bind--style="state.thumbsStyle"
+					data-wp-bind--hidden="!state.showThumbnails"
 				>
 					<template data-wp-each="state.currentThumbs">
 						<button
@@ -152,22 +149,32 @@ class Gallery {
 					</template>
 				</div>
 			</div>
-		</div>
+		</dialog>
 		<?php
 	}
 
 	/**
-	 * Build image metadata for the lightbox store.
+	 * Build image metadata for the lightbox store and carousel thumbs.
 	 *
 	 * @param array  $inner_blocks Inner blocks.
 	 * @param string $size_slug Visible size slug.
-	 * @param string $thumbnail_size_slug Thumbnail size slug.
+	 * @param string $thumbnail_size_slug Carousel thumbnail size slug.
 	 * @param string $lightbox_size_slug Lightbox size slug.
+	 * @param string $lightbox_thumbnail_size_slug Lightbox thumbnail size slug.
 	 * @return array
 	 */
-	public static function build_image_metadata( array $inner_blocks, string $size_slug, string $thumbnail_size_slug, string $lightbox_size_slug ): array {
-		$images = [];
-		$order  = 0;
+	public static function build_image_metadata(
+		array $inner_blocks,
+		string $size_slug,
+		string $thumbnail_size_slug,
+		string $lightbox_size_slug,
+		string $lightbox_thumbnail_size_slug = ''
+	): array {
+		$images              = [];
+		$order               = 0;
+		$lightbox_thumb_slug = $lightbox_thumbnail_size_slug
+			? $lightbox_thumbnail_size_slug
+			: $thumbnail_size_slug;
 
 		foreach ( $inner_blocks as $inner_block ) {
 			if ( ! $inner_block instanceof \WP_Block ) {
@@ -181,23 +188,25 @@ class Gallery {
 			$attrs = is_array( $inner_block->attributes ) ? $inner_block->attributes : [];
 			$id    = isset( $attrs['id'] ) ? (int) $attrs['id'] : 0;
 
-			$visible  = self::get_attachment_image_data( $id, $size_slug, $attrs );
-			$thumb    = self::get_attachment_image_data( $id, $thumbnail_size_slug, $attrs );
-			$lightbox = self::get_attachment_image_data( $id, $lightbox_size_slug, $attrs );
+			$visible        = self::get_attachment_image_data( $id, $size_slug, $attrs );
+			$thumb          = self::get_attachment_image_data( $id, $thumbnail_size_slug, $attrs );
+			$lightbox       = self::get_attachment_image_data( $id, $lightbox_size_slug, $attrs );
+			$lightbox_thumb = self::get_attachment_image_data( $id, $lightbox_thumb_slug, $attrs );
 
 			$images[] = [
-				'id'             => $id,
-				'order'          => $order,
-				'alt'            => $visible['alt'],
-				'caption'        => isset( $attrs['caption'] ) ? (string) $attrs['caption'] : '',
-				'src'            => $visible['src'],
-				'srcset'         => $visible['srcset'],
-				'sizes'          => $visible['sizes'],
-				'thumbSrc'       => $thumb['src'],
-				'thumbSrcset'    => $thumb['srcset'],
-				'lightboxSrc'    => $lightbox['src'],
-				'lightboxSrcset' => $lightbox['srcset'],
-				'lightboxSizes'  => $lightbox['sizes'],
+				'id'               => $id,
+				'order'            => $order,
+				'alt'              => $visible['alt'],
+				'caption'          => isset( $attrs['caption'] ) ? (string) $attrs['caption'] : '',
+				'src'              => $visible['src'],
+				'srcset'           => $visible['srcset'],
+				'sizes'            => $visible['sizes'],
+				'thumbSrc'         => $thumb['src'],
+				'thumbSrcset'      => $thumb['srcset'],
+				'lightboxThumbSrc' => $lightbox_thumb['src'],
+				'lightboxSrc'      => $lightbox['src'],
+				'lightboxSrcset'   => $lightbox['srcset'],
+				'lightboxSizes'    => $lightbox['sizes'],
 			];
 
 			++$order;
@@ -304,6 +313,34 @@ class Gallery {
 	}
 
 	/**
+	 * Resolve a blockGap style value to a CSS length/var.
+	 *
+	 * @param mixed $gap_value Block gap from style.spacing.blockGap.
+	 * @return string Empty when unset.
+	 */
+	public static function resolve_block_gap_value( $gap_value ): string {
+		if ( is_array( $gap_value ) ) {
+			$gap_value = $gap_value['top'] ?? $gap_value['left'] ?? null;
+		}
+
+		if ( ! is_string( $gap_value ) || '' === $gap_value ) {
+			return '';
+		}
+
+		if ( preg_match( '%[\\\(&=}]|/\*%', $gap_value ) ) {
+			return '';
+		}
+
+		if ( str_contains( $gap_value, 'var:preset|spacing|' ) ) {
+			$index_to_splice = strrpos( $gap_value, '|' ) + 1;
+			$slug            = _wp_to_kebab_case( substr( $gap_value, $index_to_splice ) );
+			return "var(--wp--preset--spacing--$slug)";
+		}
+
+		return $gap_value;
+	}
+
+	/**
 	 * Render a thumbnail button for carousel mode.
 	 *
 	 * @param array  $image Image metadata.
@@ -318,7 +355,7 @@ class Gallery {
 		}
 
 		return sprintf(
-			'<button type="button" class="embla__thumb matter-gallery__thumb" data-index="%1$d" aria-label="%2$s"><img src="%3$s" alt="%4$s"%5$s loading="lazy" /></button>',
+			'<button type="button" class="matter-gallery__thumb" data-index="%1$d" aria-label="%2$s"><img src="%3$s" alt="%4$s"%5$s loading="lazy" /></button>',
 			(int) $index,
 			esc_attr(
 				sprintf(
