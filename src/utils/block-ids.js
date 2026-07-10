@@ -83,7 +83,6 @@ export const PUBLIC_ID_BLOCK_NAMES = [
  * Resolve the public ID used by a Matter block instance.
  *
  * Priority matches PHP BlockId: anchor → generatedId.
- * Legacy targetId is still read for unmigrated overlay content and trigger targeting.
  *
  * @param {Object} block Block object from the editor.
  * @return {string} Public ID or empty string.
@@ -91,9 +90,7 @@ export const PUBLIC_ID_BLOCK_NAMES = [
 export const getBlockPublicId = (block) => {
 	const attributes = block?.attributes || {};
 
-	return (
-		attributes.anchor || attributes.generatedId || attributes.targetId || ''
-	);
+	return attributes.anchor || attributes.generatedId || '';
 };
 
 /**
