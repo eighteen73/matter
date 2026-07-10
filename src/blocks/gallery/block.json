@@ -1,0 +1,119 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/gallery",
+	"version": "0.1.0",
+	"title": "Gallery",
+	"category": "media",
+	"icon": "format-gallery",
+	"description": "A gallery of images with grid or carousel display and an optional lightbox.",
+	"keywords": ["gallery", "images", "carousel", "lightbox"],
+	"allowedBlocks": ["core/image"],
+	"attributes": {
+		"type": {
+			"type": "string",
+			"default": "grid",
+			"enum": ["grid", "carousel"]
+		},
+		"aspectRatio": {
+			"type": "string",
+			"default": "auto"
+		},
+		"sizeSlug": {
+			"type": "string",
+			"default": "large"
+		},
+		"thumbnailSizeSlug": {
+			"type": "string",
+			"default": "thumbnail"
+		},
+		"lightbox": {
+			"type": "boolean",
+			"default": false
+		},
+		"lightboxSizeSlug": {
+			"type": "string",
+			"default": "large"
+		},
+		"imageLimit": {
+			"type": "number",
+			"default": 0
+		},
+		"includeThumbnails": {
+			"type": "boolean",
+			"default": false
+		},
+		"thumbnailAspectRatio": {
+			"type": "string",
+			"default": "1"
+		},
+		"imageCrop": {
+			"type": "boolean",
+			"default": true
+		},
+		"carouselConfig": {
+			"type": "object",
+			"default": {
+				"options": {
+					"loop": false,
+					"axis": "x",
+					"slidesToScroll": 1,
+					"slidesToShow": 1,
+					"slideGap": "",
+					"active": true
+				},
+				"plugins": {
+					"fade": {
+						"active": false
+					},
+					"autoplay": {
+						"active": false,
+						"type": "slide",
+						"delay": 4000
+					}
+				},
+				"breakpointLayers": {}
+			}
+		},
+		"advancedCarouselConfig": {
+			"type": "object",
+			"default": null
+		},
+		"advancedCarouselConfigMerge": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"supports": {
+		"anchor": true,
+		"align": ["wide", "full"],
+		"html": false,
+		"interactivity": true,
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": false,
+				"blockGap": true
+			}
+		},
+		"layout": {
+			"allowSwitching": false,
+			"allowInheriting": false,
+			"allowEditing": true,
+			"allowSizingOnChildren": true,
+			"default": {
+				"type": "grid",
+				"columnCount": 3
+			}
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScriptModule": "file:./view.js",
+	"render": "file:./render.php"
+}

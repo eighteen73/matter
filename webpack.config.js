@@ -12,6 +12,10 @@ const overlayStoreEntry = path.resolve(
 	__dirname,
 	'src/interactivity/overlay-store.js'
 );
+const lightboxStoreEntry = path.resolve(
+	__dirname,
+	'src/interactivity/lightbox-store.js'
+);
 
 if (!Array.isArray(defaultConfigs)) {
 	module.exports = defaultConfigs;
@@ -28,6 +32,7 @@ if (!Array.isArray(defaultConfigs)) {
 			entry: () => ({
 				...originalEntry(),
 				'interactivity/overlay-store': overlayStoreEntry,
+				'interactivity/lightbox-store': lightboxStoreEntry,
 			}),
 		};
 	});
