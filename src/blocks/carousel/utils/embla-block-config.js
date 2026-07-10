@@ -54,8 +54,9 @@ export const normalizeEmblaConfig = (input) =>
 	deepMerge(DEFAULT_EMBLA_CONFIG, isPlainObject(input) ? input : {});
 
 /**
- * Compile UI `breakpointLayers` into Embla `options.breakpoints` and
- * `plugins.autoplay.breakpoints` (ascending min-width).
+ * Compile UI `breakpointLayers` into Embla `options.breakpoints`,
+ * `plugins.autoplay.breakpoints`, and `plugins.fade.breakpoints`
+ * (ascending min-width).
  * @param {Object} resolved - The resolved Embla config.
  * @param {Object} layers   - The breakpoint layers.
  */
@@ -78,6 +79,11 @@ const applyBreakpointLayers = (resolved, layers) => {
 		: {};
 	const autoplayBreakpoints = isPlainObject(autoplay.breakpoints)
 		? { ...autoplay.breakpoints }
+		: {};
+
+	let fade = isPlainObject(plugins.fade) ? { ...plugins.fade } : {};
+	const fadeBreakpoints = isPlainObject(fade.breakpoints)
+		? { ...fade.breakpoints }
 		: {};
 
 	for (const token of breakpointTokens) {
@@ -104,6 +110,13 @@ const applyBreakpointLayers = (resolved, layers) => {
 				? deepMerge(autoplayBreakpoints[query], autoplayLayer)
 				: { ...autoplayLayer };
 		}
+
+		const fadeLayer = layer.plugins?.fade;
+		if (isPlainObject(fadeLayer) && Object.keys(fadeLayer).length) {
+			fadeBreakpoints[query] = isPlainObject(fadeBreakpoints[query])
+				? deepMerge(fadeBreakpoints[query], fadeLayer)
+				: { ...fadeLayer };
+		}
 	}
 
 	if (Object.keys(optionBreakpoints).length) {
@@ -112,6 +125,10 @@ const applyBreakpointLayers = (resolved, layers) => {
 	if (Object.keys(autoplayBreakpoints).length) {
 		autoplay = { ...autoplay, breakpoints: autoplayBreakpoints };
 		plugins.autoplay = autoplay;
+	}
+	if (Object.keys(fadeBreakpoints).length) {
+		fade = { ...fade, breakpoints: fadeBreakpoints };
+		plugins.fade = fade;
 	}
 
 	return { options, plugins };
@@ -168,6 +185,11 @@ export const buildEmblaPlugins = (pluginState, options = {}) => {
 		? pluginState.autoplay
 		: {};
 	const {
+		active: fadeBaseActive = false,
+		breakpoints: fadeRawBreakpoints,
+		...fadeRest
+	} = fade;
+	const {
 		active: baseActive = false,
 		type: baseType = 'slide',
 		breakpoints: rawBreakpoints,
@@ -177,12 +199,34 @@ export const buildEmblaPlugins = (pluginState, options = {}) => {
 	const wantBaseActive = !forceInactive && !!baseActive;
 	const autoplayBaseActive = wantBaseActive && baseType !== 'scroll';
 	const autoScrollBaseActive = wantBaseActive && baseType === 'scroll';
-	const fadeActive = !forceInactive && !!fade.active;
 
-	if (fadeActive) {
-		const { active: _fadeActive, ...fadeOptions } = fade;
-		plugins.push(Fade(fadeOptions));
+	const fadeBreakpoints = {};
+
+	if (isPlainObject(fadeRawBreakpoints)) {
+		for (const [query, rawLayer] of Object.entries(fadeRawBreakpoints)) {
+			if (!isPlainObject(rawLayer)) {
+				continue;
+			}
+			const { active: layerActiveRaw, ...layerRest } = rawLayer;
+			const effectiveActive =
+				layerActiveRaw !== undefined
+					? !!layerActiveRaw
+					: !!fadeBaseActive;
+			fadeBreakpoints[query] = {
+				...layerRest,
+				active: !forceInactive && effectiveActive,
+			};
+		}
 	}
+
+	const fadeOptions = {
+		...fadeRest,
+		active: !forceInactive && !!fadeBaseActive,
+	};
+	if (Object.keys(fadeBreakpoints).length) {
+		fadeOptions.breakpoints = fadeBreakpoints;
+	}
+	plugins.push(Fade(fadeOptions));
 
 	const autoplayBreakpoints = {};
 	const autoScrollBreakpoints = {};

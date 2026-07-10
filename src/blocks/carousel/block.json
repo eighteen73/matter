@@ -33,6 +33,9 @@
 						"active": false,
 						"type": "slide",
 						"speed": 1
+					},
+					"fade": {
+						"active": false
 					}
 				},
 				"breakpointLayers": {}
