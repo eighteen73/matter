@@ -12,6 +12,8 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -54,7 +56,7 @@ function CarouselFields({
 	onChangeAutoplay,
 }) {
 	return (
-		<div style={{ marginTop: '16px' }}>
+		<VStack spacing={4} style={{ marginTop: '16px' }}>
 			<RangeControl
 				label={__('Slides to show', 'matter')}
 				value={options.slidesToShow}
@@ -183,7 +185,7 @@ function CarouselFields({
 					label={__('Yes', 'matter')}
 				/>
 			</ToggleGroupControl>
-		</div>
+		</VStack>
 	);
 }
 
