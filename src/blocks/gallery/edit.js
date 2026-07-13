@@ -13,6 +13,7 @@ import {
 	__experimentalSpacingSizesControl as SpacingSizesControl,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
+	RichText,
 } from '@wordpress/block-editor';
 import {
 	SelectControl,
@@ -93,6 +94,7 @@ export default function Edit(props) {
 		thumbnailsVisible,
 		thumbnailGap,
 		imageCrop,
+		viewAllText,
 		carouselConfig,
 		layout,
 		style,
@@ -1358,9 +1360,15 @@ export default function Edit(props) {
 				</div>
 
 				{showViewAll && (
-					<div className="matter-gallery__view-all">
-						{__('View gallery', 'matter')}
-					</div>
+					<RichText
+						tagName="div"
+						className="matter-gallery__view-all"
+						value={viewAllText}
+						onChange={(value) =>
+							setAttributes({ viewAllText: value })
+						}
+						allowedFormats={[]}
+					/>
 				)}
 			</figure>
 		</>

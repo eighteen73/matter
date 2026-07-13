@@ -91,6 +91,10 @@
 			"type": "boolean",
 			"default": true
 		},
+		"viewAllText": {
+			"type": "string",
+			"default": "View Gallery"
+		},
 		"carouselConfig": {
 			"type": "object",
 			"default": {

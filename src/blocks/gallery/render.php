@@ -28,6 +28,7 @@ $lightbox_thumbs      = ! isset( $block_attributes['lightboxThumbnails'] ) || ! 
 $lightbox_thumb_ratio = isset( $block_attributes['lightboxThumbnailAspectRatio'] ) ? (string) $block_attributes['lightboxThumbnailAspectRatio'] : '1';
 $lightbox             = ! isset( $block_attributes['lightbox'] ) || ! empty( $block_attributes['lightbox'] ) || ( ! $is_carousel && $image_limit > 0 );
 $show_captions        = ! isset( $block_attributes['showCaptions'] ) || ! empty( $block_attributes['showCaptions'] );
+$view_all_text        = isset( $block_attributes['viewAllText'] ) ? (string) $block_attributes['viewAllText'] : __( 'View gallery', 'matter' );
 
 $gallery_id = isset( $block->context['matter/gallery-id'] )
 	? (string) $block->context['matter/gallery-id']
@@ -272,7 +273,7 @@ if ( $show_view_all ) {
 				]
 			)
 		),
-		esc_html__( 'View gallery', 'matter' )
+		esc_html( $view_all_text )
 	);
 }
 
