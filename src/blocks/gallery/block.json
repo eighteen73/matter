@@ -91,6 +91,10 @@
 			"type": "boolean",
 			"default": true
 		},
+		"allowResize": {
+			"type": "boolean",
+			"default": false
+		},
 		"viewAllText": {
 			"type": "string",
 			"default": "View Gallery"
@@ -127,6 +131,10 @@
 			"type": "boolean",
 			"default": false
 		}
+	},
+	"providesContext": {
+		"allowResize": "allowResize",
+		"imageCrop": "imageCrop"
 	},
 	"supports": {
 		"anchor": true,

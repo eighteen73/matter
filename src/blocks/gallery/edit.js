@@ -94,6 +94,7 @@ export default function Edit(props) {
 		thumbnailsVisible,
 		thumbnailGap,
 		imageCrop,
+		allowResize,
 		viewAllText,
 		carouselConfig,
 		layout,
@@ -111,6 +112,7 @@ export default function Edit(props) {
 			setAttributes({
 				type: 'carousel',
 				layout: DEFAULT_FLOW_LAYOUT,
+				allowResize: true,
 			});
 			return;
 		}
@@ -122,6 +124,7 @@ export default function Edit(props) {
 				columnCount:
 					layout?.columnCount || DEFAULT_GRID_LAYOUT.columnCount,
 			},
+			allowResize: false,
 		});
 	};
 
@@ -131,6 +134,14 @@ export default function Edit(props) {
 			setAttributes({ layout: DEFAULT_FLOW_LAYOUT });
 		}
 	}, [isCarousel, layout?.type, setAttributes]);
+
+	// Keep allowResize in sync with type (core image reads this via context).
+	useEffect(() => {
+		const nextAllowResize = isCarousel;
+		if (allowResize !== nextAllowResize) {
+			setAttributes({ allowResize: nextAllowResize });
+		}
+	}, [isCarousel, allowResize, setAttributes]);
 
 	// Keep image limit at least one full row when columns change.
 	useEffect(() => {
