@@ -4,6 +4,7 @@ import {
 	getElement,
 	withSyncEvent,
 } from '@wordpress/interactivity';
+import EmblaCarousel from 'embla-carousel';
 
 const STORE = 'matter/lightbox';
 
@@ -44,6 +45,42 @@ const preloadNeighbors = (images, index) => {
 	}
 	if (prev && prev !== next) {
 		preloadImage(prev.lightboxSrc, prev.lightboxSrcset);
+	}
+};
+
+let thumbsCarouselApi = null;
+let thumbsScrollFrame = 0;
+let thumbsOverflowRoot = null;
+
+const updateThumbsOverflowClass = (root, viewport, track, api) => {
+	if (!root) {
+		return;
+	}
+
+	root.classList.add('has-thumbs-alignment');
+
+	const overflowing = api
+		? api.canScrollPrev() || api.canScrollNext()
+		: track.scrollWidth > viewport.clientWidth + 1;
+
+	root.classList.toggle('is-overflowing', overflowing);
+};
+
+const destroyThumbsCarousel = () => {
+	if (thumbsScrollFrame) {
+		window.cancelAnimationFrame(thumbsScrollFrame);
+		thumbsScrollFrame = 0;
+	}
+	if (thumbsCarouselApi) {
+		thumbsCarouselApi.destroy();
+		thumbsCarouselApi = null;
+	}
+	if (thumbsOverflowRoot) {
+		thumbsOverflowRoot.classList.remove(
+			'has-thumbs-alignment',
+			'is-overflowing'
+		);
+		thumbsOverflowRoot = null;
 	}
 };
 
@@ -111,29 +148,12 @@ const { state, actions } = store(STORE, {
 			const ratio = state.currentThumbAspectRatio;
 			return `aspect-ratio:${ratio};object-fit:cover;`;
 		},
-		get thumbsVisible() {
-			return Number(state.currentGallery?.lightboxThumbnailsVisible) || 0;
-		},
-		get thumbsClassName() {
-			const visible = state.thumbsVisible;
-			return visible > 0
-				? 'matter-lightbox__thumbs has-visible-count'
-				: 'matter-lightbox__thumbs';
-		},
 		get thumbsStyle() {
 			const gallery = state.currentGallery;
-			const visible = state.thumbsVisible;
-			const parts = [];
-
-			if (visible > 0) {
-				parts.push(`--matter-lightbox--thumbs-visible:${visible}`);
+			if (!gallery?.thumbnailGap) {
+				return '';
 			}
-			if (gallery?.thumbnailGap) {
-				parts.push(
-					`--matter-lightbox--thumbnail-gap:${gallery.thumbnailGap}`
-				);
-			}
-			return parts.join(';');
+			return `--matter-lightbox--thumbnail-gap:${gallery.thumbnailGap}`;
 		},
 		get backdropStyle() {
 			const gallery = state.currentGallery;
@@ -192,6 +212,7 @@ const { state, actions } = store(STORE, {
 			});
 		},
 		close: () => {
+			destroyThumbsCarousel();
 			state.isOpen = false;
 			state.selectedGalleryId = null;
 			state.selectedIndex = 0;
@@ -245,7 +266,16 @@ const { state, actions } = store(STORE, {
 			state.selectedIndex = prev;
 			preloadNeighbors(state.currentImages, prev);
 		},
-		selectThumb: () => {
+		selectThumb: withSyncEvent((event) => {
+			if (
+				thumbsCarouselApi &&
+				typeof thumbsCarouselApi.clickAllowed === 'function' &&
+				!thumbsCarouselApi.clickAllowed()
+			) {
+				event.preventDefault();
+				return;
+			}
+
 			const context = getContext();
 			const index = context?.item?.index ?? context?.index;
 			if (typeof index !== 'number') {
@@ -253,7 +283,7 @@ const { state, actions } = store(STORE, {
 			}
 			state.selectedIndex = index;
 			preloadNeighbors(state.currentImages, index);
-		},
+		}),
 		handleKeydown: withSyncEvent((event) => {
 			if (!state.isOpen) {
 				return;
@@ -280,6 +310,73 @@ const { state, actions } = store(STORE, {
 			if (!state.isOpen && ref.open) {
 				ref.close();
 			}
+		},
+		syncThumbsCarousel: () => {
+			const { ref } = getElement();
+			const shouldShow = state.isOpen && state.showThumbnails;
+			const selectedIndex = state.selectedIndex;
+			const thumbCount = state.currentThumbs.length;
+
+			if (!shouldShow || !ref || thumbCount < 2) {
+				destroyThumbsCarousel();
+				return;
+			}
+
+			const viewport = ref.querySelector(
+				'.matter-lightbox__thumbs-viewport'
+			);
+			const track = ref.querySelector('.matter-lightbox__thumbs-track');
+
+			if (!viewport || !track) {
+				return;
+			}
+
+			if (thumbsScrollFrame) {
+				window.cancelAnimationFrame(thumbsScrollFrame);
+			}
+
+			thumbsScrollFrame = window.requestAnimationFrame(() => {
+				thumbsScrollFrame = 0;
+
+				if (!state.isOpen || !state.showThumbnails) {
+					destroyThumbsCarousel();
+					return;
+				}
+
+				if (!thumbsCarouselApi) {
+					thumbsCarouselApi = EmblaCarousel(viewport, {
+						containScroll: 'keepSnaps',
+						dragFree: true,
+						container: track,
+						slides: '.matter-lightbox__thumb',
+					});
+				} else {
+					thumbsCarouselApi.reInit();
+				}
+
+				thumbsOverflowRoot = ref;
+				updateThumbsOverflowClass(
+					ref,
+					viewport,
+					track,
+					thumbsCarouselApi
+				);
+
+				// Re-check after layout settles (images/aspect can change width).
+				window.requestAnimationFrame(() => {
+					if (!thumbsCarouselApi || thumbsOverflowRoot !== ref) {
+						return;
+					}
+					updateThumbsOverflowClass(
+						ref,
+						viewport,
+						track,
+						thumbsCarouselApi
+					);
+				});
+
+				thumbsCarouselApi.scrollTo(selectedIndex);
+			});
 		},
 	},
 });

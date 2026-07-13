@@ -87,12 +87,13 @@
 			}
 		}
 
-		.matter-gallery__nav {
+		.matter-gallery__button {
 			pointer-events: auto;
 			z-index: 3;
 		}
 
-		.matter-gallery__controls {
+		.matter-gallery__controls,
+		.matter-gallery__buttons {
 			inset: 0;
 			pointer-events: none;
 			position: absolute;

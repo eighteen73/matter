@@ -11,23 +11,22 @@ use Eighteen73\Matter\Styling\BlockStyles;
 
 defined( 'ABSPATH' ) || exit;
 
-$block_attributes        = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$type                    = isset( $block_attributes['type'] ) && 'carousel' === $block_attributes['type'] ? 'carousel' : 'grid';
-$is_carousel             = 'carousel' === $type;
-$aspect_ratio            = isset( $block_attributes['aspectRatio'] ) ? (string) $block_attributes['aspectRatio'] : 'auto';
-$size_slug               = isset( $block_attributes['sizeSlug'] ) ? (string) $block_attributes['sizeSlug'] : 'large';
-$thumbnail_slug          = isset( $block_attributes['thumbnailSizeSlug'] ) ? (string) $block_attributes['thumbnailSizeSlug'] : 'thumbnail';
-$lightbox_slug           = isset( $block_attributes['lightboxSizeSlug'] ) ? (string) $block_attributes['lightboxSizeSlug'] : 'large';
-$lightbox_thumb_slug     = isset( $block_attributes['lightboxThumbnailSizeSlug'] ) ? (string) $block_attributes['lightboxThumbnailSizeSlug'] : 'thumbnail';
-$image_limit             = isset( $block_attributes['imageLimit'] ) ? (int) $block_attributes['imageLimit'] : 0;
-$image_crop              = ! isset( $block_attributes['imageCrop'] ) || ! empty( $block_attributes['imageCrop'] );
-$include_thumbs          = ! empty( $block_attributes['includeThumbnails'] );
-$thumb_ratio             = isset( $block_attributes['thumbnailAspectRatio'] ) ? (string) $block_attributes['thumbnailAspectRatio'] : '1';
-$thumbs_visible          = isset( $block_attributes['thumbnailsVisible'] ) ? (int) $block_attributes['thumbnailsVisible'] : 0;
-$lightbox_thumbs         = ! isset( $block_attributes['lightboxThumbnails'] ) || ! empty( $block_attributes['lightboxThumbnails'] );
-$lightbox_thumb_ratio    = isset( $block_attributes['lightboxThumbnailAspectRatio'] ) ? (string) $block_attributes['lightboxThumbnailAspectRatio'] : '1';
-$lightbox_thumbs_visible = isset( $block_attributes['lightboxThumbnailsVisible'] ) ? (int) $block_attributes['lightboxThumbnailsVisible'] : 0;
-$lightbox                = ! isset( $block_attributes['lightbox'] ) || ! empty( $block_attributes['lightbox'] ) || ( ! $is_carousel && $image_limit > 0 );
+$block_attributes     = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
+$type                 = isset( $block_attributes['type'] ) && 'carousel' === $block_attributes['type'] ? 'carousel' : 'grid';
+$is_carousel          = 'carousel' === $type;
+$aspect_ratio         = isset( $block_attributes['aspectRatio'] ) ? (string) $block_attributes['aspectRatio'] : 'auto';
+$size_slug            = isset( $block_attributes['sizeSlug'] ) ? (string) $block_attributes['sizeSlug'] : 'large';
+$thumbnail_slug       = isset( $block_attributes['thumbnailSizeSlug'] ) ? (string) $block_attributes['thumbnailSizeSlug'] : 'thumbnail';
+$lightbox_slug        = isset( $block_attributes['lightboxSizeSlug'] ) ? (string) $block_attributes['lightboxSizeSlug'] : 'large';
+$lightbox_thumb_slug  = isset( $block_attributes['lightboxThumbnailSizeSlug'] ) ? (string) $block_attributes['lightboxThumbnailSizeSlug'] : 'thumbnail';
+$image_limit          = isset( $block_attributes['imageLimit'] ) ? (int) $block_attributes['imageLimit'] : 0;
+$image_crop           = ! isset( $block_attributes['imageCrop'] ) || ! empty( $block_attributes['imageCrop'] );
+$include_thumbs       = ! empty( $block_attributes['includeThumbnails'] );
+$thumb_ratio          = isset( $block_attributes['thumbnailAspectRatio'] ) ? (string) $block_attributes['thumbnailAspectRatio'] : '1';
+$thumbs_visible       = isset( $block_attributes['thumbnailsVisible'] ) ? (int) $block_attributes['thumbnailsVisible'] : 0;
+$lightbox_thumbs      = ! isset( $block_attributes['lightboxThumbnails'] ) || ! empty( $block_attributes['lightboxThumbnails'] );
+$lightbox_thumb_ratio = isset( $block_attributes['lightboxThumbnailAspectRatio'] ) ? (string) $block_attributes['lightboxThumbnailAspectRatio'] : '1';
+$lightbox             = ! isset( $block_attributes['lightbox'] ) || ! empty( $block_attributes['lightbox'] ) || ( ! $is_carousel && $image_limit > 0 );
 
 $gallery_id = isset( $block->context['matter/gallery-id'] )
 	? (string) $block->context['matter/gallery-id']
@@ -69,7 +68,6 @@ if ( $lightbox && $total > 0 ) {
 					'images'                       => $images,
 					'lightboxThumbnails'           => $lightbox_thumbs,
 					'lightboxThumbnailAspectRatio' => $lightbox_thumb_ratio,
-					'lightboxThumbnailsVisible'    => $lightbox_thumbs_visible,
 					'thumbnailGap'                 => $lightbox_declarations['--matter-lightbox--thumbnail-gap'] ?? '',
 					'backdropColor'                => $lightbox_declarations['--matter-lightbox--backdrop-color'] ?? '',
 					'backdropOpacity'              => $block_attributes['lightboxBackdropOpacity'] ?? 85,
@@ -88,6 +86,13 @@ $classes     = [
 
 if ( $lightbox ) {
 	$classes[] = 'has-lightbox';
+}
+
+$visible_limit = ( ! $is_carousel && $image_limit > 0 ) ? $image_limit : 0;
+$show_view_all = $lightbox && $visible_limit > 0 && $total > $visible_limit;
+
+if ( $show_view_all ) {
+	$classes[] = 'has-image-limit';
 }
 
 if ( $is_carousel ) {
@@ -144,9 +149,6 @@ if ( $is_carousel ) {
 	}
 }
 
-$visible_limit = ( ! $is_carousel && $image_limit > 0 ) ? $image_limit : 0;
-$show_view_all = $lightbox && ! $is_carousel && $visible_limit > 0 && $total > $visible_limit;
-
 ob_start();
 
 if ( $is_carousel ) {
@@ -175,14 +177,16 @@ if ( $is_carousel ) {
 	echo '</div></div>';
 
 	echo '<div class="matter-gallery__controls">';
+	echo '<div class="matter-gallery__buttons">';
 	printf(
-		'<button type="button" class="matter-gallery__nav matter-gallery__nav--prev" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		'<button type="button" class="matter-gallery__button matter-gallery__button--prev" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
 		esc_attr__( 'Previous image', 'matter' )
 	);
 	printf(
-		'<button type="button" class="matter-gallery__nav matter-gallery__nav--next" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		'<button type="button" class="matter-gallery__button matter-gallery__button--next" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
 		esc_attr__( 'Next image', 'matter' )
 	);
+	echo '</div>';
 	echo '</div>';
 	echo '</div>';
 
@@ -255,5 +259,10 @@ $inner_content = ob_get_clean();
 	echo ' ' . wp_interactivity_data_wp_context( $gallery_context ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	?>
 >
+	<?php if ( $lightbox && ! $show_view_all ) : ?>
+		<span class="matter-gallery__lightbox-indicator" aria-hidden="true">
+			<span class="matter-gallery__icon"></span>
+		</span>
+	<?php endif; ?>
 	<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </figure>

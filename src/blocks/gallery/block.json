@@ -47,10 +47,6 @@
 			"type": "string",
 			"default": "1"
 		},
-		"lightboxThumbnailsVisible": {
-			"type": "number",
-			"default": 0
-		},
 		"lightboxThumbnailGap": {
 			"type": "string",
 			"default": ""

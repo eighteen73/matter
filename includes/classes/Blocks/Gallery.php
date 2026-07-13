@@ -92,61 +92,68 @@ class Gallery {
 				>
 					<span class="matter-lightbox__icon" aria-hidden="true"></span>
 				</button>
-				<figure class="matter-lightbox__figure">
-					<img
-						class="matter-lightbox__image"
-						data-wp-bind--src="state.currentSrc"
-						data-wp-bind--srcset="state.currentSrcset"
-						data-wp-bind--sizes="state.currentSizes"
-						data-wp-bind--alt="state.currentAlt"
-					/>
-					<figcaption
-						class="matter-lightbox__caption"
-						data-wp-bind--hidden="!state.currentCaption"
-						data-wp-text="state.currentCaption"
-					></figcaption>
-				</figure>
-				<div
-					class="matter-lightbox__controls"
-					data-wp-bind--hidden="!state.hasNavigation"
-				>
-					<button
-						type="button"
-						class="matter-lightbox__nav matter-lightbox__nav--prev"
-						data-wp-on--click="actions.showPrevious"
-						aria-label="<?php esc_attr_e( 'Previous image', 'matter' ); ?>"
+				<div class="matter-lightbox__stage">
+					<figure class="matter-lightbox__figure">
+						<img
+							class="matter-lightbox__image"
+							data-wp-bind--src="state.currentSrc"
+							data-wp-bind--srcset="state.currentSrcset"
+							data-wp-bind--sizes="state.currentSizes"
+							data-wp-bind--alt="state.currentAlt"
+						/>
+						<figcaption
+							class="matter-lightbox__caption"
+							data-wp-bind--hidden="!state.currentCaption"
+							data-wp-text="state.currentCaption"
+						></figcaption>
+					</figure>
+					<div
+						class="matter-lightbox__controls"
+						data-wp-bind--hidden="!state.hasNavigation"
 					>
-						<span class="matter-lightbox__icon" aria-hidden="true"></span>
-					</button>
-					<button
-						type="button"
-						class="matter-lightbox__nav matter-lightbox__nav--next"
-						data-wp-on--click="actions.showNext"
-						aria-label="<?php esc_attr_e( 'Next image', 'matter' ); ?>"
-					>
-						<span class="matter-lightbox__icon" aria-hidden="true"></span>
-					</button>
-				</div>
-				<div
-					data-wp-bind--class="state.thumbsClassName"
-					data-wp-bind--style="state.thumbsStyle"
-					data-wp-bind--hidden="!state.showThumbnails"
-				>
-					<template data-wp-each="state.currentThumbs">
 						<button
 							type="button"
-							class="matter-lightbox__thumb"
-							data-wp-on--click="actions.selectThumb"
-							data-wp-class--is-active="context.item.isActive"
-							data-wp-bind--aria-current="context.item.isActive"
+							class="matter-lightbox__nav matter-lightbox__nav--prev"
+							data-wp-on--click="actions.showPrevious"
+							aria-label="<?php esc_attr_e( 'Previous image', 'matter' ); ?>"
 						>
-							<img
-								data-wp-bind--src="context.item.src"
-								data-wp-bind--alt="context.item.alt"
-								data-wp-bind--style="state.currentThumbImageStyle"
-							/>
+							<span class="matter-lightbox__icon" aria-hidden="true"></span>
 						</button>
-					</template>
+						<button
+							type="button"
+							class="matter-lightbox__nav matter-lightbox__nav--next"
+							data-wp-on--click="actions.showNext"
+							aria-label="<?php esc_attr_e( 'Next image', 'matter' ); ?>"
+						>
+							<span class="matter-lightbox__icon" aria-hidden="true"></span>
+						</button>
+					</div>
+				</div>
+				<div
+					class="matter-lightbox__thumbs"
+					data-wp-bind--style="state.thumbsStyle"
+					data-wp-bind--hidden="!state.showThumbnails"
+					data-wp-watch="callbacks.syncThumbsCarousel"
+				>
+					<div class="matter-lightbox__thumbs-viewport">
+						<div class="matter-lightbox__thumbs-track">
+							<template data-wp-each="state.currentThumbs">
+								<button
+									type="button"
+									class="matter-lightbox__thumb"
+									data-wp-on--click="actions.selectThumb"
+									data-wp-class--is-active="context.item.isActive"
+									data-wp-bind--aria-current="context.item.isActive"
+								>
+									<img
+										data-wp-bind--src="context.item.src"
+										data-wp-bind--alt="context.item.alt"
+										data-wp-bind--style="state.currentThumbImageStyle"
+									/>
+								</button>
+							</template>
+						</div>
+					</div>
 				</div>
 			</div>
 		</dialog>

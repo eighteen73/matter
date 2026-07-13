@@ -82,7 +82,6 @@ export default function Edit(props) {
 		lightboxThumbnails,
 		lightboxThumbnailSizeSlug,
 		lightboxThumbnailAspectRatio,
-		lightboxThumbnailsVisible,
 		lightboxThumbnailGap,
 		lightboxBackdropColor,
 		lightboxBackdropOpacity,
@@ -486,11 +485,14 @@ export default function Edit(props) {
 		);
 	};
 
+	const showViewAll = hasImageLimit && images.length > imageLimit;
+
 	const blockProps = useBlockProps({
 		className: clsx(className, 'matter-gallery', {
 			'matter-gallery--grid': isGrid,
 			'matter-gallery--carousel': isCarousel,
 			'has-lightbox': lightboxEnabled,
+			'has-image-limit': showViewAll,
 			'is-cropped':
 				isGrid &&
 				(imageCrop || (aspectRatio && aspectRatio !== 'auto')),
@@ -923,7 +925,6 @@ export default function Edit(props) {
 							lightboxThumbnails: true,
 							lightboxThumbnailSizeSlug: 'thumbnail',
 							lightboxThumbnailAspectRatio: '1',
-							lightboxThumbnailsVisible: 0,
 							lightboxThumbnailGap: '',
 						});
 					}}
@@ -1065,37 +1066,6 @@ export default function Edit(props) {
 								/>
 							</ToolsPanelItem>
 						)}
-
-					{showLightboxThumbControls && (
-						<ToolsPanelItem
-							hasValue={() => lightboxThumbnailsVisible > 0}
-							label={__('Thumbnails visible', 'matter')}
-							onDeselect={() =>
-								setAttributes({
-									lightboxThumbnailsVisible: 0,
-								})
-							}
-							isShownByDefault
-						>
-							<RangeControl
-								label={__('Thumbnails visible', 'matter')}
-								help={__(
-									'0 uses a fixed thumbnail width. Set a number to show that many across the strip.',
-									'matter'
-								)}
-								value={lightboxThumbnailsVisible}
-								onChange={(value) =>
-									setAttributes({
-										lightboxThumbnailsVisible: value ?? 0,
-									})
-								}
-								min={0}
-								max={12}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
-						</ToolsPanelItem>
-					)}
 				</ToolsPanel>
 			</InspectorControls>
 
@@ -1265,6 +1235,14 @@ export default function Edit(props) {
 			)}
 
 			<figure {...blockProps}>
+				{lightboxEnabled && !showViewAll && (
+					<span
+						className="matter-gallery__lightbox-indicator"
+						aria-hidden="true"
+					>
+						<span className="matter-gallery__icon" />
+					</span>
+				)}
 				<div
 					className={
 						isCarousel
@@ -1283,28 +1261,33 @@ export default function Edit(props) {
 
 						{isCarousel && (
 							<div className="matter-gallery__controls">
-								<button
-									type="button"
-									className="matter-gallery__nav matter-gallery__nav--prev"
-									ref={prevButtonRef}
-									aria-label={__('Previous image', 'matter')}
-								>
-									<span
-										className="matter-gallery__icon"
-										aria-hidden="true"
-									/>
-								</button>
-								<button
-									type="button"
-									className="matter-gallery__nav matter-gallery__nav--next"
-									ref={nextButtonRef}
-									aria-label={__('Next image', 'matter')}
-								>
-									<span
-										className="matter-gallery__icon"
-										aria-hidden="true"
-									/>
-								</button>
+								<div className="matter-gallery__buttons">
+									<button
+										type="button"
+										className="matter-gallery__button matter-gallery__button--prev"
+										ref={prevButtonRef}
+										aria-label={__(
+											'Previous image',
+											'matter'
+										)}
+									>
+										<span
+											className="matter-gallery__icon"
+											aria-hidden="true"
+										/>
+									</button>
+									<button
+										type="button"
+										className="matter-gallery__button matter-gallery__button--next"
+										ref={nextButtonRef}
+										aria-label={__('Next image', 'matter')}
+									>
+										<span
+											className="matter-gallery__icon"
+											aria-hidden="true"
+										/>
+									</button>
+								</div>
 							</div>
 						)}
 					</div>
@@ -1351,7 +1334,7 @@ export default function Edit(props) {
 					)}
 				</div>
 
-				{hasImageLimit && images.length > imageLimit && (
+				{showViewAll && (
 					<div className="matter-gallery__view-all">
 						{__('View gallery', 'matter')}
 					</div>

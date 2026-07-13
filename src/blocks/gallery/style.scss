@@ -1,6 +1,48 @@
 .wp-block-matter-gallery {
 	position: relative;
 
+	.matter-gallery__lightbox-indicator {
+		--_size: var(--matter-gallery--lightbox-indicator--size, var(--wp--custom--matter-gallery--lightbox-indicator--size, 44px));
+		--_icon-size: var(--matter-gallery--lightbox-indicator--icon-size, var(--wp--custom--matter-gallery--lightbox-indicator--icon-size, 50%));
+		--_background-color: var(--matter-gallery--lightbox-indicator--background-color, var(--wp--custom--matter-gallery--lightbox-indicator--background-color, rgba(0, 0, 0, 0.5)));
+		--_icon-color: var(--matter-gallery--lightbox-indicator--icon-color, var(--wp--custom--matter-gallery--lightbox-indicator--icon-color, #fff));
+		--_border-radius: var(--matter-gallery--lightbox-indicator--border-radius, var(--wp--custom--matter-gallery--lightbox-indicator--border-radius, 0));
+		--_inset: var(--matter-gallery--lightbox-indicator--inset, var(--wp--custom--matter-gallery--lightbox-indicator--inset, 1rem));
+
+		align-items: center;
+		background-color: var(--_background-color);
+		border-radius: var(--_border-radius);
+		display: inline-flex;
+		height: var(--_size);
+		justify-content: center;
+		pointer-events: none;
+		position: absolute;
+		right: var(--_inset);
+		top: var(--_inset);
+		width: var(--_size);
+		z-index: 2;
+
+		.matter-gallery__icon {
+			mask-image: url("../../../assets/svg/corners-out.svg");
+		}
+	}
+
+	&.has-image-limit {
+		.matter-gallery__lightbox-indicator {
+			display: none;
+		}
+	}
+
+	.matter-gallery__icon {
+		background-color: var(--_icon-color, currentcolor);
+		display: block;
+		height: var(--_icon-size, 1em);
+		mask-position: center;
+		mask-repeat: no-repeat;
+		mask-size: contain;
+		width: var(--_icon-size, 1em);
+	}
+
 	&.matter-gallery--grid {
 		.matter-gallery__grid {
 			display: contents;
@@ -20,29 +62,13 @@
 		}
 	}
 
-	&:where(.has-lightbox) {
-		&::after {
-			background: #fff;
-			content: "";
-			height: 32px;
-			mask-image: url("../../../assets/svg/corners-out.svg");
-			mask-position: center;
-			mask-repeat: no-repeat;
-			mask-size: contain;
-			position: absolute;
-			right: 1rem;
-			top: 1rem;
-			width: 32px;
-		}
-	}
-
 	&.matter-gallery--carousel {
-		--_slides-to-show: var(--matter-carousel--slides-to-show, 1);
-		--_slide--gap: var(--matter-carousel--slide--gap, 0);
-		--_slide--gap-left: var(--matter-carousel--slide--gap-left, 0);
-		--_slide--gap-top: var(--matter-carousel--slide--gap-top, 0);
+		--_slides-to-show: var(--matter-gallery--carousel--slides-to-show, var(--wp--custom--matter-gallery--carousel--slides-to-show, 1));
+		--_slide--gap: var(--matter-gallery--carousel--slide--gap, var(--wp--custom--matter-gallery--carousel--slide--gap, 0));
+		--_slide--gap-left: var(--matter-gallery--carousel--slide--gap-left, var(--wp--custom--matter-gallery--carousel--slide--gap-left, 0));
+		--_slide--gap-top: var(--matter-gallery--carousel--slide--gap-top, var(--wp--custom--matter-gallery--carousel--slide--gap-top, 0));
 		--_slide--width: calc(100% / var(--_slides-to-show));
-		--_direction: var(--matter-carousel--direction, row);
+		--_direction: var(--matter-gallery--carousel--direction, var(--wp--custom--matter-gallery--carousel--direction, row));
 
 		.matter-gallery__carousel {
 			display: flex;
@@ -95,12 +121,18 @@
 			z-index: 2;
 		}
 
-		.matter-gallery__nav {
-			--_size: var(--matter-gallery--nav--size, 2.5rem);
-			--_icon-size: var(--matter-gallery--nav--icon-size, 50%);
-			--_background-color: var(--matter-gallery--nav--background-color, rgba(0, 0, 0, 0.5));
-			--_icon-color: var(--matter-gallery--nav--icon-color, #fff);
-			--_border-radius: var(--matter-gallery--nav--border-radius, 0);
+		.matter-gallery__buttons {
+			inset: 0;
+			pointer-events: none;
+			position: absolute;
+		}
+
+		.matter-gallery__button {
+			--_size: var(--matter-gallery--button--size, 2.5rem);
+			--_icon-size: var(--matter-gallery--button--icon-size, 50%);
+			--_background-color: var(--matter-gallery--button--background-color, rgba(0, 0, 0, 0.5));
+			--_icon-color: var(--matter-gallery--button--icon-color, #fff);
+			--_border-radius: var(--matter-gallery--button--border-radius, 0);
 
 			align-items: center;
 			appearance: none;
@@ -140,20 +172,10 @@
 			}
 		}
 
-		.matter-gallery__icon {
-			background-color: var(--_icon-color);
-			display: block;
-			height: var(--_icon-size);
-			mask-position: center;
-			mask-repeat: no-repeat;
-			mask-size: contain;
-			width: var(--_icon-size);
-		}
-
 		.matter-gallery__thumbs {
-			--_thumbs-visible: var(--matter-gallery--thumbs-visible, 0);
-			--_thumb-gap: var(--matter-gallery--thumbnail-gap, 0.5rem);
-			--_thumb-basis: 4rem;
+			--_thumbs-visible: var(--matter-gallery--thumbs-visible, var(--wp--custom--matter-gallery--thumbs-visible, 0));
+			--_thumb-gap: var(--matter-gallery--thumbnail-gap, var(--wp--custom--matter-gallery--thumbnail-gap, var(--wp--style--block-gap, 1rem)));
+			--_thumb-basis: 100px;
 
 			&.has-visible-count {
 				--_thumb-basis: calc((100% - (var(--_thumb-gap) * (var(--_thumbs-visible) - 1))) / var(--_thumbs-visible));
@@ -219,7 +241,6 @@
 	--_backdrop-opacity: calc(var(--matter-lightbox--backdrop-opacity, 85) / 100);
 	--_backdrop-blur: calc(var(--matter-lightbox--backdrop-blur, 0) * 1px);
 	--_backdrop-background: rgb(from var(--_backdrop-color) r g b / var(--_backdrop-opacity));
-	--_thumbs-visible: var(--matter-lightbox--thumbs-visible, 0);
 	--_thumb-gap: var(--matter-lightbox--thumbnail-gap, 0.5rem);
 	--_thumb-basis: 4rem;
 
@@ -239,34 +260,50 @@
 	}
 
 	&__content {
-		align-items: center;
+		align-items: stretch;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		height: 100%;
-		justify-content: center;
+		justify-content: flex-start;
 		max-height: 100%;
 		padding: 1rem;
 		position: relative;
 		width: 100%;
 	}
 
-	&__figure {
+	&__stage {
 		align-items: center;
 		display: flex;
-		flex-direction: column;
+		flex: 1 1 auto;
+		justify-content: center;
+		min-height: 0;
+		position: relative;
+		width: 100%;
+	}
+
+	&__figure {
+		display: grid;
+		grid-template-rows: minmax(0, 1fr) auto;
+		height: 100%;
+		justify-items: center;
 		margin: 0;
-		max-height: 75vh;
-		max-width: min(96vw, 1200px);
+		max-height: 100%;
+		max-width: min(96vw, var(--wp--style--global--wide-size, 1200px));
+		min-height: 0;
+		width: 100%;
 	}
 
 	&__image {
-		height: auto;
-		max-height: 70vh;
+		align-self: stretch;
+		height: 100%;
+		max-height: 100%;
 		max-width: 100%;
+		min-height: 0;
 		object-fit: contain;
-		width: auto;
+		object-position: center;
+		width: 100%;
 	}
 
 	&__caption {
@@ -358,20 +395,37 @@
 	}
 
 	&__thumbs {
-		display: flex;
-		flex-wrap: nowrap;
-		gap: var(--_thumb-gap);
-		justify-content: center;
-		max-width: min(96vw, 1200px);
-		overflow-x: auto;
+		flex: 0 0 auto;
+		margin-inline: auto;
+		max-width: 100%;
 		width: 100%;
-
-		&.has-visible-count {
-			--_thumb-basis: calc((100% - (var(--_thumb-gap) * (var(--_thumbs-visible) - 1))) / var(--_thumbs-visible));
-		}
 
 		&[hidden] {
 			display: none !important; // stylelint-disable-line declaration-no-important
+		}
+	}
+
+	&__thumbs-viewport {
+		overflow: hidden;
+		width: 100%;
+	}
+
+	&__thumbs-track {
+		display: flex;
+		gap: var(--_thumb-gap);
+		justify-content: safe center;
+	}
+
+	// Fallback when `safe center` is unsupported: start by default,
+	// then centre via JS when the strip does not overflow.
+	@supports not (justify-content: safe center) {
+		.matter-lightbox__thumbs-track {
+			justify-content: flex-start;
+		}
+
+		.matter-lightbox__thumbs.has-thumbs-alignment:not(.is-overflowing)
+		.matter-lightbox__thumbs-track {
+			justify-content: center;
 		}
 	}
 
