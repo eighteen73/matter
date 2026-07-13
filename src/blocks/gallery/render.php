@@ -36,9 +36,7 @@ $lightbox             = ! isset( $block_attributes['lightbox'] ) || ! empty( $bl
 $show_captions        = ! isset( $block_attributes['showCaptions'] ) || ! empty( $block_attributes['showCaptions'] );
 $view_all_text        = isset( $block_attributes['viewAllText'] ) ? (string) $block_attributes['viewAllText'] : __( 'View gallery', 'matter' );
 
-$gallery_id = isset( $block->context['matter/gallery-id'] )
-	? (string) $block->context['matter/gallery-id']
-	: wp_unique_id( 'matter-gallery-' );
+$gallery_id = Gallery::resolve_base_id( $block_attributes );
 
 $inner_blocks = [];
 if ( isset( $block ) && $block instanceof WP_Block && ! empty( $block->inner_blocks ) ) {

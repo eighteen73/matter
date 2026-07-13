@@ -50,6 +50,7 @@ import { Gallery as GalleryIcon } from '../../components/icons/gallery';
 import ColorControl from '../../components/color-control';
 import { storeColorValue } from '../../utils/colors';
 import { getBlockStyles } from '../../utils/block-styles';
+import useBlockId from '../../utils/use-block-id';
 
 const ALLOWED_MEDIA_TYPES = ['image'];
 const DEFAULT_BLOCK = { name: 'core/image' };
@@ -130,6 +131,14 @@ export default function Edit(props) {
 		isSelected,
 		__unstableLayoutClassNames: layoutClassNames,
 	} = props;
+
+	useBlockId({
+		blockName: 'matter/gallery',
+		prefix: 'matter-gallery',
+		attributes,
+		setAttributes,
+		clientId,
+	});
 
 	const {
 		type,

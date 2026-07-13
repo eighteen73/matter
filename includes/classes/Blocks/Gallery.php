@@ -35,7 +35,17 @@ class Gallery {
 	}
 
 	/**
-	 * Provide a unique gallery ID in block context.
+	 * Resolve the saved base ID from block attributes.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @return string
+	 */
+	public static function resolve_base_id( array $attributes ): string {
+		return BlockId::resolve_base_id( $attributes, 'matter-gallery-' );
+	}
+
+	/**
+	 * Provide a stable gallery ID in block context.
 	 *
 	 * @param array $context       Block context.
 	 * @param array $parsed_block  Parsed block.
@@ -46,7 +56,9 @@ class Gallery {
 			return $context;
 		}
 
-		$context['matter/gallery-id'] = wp_unique_id( 'matter-gallery-' );
+		$context['matter/gallery-id'] = self::resolve_base_id(
+			$parsed_block['attrs'] ?? []
+		);
 
 		return $context;
 	}

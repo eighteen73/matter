@@ -10,6 +10,10 @@
 	"keywords": ["gallery", "images", "carousel", "lightbox"],
 	"allowedBlocks": ["core/image"],
 	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
 		"type": {
 			"type": "string",
 			"default": "grid",

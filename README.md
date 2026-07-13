@@ -61,6 +61,7 @@ Carousel mode uses the shared carousel runtime (Embla under the hood) via `carou
 
 #### Attributes
 
+- generatedId (auto-managed; prefer a custom anchor)
 - type (`grid` | `carousel`)
 - aspectRatio
 - sizeSlug
