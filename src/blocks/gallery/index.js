@@ -1,4 +1,5 @@
 import { registerBlockType } from '@wordpress/blocks';
+import { gallery } from '@wordpress/icons';
 
 import './style.scss';
 import './editor.scss';
@@ -6,10 +7,9 @@ import './editor.scss';
 import Edit from './edit';
 import Save from './save';
 import metadata from './block.json';
-import { Gallery } from '../../components/icons/gallery';
 
 registerBlockType(metadata.name, {
-	icon: Gallery,
+	icon: gallery,
 	edit: Edit,
 	save: Save,
 });
