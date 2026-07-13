@@ -20,6 +20,10 @@ return array(
 			'core/group'
 		),
 		'attributes' => array(
+			'generatedId' => array(
+				'type' => 'string',
+				'default' => ''
+			),
 			'emblaConfig' => array(
 				'type' => 'object',
 				'default' => array(
@@ -32,6 +36,9 @@ return array(
 						'slideGap' => ''
 					),
 					'plugins' => array(
+						'fade' => array(
+							'active' => false
+						),
 						'autoplay' => array(
 							'active' => false,
 							'type' => 'slide',
@@ -54,6 +61,7 @@ return array(
 		),
 		'supports' => array(
 			'inserter' => true,
+			'anchor' => true,
 			'align' => array(
 				'wide',
 				'full'
@@ -472,10 +480,6 @@ return array(
 				'type' => 'string',
 				'default' => ''
 			),
-			'targetId' => array(
-				'type' => 'string',
-				'default' => ''
-			),
 			'type' => array(
 				'type' => 'string',
 				'enum' => array(
@@ -491,7 +495,6 @@ return array(
 			)
 		),
 		'providesContext' => array(
-			'matter/collapsible-id' => 'targetId',
 			'matter/collapsible-is-open' => 'editorIsOpen'
 		),
 		'usesContext' => array(
@@ -580,10 +583,6 @@ return array(
 				'type' => 'string',
 				'default' => ''
 			),
-			'targetId' => array(
-				'type' => 'string',
-				'default' => ''
-			),
 			'editorIsOpen' => array(
 				'type' => 'boolean',
 				'default' => false,
@@ -591,7 +590,6 @@ return array(
 			)
 		),
 		'providesContext' => array(
-			'matter/drawer-id' => 'targetId',
 			'matter/drawer-is-open' => 'editorIsOpen'
 		),
 		'usesContext' => array(
@@ -718,6 +716,221 @@ return array(
 		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
+	'gallery' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/gallery',
+		'version' => '0.1.0',
+		'title' => 'Gallery',
+		'category' => 'media',
+		'icon' => 'format-gallery',
+		'description' => 'A gallery of images with grid or carousel display and an optional lightbox.',
+		'keywords' => array(
+			'gallery',
+			'images',
+			'carousel',
+			'lightbox'
+		),
+		'allowedBlocks' => array(
+			'core/image'
+		),
+		'attributes' => array(
+			'generatedId' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'type' => array(
+				'type' => 'string',
+				'default' => 'grid',
+				'enum' => array(
+					'grid',
+					'carousel'
+				)
+			),
+			'aspectRatio' => array(
+				'type' => 'string',
+				'default' => 'auto'
+			),
+			'sizeSlug' => array(
+				'type' => 'string',
+				'default' => 'large'
+			),
+			'thumbnailSizeSlug' => array(
+				'type' => 'string',
+				'default' => 'thumbnail'
+			),
+			'lightbox' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'lightboxSizeSlug' => array(
+				'type' => 'string',
+				'default' => 'large'
+			),
+			'lightboxThumbnails' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'lightboxThumbnailSizeSlug' => array(
+				'type' => 'string',
+				'default' => 'thumbnail'
+			),
+			'lightboxThumbnailAspectRatio' => array(
+				'type' => 'string',
+				'default' => '1'
+			),
+			'lightboxThumbnailFocalPoint' => array(
+				'type' => 'object',
+				'default' => array(
+					'x' => 0.5,
+					'y' => 0.5
+				)
+			),
+			'lightboxThumbnailGap' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'lightboxBackdropColor' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'lightboxBackdropOpacity' => array(
+				'type' => 'number',
+				'default' => 85
+			),
+			'lightboxBackdropBlur' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'showCaptions' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'imageLimit' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'includeThumbnails' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'thumbnailAspectRatio' => array(
+				'type' => 'string',
+				'default' => '1'
+			),
+			'thumbnailsVisible' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'thumbnailGap' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'imageCrop' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'allowResize' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'viewAllText' => array(
+				'type' => 'string',
+				'default' => 'View Gallery'
+			),
+			'carouselConfig' => array(
+				'type' => 'object',
+				'default' => array(
+					'options' => array(
+						'loop' => false,
+						'axis' => 'x',
+						'slidesToScroll' => 1,
+						'slidesToShow' => 1,
+						'slideGap' => '',
+						'active' => true
+					),
+					'plugins' => array(
+						'fade' => array(
+							'active' => false
+						),
+						'autoplay' => array(
+							'active' => false,
+							'type' => 'slide',
+							'delay' => 4000
+						)
+					),
+					'breakpointLayers' => array(
+						
+					)
+				)
+			),
+			'advancedCarouselConfig' => array(
+				'type' => 'object',
+				'default' => null
+			),
+			'advancedCarouselConfigMerge' => array(
+				'type' => 'boolean',
+				'default' => false
+			)
+		),
+		'providesContext' => array(
+			'allowResize' => 'allowResize',
+			'imageCrop' => 'imageCrop'
+		),
+		'supports' => array(
+			'anchor' => true,
+			'align' => array(
+				'wide',
+				'full'
+			),
+			'color' => array(
+				'text' => true,
+				'background' => true,
+				'gradients' => true,
+				'link' => false
+			),
+			'html' => false,
+			'interactivity' => true,
+			'spacing' => array(
+				'margin' => true,
+				'padding' => true,
+				'blockGap' => true,
+				'__experimentalDefaultControls' => array(
+					'margin' => true,
+					'padding' => true,
+					'blockGap' => true
+				)
+			),
+			'layout' => array(
+				'allowSwitching' => false,
+				'allowInheriting' => false,
+				'allowEditing' => true,
+				'allowSizingOnChildren' => true,
+				'default' => array(
+					'type' => 'grid',
+					'columnCount' => 3
+				)
+			),
+			'dimensions' => array(
+				'width' => false,
+				'height' => false,
+				'aspectRatio' => false,
+				'minHeight' => false
+			)
+		),
+		'selectors' => array(
+			'root' => '.wp-block-matter-gallery',
+			'spacing' => array(
+				'blockGap' => '.wp-block-matter-gallery.matter-gallery--grid.is-layout-grid, .wp-block-matter-gallery.matter-gallery--grid .block-editor-block-list__layout.is-layout-grid, .wp-block-matter-gallery.matter-gallery--carousel .matter-gallery__carousel'
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css',
+		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'file:./view.js',
+		'render' => 'file:./render.php'
+	),
 	'modal' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
@@ -738,10 +951,6 @@ return array(
 		),
 		'attributes' => array(
 			'generatedId' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'targetId' => array(
 				'type' => 'string',
 				'default' => ''
 			),
@@ -783,7 +992,6 @@ return array(
 			)
 		),
 		'providesContext' => array(
-			'matter/modal-id' => 'targetId',
 			'matter/modal-is-open' => 'editorIsOpen'
 		),
 		'usesContext' => array(
@@ -1398,6 +1606,10 @@ return array(
 			'matter/tab-panels'
 		),
 		'attributes' => array(
+			'generatedId' => array(
+				'type' => 'string',
+				'default' => ''
+			),
 			'activeTabIndex' => array(
 				'type' => 'number',
 				'default' => 0
@@ -1529,6 +1741,12 @@ return array(
 			'accessibleLabel' => array(
 				'type' => 'string',
 				'default' => ''
+			),
+			'overlayContext' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
 			)
 		),
 		'supports' => array(

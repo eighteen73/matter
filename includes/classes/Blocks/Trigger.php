@@ -83,9 +83,10 @@ class Trigger {
 	 * @param string $target_id  Overlay target element ID.
 	 * @param bool   $standalone Whether the trigger sits outside the overlay parent.
 	 * @param string $control    Control type: native (button/a) or custom (group/div).
+	 * @param array  $overlay_context Overlay context to pass to the target overlay.
 	 * @return array<string, string>
 	 */
-	public static function get_toggle_attributes( string $target_id, bool $standalone = false, string $control = 'native' ): array {
+	public static function get_toggle_attributes( string $target_id, bool $standalone = false, string $control = 'native', array $overlay_context = [] ): array {
 		if ( '' === $target_id ) {
 			return [];
 		}
@@ -105,14 +106,63 @@ class Trigger {
 
 		if ( $standalone ) {
 			$attributes['data-wp-interactive'] = 'matter/overlay';
-			$attributes['data-wp-context']     = wp_json_encode(
-				[
-					'id' => $target_id,
-				]
-			);
+		}
+
+		$context = [];
+
+		if ( $standalone ) {
+			$context['id'] = $target_id;
+		}
+
+		if ( ! empty( $overlay_context ) ) {
+			$context['overlayContext'] = $overlay_context;
+		}
+
+		if ( ! empty( $context ) ) {
+			$attributes['data-wp-context'] = wp_json_encode( $context );
 		}
 
 		return $attributes;
+	}
+
+	/**
+	 * Sanitize trigger overlay context.
+	 *
+	 * Context is intentionally limited to flat scalar key/value pairs so it can
+	 * be safely serialized into the Interactivity API context.
+	 *
+	 * @param mixed $context Raw overlay context.
+	 * @return array<string, string|int|float|bool|null>
+	 */
+	public static function sanitize_overlay_context( mixed $context ): array {
+		if ( ! is_array( $context ) ) {
+			return [];
+		}
+
+		$sanitized = [];
+
+		foreach ( $context as $key => $value ) {
+			if ( ! is_string( $key ) && ! is_int( $key ) ) {
+				continue;
+			}
+
+			$key = sanitize_key( (string) $key );
+
+			if ( '' === $key ) {
+				continue;
+			}
+
+			if ( is_string( $value ) ) {
+				$sanitized[ $key ] = sanitize_text_field( $value );
+				continue;
+			}
+
+			if ( is_int( $value ) || is_float( $value ) || is_bool( $value ) || null === $value ) {
+				$sanitized[ $key ] = $value;
+			}
+		}
+
+		return $sanitized;
 	}
 
 	/**
@@ -142,9 +192,10 @@ class Trigger {
 	 * @param string $target_id         Overlay target element ID.
 	 * @param bool   $standalone        Whether the trigger sits outside the overlay parent.
 	 * @param string $accessible_label  Optional accessible label for custom controls.
+	 * @param array  $overlay_context   Overlay context to pass to the target overlay.
 	 * @return string
 	 */
-	public static function apply_toggle_attributes_to_markup( string $tag_markup, string $target_id, bool $standalone = false, string $accessible_label = '' ): string {
+	public static function apply_toggle_attributes_to_markup( string $tag_markup, string $target_id, bool $standalone = false, string $accessible_label = '', array $overlay_context = [] ): string {
 		if ( '' === trim( $tag_markup ) || ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
 			return $tag_markup;
 		}
@@ -176,7 +227,7 @@ class Trigger {
 			$tag_name = strtolower( $tag_processor->get_tag() );
 
 			if ( 'native' === $control_type && in_array( $tag_name, [ 'button', 'a' ], true ) ) {
-				self::apply_control_attributes( $tag_processor, $target_id, $standalone, 'native' );
+				self::apply_control_attributes( $tag_processor, $target_id, $standalone, 'native', '', $overlay_context );
 
 				if ( 'button' === $tag_name && ! $tag_processor->get_attribute( 'type' ) ) {
 					$tag_processor->set_attribute( 'type', 'button' );
@@ -186,7 +237,7 @@ class Trigger {
 			}
 
 			if ( 'custom' === $control_type && 'div' === $tag_name && self::has_group_class( $tag_processor->get_attribute( 'class' ) ) ) {
-				self::apply_control_attributes( $tag_processor, $target_id, $standalone, 'custom', $accessible_label );
+				self::apply_control_attributes( $tag_processor, $target_id, $standalone, 'custom', $accessible_label, $overlay_context );
 				break;
 			}
 		}
@@ -202,13 +253,14 @@ class Trigger {
 	 * @param bool                   $standalone        Whether the trigger sits outside the overlay parent.
 	 * @param string                 $control           Control type.
 	 * @param string                 $accessible_label  Optional accessible label for custom controls.
+	 * @param array                  $overlay_context   Overlay context to pass to the target overlay.
 	 * @return void
 	 */
-	private static function apply_control_attributes( \WP_HTML_Tag_Processor $tag_processor, string $target_id, bool $standalone, string $control, string $accessible_label = '' ): void {
+	private static function apply_control_attributes( \WP_HTML_Tag_Processor $tag_processor, string $target_id, bool $standalone, string $control, string $accessible_label = '', array $overlay_context = [] ): void {
 		$tag_processor->add_class( 'wp-block-matter-trigger' );
 		$tag_processor->add_class( 'wp-block-matter-trigger__control' );
 
-		foreach ( self::get_toggle_attributes( $target_id, $standalone, $control ) as $attribute => $value ) {
+		foreach ( self::get_toggle_attributes( $target_id, $standalone, $control, $overlay_context ) as $attribute => $value ) {
 			$tag_processor->set_attribute( $attribute, $value );
 		}
 

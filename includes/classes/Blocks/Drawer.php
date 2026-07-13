@@ -37,8 +37,9 @@ class Drawer {
 			[
 				'items' => [
 					$drawer_id => [
-						'isOpen' => false,
-						'type'   => 'drawer',
+						'instance' => null,
+						'isOpen'   => false,
+						'type'     => 'drawer',
 					],
 				],
 			]

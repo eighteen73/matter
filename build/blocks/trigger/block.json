@@ -30,6 +30,10 @@
     "accessibleLabel": {
       "type": "string",
       "default": ""
+    },
+    "overlayContext": {
+      "type": "object",
+      "default": {}
     }
   },
   "supports": {

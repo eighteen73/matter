@@ -12,6 +12,10 @@
     "matter/tab-panels"
   ],
   "attributes": {
+    "generatedId": {
+      "type": "string",
+      "default": ""
+    },
     "activeTabIndex": {
       "type": "number",
       "default": 0

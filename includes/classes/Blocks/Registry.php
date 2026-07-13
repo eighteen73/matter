@@ -25,6 +25,7 @@ class Registry {
 	 */
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register_overlay_store_module' ], 9 );
+		add_action( 'init', [ $this, 'register_lightbox_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register' ] );
 	}
 
@@ -50,6 +51,29 @@ class Registry {
 		wp_register_script_module(
 			'matter/overlay-store',
 			MATTER_URL . 'build/interactivity/overlay-store.js',
+			$asset['dependencies'] ?? [],
+			$asset['version'] ?? false,
+		);
+	}
+
+	/**
+	 * Register the shared lightbox store script module.
+	 *
+	 * @return void
+	 */
+	public function register_lightbox_store_module(): void {
+		$script_path = MATTER_PATH . 'build/interactivity/lightbox-store.js';
+		$asset_path  = MATTER_PATH . 'build/interactivity/lightbox-store.asset.php';
+
+		if ( ! file_exists( $script_path ) ) {
+			return;
+		}
+
+		$asset = file_exists( $asset_path ) ? require $asset_path : [];
+
+		wp_register_script_module(
+			'matter/lightbox-store',
+			MATTER_URL . 'build/interactivity/lightbox-store.js',
 			$asset['dependencies'] ?? [],
 			$asset['version'] ?? false,
 		);

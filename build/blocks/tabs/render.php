@@ -5,6 +5,7 @@
  * @package Eighteen73\Matter
  */
 
+use Eighteen73\Matter\Blocks\BlockId;
 use Eighteen73\Matter\Config;
 
 defined( 'ABSPATH' ) || exit;
@@ -19,7 +20,7 @@ if ( ! $block_instance instanceof \WP_Block ) {
 	return;
 }
 
-$tabs_id                     = $block_instance->context['matter/tabs-id'] ?? null;
+$tabs_id                     = $block_instance->context['matter/tabs-id'] ?? BlockId::resolve_base_id( $block_attributes, 'matter-tabs-' );
 $tabs_list                   = $block_instance->context['matter/tabs-list'] ?? [];
 $active_tab_index            = $block_attributes['activeTabIndex'] ?? 0;
 $deep_linking                = $block_attributes['deepLinking'] ?? false;
@@ -49,6 +50,11 @@ wp_interactivity_state(
 	'matter/tabs/private',
 	[
 		$tabs_id => $tabs_list,
+		'items'  => [
+			$tabs_id => [
+				'tabsList' => $tabs_list,
+			],
+		],
 	]
 );
 
@@ -60,6 +66,7 @@ $tabs_context = [
 ];
 
 $wrapper_attributes = [
+	'id'                            => $tabs_id,
 	'data-wp-interactive'           => 'matter/tabs/private',
 	'data-wp-init'                  => 'callbacks.onTabsInit',
 	'data-wp-on--keydown'           => 'actions.handleTabKeyDown',
