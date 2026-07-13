@@ -156,7 +156,17 @@ const { state, actions } = store(STORE, {
 		},
 		get currentThumbImageStyle() {
 			const ratio = state.currentThumbAspectRatio;
-			return `aspect-ratio:${ratio};object-fit:cover;`;
+			const focal =
+				state.currentGallery?.lightboxThumbnailFocalPoint || {};
+			const x =
+				typeof focal.x === 'number' && !Number.isNaN(focal.x)
+					? focal.x
+					: 0.5;
+			const y =
+				typeof focal.y === 'number' && !Number.isNaN(focal.y)
+					? focal.y
+					: 0.5;
+			return `aspect-ratio:${ratio};object-fit:cover;object-position:${x * 100}% ${y * 100}%;`;
 		},
 		get thumbsStyle() {
 			const gallery = state.currentGallery;

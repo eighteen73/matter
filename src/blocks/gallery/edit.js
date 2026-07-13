@@ -20,6 +20,7 @@ import {
 	SelectControl,
 	ToggleControl,
 	RangeControl,
+	FocalPointPicker,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -140,6 +141,7 @@ export default function Edit(props) {
 		lightboxThumbnails,
 		lightboxThumbnailSizeSlug,
 		lightboxThumbnailAspectRatio,
+		lightboxThumbnailFocalPoint,
 		lightboxThumbnailGap,
 		lightboxBackdropColor,
 		lightboxBackdropOpacity,
@@ -1045,6 +1047,7 @@ export default function Edit(props) {
 							lightboxThumbnails: true,
 							lightboxThumbnailSizeSlug: 'thumbnail',
 							lightboxThumbnailAspectRatio: '1',
+							lightboxThumbnailFocalPoint: { x: 0.5, y: 0.5 },
 							lightboxThumbnailGap: '',
 						});
 					}}
@@ -1186,6 +1189,49 @@ export default function Edit(props) {
 								/>
 							</ToolsPanelItem>
 						)}
+
+					{showLightboxThumbControls && images[0]?.url && (
+						<ToolsPanelItem
+							hasValue={() => {
+								const point = lightboxThumbnailFocalPoint || {
+									x: 0.5,
+									y: 0.5,
+								};
+								return point.x !== 0.5 || point.y !== 0.5;
+							}}
+							label={__('Thumbnail focal point', 'matter')}
+							onDeselect={() =>
+								setAttributes({
+									lightboxThumbnailFocalPoint: {
+										x: 0.5,
+										y: 0.5,
+									},
+								})
+							}
+							isShownByDefault
+						>
+							<FocalPointPicker
+								label={__('Thumbnail focal point', 'matter')}
+								url={images[0].url}
+								value={
+									lightboxThumbnailFocalPoint || {
+										x: 0.5,
+										y: 0.5,
+									}
+								}
+								onDrag={(value) =>
+									setAttributes({
+										lightboxThumbnailFocalPoint: value,
+									})
+								}
+								onChange={(value) =>
+									setAttributes({
+										lightboxThumbnailFocalPoint: value,
+									})
+								}
+							/>
+						</ToolsPanelItem>
+					)}
 				</ToolsPanel>
 			</InspectorControls>
 

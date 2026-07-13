@@ -47,6 +47,10 @@
 			"type": "string",
 			"default": "1"
 		},
+		"lightboxThumbnailFocalPoint": {
+			"type": "object",
+			"default": { "x": 0.5, "y": 0.5 }
+		},
 		"lightboxThumbnailGap": {
 			"type": "string",
 			"default": ""

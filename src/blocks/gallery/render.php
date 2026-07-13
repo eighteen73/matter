@@ -26,6 +26,12 @@ $thumb_ratio          = isset( $block_attributes['thumbnailAspectRatio'] ) ? (st
 $thumbs_visible       = isset( $block_attributes['thumbnailsVisible'] ) ? (int) $block_attributes['thumbnailsVisible'] : 0;
 $lightbox_thumbs      = ! isset( $block_attributes['lightboxThumbnails'] ) || ! empty( $block_attributes['lightboxThumbnails'] );
 $lightbox_thumb_ratio = isset( $block_attributes['lightboxThumbnailAspectRatio'] ) ? (string) $block_attributes['lightboxThumbnailAspectRatio'] : '1';
+$lightbox_thumb_focal = isset( $block_attributes['lightboxThumbnailFocalPoint'] ) && is_array( $block_attributes['lightboxThumbnailFocalPoint'] )
+	? $block_attributes['lightboxThumbnailFocalPoint']
+	: [
+		'x' => 0.5,
+		'y' => 0.5,
+	];
 $lightbox             = ! isset( $block_attributes['lightbox'] ) || ! empty( $block_attributes['lightbox'] ) || ( ! $is_carousel && $image_limit > 0 );
 $show_captions        = ! isset( $block_attributes['showCaptions'] ) || ! empty( $block_attributes['showCaptions'] );
 $view_all_text        = isset( $block_attributes['viewAllText'] ) ? (string) $block_attributes['viewAllText'] : __( 'View gallery', 'matter' );
@@ -70,6 +76,7 @@ if ( $lightbox && $total > 0 ) {
 					'images'                       => $images,
 					'lightboxThumbnails'           => $lightbox_thumbs,
 					'lightboxThumbnailAspectRatio' => $lightbox_thumb_ratio,
+					'lightboxThumbnailFocalPoint'  => $lightbox_thumb_focal,
 					'showCaptions'                 => $show_captions,
 					'thumbnailGap'                 => $lightbox_declarations['--matter-lightbox--thumbnail-gap'] ?? '',
 					'backdropColor'                => $lightbox_declarations['--matter-lightbox--backdrop-color'] ?? '',
