@@ -1,29 +1,45 @@
 .wp-block-matter-gallery {
+	--_lightbox-indicator--size: var(--matter-gallery--lightbox-indicator--size, var(--wp--custom--matter-gallery--lightbox-indicator--size, 44px));
+	--_lightbox-indicator--icon-size: var(--matter-gallery--lightbox-indicator--icon-size, var(--wp--custom--matter-gallery--lightbox-indicator--icon-size, 50%));
+	--_lightbox-indicator--background-color: var(--matter-gallery--lightbox-indicator--background-color, var(--wp--custom--matter-gallery--lightbox-indicator--background-color, rgba(0, 0, 0, 0.5)));
+	--_lightbox-indicator--icon-color: var(--matter-gallery--lightbox-indicator--icon-color, var(--wp--custom--matter-gallery--lightbox-indicator--icon-color, #fff));
+	--_lightbox-indicator--border-radius: var(--matter-gallery--lightbox-indicator--border-radius, var(--wp--custom--matter-gallery--lightbox-indicator--border-radius, 0));
+	--_lightbox-indicator--inset: var(--matter-gallery--lightbox-indicator--inset, var(--wp--custom--matter-gallery--lightbox-indicator--inset, 1rem));
+
+	--_slides-to-show: var(--matter-gallery--carousel--slides-to-show, var(--wp--custom--matter-gallery--carousel--slides-to-show, 1));
+	--_slide--gap: var(--matter-gallery--carousel--slide--gap, var(--wp--custom--matter-gallery--carousel--slide--gap, 0));
+	--_slide--gap-left: var(--matter-gallery--carousel--slide--gap-left, var(--wp--custom--matter-gallery--carousel--slide--gap-left, 0));
+	--_slide--gap-top: var(--matter-gallery--carousel--slide--gap-top, var(--wp--custom--matter-gallery--carousel--slide--gap-top, 0));
+	--_slide--width: calc(100% / var(--_slides-to-show));
+	--_direction: var(--matter-gallery--carousel--direction, var(--wp--custom--matter-gallery--carousel--direction, row));
+
+	--_button--size: var(--matter-gallery--button--size, 2.5rem);
+	--_button--icon-size: var(--matter-gallery--button--icon-size, 50%);
+	--_button--background-color: var(--matter-gallery--button--background-color, rgba(0, 0, 0, 0.5));
+	--_button--icon-color: var(--matter-gallery--button--icon-color, #fff);
+	--_button--border-radius: var(--matter-gallery--button--border-radius, 0);
+
 	position: relative;
 
 	.matter-gallery__lightbox-indicator {
-		--_size: var(--matter-gallery--lightbox-indicator--size, var(--wp--custom--matter-gallery--lightbox-indicator--size, 44px));
-		--_icon-size: var(--matter-gallery--lightbox-indicator--icon-size, var(--wp--custom--matter-gallery--lightbox-indicator--icon-size, 50%));
-		--_background-color: var(--matter-gallery--lightbox-indicator--background-color, var(--wp--custom--matter-gallery--lightbox-indicator--background-color, rgba(0, 0, 0, 0.5)));
-		--_icon-color: var(--matter-gallery--lightbox-indicator--icon-color, var(--wp--custom--matter-gallery--lightbox-indicator--icon-color, #fff));
-		--_border-radius: var(--matter-gallery--lightbox-indicator--border-radius, var(--wp--custom--matter-gallery--lightbox-indicator--border-radius, 0));
-		--_inset: var(--matter-gallery--lightbox-indicator--inset, var(--wp--custom--matter-gallery--lightbox-indicator--inset, 1rem));
-
 		align-items: center;
-		background-color: var(--_background-color);
-		border-radius: var(--_border-radius);
+		background-color: var(--_lightbox-indicator--background-color);
+		border-radius: var(--_lightbox-indicator--border-radius);
 		display: inline-flex;
-		height: var(--_size);
+		height: var(--_lightbox-indicator--size);
 		justify-content: center;
 		pointer-events: none;
 		position: absolute;
-		right: var(--_inset);
-		top: var(--_inset);
-		width: var(--_size);
+		right: var(--_lightbox-indicator--inset);
+		top: var(--_lightbox-indicator--inset);
+		width: var(--_lightbox-indicator--size);
 		z-index: 2;
 
 		.matter-gallery__icon {
+			background-color: var(--_lightbox-indicator--icon-color);
+			height: var(--_lightbox-indicator--icon-size);
 			mask-image: url("../../../assets/svg/corners-out.svg");
+			width: var(--_lightbox-indicator--icon-size);
 		}
 	}
 
@@ -34,13 +50,13 @@
 	}
 
 	.matter-gallery__icon {
-		background-color: var(--_icon-color, currentcolor);
+		background-color: var(--_button--icon-color, currentcolor);
 		display: block;
-		height: var(--_icon-size, 1em);
+		height: var(--_button--icon-size, 1em);
 		mask-position: center;
 		mask-repeat: no-repeat;
 		mask-size: contain;
-		width: var(--_icon-size, 1em);
+		width: var(--_button--icon-size, 1em);
 	}
 
 	&.matter-gallery--grid {
@@ -63,17 +79,13 @@
 	}
 
 	&.matter-gallery--carousel {
-		--_slides-to-show: var(--matter-gallery--carousel--slides-to-show, var(--wp--custom--matter-gallery--carousel--slides-to-show, 1));
-		--_slide--gap: var(--matter-gallery--carousel--slide--gap, var(--wp--custom--matter-gallery--carousel--slide--gap, 0));
-		--_slide--gap-left: var(--matter-gallery--carousel--slide--gap-left, var(--wp--custom--matter-gallery--carousel--slide--gap-left, 0));
-		--_slide--gap-top: var(--matter-gallery--carousel--slide--gap-top, var(--wp--custom--matter-gallery--carousel--slide--gap-top, 0));
-		--_slide--width: calc(100% / var(--_slides-to-show));
-		--_direction: var(--matter-gallery--carousel--direction, var(--wp--custom--matter-gallery--carousel--direction, row));
-
 		.matter-gallery__carousel {
+			// Defined here so inline --matter-gallery--carousel--gap on this element resolves correctly.
+			--_gap: var(--matter-gallery--carousel--gap, calc(var(--wp--style--block-gap, 1.5rem) / 2));
+
 			display: flex;
 			flex-direction: column;
-			gap: 0.75rem;
+			gap: var(--_gap);
 			position: relative;
 		}
 
@@ -128,34 +140,28 @@
 		}
 
 		.matter-gallery__button {
-			--_size: var(--matter-gallery--button--size, 2.5rem);
-			--_icon-size: var(--matter-gallery--button--icon-size, 50%);
-			--_background-color: var(--matter-gallery--button--background-color, rgba(0, 0, 0, 0.5));
-			--_icon-color: var(--matter-gallery--button--icon-color, #fff);
-			--_border-radius: var(--matter-gallery--button--border-radius, 0);
-
 			align-items: center;
 			appearance: none;
-			background-color: var(--_background-color);
+			background-color: var(--_button--background-color);
 			border: 0;
-			border-radius: var(--_border-radius);
+			border-radius: var(--_button--border-radius);
 			cursor: pointer;
 			display: inline-flex;
-			height: var(--_size);
+			height: var(--_button--size);
 			justify-content: center;
 			padding: 0;
 			pointer-events: auto;
 			position: absolute;
 			top: 50%;
 			transform: translateY(-50%);
-			width: var(--_size);
+			width: var(--_button--size);
 
 			&:disabled {
 				cursor: default;
 				opacity: 0.35;
 			}
 
-			&--prev {
+			&--previous {
 				left: 0.5rem;
 
 				.matter-gallery__icon {
@@ -173,8 +179,9 @@
 		}
 
 		.matter-gallery__thumbs {
+			// Defined here so inline --matter-gallery--thumbnail-gap / --thumbs-visible resolve correctly.
 			--_thumbs-visible: var(--matter-gallery--thumbs-visible, var(--wp--custom--matter-gallery--thumbs-visible, 0));
-			--_thumb-gap: var(--matter-gallery--thumbnail-gap, var(--wp--custom--matter-gallery--thumbnail-gap, var(--wp--style--block-gap, 1rem)));
+			--_thumb-gap: var(--matter-gallery--thumbnail-gap, var(--wp--custom--matter-gallery--thumbnail-gap, var(--_gap)));
 			--_thumb-basis: 100px;
 
 			&.has-visible-count {
@@ -193,7 +200,7 @@
 
 		.matter-gallery__thumb {
 			background: none;
-			border: 2px solid transparent;
+			border: 0;
 			cursor: pointer;
 			flex: 0 0 var(--_thumb-basis);
 			overflow: hidden;
@@ -210,7 +217,8 @@
 			&.is-selected,
 			&.embla__thumb--selected,
 			&[aria-current="true"] {
-				border-color: currentcolor;
+				outline: 2px solid currentcolor;
+				outline-offset: -2px;
 			}
 		}
 	}
@@ -241,8 +249,21 @@
 	--_backdrop-opacity: calc(var(--matter-lightbox--backdrop-opacity, 85) / 100);
 	--_backdrop-blur: calc(var(--matter-lightbox--backdrop-blur, 0) * 1px);
 	--_backdrop-background: rgb(from var(--_backdrop-color) r g b / var(--_backdrop-opacity));
+	--_content-padding: var(--matter-lightbox--content-padding, 1rem);
 	--_thumb-gap: var(--matter-lightbox--thumbnail-gap, 0.5rem);
 	--_thumb-basis: 4rem;
+
+	--_close--size: var(--matter-lightbox--close--size, 2.5rem);
+	--_close--icon-size: var(--matter-lightbox--close--icon-size, 50%);
+	--_close--background-color: var(--matter-lightbox--close--background-color, rgba(255, 255, 255, 0.15));
+	--_close--icon-color: var(--matter-lightbox--close--icon-color, #fff);
+	--_close--border-radius: var(--matter-lightbox--close--border-radius, 0);
+
+	--_nav--size: var(--matter-lightbox--nav--size, 2.5rem);
+	--_nav--icon-size: var(--matter-lightbox--nav--icon-size, 50%);
+	--_nav--background-color: var(--matter-lightbox--nav--background-color, rgba(255, 255, 255, 0.15));
+	--_nav--icon-color: var(--matter-lightbox--nav--icon-color, #fff);
+	--_nav--border-radius: var(--matter-lightbox--nav--border-radius, 0);
 
 	background: transparent;
 	border: 0;
@@ -268,7 +289,7 @@
 		height: 100%;
 		justify-content: flex-start;
 		max-height: 100%;
-		padding: 1rem;
+		padding: var(--_content-padding);
 		position: relative;
 		width: 100%;
 	}
@@ -316,41 +337,35 @@
 	&__nav {
 		align-items: center;
 		appearance: none;
-		background-color: var(--_background-color);
 		border: 0;
-		border-radius: var(--_border-radius);
 		cursor: pointer;
 		display: inline-flex;
-		height: var(--_size);
 		justify-content: center;
 		padding: 0;
-		width: var(--_size);
 	}
 
 	&__icon {
-		background-color: var(--_icon-color);
 		display: block;
-		height: var(--_icon-size);
 		mask-position: center;
 		mask-repeat: no-repeat;
 		mask-size: contain;
-		width: var(--_icon-size);
 	}
 
 	&__close {
-		--_size: var(--matter-lightbox--close--size, 2.5rem);
-		--_icon-size: var(--matter-lightbox--close--icon-size, 50%);
-		--_background-color: var(--matter-lightbox--close--background-color, rgba(255, 255, 255, 0.15));
-		--_icon-color: var(--matter-lightbox--close--icon-color, #fff);
-		--_border-radius: var(--matter-lightbox--close--border-radius, 0);
-
+		background-color: var(--_close--background-color);
+		border-radius: var(--_close--border-radius);
+		height: var(--_close--size);
 		position: absolute;
-		right: 0.5rem;
-		top: 0.5rem;
+		right: var(--_content-padding);
+		top: var(--_content-padding);
+		width: var(--_close--size);
 		z-index: 2;
 
 		.matter-lightbox__icon {
+			background-color: var(--_close--icon-color);
+			height: var(--_close--icon-size);
 			mask-image: url("../../../assets/svg/x.svg");
+			width: var(--_close--icon-size);
 		}
 	}
 
@@ -366,19 +381,23 @@
 	}
 
 	&__nav {
-		--_size: var(--matter-lightbox--nav--size, 2.5rem);
-		--_icon-size: var(--matter-lightbox--nav--icon-size, 50%);
-		--_background-color: var(--matter-lightbox--nav--background-color, rgba(255, 255, 255, 0.15));
-		--_icon-color: var(--matter-lightbox--nav--icon-color, #fff);
-		--_border-radius: var(--matter-lightbox--nav--border-radius, 0);
-
+		background-color: var(--_nav--background-color);
+		border-radius: var(--_nav--border-radius);
+		height: var(--_nav--size);
 		pointer-events: auto;
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
+		width: var(--_nav--size);
 
-		&--prev {
-			left: 0.5rem;
+		.matter-lightbox__icon {
+			background-color: var(--_nav--icon-color);
+			height: var(--_nav--icon-size);
+			width: var(--_nav--icon-size);
+		}
+
+		&--previous {
+			left: 0;
 
 			.matter-lightbox__icon {
 				mask-image: url("../../../assets/svg/arrow-left.svg");
@@ -386,7 +405,7 @@
 		}
 
 		&--next {
-			right: 0.5rem;
+			right: 0;
 
 			.matter-lightbox__icon {
 				mask-image: url("../../../assets/svg/arrow-right.svg");
@@ -432,7 +451,7 @@
 	&__thumb {
 		appearance: none;
 		background: none;
-		border: 2px solid transparent;
+		border: 0;
 		cursor: pointer;
 		flex: 0 0 var(--_thumb-basis);
 		opacity: 0.7;
@@ -447,8 +466,9 @@
 		}
 
 		&.is-active {
-			border-color: #fff;
 			opacity: 1;
+			outline: 2px solid #fff;
+			outline-offset: -2px;
 		}
 	}
 }

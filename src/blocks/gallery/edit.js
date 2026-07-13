@@ -545,7 +545,9 @@ export default function Edit(props) {
 	const carouselGap = isCarousel
 		? getGapCSSValue(style?.spacing?.blockGap)
 		: null;
-	const carouselStyles = carouselGap ? { gap: carouselGap } : undefined;
+	const carouselStyles = carouselGap
+		? { '--matter-gallery--carousel--gap': carouselGap }
+		: undefined;
 
 	if (!hasImages) {
 		return (
@@ -1264,7 +1266,7 @@ export default function Edit(props) {
 								<div className="matter-gallery__buttons">
 									<button
 										type="button"
-										className="matter-gallery__button matter-gallery__button--prev"
+										className="matter-gallery__button matter-gallery__button--previous"
 										ref={prevButtonRef}
 										aria-label={__(
 											'Previous image',

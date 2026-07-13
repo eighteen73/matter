@@ -155,7 +155,9 @@ if ( $is_carousel ) {
 	$carousel_gap   = Gallery::resolve_block_gap_value(
 		$block_attributes['style']['spacing']['blockGap'] ?? null
 	);
-	$carousel_style = $carousel_gap ? 'gap:' . $carousel_gap : '';
+	$carousel_style = $carousel_gap
+		? '--matter-gallery--carousel--gap:' . $carousel_gap . ';'
+		: '';
 
 	printf(
 		'<div class="matter-gallery__carousel"%s>',
@@ -179,7 +181,7 @@ if ( $is_carousel ) {
 	echo '<div class="matter-gallery__controls">';
 	echo '<div class="matter-gallery__buttons">';
 	printf(
-		'<button type="button" class="matter-gallery__button matter-gallery__button--prev" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		'<button type="button" class="matter-gallery__button matter-gallery__button--previous" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
 		esc_attr__( 'Previous image', 'matter' )
 	);
 	printf(

@@ -49,7 +49,7 @@ store(STORE, {
 			context.carouselApi = carouselApi;
 
 			const prevButtonNode = ref.querySelector(
-				'.matter-gallery__button--prev'
+				'.matter-gallery__button--previous'
 			);
 			const nextButtonNode = ref.querySelector(
 				'.matter-gallery__button--next'

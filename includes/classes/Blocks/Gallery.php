@@ -113,7 +113,7 @@ class Gallery {
 					>
 						<button
 							type="button"
-							class="matter-lightbox__nav matter-lightbox__nav--prev"
+							class="matter-lightbox__nav matter-lightbox__nav--previous"
 							data-wp-on--click="actions.showPrevious"
 							aria-label="<?php esc_attr_e( 'Previous image', 'matter' ); ?>"
 						>
