@@ -17,6 +17,10 @@
 		"core/group"
 	],
 	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
 		"emblaConfig": {
 			"type": "object",
 			"default": {
@@ -29,6 +33,9 @@
 					"slideGap": ""
 				},
 				"plugins": {
+					"fade": {
+						"active": false
+					},
 					"autoplay": {
 						"active": false,
 						"type": "slide",
@@ -52,6 +59,7 @@
 	},
 	"supports": {
 		"inserter": true,
+		"anchor": true,
 		"align": ["wide", "full"],
 		"interactivity": true,
 		"spacing": {

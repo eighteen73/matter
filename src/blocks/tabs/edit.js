@@ -13,6 +13,7 @@ import { useMemo, useCallback, useRef } from '@wordpress/element';
 import {
 	ToggleControl,
 	Button,
+	Notice,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -33,12 +34,14 @@ import {
 } from './utils/query-tabs-list';
 import BlockVariationPicker from '../../components/block-variation-picker';
 import BreakpointSelectorControl from '../../components/breakpoint-selector-control';
+import useBlockId from '../../utils/use-block-id';
 
 const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
 
 function Edit({ clientId, attributes, setAttributes }) {
 	const {
 		anchor,
+		generatedId,
 		activeTabIndex,
 		editorActiveTabIndex,
 		deepLinking,
@@ -50,6 +53,16 @@ function Edit({ clientId, attributes, setAttributes }) {
 		stackOnMobile,
 		stackedBreakpoint,
 	} = attributes;
+
+	const { duplicateAnchor } = useBlockId({
+		blockName: 'matter/tabs',
+		prefix: 'matter-tabs',
+		attributes,
+		setAttributes,
+		clientId,
+	});
+
+	const tabsId = anchor || generatedId || '';
 
 	const { tabPanels, tabButtons, tabPanelsClientId, tabListClientId } =
 		useSelect(
@@ -155,19 +168,19 @@ function Edit({ clientId, attributes, setAttributes }) {
 
 	const contextValue = useMemo(() => {
 		const tabList = isQueryMode
-			? buildTabsListFromPosts(queryPosts, anchor)
+			? buildTabsListFromPosts(queryPosts, tabsId)
 			: tabButtons.map((button, index) =>
 					buildManualTabEntry({
 						button,
 						panel: tabPanels[index],
 						index,
-						tabsId: anchor,
+						tabsId,
 					})
 				);
 
 		return {
 			'matter/tabs-list': tabList,
-			'matter/tabs-id': anchor,
+			'matter/tabs-id': tabsId,
 			'matter/tabs-activeTabIndex': activeTabIndex,
 			'matter/tabs-editorActiveTabIndex': editorActiveTabIndex,
 			'matter/tabs-collapses': collapses,
@@ -179,7 +192,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 		queryPosts,
 		tabButtons,
 		tabPanels,
-		anchor,
+		tabsId,
 		activeTabIndex,
 		editorActiveTabIndex,
 		collapses,
@@ -214,6 +227,14 @@ function Edit({ clientId, attributes, setAttributes }) {
 
 	return (
 		<>
+			{duplicateAnchor && (
+				<Notice status="warning" isDismissible={false}>
+					{__(
+						'Another tabs block is using this anchor. Choose a unique anchor so programmatic controls target the correct tabs.',
+						'matter'
+					)}
+				</Notice>
+			)}
 			<InspectorControls>
 				<ToolsPanel label={__('Settings', 'matter')}>
 					<ToolsPanelItem

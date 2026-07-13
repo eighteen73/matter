@@ -13,10 +13,6 @@
 			"type": "string",
 			"default": ""
 		},
-		"targetId": {
-			"type": "string",
-			"default": ""
-		},
 		"type": {
 			"type": "string",
 			"enum": [ "popover", "inline" ],
@@ -29,7 +25,6 @@
 		}
 	},
 	"providesContext": {
-		"matter/collapsible-id": "targetId",
 		"matter/collapsible-is-open": "editorIsOpen"
 	},
 	"usesContext": [

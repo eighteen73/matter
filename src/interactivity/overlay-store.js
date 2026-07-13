@@ -165,6 +165,39 @@ const onClose = (dialogElement) => {
 
 const getItem = (id) => privateState.items[id];
 
+const getInstanceForId = (id) => getItem(id)?.instance || null;
+
+/**
+ * Register a bound overlay API on the private store item (carousel's loadCarousel equivalent).
+ *
+ * @return {void}
+ */
+const onInit = () => {
+	const id = getContextId();
+
+	if (id && privateState.items[id] && !privateState.items[id].instance) {
+		privateState.items[id].instance = {
+			open: (options = {}) =>
+				privateActions.open(id, {
+					source: options.source || 'manual',
+					overlayContext: options.overlayContext,
+				}),
+			close: () => privateActions.close(id),
+			toggle: (options = {}) => privateActions.toggle(id, options),
+			openNext: () => privateActions.openNext(id),
+			openPrevious: () => privateActions.openPrevious(id),
+			get isOpen() {
+				return Boolean(getItem(id)?.isOpen);
+			},
+			get type() {
+				return getItem(id)?.type;
+			},
+		};
+	}
+
+	runGlobalInit();
+};
+
 const getNavigationDirection = () => {
 	const context = getContext(PUBLIC_STORE);
 
@@ -640,6 +673,9 @@ const { actions: privateActions, state: privateState } = store(
 			get item() {
 				return getItem(privateState.id);
 			},
+			get instance() {
+				return getInstanceForId(privateState.id);
+			},
 			get dialogElement() {
 				const { id } = privateState;
 
@@ -651,6 +687,8 @@ const { actions: privateActions, state: privateState } = store(
 			},
 		},
 		actions: {
+			getInstance: (passthroughId = false) =>
+				getInstanceForId(resolveId(passthroughId)),
 			open: (passthroughId = false, options = {}) => {
 				const id = resolveId(passthroughId);
 				const source = options.source || 'manual';
@@ -763,9 +801,7 @@ const { actions: privateActions, state: privateState } = store(
 			}),
 		},
 		callbacks: {
-			onInit: () => {
-				runGlobalInit();
-			},
+			onInit,
 			syncDialog: () => {
 				const { dialogElement, item, id } = privateState;
 
@@ -860,6 +896,9 @@ const publicStore = store(PUBLIC_STORE, {
 
 			return createReadOnlyProxy(item);
 		},
+		get instance() {
+			return privateState.instance;
+		},
 		get hasNext() {
 			return hasAdjacentModal(getContextId(), 'next');
 		},
@@ -871,6 +910,9 @@ const publicStore = store(PUBLIC_STORE, {
 		},
 	},
 	actions: {
+		getInstance(id = false) {
+			return privateActions.getInstance(resolvePublicId(id));
+		},
 		open(id = false, options = {}) {
 			privateActions.open(resolvePublicId(id), {
 				source: options.source || 'manual',
@@ -907,9 +949,7 @@ const publicStore = store(PUBLIC_STORE, {
 		},
 	},
 	callbacks: {
-		onInit() {
-			runGlobalInit();
-		},
+		onInit,
 		syncDialog() {
 			const id = getContextId();
 			const item = publicState.item;

@@ -67,3 +67,53 @@ export const hasDuplicateAttributeValue = (
 			block.attributes?.[attributeName] === value
 	);
 };
+
+/**
+ * Matter blocks that expose a stable public ID for programmatic control.
+ */
+export const PUBLIC_ID_BLOCK_NAMES = [
+	'matter/modal',
+	'matter/drawer',
+	'matter/collapsible',
+	'matter/carousel',
+	'matter/tabs',
+];
+
+/**
+ * Resolve the public ID used by a Matter block instance.
+ *
+ * Priority matches PHP BlockId: anchor → generatedId.
+ *
+ * @param {Object} block Block object from the editor.
+ * @return {string} Public ID or empty string.
+ */
+export const getBlockPublicId = (block) => {
+	const attributes = block?.attributes || {};
+
+	return attributes.anchor || attributes.generatedId || '';
+};
+
+/**
+ * Whether another Matter public-ID block already uses this ID.
+ *
+ * @param {Array}  blocks          Editor blocks tree.
+ * @param {string} currentClientId Current block client ID.
+ * @param {string} value           Candidate public ID.
+ * @return {boolean} Whether a duplicate exists.
+ */
+export const hasDuplicatePublicId = (blocks, currentClientId, value) => {
+	if (!value) {
+		return false;
+	}
+
+	return flattenBlocks(blocks).some((block) => {
+		if (
+			!PUBLIC_ID_BLOCK_NAMES.includes(block.name) ||
+			block.clientId === currentClientId
+		) {
+			return false;
+		}
+
+		return getBlockPublicId(block) === value;
+	});
+};

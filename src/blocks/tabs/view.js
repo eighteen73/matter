@@ -23,7 +23,6 @@ function createReadOnlyProxy(obj) {
 
 	return new Proxy(obj, {
 		get(target, prop) {
-			// If accessing an array mutation method, return a no-op function.
 			if (Array.isArray(target) && arrayMutationMethods.has(prop)) {
 				return () => {};
 			}
@@ -43,28 +42,85 @@ function createReadOnlyProxy(obj) {
 	});
 }
 
+/**
+ * Non-reactive map of tabsId → interactivity context.
+ * Used for programmatic setActiveTab(id, index) outside element context.
+ *
+ * @type {Map<string, Object>}
+ */
+const tabsContexts = new Map();
+
+const getTabsListForId = (id) => {
+	if (!id) {
+		return undefined;
+	}
+
+	return privateState.items[id]?.tabsList || privateState[id];
+};
+
+const dispatchTabsChange = (id, tabIndex, tab) => {
+	document.dispatchEvent(
+		new window.CustomEvent('matter/tabs/change', {
+			detail: {
+				id,
+				tabIndex,
+				tab: tab || null,
+			},
+		})
+	);
+};
+
+/**
+ * Apply an active tab change against a known tabs context.
+ *
+ * @param {string}  id          Tabs instance id.
+ * @param {Object}  context     Interactivity context for the tabs instance.
+ * @param {number}  tabIndex    Target tab index.
+ * @param {boolean} scrollToTab Whether to scroll the tab into view.
+ * @return {void}
+ */
+const applyActiveTab = (id, context, tabIndex, scrollToTab = false) => {
+	const tabsList = getTabsListForId(id);
+
+	if (!id || !context || !tabsList?.length) {
+		return;
+	}
+
+	let newIndex = tabIndex;
+	if (newIndex < 0) {
+		newIndex = 0;
+	} else if (newIndex >= tabsList.length) {
+		newIndex = tabsList.length - 1;
+	}
+
+	const previousIndex = context.activeTabIndex ?? 0;
+
+	context.activeTabIndex = newIndex;
+
+	if (context.deepLinking) {
+		privateActions.updateUrlHash(newIndex, id);
+	}
+
+	if (scrollToTab) {
+		privateActions.scrollTabIntoView(newIndex, id);
+	}
+
+	if (previousIndex !== newIndex) {
+		dispatchTabsChange(id, newIndex, tabsList[newIndex]);
+	}
+};
+
 // Private store for internal tabs functionality and security.
 const { actions: privateActions, state: privateState } = store(
 	'matter/tabs/private',
 	{
 		state: {
-			/**
-			 * Gets a contextually aware list of tabs for the current tabs block.
-			 *
-			 * @type {Array}
-			 */
+			items: {},
 			get tabsList() {
 				const context = getContext();
 				const tabsId = context?.tabsId;
-				const tabsList = privateState[tabsId];
-				return tabsList;
+				return getTabsListForId(tabsId);
 			},
-			/**
-			 * Gets the index of the active tab element whether it
-			 * is a tab label or tab panel.
-			 *
-			 * @type {number|null}
-			 */
 			get tabIndex() {
 				const context = getContext();
 
@@ -92,49 +148,23 @@ const { actions: privateActions, state: privateState } = store(
 
 				return tabsList.findIndex((t) => t.id === tabId);
 			},
-			/**
-			 * Whether the tab panel or tab label is the active tab.
-			 *
-			 * @type {boolean}
-			 */
 			get isActiveTab() {
 				const { activeTabIndex } = getContext();
 				const { tabIndex } = privateState;
 				return activeTabIndex === tabIndex;
 			},
-			/**
-			 * The value of the tabindex attribute for tab buttons.
-			 * Only the active tab should be in the tab sequence.
-			 *
-			 * @type {number}
-			 */
 			get tabIndexAttribute() {
 				return privateState.isActiveTab ? 0 : -1;
 			},
-			/**
-			 * Active tab index from context for select binding.
-			 *
-			 * @type {number}
-			 */
 			get activeTabIndex() {
 				const context = getContext();
 				return context?.activeTabIndex ?? 0;
 			},
-			/**
-			 * String value for select binding.
-			 *
-			 * @type {string}
-			 */
 			get selectValue() {
 				return String(privateState.activeTabIndex);
 			},
 		},
 		actions: {
-			/**
-			 * Handles the keydown events for the tab label and tabs controller.
-			 *
-			 * @param {KeyboardEvent} event The keydown event.
-			 */
 			handleTabKeyDown: withSyncEvent((event) => {
 				const context = getContext();
 				const { isVertical } = context;
@@ -158,11 +188,6 @@ const { actions: privateActions, state: privateState } = store(
 					privateActions.moveFocus(tabIndex - 1);
 				}
 			}),
-			/**
-			 * Handles the click event for the tab label.
-			 *
-			 * @param {MouseEvent} event The click event.
-			 */
 			handleTabClick: withSyncEvent((event) => {
 				event.preventDefault();
 
@@ -171,11 +196,6 @@ const { actions: privateActions, state: privateState } = store(
 					privateActions.setActiveTab(tabIndex);
 				}
 			}),
-			/**
-			 * Handles the change event for the collapsible tab select.
-			 *
-			 * @param {Event} event The change event.
-			 */
 			handleSelectChange: withSyncEvent((event) => {
 				const selectedIndex = parseInt(event.target.value, 10);
 
@@ -185,11 +205,6 @@ const { actions: privateActions, state: privateState } = store(
 
 				privateActions.setActiveTab(selectedIndex, false);
 			}),
-			/**
-			 * Moves focus to a specific tab without activating it.
-			 *
-			 * @param {number} tabIndex The index to move focus to.
-			 */
 			moveFocus: (tabIndex) => {
 				const { tabsList } = privateState;
 
@@ -211,41 +226,25 @@ const { actions: privateActions, state: privateState } = store(
 				}
 			},
 			/**
-			 * Sets the active tab index (internal implementation).
+			 * Sets the active tab for the current contextual tabs instance.
 			 *
 			 * @param {number}  tabIndex    The index of the active tab.
 			 * @param {boolean} scrollToTab Whether to scroll the tab button into view.
 			 */
 			setActiveTab: (tabIndex, scrollToTab = false) => {
-				const { tabsList } = privateState;
-
-				if (!tabsList || tabsList.length === 0) {
-					return;
-				}
-
-				let newIndex = tabIndex;
-				if (newIndex < 0) {
-					newIndex = 0;
-				} else if (newIndex >= tabsList.length) {
-					newIndex = tabsList.length - 1;
-				}
-
 				const context = getContext();
-				context.activeTabIndex = newIndex;
-
-				if (context.deepLinking) {
-					privateActions.updateUrlHash(newIndex);
-				}
-
-				if (scrollToTab) {
-					privateActions.scrollTabIntoView(newIndex);
-				}
+				applyActiveTab(context?.tabsId, context, tabIndex, scrollToTab);
 			},
 			/**
-			 * Activates a tab based on a URL hash matching a panel deep linking ID.
+			 * Sets the active tab for a tabs instance by id.
 			 *
-			 * @param {string} hash The URL hash including the leading #.
+			 * @param {string}  id          Tabs instance id.
+			 * @param {number}  tabIndex    The index of the active tab.
+			 * @param {boolean} scrollToTab Whether to scroll the tab button into view.
 			 */
+			setActiveTabById: (id, tabIndex, scrollToTab = false) => {
+				applyActiveTab(id, tabsContexts.get(id), tabIndex, scrollToTab);
+			},
 			activateTabByHash: (hash) => {
 				const { tabsList } = privateState;
 
@@ -262,23 +261,20 @@ const { actions: privateActions, state: privateState } = store(
 					return;
 				}
 
-				const context = getContext();
-				context.activeTabIndex = tabIndex;
-				privateActions.scrollTabIntoView(tabIndex);
+				privateActions.setActiveTab(tabIndex, true);
 			},
-			/**
-			 * Updates the URL hash when deep linking is enabled.
-			 *
-			 * @param {number} tabIndex The active tab index.
-			 */
-			updateUrlHash: (tabIndex) => {
-				const context = getContext();
+			updateUrlHash: (tabIndex, passthroughId = false) => {
+				const context =
+					typeof passthroughId === 'string'
+						? tabsContexts.get(passthroughId)
+						: getContext();
 
-				if (!context.deepLinking) {
+				if (!context?.deepLinking) {
 					return;
 				}
 
-				const { tabsList } = privateState;
+				const id = context.tabsId;
+				const tabsList = getTabsListForId(id);
 				const deepLinkingId = tabsList?.[tabIndex]?.deepLinkingId;
 
 				if (!deepLinkingId) {
@@ -293,13 +289,12 @@ const { actions: privateActions, state: privateState } = store(
 					window.history.replaceState(null, '', newHash);
 				}
 			},
-			/**
-			 * Scrolls the tab button into view.
-			 *
-			 * @param {number} tabIndex The tab index to scroll to.
-			 */
-			scrollTabIntoView: (tabIndex) => {
-				const { tabsList } = privateState;
+			scrollTabIntoView: (tabIndex, passthroughId = false) => {
+				const id =
+					typeof passthroughId === 'string'
+						? passthroughId
+						: getContext()?.tabsId;
+				const tabsList = getTabsListForId(id);
 				const tab = tabsList?.[tabIndex];
 
 				if (!tab?.id) {
@@ -319,9 +314,6 @@ const { actions: privateActions, state: privateState } = store(
 					});
 				}, 100);
 			},
-			/**
-			 * Handles browser hash changes for deep linking.
-			 */
 			onHashChange: () => {
 				const context = getContext();
 
@@ -337,13 +329,18 @@ const { actions: privateActions, state: privateState } = store(
 			},
 		},
 		callbacks: {
-			/**
-			 * Initialise tabs and activate a deep-linked tab from the URL hash.
-			 */
 			onTabsInit: () => {
 				const context = getContext();
+				const tabsId = context?.tabsId;
 
-				if (!context.deepLinking) {
+				if (tabsId) {
+					tabsContexts.set(tabsId, context);
+					privateState.items[tabsId] = {
+						tabsList: privateState[tabsId] || [],
+					};
+				}
+
+				if (!context?.deepLinking) {
 					return;
 				}
 
@@ -352,15 +349,6 @@ const { actions: privateActions, state: privateState } = store(
 				if (hash) {
 					privateActions.activateTabByHash(hash);
 				}
-
-				// register tabs on window
-				window.matter = window.matter || {};
-				window.matter.tabs = window.matter.tabs || new Map();
-
-				window.matter.tabs.set(context.tabsId, {
-					tabsList: privateState.tabsList,
-					activeTabIndex: privateState.activeTabIndex,
-				});
 			},
 		},
 	},
@@ -372,42 +360,38 @@ const { actions: privateActions, state: privateState } = store(
 // Public store for third-party extensibility.
 store('matter/tabs', {
 	state: {
-		/**
-		 * Gets a contextually aware list of tabs for the current tabs block.
-		 * Public API for third-party access.
-		 *
-		 * @type {Array}
-		 */
-		get tabsList() {
-			return createReadOnlyProxy(privateState.tabsList);
+		get items() {
+			return createReadOnlyProxy(privateState.items);
 		},
-		/**
-		 * Gets the index of the active tab element whether it
-		 * is a tab label or tab panel.
-		 *
-		 * @type {number|null}
-		 */
+		get tabsList() {
+			const list = privateState.tabsList;
+
+			return list ? createReadOnlyProxy(list) : undefined;
+		},
 		get tabIndex() {
 			return privateState.tabIndex;
 		},
-		/**
-		 * Whether the tab panel or tab label is the active tab.
-		 *
-		 * @type {boolean}
-		 */
 		get isActiveTab() {
 			return privateState.isActiveTab;
+		},
+		get activeTabIndex() {
+			return privateState.activeTabIndex;
 		},
 	},
 	actions: {
 		/**
 		 * Sets the active tab index.
-		 * Public API for third-party programmatic tab activation.
 		 *
-		 * @param {number}  tabIndex    The index of the active tab.
-		 * @param {boolean} scrollToTab Whether to scroll to the tab element.
+		 * @param {string|false} id          Tabs instance id, or false for current context.
+		 * @param {number}       tabIndex    The index of the active tab.
+		 * @param {boolean}      scrollToTab Whether to scroll to the tab element.
 		 */
-		setActiveTab: (tabIndex, scrollToTab = false) => {
+		setActiveTab(id = false, tabIndex = 0, scrollToTab = false) {
+			if (typeof id === 'string') {
+				privateActions.setActiveTabById(id, tabIndex, scrollToTab);
+				return;
+			}
+
 			privateActions.setActiveTab(tabIndex, scrollToTab);
 		},
 	},

@@ -13,10 +13,6 @@
 			"type": "string",
 			"default": ""
 		},
-		"targetId": {
-			"type": "string",
-			"default": ""
-		},
 		"editorIsOpen": {
 			"type": "boolean",
 			"default": false,
@@ -24,7 +20,6 @@
 		}
 	},
 	"providesContext": {
-		"matter/drawer-id": "targetId",
 		"matter/drawer-is-open": "editorIsOpen"
 	},
 	"usesContext": [
