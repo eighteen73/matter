@@ -40,6 +40,7 @@ wp_interactivity_state(
 	[
 		'items' => [
 			$modal_id => [
+				'instance'          => null,
 				'isOpen'            => false,
 				'type'              => 'modal',
 				'baseId'            => $base_id,

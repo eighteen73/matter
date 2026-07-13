@@ -1,0 +1,198 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/gallery",
+	"version": "0.1.0",
+	"title": "Gallery",
+	"category": "media",
+	"icon": "format-gallery",
+	"description": "A gallery of images with grid or carousel display and an optional lightbox.",
+	"keywords": ["gallery", "images", "carousel", "lightbox"],
+	"allowedBlocks": ["core/image"],
+	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
+		"type": {
+			"type": "string",
+			"default": "grid",
+			"enum": ["grid", "carousel"]
+		},
+		"aspectRatio": {
+			"type": "string",
+			"default": "auto"
+		},
+		"sizeSlug": {
+			"type": "string",
+			"default": "large"
+		},
+		"thumbnailSizeSlug": {
+			"type": "string",
+			"default": "thumbnail"
+		},
+		"lightbox": {
+			"type": "boolean",
+			"default": true
+		},
+		"lightboxSizeSlug": {
+			"type": "string",
+			"default": "large"
+		},
+		"lightboxThumbnails": {
+			"type": "boolean",
+			"default": true
+		},
+		"lightboxThumbnailSizeSlug": {
+			"type": "string",
+			"default": "thumbnail"
+		},
+		"lightboxThumbnailAspectRatio": {
+			"type": "string",
+			"default": "1"
+		},
+		"lightboxThumbnailFocalPoint": {
+			"type": "object",
+			"default": { "x": 0.5, "y": 0.5 }
+		},
+		"lightboxThumbnailGap": {
+			"type": "string",
+			"default": ""
+		},
+		"lightboxBackdropColor": {
+			"type": "string",
+			"default": ""
+		},
+		"lightboxBackdropOpacity": {
+			"type": "number",
+			"default": 85
+		},
+		"lightboxBackdropBlur": {
+			"type": "number",
+			"default": 0
+		},
+		"showCaptions": {
+			"type": "boolean",
+			"default": true
+		},
+		"imageLimit": {
+			"type": "number",
+			"default": 0
+		},
+		"includeThumbnails": {
+			"type": "boolean",
+			"default": false
+		},
+		"thumbnailAspectRatio": {
+			"type": "string",
+			"default": "1"
+		},
+		"thumbnailsVisible": {
+			"type": "number",
+			"default": 0
+		},
+		"thumbnailGap": {
+			"type": "string",
+			"default": ""
+		},
+		"imageCrop": {
+			"type": "boolean",
+			"default": true
+		},
+		"allowResize": {
+			"type": "boolean",
+			"default": false
+		},
+		"viewAllText": {
+			"type": "string",
+			"default": "View Gallery"
+		},
+		"carouselConfig": {
+			"type": "object",
+			"default": {
+				"options": {
+					"loop": false,
+					"axis": "x",
+					"slidesToScroll": 1,
+					"slidesToShow": 1,
+					"slideGap": "",
+					"active": true
+				},
+				"plugins": {
+					"fade": {
+						"active": false
+					},
+					"autoplay": {
+						"active": false,
+						"type": "slide",
+						"delay": 4000
+					}
+				},
+				"breakpointLayers": {}
+			}
+		},
+		"advancedCarouselConfig": {
+			"type": "object",
+			"default": null
+		},
+		"advancedCarouselConfigMerge": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"providesContext": {
+		"allowResize": "allowResize",
+		"imageCrop": "imageCrop"
+	},
+	"supports": {
+		"anchor": true,
+		"align": ["wide", "full"],
+		"color": {
+			"text": true,
+			"background": true,
+			"gradients": true,
+			"link": false
+		},
+		"html": false,
+		"interactivity": true,
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true,
+			"__experimentalDefaultControls": {
+				"margin": true,
+				"padding": true,
+				"blockGap": true
+			}
+		},
+		"layout": {
+			"allowSwitching": false,
+			"allowInheriting": false,
+			"allowEditing": true,
+			"allowSizingOnChildren": true,
+
+			"default": {
+				"type": "grid",
+				"columnCount": 3
+			}
+		},
+		"dimensions": {
+			"width": false,
+			"height": false,
+			"aspectRatio": false,
+			"minHeight": false
+		}
+	},
+	"selectors": {
+		"root": ".wp-block-matter-gallery",
+		"spacing": {
+			"blockGap": ".wp-block-matter-gallery.matter-gallery--grid.is-layout-grid, .wp-block-matter-gallery.matter-gallery--grid .block-editor-block-list__layout.is-layout-grid, .wp-block-matter-gallery.matter-gallery--carousel .matter-gallery__carousel"
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScriptModule": "file:./view.js",
+	"render": "file:./render.php"
+}

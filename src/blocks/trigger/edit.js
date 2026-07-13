@@ -24,6 +24,7 @@ import { useEffect } from '@wordpress/element';
 
 import OverlayTargetControl from '../../components/overlay-target-control';
 import useOverlayTarget from '../../utils/use-overlay-target';
+import OverlayContextControl from './components/overlay-context-control';
 
 const BUTTON_TEMPLATE = [
 	[
@@ -195,6 +196,11 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 						</ToolsPanelItem>
 					</ToolsPanel>
 				)}
+
+				<OverlayContextControl
+					overlayContext={attributes.overlayContext}
+					setAttributes={setAttributes}
+				/>
 			</InspectorControls>
 
 			<div {...innerBlocksProps} />

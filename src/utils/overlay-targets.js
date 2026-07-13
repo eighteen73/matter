@@ -39,9 +39,7 @@ export const OVERLAY_CONTEXT_KEYS = [
 export const getOverlayTargetIdFromBlock = (block) => {
 	const attributes = block?.attributes ?? {};
 
-	return (
-		attributes.targetId || attributes.anchor || attributes.generatedId || ''
-	);
+	return attributes.anchor || attributes.generatedId || '';
 };
 
 /**

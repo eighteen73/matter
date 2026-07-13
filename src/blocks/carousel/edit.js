@@ -39,6 +39,7 @@ import AdvancedControls from './components/advanced-controls';
 import CarouselControls from './components/carousel-controls';
 import breakpoints from '../../constants/breakpoints';
 import BlockVariationPicker from '../../components/block-variation-picker';
+import useBlockId from '../../utils/use-block-id';
 
 import './editor.scss';
 
@@ -70,6 +71,15 @@ export default function Edit({
 }) {
 	const { emblaConfig, advancedEmblaConfig, advancedEmblaConfigMerge } =
 		attributes;
+
+	useBlockId({
+		blockName: 'matter/carousel',
+		prefix: 'matter-carousel',
+		attributes,
+		setAttributes,
+		clientId,
+	});
+
 	const resolvedConfig = useMemo(
 		() => normalizeEmblaConfig(emblaConfig),
 		[emblaConfig]
@@ -112,6 +122,52 @@ export default function Edit({
 		});
 	};
 
+	const setFade = (key, value) => {
+		const enablingFade = key === 'active' && value === true;
+		const layers = resolvedConfig.breakpointLayers || {};
+		let nextLayers = layers;
+
+		if (enablingFade) {
+			nextLayers = Object.fromEntries(
+				Object.entries(layers).map(([token, layer]) => {
+					if (layer?.plugins?.fade?.active === false) {
+						return [token, layer];
+					}
+					return [
+						token,
+						{
+							...layer,
+							options: {
+								...(layer.options || {}),
+								slidesToShow: 1,
+							},
+						},
+					];
+				})
+			);
+		}
+
+		setAttributes({
+			emblaConfig: {
+				...resolvedConfig,
+				options: enablingFade
+					? {
+							...resolvedConfig.options,
+							slidesToShow: 1,
+						}
+					: resolvedConfig.options,
+				plugins: {
+					...resolvedConfig.plugins,
+					fade: {
+						...resolvedConfig.plugins.fade,
+						[key]: value,
+					},
+				},
+				breakpointLayers: nextLayers,
+			},
+		});
+	};
+
 	const setLayerOption = (token, key, value) => {
 		const layers = resolvedConfig.breakpointLayers || {};
 		const layer = layers[token] || {};
@@ -147,6 +203,40 @@ export default function Edit({
 							...layerPlugins,
 							autoplay: {
 								...(layerPlugins.autoplay || {}),
+								[key]: value,
+							},
+						},
+					},
+				},
+			},
+		});
+	};
+
+	const setLayerFade = (token, key, value) => {
+		const layers = resolvedConfig.breakpointLayers || {};
+		const layer = layers[token] || {};
+		const layerPlugins = layer.plugins || {};
+		const enablingFade = key === 'active' && value === true;
+
+		setAttributes({
+			emblaConfig: {
+				...resolvedConfig,
+				breakpointLayers: {
+					...layers,
+					[token]: {
+						...layer,
+						...(enablingFade
+							? {
+									options: {
+										...(layer.options || {}),
+										slidesToShow: 1,
+									},
+								}
+							: {}),
+						plugins: {
+							...layerPlugins,
+							fade: {
+								...(layerPlugins.fade || {}),
 								[key]: value,
 							},
 						},
@@ -401,6 +491,7 @@ export default function Edit({
 
 	const uiOptions = resolvedConfig.options;
 	const uiAutoplay = resolvedConfig.plugins.autoplay;
+	const uiFade = resolvedConfig.plugins.fade;
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		orientation: 'vertical',
@@ -431,11 +522,14 @@ export default function Edit({
 				<CarouselControls
 					baseOptions={uiOptions}
 					baseAutoplay={uiAutoplay}
+					baseFade={uiFade}
 					breakpointLayers={resolvedConfig.breakpointLayers}
 					onChangeBaseOption={setOption}
 					onChangeBaseAutoplay={setAutoplay}
+					onChangeBaseFade={setFade}
 					onChangeLayerOption={setLayerOption}
 					onChangeLayerAutoplay={setLayerAutoplay}
+					onChangeLayerFade={setLayerFade}
 					onResetLayer={resetLayer}
 					emblaConfig={resolvedConfig}
 					setAttributes={setAttributes}

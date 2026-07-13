@@ -109,6 +109,30 @@
 			"type": "spacing"
 		}
 	},
+	"lightbox": {
+		"lightboxBackdropColor": {
+			"variable": "--matter-lightbox--backdrop-color",
+			"type": "color"
+		},
+		"lightboxBackdropOpacity": {
+			"variable": "--matter-lightbox--backdrop-opacity",
+			"type": "number"
+		},
+		"lightboxBackdropBlur": {
+			"variable": "--matter-lightbox--backdrop-blur",
+			"type": "number"
+		},
+		"lightboxThumbnailGap": {
+			"variable": "--matter-lightbox--thumbnail-gap",
+			"type": "spacing"
+		}
+	},
+	"gallery": {
+		"thumbnailGap": {
+			"variable": "--matter-gallery--thumbnail-gap",
+			"type": "spacing"
+		}
+	},
 	"tab-panel": {
 		"tabPanelActiveColor": {
 			"variable": "--matter-tab-panel--active-color",

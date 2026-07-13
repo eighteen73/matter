@@ -53,8 +53,9 @@ class Collapsible {
 			[
 				'items' => [
 					$collapsible_id => [
-						'isOpen' => false,
-						'type'   => 'collapsible',
+						'instance' => null,
+						'isOpen'   => false,
+						'type'     => 'collapsible',
 					],
 				],
 			]

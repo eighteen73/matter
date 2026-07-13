@@ -18,6 +18,27 @@ defined( 'ABSPATH' ) || exit;
 class Carousel {
 
 	/**
+	 * Resolve the carousel ID from block attributes and context.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array<string, mixed> $context    Block context.
+	 * @return string
+	 */
+	public static function resolve_id( array $attributes, array $context = [] ): string {
+		return BlockId::resolve_id( $attributes, $context, 'matter-carousel-' );
+	}
+
+	/**
+	 * Resolve the saved base ID from block attributes.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @return string
+	 */
+	public static function resolve_base_id( array $attributes ): string {
+		return BlockId::resolve_base_id( $attributes, 'matter-carousel-' );
+	}
+
+	/**
 	 * Generate carousel styles.
 	 *
 	 * @param string $carousel_id The carousel element ID.
@@ -250,10 +271,10 @@ class Carousel {
 			: false;
 
 		return [
+			'id'                       => $carousel_id,
 			'emblaConfig'              => $embla_config,
 			'advancedEmblaConfig'      => $advanced_embla_config,
 			'advancedEmblaConfigMerge' => $advanced_embla_config_merge,
-			'carouselId'               => $carousel_id,
 		];
 	}
 }

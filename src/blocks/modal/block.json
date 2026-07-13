@@ -13,10 +13,6 @@
 			"type": "string",
 			"default": ""
 		},
-		"targetId": {
-			"type": "string",
-			"default": ""
-		},
 		"editorIsOpen": {
 			"type": "boolean",
 			"default": false,
@@ -53,7 +49,6 @@
 		}
 	},
 	"providesContext": {
-		"matter/modal-id": "targetId",
 		"matter/modal-is-open": "editorIsOpen"
 	},
 	"usesContext": [
