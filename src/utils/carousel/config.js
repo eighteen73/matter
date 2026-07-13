@@ -194,7 +194,9 @@ export const prepareEmblaBlockState = prepareCarouselBlockState;
  * autoplay type can switch.
  * @param {Object}  pluginState             - The plugin state.
  * @param {Object}  [options]               - Build options.
- * @param {boolean} [options.forceInactive] - The force inactive flag.
+ * @param {boolean} [options.forceInactive] - Disable Autoplay/AutoScroll only
+ *                                          (e.g. in the editor). Fade is
+ *                                          unaffected so transition preview works.
  */
 export const buildCarouselPlugins = (pluginState, options = {}) => {
 	const { forceInactive = false } = options;
@@ -233,14 +235,14 @@ export const buildCarouselPlugins = (pluginState, options = {}) => {
 					: !!fadeBaseActive;
 			fadeBreakpoints[query] = {
 				...layerRest,
-				active: !forceInactive && effectiveActive,
+				active: effectiveActive,
 			};
 		}
 	}
 
 	const fadeOptions = {
 		...fadeRest,
-		active: !forceInactive && !!fadeBaseActive,
+		active: !!fadeBaseActive,
 	};
 	if (Object.keys(fadeBreakpoints).length) {
 		fadeOptions.breakpoints = fadeBreakpoints;
