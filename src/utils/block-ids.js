@@ -77,6 +77,7 @@ export const PUBLIC_ID_BLOCK_NAMES = [
 	'matter/collapsible',
 	'matter/carousel',
 	'matter/tabs',
+	'matter/gallery',
 ];
 
 /**

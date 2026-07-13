@@ -53,6 +53,33 @@ Previous and next slide controls.
 
 ---
 
+### [Gallery](/src/blocks/gallery/)
+
+An image gallery with **grid** or **carousel** display, optional image limit with a “View gallery” control, and a shared Matter lightbox (with thumbnail strip). Images are edited as `core/image` inner blocks (same multi-select media UX as core Gallery).
+
+Carousel mode uses the shared carousel runtime (Embla under the hood) via `carouselConfig`. Lightbox behaviour lives in the block-agnostic `matter/lightbox-store` module.
+
+#### Attributes
+
+- generatedId (auto-managed; prefer a custom anchor)
+- type (`grid` | `carousel`)
+- aspectRatio
+- sizeSlug
+- thumbnailSizeSlug
+- lightbox
+- lightboxSizeSlug
+- imageLimit (grid only; forces lightbox when set)
+- includeThumbnails (carousel only; “Enable thumbnails” in the editor)
+- thumbnailAspectRatio (carousel only)
+- imageCrop (grid; hidden when aspect ratio is set)
+- carouselConfig
+- advancedCarouselConfig
+- advancedCarouselConfigMerge
+
+Opt out of registration with `add_filter( 'matter_register_gallery', '__return_false' );`.
+
+---
+
 ### [Tabs](/src/blocks/tabs/)
 
 An accessible tabbed interface for organising detailed content. Supports deep linking, responsive collapse into an accordion-style layout, and query-driven tab panels.

@@ -1,0 +1,173 @@
+.wp-block-matter-gallery {
+	// Captions are hidden on the frontend; in the editor show a bottom overlay
+	// only while the image is selected so captions remain editable.
+	.block-editor-block-list__block.wp-block-image,
+	.block-editor-block-list__block[data-type="core/image"] {
+		position: relative;
+
+		figcaption,
+		.wp-element-caption {
+			background: var(--_caption-popover--background-color);
+			bottom: 0;
+			box-sizing: border-box;
+			color: var(--_caption-popover--color);
+			display: none;
+			font-size: var(--_caption-popover--font-size);
+			left: 0;
+			line-height: 1.4;
+			margin: 0;
+			max-width: none;
+			padding: var(--_caption-popover--padding);
+			position: absolute;
+			right: 0;
+			text-align: left;
+			width: 100%;
+			z-index: 2;
+
+			a {
+				color: inherit;
+				text-decoration: underline;
+			}
+		}
+
+		&.is-selected,
+		&.has-child-selected {
+			figcaption,
+			.wp-element-caption {
+				display: block;
+			}
+		}
+	}
+
+	&.matter-gallery--grid {
+		// Wrappers exist so InnerBlocks can stay mounted when switching types.
+		// Layout classnames live on the InnerBlocks host, so these can be transparent.
+		.matter-gallery__grid,
+		.matter-gallery__stage,
+		.matter-gallery__viewport {
+			display: contents;
+		}
+
+		.block-editor-block-list__layout > .wp-block-image,
+		.block-editor-block-list__layout > .wp-block[data-type="core/image"] {
+			margin: 0;
+			min-width: 0;
+			width: 100%;
+
+			img {
+				display: block;
+				height: auto;
+				max-width: 100%;
+				width: 100%;
+			}
+		}
+
+		&.is-cropped {
+			.block-editor-block-list__layout > .wp-block-image,
+			.block-editor-block-list__layout > .wp-block[data-type="core/image"] {
+				height: 100%;
+
+				img {
+					height: 100%;
+					object-fit: cover;
+				}
+			}
+		}
+	}
+
+	&.matter-gallery--carousel {
+		// Neutralise any leftover grid layout styles from block supports.
+		.matter-gallery__track.block-editor-block-list__layout,
+		.matter-gallery__track {
+			display: flex !important; // stylelint-disable-line declaration-no-important
+			flex-direction: row;
+			gap: 0 !important; // stylelint-disable-line declaration-no-important
+			grid-template-columns: none !important; // stylelint-disable-line declaration-no-important
+			grid-template-rows: none !important; // stylelint-disable-line declaration-no-important
+		}
+
+		.matter-gallery__carousel {
+			--_gap: var(--matter-gallery--carousel--gap, calc(var(--wp--style--block-gap, 1.5rem) / 2));
+
+			display: flex;
+			flex-direction: column;
+			gap: var(--_gap);
+			position: relative;
+		}
+
+		.matter-gallery__stage {
+			overflow: hidden;
+			position: relative;
+		}
+
+		.matter-gallery__viewport {
+			overflow: hidden;
+		}
+
+		.matter-gallery__track > .wp-block-image,
+		.matter-gallery__track > .wp-block[data-type="core/image"] {
+			flex: 0 0 100%;
+			margin: 0;
+			min-width: 0;
+			width: 100%;
+
+			img {
+				display: block;
+				height: auto;
+				max-width: 100%;
+				width: 100%;
+			}
+		}
+
+		&.has-aspect-ratio {
+			.matter-gallery__track > .wp-block-image,
+			.matter-gallery__track > .wp-block[data-type="core/image"] {
+				img {
+					height: 100%;
+					object-fit: cover;
+				}
+			}
+		}
+
+		.matter-gallery__button {
+			pointer-events: auto;
+			z-index: 3;
+		}
+
+		.matter-gallery__controls,
+		.matter-gallery__buttons {
+			inset: 0;
+			pointer-events: none;
+			position: absolute;
+			z-index: 2;
+		}
+
+		.matter-gallery__thumbs {
+			--_thumbs-visible: var(--matter-gallery--thumbs-visible, var(--wp--custom--matter-gallery--thumbs-visible, 0));
+			--_thumb-gap: var(--matter-gallery--thumbnail-gap, var(--wp--custom--matter-gallery--thumbnail-gap, var(--_gap)));
+			--_thumb-basis: 4rem;
+
+			&.has-visible-count {
+				--_thumb-basis: calc((100% - (var(--_thumb-gap) * (var(--_thumbs-visible) - 1))) / var(--_thumbs-visible));
+			}
+
+			.matter-gallery__thumbs-track {
+				gap: var(--_thumb-gap);
+			}
+
+			.matter-gallery__thumb {
+				flex: 0 0 var(--_thumb-basis);
+				width: var(--_thumb-basis);
+			}
+		}
+
+		.matter-gallery__thumb img {
+			pointer-events: none;
+		}
+	}
+}
+
+// Applied in edit.js when a carousel gallery is selected (WP PanelBody / ToolsPanel).
+[data-matter-hide-layout-panel] {
+	display: none !important; // stylelint-disable-line declaration-no-important
+}
