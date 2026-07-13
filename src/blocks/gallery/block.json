@@ -63,6 +63,10 @@
 			"type": "number",
 			"default": 0
 		},
+		"showCaptions": {
+			"type": "boolean",
+			"default": true
+		},
 		"imageLimit": {
 			"type": "number",
 			"default": 0

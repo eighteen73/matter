@@ -103,8 +103,8 @@ class Gallery {
 						/>
 						<figcaption
 							class="matter-lightbox__caption"
-							data-wp-bind--hidden="!state.currentCaption"
-							data-wp-text="state.currentCaption"
+							data-wp-bind--hidden="!state.showCurrentCaption"
+							data-wp-watch="callbacks.syncCaptionHtml"
 						></figcaption>
 					</figure>
 					<div
@@ -161,6 +161,39 @@ class Gallery {
 	}
 
 	/**
+	 * Resolve a core/image caption from attributes or figcaption HTML.
+	 *
+	 * core/image stores caption as a rich-text sourced attribute (figcaption),
+	 * so it is often absent from parsed block attrs and only present in HTML.
+	 *
+	 * @param \WP_Block $block Image block.
+	 * @param array     $attrs Block attributes.
+	 * @return string Sanitized caption HTML.
+	 */
+	public static function get_image_caption( \WP_Block $block, array $attrs = [] ): string {
+		if ( isset( $attrs['caption'] ) && '' !== trim( wp_strip_all_tags( (string) $attrs['caption'] ) ) ) {
+			return wp_kses_post( (string) $attrs['caption'] );
+		}
+
+		$html = '';
+		if ( ! empty( $block->inner_html ) ) {
+			$html = (string) $block->inner_html;
+		} elseif ( ! empty( $block->parsed_block['innerHTML'] ) ) {
+			$html = (string) $block->parsed_block['innerHTML'];
+		}
+
+		if ( '' === $html ) {
+			return '';
+		}
+
+		if ( preg_match( '/<figcaption\b[^>]*>(.*?)<\/figcaption>/is', $html, $matches ) ) {
+			return wp_kses_post( $matches[1] );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Build image metadata for the lightbox store and carousel thumbs.
 	 *
 	 * @param array  $inner_blocks Inner blocks.
@@ -204,7 +237,7 @@ class Gallery {
 				'id'               => $id,
 				'order'            => $order,
 				'alt'              => $visible['alt'],
-				'caption'          => isset( $attrs['caption'] ) ? (string) $attrs['caption'] : '',
+				'caption'          => self::get_image_caption( $inner_block, $attrs ),
 				'src'              => $visible['src'],
 				'srcset'           => $visible['srcset'],
 				'sizes'            => $visible['sizes'],
@@ -262,16 +295,31 @@ class Gallery {
 	}
 
 	/**
-	 * Enhance a rendered core/image with lightbox open directives.
+	 * Enhance a rendered core/image with lightbox open directives and caption affordance.
 	 *
-	 * @param string $html       Image HTML.
-	 * @param string $gallery_id Gallery ID.
-	 * @param int    $index      Image index.
-	 * @param bool   $lightbox   Whether lightbox is enabled.
+	 * @param string $html           Image HTML.
+	 * @param string $gallery_id     Gallery ID.
+	 * @param int    $index          Image index.
+	 * @param bool   $lightbox       Whether lightbox is enabled.
+	 * @param bool   $show_captions  Whether captions are enabled.
+	 * @param string $caption        Sanitized caption HTML.
 	 * @return string
 	 */
-	public static function enhance_image_html( string $html, string $gallery_id, int $index, bool $lightbox ): string {
-		if ( ! $lightbox || '' === $html ) {
+	public static function enhance_image_html(
+		string $html,
+		string $gallery_id,
+		int $index,
+		bool $lightbox,
+		bool $show_captions = false,
+		string $caption = ''
+	): string {
+		if ( '' === $html ) {
+			return $html;
+		}
+
+		$has_caption = $show_captions && '' !== trim( wp_strip_all_tags( $caption ) );
+
+		if ( ! $lightbox && ! $has_caption ) {
 			return $html;
 		}
 
@@ -303,20 +351,60 @@ class Gallery {
 				$existing .= ' class="matter-gallery__item"';
 			}
 
-			$replacement = sprintf(
-				'<figure%s data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context="%s">',
-				$existing,
-				esc_attr( $context )
-			);
+			if ( $lightbox ) {
+				$replacement = sprintf(
+					'<figure%s data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context="%s">',
+					$existing,
+					esc_attr( $context )
+				);
+			} else {
+				$replacement = sprintf( '<figure%s>', $existing );
+			}
 
-			return preg_replace( '/<figure\b[^>]*>/', $replacement, $html, 1 );
+			$html = preg_replace( '/<figure\b[^>]*>/', $replacement, $html, 1 );
+		} elseif ( $lightbox ) {
+			$html = sprintf(
+				'<div class="matter-gallery__item" data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context="%1$s">%2$s</div>',
+				esc_attr( $context ),
+				$html
+			);
+		} elseif ( $has_caption ) {
+			$html = sprintf(
+				'<div class="matter-gallery__item">%s</div>',
+				$html
+			);
 		}
 
-		return sprintf(
-			'<div class="matter-gallery__item" data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context="%1$s">%2$s</div>',
-			esc_attr( $context ),
-			$html
+		if ( ! $has_caption ) {
+			return $html;
+		}
+
+		$caption_id = $gallery_id . '-caption-' . $index;
+		$affordance = sprintf(
+			'<div class="matter-gallery__caption" data-wp-interactive="matter/gallery" data-wp-context="%1$s"><button type="button" class="matter-gallery__caption-trigger" data-wp-on--click="actions.toggleCaption" data-wp-bind--aria-expanded="state.isCaptionOpen" data-wp-bind--aria-label="state.captionTriggerLabel" aria-controls="%2$s"><span class="matter-gallery__icon matter-gallery__icon--info" aria-hidden="true"></span></button><div id="%2$s" class="matter-gallery__caption-popover" role="tooltip" data-wp-bind--hidden="!state.isCaptionOpen" hidden>%3$s</div></div>',
+			esc_attr(
+				wp_json_encode(
+					[
+						'galleryId'        => $gallery_id,
+						'index'            => $index,
+						'captionShowLabel' => __( 'Show caption', 'matter' ),
+						'captionHideLabel' => __( 'Hide caption', 'matter' ),
+					]
+				)
+			),
+			esc_attr( $caption_id ),
+			$caption
 		);
+
+		if ( false !== stripos( $html, '</figure>' ) ) {
+			return preg_replace( '/<\/figure>/i', $affordance . '</figure>', $html, 1 );
+		}
+
+		if ( preg_match( '/<\/div>\s*$/', $html ) ) {
+			return preg_replace( '/<\/div>\s*$/', $affordance . '</div>', $html, 1 );
+		}
+
+		return $html . $affordance;
 	}
 
 	/**

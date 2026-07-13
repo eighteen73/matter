@@ -119,6 +119,16 @@ const { state, actions } = store(STORE, {
 		get currentCaption() {
 			return state.currentImage?.caption || '';
 		},
+		get showCaptions() {
+			const gallery = state.currentGallery;
+			if (!gallery) {
+				return false;
+			}
+			return gallery.showCaptions !== false;
+		},
+		get showCurrentCaption() {
+			return state.showCaptions && !!state.currentCaption;
+		},
 		get hasNavigation() {
 			return state.currentImages.length > 1;
 		},
@@ -309,6 +319,16 @@ const { state, actions } = store(STORE, {
 
 			if (!state.isOpen && ref.open) {
 				ref.close();
+			}
+		},
+		syncCaptionHtml: () => {
+			const { ref } = getElement();
+			if (!ref) {
+				return;
+			}
+			const html = state.showCurrentCaption ? state.currentCaption : '';
+			if (ref.innerHTML !== html) {
+				ref.innerHTML = html;
 			}
 		},
 		syncThumbsCarousel: () => {

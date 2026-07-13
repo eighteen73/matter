@@ -1,4 +1,9 @@
-import { store, getContext, getElement } from '@wordpress/interactivity';
+import {
+	store,
+	getContext,
+	getElement,
+	withSyncEvent,
+} from '@wordpress/interactivity';
 import EmblaCarousel from 'embla-carousel';
 
 import {
@@ -12,7 +17,68 @@ import {
 
 const STORE = 'matter/gallery';
 
-store(STORE, {
+const captionKey = (galleryId, index) => `${galleryId}:${index}`;
+
+const { state, actions } = store(STORE, {
+	state: {
+		openCaptionKey: null,
+		get isCaptionOpen() {
+			const context = getContext();
+			if (!context || typeof context.index !== 'number') {
+				return false;
+			}
+			return (
+				state.openCaptionKey ===
+				captionKey(context.galleryId, context.index)
+			);
+		},
+		get captionTriggerLabel() {
+			const context = getContext();
+			if (!context) {
+				return '';
+			}
+			return state.isCaptionOpen
+				? context.captionHideLabel || 'Hide caption'
+				: context.captionShowLabel || 'Show caption';
+		},
+	},
+	actions: {
+		toggleCaption: withSyncEvent((event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			const context = getContext();
+			if (!context || typeof context.index !== 'number') {
+				return;
+			}
+			const key = captionKey(context.galleryId, context.index);
+			state.openCaptionKey = state.openCaptionKey === key ? null : key;
+		}),
+		closeCaption: () => {
+			state.openCaptionKey = null;
+		},
+		onCaptionOutsidePointerDown: withSyncEvent((event) => {
+			if (!state.openCaptionKey) {
+				return;
+			}
+			const target = event.target;
+			if (
+				target?.closest?.(
+					'.matter-gallery__caption-trigger, .matter-gallery__caption-popover'
+				)
+			) {
+				return;
+			}
+			actions.closeCaption();
+		}),
+		onCaptionKeydown: withSyncEvent((event) => {
+			if (!state.openCaptionKey || event.key !== 'Escape') {
+				return;
+			}
+			event.preventDefault();
+			event.stopPropagation();
+			actions.closeCaption();
+		}),
+	},
 	callbacks: {
 		loadCarousel: () => {
 			const context = getContext(STORE);

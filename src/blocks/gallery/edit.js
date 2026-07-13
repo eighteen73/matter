@@ -86,6 +86,7 @@ export default function Edit(props) {
 		lightboxBackdropColor,
 		lightboxBackdropOpacity,
 		lightboxBackdropBlur,
+		showCaptions,
 		imageLimit,
 		includeThumbnails,
 		thumbnailAspectRatio,
@@ -718,6 +719,26 @@ export default function Edit(props) {
 							/>
 						</ToolsPanelItem>
 					)}
+
+					<ToolsPanelItem
+						hasValue={() => showCaptions === false}
+						label={__('Show captions', 'matter')}
+						onDeselect={() => setAttributes({ showCaptions: true })}
+						isShownByDefault
+					>
+						<ToggleControl
+							label={__('Show captions', 'matter')}
+							checked={showCaptions !== false}
+							onChange={(value) =>
+								setAttributes({ showCaptions: value })
+							}
+							help={__(
+								'Show captions in the lightbox and via an info control on images that have one.',
+								'matter'
+							)}
+							__nextHasNoMarginBottom
+						/>
+					</ToolsPanelItem>
 
 					{isGrid && (
 						<>

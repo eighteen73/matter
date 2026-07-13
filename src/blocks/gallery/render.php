@@ -27,6 +27,7 @@ $thumbs_visible       = isset( $block_attributes['thumbnailsVisible'] ) ? (int) 
 $lightbox_thumbs      = ! isset( $block_attributes['lightboxThumbnails'] ) || ! empty( $block_attributes['lightboxThumbnails'] );
 $lightbox_thumb_ratio = isset( $block_attributes['lightboxThumbnailAspectRatio'] ) ? (string) $block_attributes['lightboxThumbnailAspectRatio'] : '1';
 $lightbox             = ! isset( $block_attributes['lightbox'] ) || ! empty( $block_attributes['lightbox'] ) || ( ! $is_carousel && $image_limit > 0 );
+$show_captions        = ! isset( $block_attributes['showCaptions'] ) || ! empty( $block_attributes['showCaptions'] );
 
 $gallery_id = isset( $block->context['matter/gallery-id'] )
 	? (string) $block->context['matter/gallery-id']
@@ -68,6 +69,7 @@ if ( $lightbox && $total > 0 ) {
 					'images'                       => $images,
 					'lightboxThumbnails'           => $lightbox_thumbs,
 					'lightboxThumbnailAspectRatio' => $lightbox_thumb_ratio,
+					'showCaptions'                 => $show_captions,
 					'thumbnailGap'                 => $lightbox_declarations['--matter-lightbox--thumbnail-gap'] ?? '',
 					'backdropColor'                => $lightbox_declarations['--matter-lightbox--backdrop-color'] ?? '',
 					'backdropOpacity'              => $block_attributes['lightboxBackdropOpacity'] ?? 85,
@@ -121,10 +123,16 @@ $wrapper_attributes = [
 	'data-gallery-id'     => $gallery_id,
 ];
 
+if ( $show_captions ) {
+	$wrapper_attributes['data-wp-on-window--pointerdown'] = 'actions.onCaptionOutsidePointerDown';
+	$wrapper_attributes['data-wp-on-document--keydown']   = 'actions.onCaptionKeydown';
+}
+
 $gallery_context = [
-	'galleryId' => $gallery_id,
-	'lightbox'  => $lightbox,
-	'type'      => $type,
+	'galleryId'    => $gallery_id,
+	'lightbox'     => $lightbox,
+	'type'         => $type,
+	'showCaptions' => $show_captions,
 ];
 
 if ( $is_carousel ) {
@@ -172,7 +180,15 @@ if ( $is_carousel ) {
 		}
 
 		$slide_html = $inner_block->render();
-		$slide_html = Gallery::enhance_image_html( $slide_html, $gallery_id, $index, $lightbox );
+		$caption    = isset( $images[ $index ]['caption'] ) ? (string) $images[ $index ]['caption'] : '';
+		$slide_html = Gallery::enhance_image_html(
+			$slide_html,
+			$gallery_id,
+			$index,
+			$lightbox,
+			$show_captions,
+			$caption
+		);
 		echo '<div class="matter-gallery__slide">' . $slide_html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
@@ -230,7 +246,15 @@ if ( $is_carousel ) {
 		}
 
 		$image_html = $inner_block->render();
-		$image_html = Gallery::enhance_image_html( $image_html, $gallery_id, $index, $lightbox );
+		$caption    = isset( $images[ $index ]['caption'] ) ? (string) $images[ $index ]['caption'] : '';
+		$image_html = Gallery::enhance_image_html(
+			$image_html,
+			$gallery_id,
+			$index,
+			$lightbox,
+			$show_captions,
+			$caption
+		);
 		echo $image_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		++$rendered;
 	}
