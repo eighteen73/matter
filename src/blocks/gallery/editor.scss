@@ -166,3 +166,8 @@
 		}
 	}
 }
+
+// Applied in edit.js when a carousel gallery is selected (WP PanelBody / ToolsPanel).
+[data-matter-hide-layout-panel] {
+	display: none !important; // stylelint-disable-line declaration-no-important
+}

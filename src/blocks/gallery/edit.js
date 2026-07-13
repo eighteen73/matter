@@ -1,3 +1,4 @@
+/* global MutationObserver */
 import clsx from 'clsx';
 import { createBlock } from '@wordpress/blocks';
 import {
@@ -54,12 +55,67 @@ const DEFAULT_BLOCK = { name: 'core/image' };
 const EMPTY_ARRAY = [];
 const DEFAULT_GRID_LAYOUT = { type: 'grid', columnCount: 3 };
 const DEFAULT_FLOW_LAYOUT = { type: 'default' };
+const LAYOUT_PANEL_TITLE = __('Layout');
 const EDITOR_SLIDES_SELECTOR =
 	':scope > .block-editor-block-list__block:not(.block-list-appender), :scope > .wp-block:not(.block-list-appender)';
 const PLACEHOLDER_TEXT = __(
 	'Drag and drop images, upload, or choose from your library.',
 	'matter'
 );
+
+/**
+ * Hide core's empty Layout inspector panel (PanelBody or ToolsPanel).
+ *
+ * @param {boolean} shouldHide Whether the Layout panel should be hidden.
+ */
+function syncLayoutPanelVisibility(shouldHide) {
+	const inspector = document.querySelector('.block-editor-block-inspector');
+	if (!inspector) {
+		return;
+	}
+
+	inspector
+		.querySelectorAll(
+			'.components-panel__body, .components-tools-panel, .layout-block-support-panel'
+		)
+		.forEach((panel) => {
+			const isToolsLayout = panel.classList.contains(
+				'layout-block-support-panel'
+			);
+			const toggle = panel.querySelector(
+				':scope > .components-panel__body-title .components-panel__body-toggle'
+			);
+			const toolsHeading = panel.querySelector(
+				':scope > .components-tools-panel-header'
+			);
+			const titleText = (
+				toggle?.textContent ||
+				toolsHeading?.textContent ||
+				''
+			)
+				.replace(/\s+/g, ' ')
+				.trim();
+			const isLayoutPanel =
+				isToolsLayout ||
+				titleText === LAYOUT_PANEL_TITLE ||
+				titleText.startsWith(`${LAYOUT_PANEL_TITLE} `);
+
+			if (!isLayoutPanel) {
+				return;
+			}
+
+			if (shouldHide) {
+				panel.setAttribute('data-matter-hide-layout-panel', '');
+				panel.hidden = true;
+				return;
+			}
+
+			if (panel.hasAttribute('data-matter-hide-layout-panel')) {
+				panel.removeAttribute('data-matter-hide-layout-panel');
+				panel.hidden = false;
+			}
+		});
+}
 
 /**
  * @param {Object} props Block props.
@@ -70,6 +126,7 @@ export default function Edit(props) {
 		setAttributes,
 		clientId,
 		className,
+		isSelected,
 		__unstableLayoutClassNames: layoutClassNames,
 	} = props;
 
@@ -134,6 +191,33 @@ export default function Edit(props) {
 			setAttributes({ layout: DEFAULT_FLOW_LAYOUT });
 		}
 	}, [isCarousel, layout?.type, setAttributes]);
+
+	// Core mounts an empty Layout PanelBody for flow layout — hide it for carousel.
+	useEffect(() => {
+		const shouldHideLayoutPanel = isSelected && isCarousel;
+		syncLayoutPanelVisibility(shouldHideLayoutPanel);
+
+		if (!shouldHideLayoutPanel) {
+			return;
+		}
+
+		const inspector = document.querySelector(
+			'.block-editor-block-inspector'
+		);
+		if (!inspector) {
+			return;
+		}
+
+		const observer = new MutationObserver(() => {
+			syncLayoutPanelVisibility(true);
+		});
+		observer.observe(inspector, { childList: true, subtree: true });
+
+		return () => {
+			observer.disconnect();
+			syncLayoutPanelVisibility(false);
+		};
+	}, [isSelected, isCarousel]);
 
 	// Keep allowResize in sync with type (core image reads this via context).
 	useEffect(() => {
