@@ -1,4 +1,44 @@
 .wp-block-matter-gallery {
+	// Captions are hidden on the frontend; in the editor show a bottom overlay
+	// only while the image is selected so captions remain editable.
+	.block-editor-block-list__block.wp-block-image,
+	.block-editor-block-list__block[data-type="core/image"] {
+		position: relative;
+
+		figcaption,
+		.wp-element-caption {
+			background: var(--_caption-popover--background-color);
+			bottom: 0;
+			box-sizing: border-box;
+			color: var(--_caption-popover--color);
+			display: none;
+			font-size: var(--_caption-popover--font-size);
+			left: 0;
+			line-height: 1.4;
+			margin: 0;
+			max-width: none;
+			padding: var(--_caption-popover--padding);
+			position: absolute;
+			right: 0;
+			text-align: left;
+			width: 100%;
+			z-index: 2;
+
+			a {
+				color: inherit;
+				text-decoration: underline;
+			}
+		}
+
+		&.is-selected,
+		&.has-child-selected {
+			figcaption,
+			.wp-element-caption {
+				display: block;
+			}
+		}
+	}
+
 	&.matter-gallery--grid {
 		// Wrappers exist so InnerBlocks can stay mounted when switching types.
 		// Layout classnames live on the InnerBlocks host, so these can be transparent.

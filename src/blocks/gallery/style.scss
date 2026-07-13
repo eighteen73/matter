@@ -19,13 +19,16 @@
 	--_button--icon-color: var(--matter-gallery--button--icon-color, #fff);
 	--_button--border-radius: var(--matter-gallery--button--border-radius, 0);
 
-	--_caption-trigger--size: var(--matter-gallery--caption-trigger--size, 1.75rem);
-	--_caption-trigger--background: var(--matter-gallery--caption-trigger--background-color, rgba(0, 0, 0, 0.45));
-	--_caption-trigger--icon-color: var(--matter-gallery--caption-trigger--icon-color, #fff);
-	--_caption-trigger--border-radius: var(--matter-gallery--caption-trigger--border-radius, 0);
-	--_caption-popover--background: var(--matter-gallery--caption-popover--background-color, #1a1a1a);
-	--_caption-popover--color: var(--matter-gallery--caption-popover--color, #fff);
-	--_caption-transition: var(--matter-gallery--caption--transition-duration, 200ms);
+	--_caption-trigger--size: var(--matter-gallery--caption-trigger--size, var(--wp--custom--matter-gallery--caption-trigger--size, 1.75rem));
+	--_caption-trigger--background-color: var(--matter-gallery--caption-trigger--background-color, var(--wp--custom--matter-gallery--caption-trigger--background-color, rgba(0, 0, 0, 0.45)));
+	--_caption-trigger--icon-color: var(--matter-gallery--caption-trigger--icon-color, var(--wp--custom--matter-gallery--caption-trigger--icon-color, #fff));
+	--_caption-trigger--border-radius: var(--matter-gallery--caption-trigger--border-radius, var(--wp--custom--matter-gallery--caption-trigger--border-radius, 0));
+	--_caption-trigger--inset: var(--matter-gallery--caption-trigger--inset, var(--wp--custom--matter-gallery--caption-trigger--inset, 0.5rem));
+	--_caption-popover--background-color: var(--matter-gallery--caption-popover--background-color, var(--wp--custom--matter-gallery--caption-popover--background-color, #1a1a1a));
+	--_caption-popover--color: var(--matter-gallery--caption-popover--color, var(--wp--custom--matter-gallery--caption-popover--color, #fff));
+	--_caption-popover--font-size: var(--matter-gallery--caption-popover--font-size, var(--wp--custom--matter-gallery--caption-popover--font-size, 0.813rem));
+	--_caption-popover--padding: var(--matter-gallery--caption-popover--padding, var(--wp--custom--matter-gallery--caption-popover--padding, 0.6rem 0.7rem));
+	--_caption-transition: var(--matter-gallery--caption--transition-duration, var(--wp--custom--matter-gallery--caption--transition-duration, 200ms));
 
 	@media (prefers-reduced-motion: reduce) {
 		--_caption-transition: 0ms;
@@ -46,15 +49,15 @@
 	.matter-gallery__caption {
 		line-height: 1;
 		position: absolute;
-		right: 0.5rem;
-		top: 0.5rem;
+		right: var(--_caption-trigger--inset);
+		top: var(--_caption-trigger--inset);
 		z-index: 3;
 	}
 
 	.matter-gallery__caption-trigger {
 		align-items: center;
 		appearance: none;
-		background: var(--_caption-trigger--background);
+		background: var(--_caption-trigger--background-color);
 		border: 0;
 		border-radius: var(--_caption-trigger--border-radius);
 		cursor: pointer;
@@ -80,13 +83,13 @@
 	}
 
 	.matter-gallery__caption-popover {
-		background: var(--_caption-popover--background);
+		background: var(--_caption-popover--background-color);
 		color: var(--_caption-popover--color);
-		font-size: 0.813rem;
+		font-size: var(--_caption-popover--font-size);
 		line-height: 1.4;
 		margin-top: 0.35rem;
 		max-width: min(16rem, 70vw);
-		padding: 0.6rem 0.7rem;
+		padding: var(--_caption-popover--padding);
 		position: absolute;
 		right: 0;
 		top: 100%;
