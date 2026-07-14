@@ -39,10 +39,17 @@ import { ITEM_TEMPLATE } from './variations';
 const DEFAULT_TEMPLATE = [ITEM_TEMPLATE];
 
 function Edit({ clientId, attributes, setAttributes, isSelected }) {
-	const { autoclose, iconPosition, showIcon, headingLevel, isQueryMode } =
-		attributes;
+	const {
+		autoclose,
+		iconPosition,
+		showIcon,
+		headingLevel,
+		isQueryMode,
+		openFirstItem,
+	} = attributes;
 
-	const { insertBlock } = useDispatch(blockEditorStore);
+	const { insertBlock, updateBlockAttributes } =
+		useDispatch(blockEditorStore);
 
 	const { duplicateAnchor } = useBlockId({
 		blockName: 'matter/accordion',
@@ -61,12 +68,25 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		(block) => block.name === 'core/query'
 	);
 	const isQuery = isQueryMode || hasQueryLoop;
+	const firstItem = innerBlocks.find(
+		(block) => block.name === 'matter/accordion-item'
+	);
 
 	useEffect(() => {
 		if (hasQueryLoop !== isQueryMode) {
 			setAttributes({ isQueryMode: hasQueryLoop });
 		}
 	}, [hasQueryLoop, isQueryMode, setAttributes]);
+
+	const syncFirstItemOpen = (value) => {
+		setAttributes({ openFirstItem: value });
+
+		if (!isQuery && firstItem) {
+			updateBlockAttributes(firstItem.clientId, {
+				openByDefault: value,
+			});
+		}
+	};
 
 	const blockProps = useBlockProps({
 		role: 'group',
@@ -135,9 +155,16 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 					resetAll={() => {
 						setAttributes({
 							autoclose: false,
+							openFirstItem: true,
 							showIcon: true,
 							iconPosition: 'right',
 						});
+
+						if (!isQuery && firstItem) {
+							updateBlockAttributes(firstItem.clientId, {
+								openByDefault: true,
+							});
+						}
 					}}
 				>
 					<ToolsPanelItem
@@ -157,6 +184,23 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 							onChange={(value) =>
 								setAttributes({ autoclose: value })
 							}
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={() => !!openFirstItem}
+						label={__('Open first item', 'matter')}
+						onDeselect={() => syncFirstItemOpen(false)}
+						isShownByDefault
+					>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={__('Open first item', 'matter')}
+							help={__(
+								'Open the first item by default.',
+								'matter'
+							)}
+							checked={openFirstItem}
+							onChange={syncFirstItemOpen}
 						/>
 					</ToolsPanelItem>
 					<ToolsPanelItem

@@ -24,7 +24,11 @@
 		},
 		"autoclose": {
 			"type": "boolean",
-			"default": false
+			"default": true
+		},
+		"openFirstItem": {
+			"type": "boolean",
+			"default": true
 		},
 		"headingLevel": {
 			"type": "number",
