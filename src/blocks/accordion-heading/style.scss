@@ -1,6 +1,9 @@
 .wp-block-matter-accordion-heading {
 	$block: &;
 
+	--_toggle--size: var(--matter-accordion--toggle--size, var(--wp--custom--matter-accordion--toggle--size, 1em));
+	--_toggle--gap: var(--matter-accordion--toggle--gap, var(--wp--custom--matter-accordion--toggle--gap, 0.5em));
+
 	color: inherit;
 
 	#{$block}__toggle {
@@ -17,7 +20,6 @@
 		letter-spacing: inherit;
 		line-height: inherit;
 		overflow: hidden;
-		padding: var(--wp--preset--spacing--20, 1em) 0;
 		text-align: inherit;
 		text-decoration: inherit;
 		text-transform: inherit;
@@ -40,15 +42,15 @@
 	#{$block}__toggle-icon {
 		align-items: center;
 		display: flex;
-		height: 1.2em;
+		height: var(--_toggle--size);
 		justify-content: center;
-		width: 1.2em;
+		width: var(--_toggle--size);
 	}
 
 	&.has-icon-left #{$block}__toggle-icon {
-		margin-inline-end: 0.5em;
+		margin-inline-end: var(--_toggle--gap);
 	}
 	&.has-icon-right #{$block}__toggle-icon {
-		margin-inline-start: 0.5em;
+		margin-inline-start: var(--_toggle--gap);
 	}
 }
