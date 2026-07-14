@@ -46,18 +46,19 @@
 		"matter/accordion-isQueryMode": "isQueryMode"
 	},
 	"supports": {
-		"align": [ "wide", "full" ],
+		"align": true,
 		"anchor": true,
 		"html": false,
 		"interactivity": true,
 		"color": {
 			"background": true,
 			"gradients": true,
-			"text": true
+			"text": true,
+			"link": false
 		},
 		"spacing": {
 			"padding": true,
-			"margin": [ "top", "bottom" ],
+			"margin": true,
 			"blockGap": true
 		},
 		"__experimentalBorder": {
@@ -73,17 +74,7 @@
 			}
 		},
 		"typography": {
-			"fontSize": true,
-			"lineHeight": true,
-			"__experimentalFontFamily": true,
-			"__experimentalFontWeight": true,
-			"__experimentalFontStyle": true,
-			"__experimentalTextTransform": true,
-			"__experimentalTextDecoration": true,
-			"__experimentalLetterSpacing": true,
-			"__experimentalDefaultControls": {
-				"fontSize": true
-			}
+			"fontSize": true
 		},
 		"ariaLabel": true,
 		"renaming": true

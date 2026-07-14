@@ -43,7 +43,8 @@
 			"text": true
 		},
 		"spacing": {
-			"margin": [ "top", "bottom" ],
+			"margin": false,
+			"padding": true,
 			"blockGap": true
 		},
 		"__experimentalBorder": {
