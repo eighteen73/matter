@@ -19,6 +19,7 @@
 	--_button--icon-color: var(--matter-gallery--button--icon-color, #fff);
 	--_button--border-radius: var(--matter-gallery--button--border-radius, 0);
 	--_button--button-inset: var(--matter-gallery--button--button-inset, var(--wp--custom--matter-gallery--button--button-inset, 0.5rem));
+	--_button--disabled-opacity: var(--matter-gallery--button--disabled-opacity, var(--wp--custom--matter-gallery--button--disabled-opacity, 0.35));
 
 	--_caption-trigger--size: var(--matter-gallery--caption-trigger--size, var(--wp--custom--matter-gallery--caption-trigger--size, 1.75rem));
 	--_caption-trigger--background-color: var(--matter-gallery--caption-trigger--background-color, var(--wp--custom--matter-gallery--caption-trigger--background-color, rgba(0, 0, 0, 0.45)));
@@ -257,7 +258,7 @@
 
 			&:disabled {
 				cursor: default;
-				opacity: 0.35;
+				opacity: var(--_button--disabled-opacity);
 			}
 
 			&--previous {
@@ -352,6 +353,7 @@
 	--_content-padding: var(--matter-lightbox--content-padding, var(--wp--custom--matter-lightbox--content-padding, 1rem));
 	--_thumb-gap: var(--matter-lightbox--thumbnail-gap, var(--wp--custom--matter-lightbox--thumbnail-gap, 0.5rem));
 	--_thumb-basis: var(--matter-lightbox--thumbnail-basis, var(--wp--custom--matter-lightbox--thumbnail-basis, 4rem));
+	--_thumb-outline-thickness: var(--matter-lightbox--thumbnail-outline-thickness, var(--wp--custom--matter-lightbox--thumbnail-outline-thickness, 2px));
 	--_thumb-active-outline-color: var(--matter-lightbox--thumbnail-active-outline-color, var(--wp--custom--matter-lightbox--thumbnail-active-outline-color, #fff));
 	--_thumb-hover-opacity: var(--matter-lightbox--thumbnail-hover-opacity, var(--wp--custom--matter-lightbox--thumbnail-hover-opacity, 0.85));
 	--_button-hover-background-color: var(--matter-lightbox--button-hover-background-color, var(--wp--custom--matter-lightbox--button-hover-background-color, rgba(255, 255, 255, 0.25)));
@@ -606,7 +608,7 @@
 		cursor: pointer;
 		flex: 0 0 var(--_thumb-basis);
 		opacity: 0.7;
-		outline: 2px solid transparent;
+		outline: var(--_thumb-outline-thickness) solid transparent;
 		outline-offset: -2px;
 		padding: 0;
 		transition:
