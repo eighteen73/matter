@@ -53,6 +53,8 @@
 		},
 		"html": false,
 		"interactivity": true,
+		"contentRole": true,
+		"listView": true,
 		"lock": false,
 		"reusable": false,
 		"spacing": {

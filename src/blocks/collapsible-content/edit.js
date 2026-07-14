@@ -50,7 +50,7 @@ export default function Edit({ context, clientId }) {
 	return (
 		<>
 			{isOpen && (
-				<BlockControls>
+				<BlockControls __experimentalShareWithChildBlocks>
 					<ToolbarGroup>
 						<ToolbarButton onClick={closeEditorPreview}>
 							{__('Close collapsible', 'matter')}

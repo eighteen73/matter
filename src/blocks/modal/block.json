@@ -59,7 +59,9 @@
 	"supports": {
 		"anchor": true,
 		"html": false,
-		"interactivity": true
+		"interactivity": true,
+		"contentRole": true,
+		"listView": true
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",

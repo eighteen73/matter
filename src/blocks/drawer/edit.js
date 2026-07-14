@@ -103,7 +103,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<>
-			<BlockControls>
+			<BlockControls __experimentalShareWithChildBlocks>
 				<ToolbarGroup>
 					<ToolbarButton onClick={toggleEditorPreview}>
 						{editorIsOpen

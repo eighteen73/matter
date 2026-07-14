@@ -259,7 +259,7 @@ export default function Edit({ context, clientId, attributes, setAttributes }) {
 			</InspectorControls>
 
 			{isOpen && (
-				<BlockControls>
+				<BlockControls __experimentalShareWithChildBlocks>
 					<ToolbarGroup>
 						<ToolbarButton onClick={closeEditorPreview}>
 							{__('Close drawer', 'matter')}
