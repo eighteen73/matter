@@ -221,7 +221,7 @@ const { state, actions } = store(STORE, {
 			state.selectedGalleryId = galleryId;
 			state.selectedIndex = safeIndex;
 			state.isOpen = true;
-			document.documentElement.classList.add('has-matter-lightbox-open');
+			document.documentElement.classList.add('has-lightbox-open');
 			preloadNeighbors(images, safeIndex);
 		},
 		openFromContext: () => {
@@ -236,9 +236,7 @@ const { state, actions } = store(STORE, {
 			state.isOpen = false;
 			state.selectedGalleryId = null;
 			state.selectedIndex = 0;
-			document.documentElement.classList.remove(
-				'has-matter-lightbox-open'
-			);
+			document.documentElement.classList.remove('has-lightbox-open');
 		},
 		onNativeClose: () => {
 			if (!state.isOpen) {

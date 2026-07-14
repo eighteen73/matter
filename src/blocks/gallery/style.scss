@@ -18,6 +18,8 @@
 	--_button--background-color: var(--matter-gallery--button--background-color, rgba(0, 0, 0, 0.5));
 	--_button--icon-color: var(--matter-gallery--button--icon-color, #fff);
 	--_button--border-radius: var(--matter-gallery--button--border-radius, 0);
+	--_button--button-inset: var(--matter-gallery--button--button-inset, var(--wp--custom--matter-gallery--button--button-inset, 0.5rem));
+	--_button--disabled-opacity: var(--matter-gallery--button--disabled-opacity, var(--wp--custom--matter-gallery--button--disabled-opacity, 0.35));
 
 	--_caption-trigger--size: var(--matter-gallery--caption-trigger--size, var(--wp--custom--matter-gallery--caption-trigger--size, 1.75rem));
 	--_caption-trigger--background-color: var(--matter-gallery--caption-trigger--background-color, var(--wp--custom--matter-gallery--caption-trigger--background-color, rgba(0, 0, 0, 0.45)));
@@ -30,6 +32,13 @@
 	--_caption-popover--padding: var(--matter-gallery--caption-popover--padding, var(--wp--custom--matter-gallery--caption-popover--padding, 0.6rem 0.7rem));
 	--_caption-transition: var(--matter-gallery--caption--transition-duration, var(--wp--custom--matter-gallery--caption--transition-duration, 200ms));
 
+	--_view-all--background-color: var(--matter-gallery--view-all--background-color, var(--wp--custom--matter-gallery--view-all--background-color, rgba(0, 0, 0, 0.75)));
+	--_view-all--color: var(--matter-gallery--view-all--color, var(--wp--custom--matter-gallery--view-all--color, #fff));
+	--_view-all--inset: var(--matter-gallery--view-all--inset, var(--wp--custom--matter-gallery--view-all--inset, 1rem));
+	--_view-all--font-size: var(--matter-gallery--view-all--font-size, var(--wp--custom--matter-gallery--view-all--font-size, 0.875rem));
+	--_view-all--letter-spacing: var(--matter-gallery--view-all--letter-spacing, var(--wp--custom--matter-gallery--view-all--letter-spacing, 0.04em));
+	--_view-all--padding: var(--matter-gallery--view-all--padding, var(--wp--custom--matter-gallery--view-all--padding, 0.5rem 0.75rem));
+
 	@media (prefers-reduced-motion: reduce) {
 		--_caption-transition: 0ms;
 	}
@@ -41,12 +50,12 @@
 		display: none;
 	}
 
-	.matter-gallery__item,
-	.wp-block-image.matter-gallery__item {
+	.wp-block-matter-gallery__item,
+	.wp-block-image.wp-block-matter-gallery__item {
 		position: relative;
 	}
 
-	.matter-gallery__caption {
+	.wp-block-matter-gallery__caption {
 		line-height: 1;
 		position: absolute;
 		right: var(--_caption-trigger--inset);
@@ -54,7 +63,7 @@
 		z-index: 3;
 	}
 
-	.matter-gallery__caption-trigger {
+	.wp-block-matter-gallery__caption-trigger {
 		align-items: center;
 		appearance: none;
 		background: var(--_caption-trigger--background-color);
@@ -74,7 +83,7 @@
 			opacity: 1;
 		}
 
-		.matter-gallery__icon--info {
+		.wp-block-matter-gallery__icon--info {
 			background-color: var(--_caption-trigger--icon-color);
 			height: 55%;
 			mask-image: url("../../../assets/svg/info.svg");
@@ -82,7 +91,7 @@
 		}
 	}
 
-	.matter-gallery__caption-popover {
+	.wp-block-matter-gallery__caption-popover {
 		background: var(--_caption-popover--background-color);
 		color: var(--_caption-popover--color);
 		font-size: var(--_caption-popover--font-size);
@@ -105,13 +114,13 @@
 		}
 	}
 
-	.matter-gallery__thumbs {
-		.matter-gallery__caption {
+	.wp-block-matter-gallery__thumbs {
+		.wp-block-matter-gallery__caption {
 			display: none;
 		}
 	}
 
-	.matter-gallery__lightbox-indicator {
+	.wp-block-matter-gallery__lightbox-indicator {
 		align-items: center;
 		background-color: var(--_lightbox-indicator--background-color);
 		border-radius: var(--_lightbox-indicator--border-radius);
@@ -125,7 +134,7 @@
 		width: var(--_lightbox-indicator--size);
 		z-index: 2;
 
-		.matter-gallery__icon {
+		.wp-block-matter-gallery__icon {
 			background-color: var(--_lightbox-indicator--icon-color);
 			height: var(--_lightbox-indicator--icon-size);
 			mask-image: url("../../../assets/svg/corners-out.svg");
@@ -134,12 +143,12 @@
 	}
 
 	&.has-image-limit {
-		.matter-gallery__lightbox-indicator {
+		.wp-block-matter-gallery__lightbox-indicator {
 			display: none;
 		}
 	}
 
-	.matter-gallery__icon {
+	.wp-block-matter-gallery__icon {
 		background-color: var(--_button--icon-color, currentcolor);
 		display: block;
 		height: var(--_button--icon-size, 1em);
@@ -149,14 +158,14 @@
 		width: var(--_button--icon-size, 1em);
 	}
 
-	&.matter-gallery--grid {
-		.matter-gallery__grid {
+	&.wp-block-matter-gallery--grid {
+		.wp-block-matter-gallery__grid {
 			display: contents;
 		}
 
 		&.is-cropped {
 			.wp-block-image,
-			.matter-gallery__item {
+			.wp-block-matter-gallery__item {
 				height: 100%;
 			}
 
@@ -168,27 +177,28 @@
 		}
 	}
 
-	&.matter-gallery--carousel {
-		.matter-gallery__carousel {
+	&.wp-block-matter-gallery--carousel {
+		.wp-block-matter-gallery__carousel {
 			// Defined here so inline --matter-gallery--carousel--gap on this element resolves correctly.
 			--_gap: var(--matter-gallery--carousel--gap, calc(var(--wp--style--block-gap, 1.5rem)));
 
 			display: flex;
 			flex-direction: column;
 			gap: var(--_gap);
+			margin: 0;
 			position: relative;
 		}
 
-		.matter-gallery__stage {
+		.wp-block-matter-gallery__stage {
 			overflow: hidden;
 			position: relative;
 		}
 
-		.matter-gallery__viewport {
+		.wp-block-matter-gallery__viewport {
 			overflow: hidden;
 		}
 
-		.matter-gallery__track {
+		.wp-block-matter-gallery__track {
 			display: flex;
 			flex-direction: var(--_direction);
 			margin-left: calc(var(--_slide--gap-left) * -1);
@@ -196,7 +206,7 @@
 			touch-action: pan-y pinch-zoom;
 		}
 
-		.matter-gallery__slide {
+		.wp-block-matter-gallery__slide {
 			flex: 0 0 var(--_slide--width);
 			min-width: 0;
 			padding-left: var(--_slide--gap-left);
@@ -204,7 +214,7 @@
 		}
 
 		&.has-aspect-ratio {
-			.matter-gallery__slide,
+			.wp-block-matter-gallery__slide,
 			.wp-block-image {
 				height: 100%;
 			}
@@ -216,20 +226,20 @@
 			}
 		}
 
-		.matter-gallery__controls {
+		.wp-block-matter-gallery__controls {
 			inset: 0;
 			pointer-events: none;
 			position: absolute;
 			z-index: 2;
 		}
 
-		.matter-gallery__buttons {
+		.wp-block-matter-gallery__buttons {
 			inset: 0;
 			pointer-events: none;
 			position: absolute;
 		}
 
-		.matter-gallery__button {
+		.wp-block-matter-gallery__button {
 			align-items: center;
 			appearance: none;
 			background-color: var(--_button--background-color);
@@ -248,27 +258,27 @@
 
 			&:disabled {
 				cursor: default;
-				opacity: 0.35;
+				opacity: var(--_button--disabled-opacity);
 			}
 
 			&--previous {
-				left: 0.5rem;
+				left: var(--_button--button-inset);
 
-				.matter-gallery__icon {
+				.wp-block-matter-gallery__icon {
 					mask-image: url("../../../assets/svg/arrow-left.svg");
 				}
 			}
 
 			&--next {
-				right: 0.5rem;
+				right: var(--_button--button-inset);
 
-				.matter-gallery__icon {
+				.wp-block-matter-gallery__icon {
 					mask-image: url("../../../assets/svg/arrow-right.svg");
 				}
 			}
 		}
 
-		.matter-gallery__thumbs {
+		.wp-block-matter-gallery__thumbs {
 			// Defined here so inline --matter-gallery--thumbnail-gap / --thumbs-visible resolve correctly.
 			--_thumbs-visible: var(--matter-gallery--thumbs-visible, var(--wp--custom--matter-gallery--thumbs-visible, 0));
 			--_thumb-gap: var(--matter-gallery--thumbnail-gap, var(--wp--custom--matter-gallery--thumbnail-gap, var(--_gap)));
@@ -279,16 +289,16 @@
 			}
 		}
 
-		.matter-gallery__thumbs-viewport {
+		.wp-block-matter-gallery__thumbs-viewport {
 			overflow: hidden;
 		}
 
-		.matter-gallery__thumbs-track {
+		.wp-block-matter-gallery__thumbs-track {
 			display: flex;
 			gap: var(--_thumb-gap);
 		}
 
-		.matter-gallery__thumb {
+		.wp-block-matter-gallery__thumb {
 			background: none;
 			border: 0;
 			cursor: pointer;
@@ -313,23 +323,23 @@
 		}
 	}
 
-	.matter-gallery__view-all {
+	.wp-block-matter-gallery__view-all {
 		appearance: none;
-		background: rgba(0, 0, 0, 0.75);
+		background: var(--_view-all--background-color);
 		border: 0;
-		bottom: 1rem;
-		color: #fff;
+		bottom: var(--_view-all--inset);
+		color: var(--_view-all--color);
 		cursor: pointer;
-		font-size: 0.875rem;
-		letter-spacing: 0.04em;
-		padding: 0.5rem 0.75rem;
+		font-size: var(--_view-all--font-size);
+		letter-spacing: var(--_view-all--letter-spacing);
+		padding: var(--_view-all--padding);
 		position: absolute;
-		right: 1rem;
+		right: var(--_view-all--inset);
 		text-transform: uppercase;
 		z-index: 2;
 	}
 
-	.matter-gallery__item {
+	.wp-block-matter-gallery__item {
 		cursor: pointer;
 	}
 }
@@ -343,6 +353,10 @@
 	--_content-padding: var(--matter-lightbox--content-padding, var(--wp--custom--matter-lightbox--content-padding, 1rem));
 	--_thumb-gap: var(--matter-lightbox--thumbnail-gap, var(--wp--custom--matter-lightbox--thumbnail-gap, 0.5rem));
 	--_thumb-basis: var(--matter-lightbox--thumbnail-basis, var(--wp--custom--matter-lightbox--thumbnail-basis, 4rem));
+	--_thumb-outline-thickness: var(--matter-lightbox--thumbnail-outline-thickness, var(--wp--custom--matter-lightbox--thumbnail-outline-thickness, 2px));
+	--_thumb-active-outline-color: var(--matter-lightbox--thumbnail-active-outline-color, var(--wp--custom--matter-lightbox--thumbnail-active-outline-color, #fff));
+	--_thumb-hover-opacity: var(--matter-lightbox--thumbnail-hover-opacity, var(--wp--custom--matter-lightbox--thumbnail-hover-opacity, 0.85));
+	--_button-hover-background-color: var(--matter-lightbox--button-hover-background-color, var(--wp--custom--matter-lightbox--button-hover-background-color, rgba(255, 255, 255, 0.25)));
 
 	--_close--size: var(--matter-lightbox--close--size, 2.5rem);
 	--_close--icon-size: var(--matter-lightbox--close--icon-size, 50%);
@@ -355,6 +369,7 @@
 	--_nav--background-color: var(--matter-lightbox--nav--background-color, rgba(255, 255, 255, 0.15));
 	--_nav--icon-color: var(--matter-lightbox--nav--icon-color, #fff);
 	--_nav--border-radius: var(--matter-lightbox--nav--border-radius, 0);
+	--_nav--button-inset: var(--matter-lightbox--nav--button-inset, var(--wp--custom--matter-lightbox--nav--button-inset, 0));
 
 	@media (prefers-reduced-motion: reduce) {
 		--_transition-duration: 0ms;
@@ -466,7 +481,7 @@
 	}
 
 	&__close,
-	&__nav {
+	&__button {
 		align-items: center;
 		appearance: none;
 		border: 0;
@@ -478,7 +493,7 @@
 
 		&:hover,
 		&:focus-visible {
-			background-color: rgba(255, 255, 255, 0.25);
+			background-color: var(--_button-hover-background-color);
 		}
 	}
 
@@ -518,7 +533,7 @@
 		}
 	}
 
-	&__nav {
+	&__button {
 		background-color: var(--_nav--background-color);
 		border-radius: var(--_nav--border-radius);
 		height: var(--_nav--size);
@@ -535,7 +550,7 @@
 		}
 
 		&--previous {
-			left: 0;
+			left: var(--_nav--button-inset);
 
 			.matter-lightbox__icon {
 				mask-image: url("../../../assets/svg/arrow-left.svg");
@@ -543,7 +558,7 @@
 		}
 
 		&--next {
-			right: 0;
+			right: var(--_nav--button-inset);
 
 			.matter-lightbox__icon {
 				mask-image: url("../../../assets/svg/arrow-right.svg");
@@ -593,7 +608,7 @@
 		cursor: pointer;
 		flex: 0 0 var(--_thumb-basis);
 		opacity: 0.7;
-		outline: 2px solid transparent;
+		outline: var(--_thumb-outline-thickness) solid transparent;
 		outline-offset: -2px;
 		padding: 0;
 		transition:
@@ -610,12 +625,12 @@
 
 		&:hover,
 		&:focus-visible {
-			opacity: 0.85;
+			opacity: var(--_thumb-hover-opacity);
 		}
 
 		&.is-active {
 			opacity: 1;
-			outline-color: #fff;
+			outline-color: var(--_thumb-active-outline-color);
 
 			&:hover,
 			&:focus-visible {
@@ -638,6 +653,6 @@
 	}
 }
 
-html.has-matter-lightbox-open {
+html.has-lightbox-open {
 	overflow: hidden;
 }

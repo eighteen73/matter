@@ -63,7 +63,7 @@ const { state, actions } = store(STORE, {
 			const target = event.target;
 			if (
 				target?.closest?.(
-					'.matter-gallery__caption-trigger, .matter-gallery__caption-popover'
+					'.wp-block-matter-gallery__caption-trigger, .wp-block-matter-gallery__caption-popover'
 				)
 			) {
 				return;
@@ -88,8 +88,12 @@ const { state, actions } = store(STORE, {
 			}
 
 			const { ref } = getElement();
-			const viewportNode = ref.querySelector('.matter-gallery__viewport');
-			const containerNode = ref.querySelector('.matter-gallery__track');
+			const viewportNode = ref.querySelector(
+				'.wp-block-matter-gallery__viewport'
+			);
+			const containerNode = ref.querySelector(
+				'.wp-block-matter-gallery__track'
+			);
 
 			if (!viewportNode || !containerNode) {
 				return;
@@ -107,7 +111,7 @@ const { state, actions } = store(STORE, {
 				{
 					...carouselOptions,
 					container: containerNode,
-					slides: '.matter-gallery__slide',
+					slides: '.wp-block-matter-gallery__slide',
 				},
 				buildCarouselPlugins(pluginState)
 			);
@@ -115,16 +119,16 @@ const { state, actions } = store(STORE, {
 			context.carouselApi = carouselApi;
 
 			const prevButtonNode = ref.querySelector(
-				'.matter-gallery__button--previous'
+				'.wp-block-matter-gallery__button--previous'
 			);
 			const nextButtonNode = ref.querySelector(
-				'.matter-gallery__button--next'
+				'.wp-block-matter-gallery__button--next'
 			);
 			const thumbsViewportNode = ref.querySelector(
-				'.matter-gallery__thumbs-viewport'
+				'.wp-block-matter-gallery__thumbs-viewport'
 			);
 			const thumbsContainerNode = ref.querySelector(
-				'.matter-gallery__thumbs-track'
+				'.wp-block-matter-gallery__thumbs-track'
 			);
 
 			if (prevButtonNode && nextButtonNode) {

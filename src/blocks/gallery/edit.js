@@ -597,9 +597,9 @@ export default function Edit(props) {
 	const showViewAll = hasImageLimit && images.length > imageLimit;
 
 	const blockProps = useBlockProps({
-		className: clsx(className, 'matter-gallery', {
-			'matter-gallery--grid': isGrid,
-			'matter-gallery--carousel': isCarousel,
+		className: clsx(className, {
+			'wp-block-matter-gallery--grid': isGrid,
+			'wp-block-matter-gallery--carousel': isCarousel,
 			'has-lightbox': lightboxEnabled,
 			'has-image-limit': showViewAll,
 			'is-cropped':
@@ -615,7 +615,7 @@ export default function Edit(props) {
 	const innerBlocksProps = useInnerBlocksProps(
 		{
 			className: clsx({
-				'matter-gallery__track': isCarousel,
+				'wp-block-matter-gallery__track': isCarousel,
 				[layoutClassNames]: isGrid && layoutClassNames,
 			}),
 		},
@@ -1412,34 +1412,34 @@ export default function Edit(props) {
 			<figure {...blockProps}>
 				{lightboxEnabled && !showViewAll && (
 					<span
-						className="matter-gallery__lightbox-indicator"
+						className="wp-block-matter-gallery__lightbox-indicator"
 						aria-hidden="true"
 					>
-						<span className="matter-gallery__icon" />
+						<span className="wp-block-matter-gallery__icon" />
 					</span>
 				)}
 				<div
 					className={
 						isCarousel
-							? 'matter-gallery__carousel'
-							: 'matter-gallery__grid'
+							? 'wp-block-matter-gallery__carousel'
+							: 'wp-block-matter-gallery__grid'
 					}
 					style={isCarousel ? carouselStyles : undefined}
 				>
-					<div className="matter-gallery__stage">
+					<div className="wp-block-matter-gallery__stage">
 						<div
-							className="matter-gallery__viewport"
+							className="wp-block-matter-gallery__viewport"
 							ref={isCarousel ? emblaRef : undefined}
 						>
 							<div {...innerBlocksProps} />
 						</div>
 
 						{isCarousel && (
-							<div className="matter-gallery__controls">
-								<div className="matter-gallery__buttons">
+							<div className="wp-block-matter-gallery__controls">
+								<div className="wp-block-matter-gallery__buttons">
 									<button
 										type="button"
-										className="matter-gallery__button matter-gallery__button--previous"
+										className="wp-block-matter-gallery__button wp-block-matter-gallery__button--previous"
 										ref={prevButtonRef}
 										aria-label={__(
 											'Previous image',
@@ -1447,18 +1447,18 @@ export default function Edit(props) {
 										)}
 									>
 										<span
-											className="matter-gallery__icon"
+											className="wp-block-matter-gallery__icon"
 											aria-hidden="true"
 										/>
 									</button>
 									<button
 										type="button"
-										className="matter-gallery__button matter-gallery__button--next"
+										className="wp-block-matter-gallery__button wp-block-matter-gallery__button--next"
 										ref={nextButtonRef}
 										aria-label={__('Next image', 'matter')}
 									>
 										<span
-											className="matter-gallery__icon"
+											className="wp-block-matter-gallery__icon"
 											aria-hidden="true"
 										/>
 									</button>
@@ -1469,16 +1469,16 @@ export default function Edit(props) {
 
 					{isCarousel && includeThumbnails && (
 						<div
-							className={clsx('matter-gallery__thumbs', {
+							className={clsx('wp-block-matter-gallery__thumbs', {
 								'has-visible-count': thumbnailsVisible > 0,
 							})}
 							style={carouselThumbStyles}
 						>
 							<div
-								className="matter-gallery__thumbs-viewport"
+								className="wp-block-matter-gallery__thumbs-viewport"
 								ref={thumbsRef}
 							>
-								<div className="matter-gallery__thumbs-track">
+								<div className="wp-block-matter-gallery__thumbs-track">
 									{images.map((image, index) => (
 										<button
 											key={
@@ -1487,7 +1487,7 @@ export default function Edit(props) {
 												index
 											}
 											type="button"
-											className="matter-gallery__thumb"
+											className="wp-block-matter-gallery__thumb"
 											aria-label={sprintf(
 												/* translators: %d: image number */
 												__('Go to image %d', 'matter'),
@@ -1512,7 +1512,7 @@ export default function Edit(props) {
 				{showViewAll && (
 					<RichText
 						tagName="div"
-						className="matter-gallery__view-all"
+						className="wp-block-matter-gallery__view-all"
 						value={viewAllText}
 						onChange={(value) =>
 							setAttributes({ viewAllText: value })
