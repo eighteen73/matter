@@ -15,6 +15,7 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 
+import ContentOnlyTextControl from '../../components/content-only-text-control';
 import OverlayTargetControl from '../../components/overlay-target-control';
 import useOverlayTarget from '../../utils/use-overlay-target';
 
@@ -51,6 +52,12 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 
 	return (
 		<>
+			<ContentOnlyTextControl
+				label={__('Label', 'matter')}
+				value={label}
+				onChange={(value) => setAttributes({ label: value })}
+			/>
+
 			<InspectorControls>
 				<ToolsPanel
 					label={__('Settings', 'matter')}

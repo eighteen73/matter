@@ -123,7 +123,10 @@ class Registry {
 				continue;
 			}
 
-			register_block_type_from_metadata( $block_folder, $block_metadata );
+			// Pass the folder only — metadata comes from the registered collection.
+			// Do not pass $block_metadata as $args; that merges camelCase block.json
+			// keys into WP_Block_Type settings and can produce inconsistent supports.
+			register_block_type_from_metadata( $block_folder );
 		}
 	}
 }

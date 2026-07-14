@@ -4,10 +4,16 @@
 	"name": "matter/trigger",
 	"version": "0.1.0",
 	"title": "Trigger",
-	"keywords": [ "trigger", "button" ],
+	"keywords": [
+		"trigger",
+		"button"
+	],
 	"category": "widgets",
 	"description": "An interactive trigger to open a modal, drawer or collapsible block.",
-	"allowedBlocks": [ "core/buttons", "core/group" ],
+	"allowedBlocks": [
+		"core/buttons",
+		"core/group"
+	],
 	"attributes": {
 		"targetId": {
 			"type": "string",
@@ -15,12 +21,16 @@
 		},
 		"triggerType": {
 			"type": "string",
-			"enum": [ "button", "content" ],
+			"enum": [
+				"button",
+				"content"
+			],
 			"default": "button"
 		},
 		"accessibleLabel": {
 			"type": "string",
-			"default": ""
+			"default": "",
+			"role": "content"
 		},
 		"overlayContext": {
 			"type": "object",
@@ -33,7 +43,11 @@
 		"lock": false,
 		"reusable": false
 	},
-	"usesContext": [ "matter/modal-id", "matter/drawer-id", "matter/collapsible-id" ],
+	"usesContext": [
+		"matter/modal-id",
+		"matter/drawer-id",
+		"matter/collapsible-id"
+	],
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",
