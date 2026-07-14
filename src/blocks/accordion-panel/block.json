@@ -22,6 +22,7 @@
 		"matter/accordion-isQueryMode"
 	],
 	"supports": {
+		"lock": false,
 		"html": false,
 		"reusable": false,
 		"interactivity": true,

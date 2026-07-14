@@ -31,6 +31,7 @@
 		"reusable": false,
 		"anchor": true,
 		"interactivity": true,
+		"lock": false,
 		"color": {
 			"background": true,
 			"gradients": true,
