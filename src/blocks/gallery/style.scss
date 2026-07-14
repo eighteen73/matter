@@ -469,7 +469,7 @@
 	}
 
 	&__close,
-	&__nav {
+	&__button {
 		align-items: center;
 		appearance: none;
 		border: 0;
@@ -521,7 +521,7 @@
 		}
 	}
 
-	&__nav {
+	&__button {
 		background-color: var(--_nav--background-color);
 		border-radius: var(--_nav--border-radius);
 		height: var(--_nav--size);
