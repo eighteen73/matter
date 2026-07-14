@@ -88,8 +88,7 @@ if ( $lightbox && $total > 0 ) {
 
 $should_crop = $image_crop || ( $aspect_ratio && 'auto' !== $aspect_ratio );
 $classes     = [
-	'matter-gallery',
-	'matter-gallery--' . $type,
+	'wp-block-matter-gallery--' . $type,
 ];
 
 if ( $lightbox ) {
@@ -174,11 +173,11 @@ if ( $is_carousel ) {
 		: '';
 
 	printf(
-		'<div class="matter-gallery__carousel"%s>',
+		'<div class="wp-block-matter-gallery__carousel"%s>',
 		$carousel_style ? ' style="' . esc_attr( $carousel_style ) . '"' : ''
 	);
-	echo '<div class="matter-gallery__stage">';
-	echo '<div class="matter-gallery__viewport"><div class="matter-gallery__track">';
+	echo '<div class="wp-block-matter-gallery__stage">';
+	echo '<div class="wp-block-matter-gallery__viewport"><div class="wp-block-matter-gallery__track">';
 
 	foreach ( $inner_blocks as $index => $inner_block ) {
 		if ( ! $inner_block instanceof WP_Block || 'core/image' !== $inner_block->name ) {
@@ -195,19 +194,19 @@ if ( $is_carousel ) {
 			$show_captions,
 			$caption
 		);
-		echo '<div class="matter-gallery__slide">' . $slide_html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo '<div class="wp-block-matter-gallery__slide">' . $slide_html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	echo '</div></div>';
 
-	echo '<div class="matter-gallery__controls">';
-	echo '<div class="matter-gallery__buttons">';
+	echo '<div class="wp-block-matter-gallery__controls">';
+	echo '<div class="wp-block-matter-gallery__buttons">';
 	printf(
-		'<button type="button" class="matter-gallery__button matter-gallery__button--previous" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		'<button type="button" class="wp-block-matter-gallery__button wp-block-matter-gallery__button--previous" aria-label="%1$s"><span class="wp-block-matter-gallery__icon" aria-hidden="true"></span></button>',
 		esc_attr__( 'Previous image', 'matter' )
 	);
 	printf(
-		'<button type="button" class="matter-gallery__button matter-gallery__button--next" aria-label="%1$s"><span class="matter-gallery__icon" aria-hidden="true"></span></button>',
+		'<button type="button" class="wp-block-matter-gallery__button wp-block-matter-gallery__button--next" aria-label="%1$s"><span class="wp-block-matter-gallery__icon" aria-hidden="true"></span></button>',
 		esc_attr__( 'Next image', 'matter' )
 	);
 	echo '</div>';
@@ -215,7 +214,7 @@ if ( $is_carousel ) {
 	echo '</div>';
 
 	if ( $include_thumbs && $total > 0 ) {
-		$thumbs_classes = 'matter-gallery__thumbs';
+		$thumbs_classes = 'wp-block-matter-gallery__thumbs';
 		$thumbs_styles  = BlockStyles::get_styles(
 			'gallery',
 			[
@@ -228,7 +227,7 @@ if ( $is_carousel ) {
 		}
 
 		printf(
-			'<div class="%1$s"%2$s><div class="matter-gallery__thumbs-viewport"><div class="matter-gallery__thumbs-track">',
+			'<div class="%1$s"%2$s><div class="wp-block-matter-gallery__thumbs-viewport"><div class="wp-block-matter-gallery__thumbs-track">',
 			esc_attr( $thumbs_classes ),
 			$thumbs_styles ? ' style="' . esc_attr( $thumbs_styles ) . '"' : ''
 		);
@@ -240,7 +239,7 @@ if ( $is_carousel ) {
 
 	echo '</div>';
 } else {
-	echo '<div class="matter-gallery__grid">';
+	echo '<div class="wp-block-matter-gallery__grid">';
 	$rendered = 0;
 	foreach ( $inner_blocks as $index => $inner_block ) {
 		if ( ! $inner_block instanceof WP_Block || 'core/image' !== $inner_block->name ) {
@@ -269,7 +268,7 @@ if ( $is_carousel ) {
 
 if ( $show_view_all ) {
 	printf(
-		'<button type="button" class="matter-gallery__view-all" data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context=\'%s\'>%s</button>',
+		'<button type="button" class="wp-block-matter-gallery__view-all" data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context=\'%s\'>%s</button>',
 		esc_attr(
 			wp_json_encode(
 				[
@@ -291,10 +290,11 @@ $inner_content = ob_get_clean();
 	echo ' ' . wp_interactivity_data_wp_context( $gallery_context ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	?>
 >
-	<?php if ( $lightbox && ! $show_view_all ) : ?>
-		<span class="matter-gallery__lightbox-indicator" aria-hidden="true">
-			<span class="matter-gallery__icon"></span>
+	<?php if ( $lightbox ) : ?>
+		<span class="wp-block-matter-gallery__lightbox-indicator" aria-hidden="true">
+			<span class="wp-block-matter-gallery__icon"></span>
 		</span>
 	<?php endif; ?>
+
 	<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </figure>
