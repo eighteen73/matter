@@ -56,6 +56,16 @@
 			"text": true,
 			"link": false
 		},
+		"layout": {
+			"default": {
+				"type": "flex",
+				"flexWrap": "nowrap",
+				"justifyContent": "stretch",
+				"verticalAlignment": "stretch",
+				"orientation": "vertical"
+			},
+			"allowEditing": false
+		},
 		"spacing": {
 			"padding": true,
 			"margin": true,
