@@ -1,0 +1,66 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/accordion-item",
+	"version": "0.1.0",
+	"title": "Accordion Item",
+	"description": "Wraps the heading and panel in one unit.",
+	"category": "widgets",
+	"textdomain": "matter",
+	"parent": [ "matter/accordion", "core/post-template" ],
+	"ancestor": [ "matter/accordion" ],
+	"allowedBlocks": [ "matter/accordion-heading", "matter/accordion-panel" ],
+	"attributes": {
+		"openByDefault": {
+			"type": "boolean",
+			"default": false
+		},
+		"inQueryLoop": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"providesContext": {
+		"matter/accordion-open-by-default": "openByDefault"
+	},
+	"usesContext": [
+		"matter/accordion-id",
+		"matter/accordion-isQueryMode",
+		"matter/accordion-heading-level",
+		"matter/accordion-icon-position",
+		"matter/accordion-show-icon",
+		"postId",
+		"postType",
+		"queryId"
+	],
+	"supports": {
+		"html": false,
+		"reusable": false,
+		"interactivity": true,
+		"color": {
+			"background": true,
+			"gradients": true,
+			"text": true
+		},
+		"spacing": {
+			"margin": [ "top", "bottom" ],
+			"blockGap": true
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
+		},
+		"renaming": true
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}

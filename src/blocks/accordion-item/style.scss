@@ -1,0 +1,23 @@
+.wp-block-matter-accordion-item.is-open > .wp-block-matter-accordion-heading
+.wp-block-matter-accordion-heading__toggle-icon {
+	transform: rotate(45deg);
+}
+
+.wp-block-matter-accordion-item {
+	@media (prefers-reduced-motion: no-preference) {
+		transition: grid-template-rows 300ms ease-out;
+
+		> .wp-block-matter-accordion-heading
+		.wp-block-matter-accordion-heading__toggle-icon {
+			transition: transform 200ms ease-in-out;
+		}
+	}
+}
+
+.wp-block-matter-accordion-item:not(.is-open) > .wp-block-matter-accordion-panel {
+	display: none;
+}
+
+.wp-block-matter-accordion-item.is-open > .wp-block-matter-accordion-panel {
+	display: block;
+}
