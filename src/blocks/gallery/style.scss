@@ -18,6 +18,7 @@
 	--_button--background-color: var(--matter-gallery--button--background-color, rgba(0, 0, 0, 0.5));
 	--_button--icon-color: var(--matter-gallery--button--icon-color, #fff);
 	--_button--border-radius: var(--matter-gallery--button--border-radius, 0);
+	--_button--button-inset: var(--matter-gallery--button--button-inset, var(--wp--custom--matter-gallery--button--button-inset, 0.5rem));
 
 	--_caption-trigger--size: var(--matter-gallery--caption-trigger--size, var(--wp--custom--matter-gallery--caption-trigger--size, 1.75rem));
 	--_caption-trigger--background-color: var(--matter-gallery--caption-trigger--background-color, var(--wp--custom--matter-gallery--caption-trigger--background-color, rgba(0, 0, 0, 0.45)));
@@ -253,7 +254,7 @@
 			}
 
 			&--previous {
-				left: 0.5rem;
+				left: var(--_button--button-inset);
 
 				.wp-block-matter-gallery__icon {
 					mask-image: url("../../../assets/svg/arrow-left.svg");
@@ -261,7 +262,7 @@
 			}
 
 			&--next {
-				right: 0.5rem;
+				right: var(--_button--button-inset);
 
 				.wp-block-matter-gallery__icon {
 					mask-image: url("../../../assets/svg/arrow-right.svg");
@@ -356,6 +357,7 @@
 	--_nav--background-color: var(--matter-lightbox--nav--background-color, rgba(255, 255, 255, 0.15));
 	--_nav--icon-color: var(--matter-lightbox--nav--icon-color, #fff);
 	--_nav--border-radius: var(--matter-lightbox--nav--border-radius, 0);
+	--_nav--button-inset: var(--matter-lightbox--nav--button-inset, var(--wp--custom--matter-lightbox--nav--button-inset, 0));
 
 	@media (prefers-reduced-motion: reduce) {
 		--_transition-duration: 0ms;
@@ -536,7 +538,7 @@
 		}
 
 		&--previous {
-			left: 0;
+			left: var(--_nav--button-inset);
 
 			.matter-lightbox__icon {
 				mask-image: url("../../../assets/svg/arrow-left.svg");
@@ -544,7 +546,7 @@
 		}
 
 		&--next {
-			right: 0;
+			right: var(--_nav--button-inset);
 
 			.matter-lightbox__icon {
 				mask-image: url("../../../assets/svg/arrow-right.svg");
