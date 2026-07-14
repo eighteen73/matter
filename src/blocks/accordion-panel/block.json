@@ -1,0 +1,75 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/accordion-panel",
+	"version": "0.1.0",
+	"title": "Accordion Panel",
+	"description": "Contains the hidden or revealed content beneath the heading.",
+	"category": "widgets",
+	"textdomain": "matter",
+	"parent": [ "matter/accordion-item" ],
+	"attributes": {
+		"templateLock": {
+			"type": [ "string", "boolean" ],
+			"enum": [ "all", "insert", "contentOnly", false ],
+			"default": false
+		}
+	},
+	"usesContext": [
+		"matter/accordion-id",
+		"matter/accordion-item-id",
+		"matter/accordion-open-by-default",
+		"matter/accordion-isQueryMode"
+	],
+	"supports": {
+		"html": false,
+		"reusable": false,
+		"interactivity": true,
+		"allowedBlocks": true,
+		"color": {
+			"background": true,
+			"gradients": true,
+			"text": true
+		},
+		"spacing": {
+			"padding": true,
+			"blockGap": true,
+			"__experimentalDefaultControls": {
+				"padding": true,
+				"blockGap": true
+			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontFamily": true,
+			"__experimentalFontWeight": true,
+			"__experimentalFontStyle": true,
+			"__experimentalTextTransform": true,
+			"__experimentalTextDecoration": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalDefaultControls": {
+				"fontSize": true
+			}
+		},
+		"layout": {
+			"allowEditing": false
+		},
+		"renaming": false
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}

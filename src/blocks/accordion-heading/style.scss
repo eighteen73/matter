@@ -1,0 +1,51 @@
+.wp-block-matter-accordion-heading__toggle {
+	align-items: center;
+	background: none;
+	border: none;
+	color: inherit;
+	cursor: pointer;
+	display: flex;
+	font-family: inherit;
+	font-size: inherit;
+	font-style: inherit;
+	font-weight: inherit;
+	letter-spacing: inherit;
+	line-height: inherit;
+	overflow: hidden;
+	padding: var(--wp--preset--spacing--20, 1em) 0;
+	text-align: inherit;
+	text-decoration: inherit;
+	text-transform: inherit;
+	width: 100%;
+	word-spacing: inherit;
+
+	&:not(:focus-visible) {
+		outline: none;
+	}
+
+	&:hover .wp-block-matter-accordion-heading__toggle-title {
+		text-decoration: underline;
+	}
+}
+
+.wp-block-matter-accordion-heading__toggle-title {
+	flex: 1;
+}
+
+.wp-block-matter-accordion-heading__toggle-icon {
+	align-items: center;
+	display: flex;
+	height: 1.2em;
+	justify-content: center;
+	width: 1.2em;
+}
+
+.wp-block-matter-accordion-heading.has-icon-left
+.wp-block-matter-accordion-heading__toggle-icon {
+	margin-inline-end: 0.5em;
+}
+
+.wp-block-matter-accordion-heading.has-icon-right
+.wp-block-matter-accordion-heading__toggle-icon {
+	margin-inline-start: 0.5em;
+}
