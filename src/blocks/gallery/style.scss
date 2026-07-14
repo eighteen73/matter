@@ -31,6 +31,13 @@
 	--_caption-popover--padding: var(--matter-gallery--caption-popover--padding, var(--wp--custom--matter-gallery--caption-popover--padding, 0.6rem 0.7rem));
 	--_caption-transition: var(--matter-gallery--caption--transition-duration, var(--wp--custom--matter-gallery--caption--transition-duration, 200ms));
 
+	--_view-all--background-color: var(--matter-gallery--view-all--background-color, var(--wp--custom--matter-gallery--view-all--background-color, rgba(0, 0, 0, 0.75)));
+	--_view-all--color: var(--matter-gallery--view-all--color, var(--wp--custom--matter-gallery--view-all--color, #fff));
+	--_view-all--inset: var(--matter-gallery--view-all--inset, var(--wp--custom--matter-gallery--view-all--inset, 1rem));
+	--_view-all--font-size: var(--matter-gallery--view-all--font-size, var(--wp--custom--matter-gallery--view-all--font-size, 0.875rem));
+	--_view-all--letter-spacing: var(--matter-gallery--view-all--letter-spacing, var(--wp--custom--matter-gallery--view-all--letter-spacing, 0.04em));
+	--_view-all--padding: var(--matter-gallery--view-all--padding, var(--wp--custom--matter-gallery--view-all--padding, 0.5rem 0.75rem));
+
 	@media (prefers-reduced-motion: reduce) {
 		--_caption-transition: 0ms;
 	}
@@ -317,16 +324,16 @@
 
 	.wp-block-matter-gallery__view-all {
 		appearance: none;
-		background: rgba(0, 0, 0, 0.75);
+		background: var(--_view-all--background-color);
 		border: 0;
-		bottom: 1rem;
-		color: #fff;
+		bottom: var(--_view-all--inset);
+		color: var(--_view-all--color);
 		cursor: pointer;
-		font-size: 0.875rem;
-		letter-spacing: 0.04em;
-		padding: 0.5rem 0.75rem;
+		font-size: var(--_view-all--font-size);
+		letter-spacing: var(--_view-all--letter-spacing);
+		padding: var(--_view-all--padding);
 		position: absolute;
-		right: 1rem;
+		right: var(--_view-all--inset);
 		text-transform: uppercase;
 		z-index: 2;
 	}
