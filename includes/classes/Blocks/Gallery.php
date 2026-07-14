@@ -348,19 +348,19 @@ class Gallery {
 			if ( false !== strpos( $existing, 'class="' ) ) {
 				$existing = preg_replace(
 					'/class="([^"]*)"/',
-					'class="$1 matter-gallery__item"',
+					'class="$1 wp-block-matter-gallery__item"',
 					$existing,
 					1
 				);
 			} elseif ( false !== strpos( $existing, "class='" ) ) {
 				$existing = preg_replace(
 					"/class='([^']*)'/",
-					"class='$1 matter-gallery__item'",
+					"class='$1 wp-block-matter-gallery__item'",
 					$existing,
 					1
 				);
 			} else {
-				$existing .= ' class="matter-gallery__item"';
+				$existing .= ' class="wp-block-matter-gallery__item"';
 			}
 
 			if ( $lightbox ) {
@@ -376,13 +376,13 @@ class Gallery {
 			$html = preg_replace( '/<figure\b[^>]*>/', $replacement, $html, 1 );
 		} elseif ( $lightbox ) {
 			$html = sprintf(
-				'<div class="matter-gallery__item" data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context="%1$s">%2$s</div>',
+				'<div class="wp-block-matter-gallery__item" data-wp-interactive="matter/lightbox" data-wp-on--click="actions.openFromContext" data-wp-context="%1$s">%2$s</div>',
 				esc_attr( $context ),
 				$html
 			);
 		} elseif ( $has_caption ) {
 			$html = sprintf(
-				'<div class="matter-gallery__item">%s</div>',
+				'<div class="wp-block-matter-gallery__item">%s</div>',
 				$html
 			);
 		}
@@ -393,7 +393,7 @@ class Gallery {
 
 		$caption_id = $gallery_id . '-caption-' . $index;
 		$affordance = sprintf(
-			'<div class="matter-gallery__caption" data-wp-interactive="matter/gallery" data-wp-context="%1$s"><button type="button" class="matter-gallery__caption-trigger" data-wp-on--click="actions.toggleCaption" data-wp-bind--aria-expanded="state.isCaptionOpen" data-wp-bind--aria-label="state.captionTriggerLabel" aria-controls="%2$s"><span class="matter-gallery__icon matter-gallery__icon--info" aria-hidden="true"></span></button><div id="%2$s" class="matter-gallery__caption-popover" role="tooltip" data-wp-bind--hidden="!state.isCaptionOpen" hidden>%3$s</div></div>',
+			'<div class="wp-block-matter-gallery__caption" data-wp-interactive="matter/gallery" data-wp-context="%1$s"><button type="button" class="wp-block-matter-gallery__caption-trigger" data-wp-on--click="actions.toggleCaption" data-wp-bind--aria-expanded="state.isCaptionOpen" data-wp-bind--aria-label="state.captionTriggerLabel" aria-controls="%2$s"><span class="wp-block-matter-gallery__icon wp-block-matter-gallery__icon--info" aria-hidden="true"></span></button><div id="%2$s" class="wp-block-matter-gallery__caption-popover" role="tooltip" data-wp-bind--hidden="!state.isCaptionOpen" hidden>%3$s</div></div>',
 			esc_attr(
 				wp_json_encode(
 					[
@@ -462,7 +462,7 @@ class Gallery {
 		}
 
 		return sprintf(
-			'<button type="button" class="matter-gallery__thumb" data-index="%1$d" aria-label="%2$s"><img src="%3$s" alt="%4$s"%5$s loading="lazy" /></button>',
+			'<button type="button" class="wp-block-matter-gallery__thumb" data-index="%1$d" aria-label="%2$s"><img src="%3$s" alt="%4$s"%5$s loading="lazy" /></button>',
 			(int) $index,
 			esc_attr(
 				sprintf(
