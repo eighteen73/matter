@@ -16,6 +16,7 @@ import {
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useCallback, useEffect, useRef, useMemo } from '@wordpress/element';
 import ColorControl from '../../components/color-control';
+import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
 import { storeColorValue } from '../../utils/colors';
 import { getBlockStyles } from '../../utils/block-styles';
 import { useEffectiveActiveTabIndex } from '../tabs/utils/use-effective-active-tab-index';
@@ -185,6 +186,7 @@ function Edit({ attributes, setAttributes, clientId, context }) {
 
 	return (
 		<>
+			<AddTabToolbarButton />
 			<InspectorControls group="color">
 				<ColorControl
 					label={__('Tab background', 'matter')}

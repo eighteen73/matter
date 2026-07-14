@@ -13,11 +13,17 @@
 			"default": false
 		},
 		"label": {
-			"type": "string"
+			"type": "string",
+			"role": "content"
 		}
 	},
-	"parent": [ "matter/tab-panels", "core/post-template" ],
-	"ancestor": [ "matter/tabs" ],
+	"parent": [
+		"matter/tab-panels",
+		"core/post-template"
+	],
+	"ancestor": [
+		"matter/tabs"
+	],
 	"usesContext": [
 		"matter/tabs-activeTabIndex",
 		"matter/tabs-editorActiveTabIndex",
@@ -32,6 +38,7 @@
 		"anchor": true,
 		"html": false,
 		"reusable": false,
+		"contentRole": true,
 		"color": {
 			"background": true,
 			"text": true,

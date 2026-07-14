@@ -7,7 +7,10 @@
 	"description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
 	"category": "widgets",
 	"textdomain": "matter",
-	"allowedBlocks": [ "matter/tab-list", "matter/tab-panels" ],
+	"allowedBlocks": [
+		"matter/tab-list",
+		"matter/tab-panels"
+	],
 	"attributes": {
 		"generatedId": {
 			"type": "string",
@@ -76,6 +79,7 @@
 		},
 		"html": false,
 		"interactivity": true,
+		"contentRole": true,
 		"spacing": {
 			"blockGap": true,
 			"margin": true,
@@ -102,7 +106,10 @@
 		"matter/tabs-collapsesOn": "collapsesOn",
 		"matter/tabs-isQueryMode": "isQueryMode"
 	},
-	"usesContext": [ "matter/tabs-list", "matter/tabs-id" ],
+	"usesContext": [
+		"matter/tabs-list",
+		"matter/tabs-id"
+	],
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
