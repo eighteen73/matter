@@ -186,7 +186,7 @@
 	"selectors": {
 		"root": ".wp-block-matter-gallery",
 		"spacing": {
-			"blockGap": ".wp-block-matter-gallery.matter-gallery--grid.is-layout-grid, .wp-block-matter-gallery.matter-gallery--grid .block-editor-block-list__layout.is-layout-grid, .wp-block-matter-gallery.matter-gallery--carousel .matter-gallery__carousel"
+			"blockGap": ".wp-block-matter-gallery.wp-block-matter-gallery--grid.is-layout-grid, .wp-block-matter-gallery.wp-block-matter-gallery--grid .block-editor-block-list__layout.is-layout-grid, .wp-block-matter-gallery.wp-block-matter-gallery--carousel .wp-block-matter-gallery__carousel"
 		}
 	},
 	"textdomain": "matter",
