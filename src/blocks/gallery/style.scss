@@ -345,6 +345,7 @@
 	--_content-padding: var(--matter-lightbox--content-padding, var(--wp--custom--matter-lightbox--content-padding, 1rem));
 	--_thumb-gap: var(--matter-lightbox--thumbnail-gap, var(--wp--custom--matter-lightbox--thumbnail-gap, 0.5rem));
 	--_thumb-basis: var(--matter-lightbox--thumbnail-basis, var(--wp--custom--matter-lightbox--thumbnail-basis, 4rem));
+	--_thumb-active-outline-color: var(--matter-lightbox--thumbnail-active-outline-color, var(--wp--custom--matter-lightbox--thumbnail-active-outline-color, #fff));
 
 	--_close--size: var(--matter-lightbox--close--size, 2.5rem);
 	--_close--icon-size: var(--matter-lightbox--close--icon-size, 50%);
@@ -618,7 +619,7 @@
 
 		&.is-active {
 			opacity: 1;
-			outline-color: #fff;
+			outline-color: var(--_thumb-active-outline-color);
 
 			&:hover,
 			&:focus-visible {
