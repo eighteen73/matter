@@ -64,7 +64,24 @@ export default function Edit({
 			),
 		[clientId]
 	);
-	const { __unstableMarkNextChangeAsNotPersistent } =
+	const { accordionClientId, isFirstItem } = useSelect(
+		(select) => {
+			const { getBlockRootClientId, getBlocks } =
+				select(blockEditorStore);
+			const parentClientId = getBlockRootClientId(clientId);
+			const siblings = parentClientId ? getBlocks(parentClientId) : [];
+			const firstAccordionItem = siblings.find(
+				(block) => block.name === 'matter/accordion-item'
+			);
+
+			return {
+				accordionClientId: parentClientId,
+				isFirstItem: firstAccordionItem?.clientId === clientId,
+			};
+		},
+		[clientId]
+	);
+	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch(blockEditorStore);
 
 	useEffect(() => {
@@ -80,6 +97,16 @@ export default function Edit({
 		setAttributes,
 		__unstableMarkNextChangeAsNotPersistent,
 	]);
+
+	const syncOpenByDefault = (value) => {
+		setAttributes({ openByDefault: value });
+
+		if (isFirstItem && accordionClientId) {
+			updateBlockAttributes(accordionClientId, {
+				openFirstItem: value,
+			});
+		}
+	};
 
 	const { isSelected } = useSelect(
 		(select) => {
@@ -116,14 +143,12 @@ export default function Edit({
 				<InspectorControls>
 					<ToolsPanel
 						label={__('Settings', 'matter')}
-						resetAll={() => setAttributes({ openByDefault: false })}
+						resetAll={() => syncOpenByDefault(false)}
 					>
 						<ToolsPanelItem
 							hasValue={() => !!openByDefault}
 							label={__('Open by default', 'matter')}
-							onDeselect={() => {
-								setAttributes({ openByDefault: false });
-							}}
+							onDeselect={() => syncOpenByDefault(false)}
 							isShownByDefault
 						>
 							<ToggleControl
@@ -134,11 +159,7 @@ export default function Edit({
 									'matter'
 								)}
 								checked={openByDefault}
-								onChange={(value) => {
-									setAttributes({
-										openByDefault: value,
-									});
-								}}
+								onChange={syncOpenByDefault}
 							/>
 						</ToolsPanelItem>
 					</ToolsPanel>
