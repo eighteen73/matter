@@ -81,9 +81,7 @@ export default function Edit({ attributes, setAttributes, context }) {
 					<span
 						className="wp-block-matter-accordion-heading__toggle-icon"
 						aria-hidden="true"
-					>
-						+
-					</span>
+					></span>
 				)}
 			</button>
 		</TagName>
