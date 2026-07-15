@@ -43,5 +43,7 @@ if ( ! $open_by_default ) {
 	echo wp_kses_data( get_block_wrapper_attributes( $wrapper_attributes ) );
 	?>
 >
-	<?php echo $block_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	<div class="wp-block-matter-accordion-panel__content">
+		<?php echo $block_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	</div>
 </div>
