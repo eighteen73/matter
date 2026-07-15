@@ -63,11 +63,17 @@ export default function Edit({ attributes, clientId, context }) {
 		}),
 	});
 
-	const innerBlocksProps = useInnerBlocksProps(blockProps, {
+	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		template: isQueryMode ? QUERY_TEMPLATE : TEMPLATE,
 		templateLock: templateLock || false,
 		templateInsertUpdatesSelection: true,
 	});
 
-	return <div {...innerBlocksProps} />;
+	return (
+		<div {...innerBlocksProps}>
+			<div className="wp-block-matter-accordion-panel__content">
+				{children}
+			</div>
+		</div>
+	);
 }
