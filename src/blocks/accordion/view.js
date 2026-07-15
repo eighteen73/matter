@@ -3,6 +3,9 @@
  */
 import { store, getContext, withSyncEvent } from '@wordpress/interactivity';
 
+const PRIVATE_STORE = 'matter/accordion/private';
+const PUBLIC_STORE = 'matter/accordion';
+
 function createReadOnlyProxy(obj) {
 	const arrayMutationMethods = new Set([
 		'push',
@@ -37,13 +40,6 @@ function createReadOnlyProxy(obj) {
 	});
 }
 
-/**
- * Non-reactive map of accordionId → interactivity context.
- *
- * @type {Map<string, Object>}
- */
-const accordionContexts = new Map();
-
 let hashHandled = false;
 
 const findItem = (accordionItems, id) =>
@@ -68,10 +64,78 @@ const setItemOpen = (context, id, isOpen) => {
 	}
 };
 
+const getContextId = () => getContext()?.accordionId;
+
+const resolveId = (passthroughId = false) =>
+	typeof passthroughId === 'string' ? passthroughId : privateState.id;
+
+const resolvePublicId = (passthroughId = false) =>
+	typeof passthroughId === 'string' ? passthroughId : getContextId();
+
+const getItem = (id) => privateState.items[id];
+
+const getInstanceForId = (id) => getItem(id)?.instance || null;
+
+/**
+ * Register a bound accordion API on the private store item.
+ *
+ * @param {string} accordionId Accordion instance id.
+ * @param {Object} context     Interactivity context for this accordion.
+ * @return {void}
+ */
+const registerAccordionInstance = (accordionId, context) => {
+	if (!accordionId || !context) {
+		return;
+	}
+
+	const existing = getItem(accordionId);
+
+	if (existing) {
+		existing.context = context;
+		return;
+	}
+
+	privateState.items[accordionId] = {
+		context,
+		instance: {
+			open: (itemId) => privateActions.openById(accordionId, itemId),
+			close: (itemId) => privateActions.closeById(accordionId, itemId),
+			toggle: (itemId) => privateActions.toggleById(accordionId, itemId),
+			closeAll: () => {
+				const { accordionItems } = getItem(accordionId)?.context || {};
+				accordionItems?.forEach((item) => {
+					item.isOpen = false;
+				});
+			},
+			isOpen: (itemId) => {
+				const { accordionItems } = getItem(accordionId)?.context || {};
+				return Boolean(findItem(accordionItems, itemId)?.isOpen);
+			},
+			get items() {
+				const accordionItems =
+					getItem(accordionId)?.context?.accordionItems;
+				return accordionItems
+					? createReadOnlyProxy(accordionItems)
+					: undefined;
+			},
+		},
+	};
+};
+
 const { actions: privateActions, state: privateState } = store(
-	'matter/accordion/private',
+	PRIVATE_STORE,
 	{
 		state: {
+			items: {},
+			get id() {
+				return getContextId();
+			},
+			get item() {
+				return getItem(privateState.id);
+			},
+			get instance() {
+				return getInstanceForId(privateState.id);
+			},
 			get isOpen() {
 				const { id, accordionItems, openByDefault } = getContext();
 				const accordionItem = findItem(accordionItems, id);
@@ -79,6 +143,8 @@ const { actions: privateActions, state: privateState } = store(
 			},
 		},
 		actions: {
+			getInstance: (passthroughId = false) =>
+				getInstanceForId(resolveId(passthroughId)),
 			toggle: () => {
 				const context = getContext();
 				const { id, accordionItems } = context;
@@ -189,21 +255,21 @@ const { actions: privateActions, state: privateState } = store(
 				}, 0);
 			},
 			openById(accordionId, itemId) {
-				const context = accordionContexts.get(accordionId);
+				const context = getItem(accordionId)?.context;
 				if (!context) {
 					return;
 				}
 				setItemOpen(context, itemId, true);
 			},
 			closeById(accordionId, itemId) {
-				const context = accordionContexts.get(accordionId);
+				const context = getItem(accordionId)?.context;
 				if (!context) {
 					return;
 				}
 				setItemOpen(context, itemId, false);
 			},
 			toggleById(accordionId, itemId) {
-				const context = accordionContexts.get(accordionId);
+				const context = getItem(accordionId)?.context;
 				if (!context) {
 					return;
 				}
@@ -217,18 +283,15 @@ const { actions: privateActions, state: privateState } = store(
 		callbacks: {
 			onAccordionInit: () => {
 				const context = getContext();
-				const { accordionId } = context;
-				if (accordionId) {
-					accordionContexts.set(accordionId, context);
-				}
+				registerAccordionInstance(context?.accordionId, context);
 			},
 			initAccordionItems: () => {
 				const context = getContext();
 				const { id, openByDefault, accordionItems, accordionId } =
 					context;
 
-				if (accordionId && !accordionContexts.has(accordionId)) {
-					accordionContexts.set(accordionId, context);
+				if (accordionId && !getItem(accordionId)) {
+					registerAccordionInstance(accordionId, context);
 				}
 
 				if (!findItem(accordionItems, id)) {
@@ -252,18 +315,28 @@ const { actions: privateActions, state: privateState } = store(
 );
 
 // Public store for third-party extensibility.
-store('matter/accordion', {
+store(PUBLIC_STORE, {
 	state: {
 		get isOpen() {
 			return privateState.isOpen;
 		},
 		get items() {
-			const context = getContext();
-			const items = context?.accordionItems;
-			return items ? createReadOnlyProxy(items) : undefined;
+			return createReadOnlyProxy(privateState.items);
+		},
+		get instance() {
+			return privateState.instance;
 		},
 	},
 	actions: {
+		/**
+		 * Get a bound accordion instance API.
+		 *
+		 * @param {string} [id] Accordion instance id (optional when in context).
+		 * @return {Object|null} Bound instance or null.
+		 */
+		getInstance(id = false) {
+			return privateActions.getInstance(resolvePublicId(id));
+		},
 		/**
 		 * Open an accordion item.
 		 *
