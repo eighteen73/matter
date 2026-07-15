@@ -41,9 +41,13 @@
 
 	#{$block}__toggle-icon {
 		align-items: center;
+		background-color: currentcolor;
 		display: flex;
 		height: var(--_toggle--size);
 		justify-content: center;
+		mask-image: url("../../../assets/svg/caret-down.svg");
+		mask-repeat: no-repeat;
+		mask-size: contain;
 		width: var(--_toggle--size);
 	}
 

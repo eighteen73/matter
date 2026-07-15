@@ -89,13 +89,13 @@ $button_attributes = [
 		aria-expanded="<?php echo $block_instance && ! empty( $block_instance->context['matter/accordion-open-by-default'] ) ? 'true' : 'false'; ?>"
 	>
 		<?php if ( $show_icon && 'left' === $icon_pos ) : ?>
-			<span class="wp-block-matter-accordion-heading__toggle-icon" aria-hidden="true">+</span>
+			<span class="wp-block-matter-accordion-heading__toggle-icon" aria-hidden="true"></span>
 		<?php endif; ?>
 		<span class="wp-block-matter-accordion-heading__toggle-title">
 			<?php echo wp_kses_post( $title ); ?>
 		</span>
 		<?php if ( $show_icon && 'right' === $icon_pos ) : ?>
-			<span class="wp-block-matter-accordion-heading__toggle-icon" aria-hidden="true">+</span>
+			<span class="wp-block-matter-accordion-heading__toggle-icon" aria-hidden="true"></span>
 		<?php endif; ?>
 	</button>
 </<?php echo tag_escape( $tag ); ?>>
