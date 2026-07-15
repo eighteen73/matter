@@ -46,6 +46,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		headingLevel,
 		isQueryMode,
 		openFirstItem,
+		hasSchema,
 	} = attributes;
 
 	const { insertBlock, updateBlockAttributes } =
@@ -75,6 +76,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 	useEffect(() => {
 		if (hasQueryLoop !== isQueryMode) {
 			setAttributes({ isQueryMode: hasQueryLoop });
+			setAttributes({ hasSchema: false });
 		}
 	}, [hasQueryLoop, isQueryMode, setAttributes]);
 
@@ -134,6 +136,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 					)}
 				</Notice>
 			)}
+
 			{isSelected && !isQuery && (
 				<BlockControls>
 					<ToolbarGroup>
@@ -143,12 +146,14 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 					</ToolbarGroup>
 				</BlockControls>
 			)}
+
 			<BlockControls group="block">
 				<HeadingLevelDropdown
 					value={headingLevel}
 					onChange={(value) => setAttributes({ headingLevel: value })}
 				/>
 			</BlockControls>
+
 			<InspectorControls>
 				<ToolsPanel
 					label={__('Settings', 'matter')}
@@ -186,6 +191,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 							}
 						/>
 					</ToolsPanelItem>
+
 					<ToolsPanelItem
 						hasValue={() => !!openFirstItem}
 						label={__('Open first item', 'matter')}
@@ -203,6 +209,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 							onChange={syncFirstItemOpen}
 						/>
 					</ToolsPanelItem>
+
 					<ToolsPanelItem
 						hasValue={() => !showIcon}
 						label={__('Show icon', 'matter')}
@@ -227,6 +234,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 							}
 						/>
 					</ToolsPanelItem>
+
 					{showIcon && (
 						<ToolsPanelItem
 							hasValue={() => iconPosition !== 'right'}
@@ -260,6 +268,34 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 						</ToolsPanelItem>
 					)}
 				</ToolsPanel>
+
+				{!isQueryMode && (
+					<ToolsPanel
+						label={__('Schema Settings', 'matter')}
+						resetAll={() => setAttributes({ hasSchema: false })}
+					>
+						<ToolsPanelItem
+							hasValue={() => !!hasSchema}
+							label={__('Output schema for FAQs', 'matter')}
+							onDeselect={() =>
+								setAttributes({ hasSchema: false })
+							}
+							isShownByDefault
+						>
+							<ToggleControl
+								label={__('Output schema for FAQs', 'matter')}
+								help={__(
+									'If using for FAQs, enable this for SEO.',
+									'matter'
+								)}
+								checked={hasSchema}
+								onChange={(value) =>
+									setAttributes({ hasSchema: value })
+								}
+							/>
+						</ToolsPanelItem>
+					</ToolsPanel>
+				)}
 			</InspectorControls>
 			<div {...innerBlocksProps} />
 		</>

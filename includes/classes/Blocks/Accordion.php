@@ -39,7 +39,8 @@ class Accordion {
 	public function setup(): void {
 		add_filter( 'render_block_data', [ $this, 'capture_accordion' ], 10, 1 );
 		add_filter( 'render_block_context', [ $this, 'provide_context' ], 10, 2 );
-		add_filter( 'render_block_matter/accordion', [ $this, 'clear_accordion' ], 999, 2 );
+		add_filter( 'render_block_matter/accordion', [ $this, 'clear_accordion' ], 10, 2 );
+		add_filter( 'render_block_matter/accordion', [ $this, 'accordion_schema' ], 10, 2 );
 	}
 
 	/**
@@ -201,5 +202,135 @@ class Accordion {
 		$context['matter/accordion-item-id'] = $item_id;
 
 		return $context;
+	}
+
+	/**
+	 * Append FAQPage JSON-LD schema when hasSchema is enabled.
+	 *
+	 * @param string               $block_content Rendered block HTML.
+	 * @param array<string, mixed> $block         Parsed block.
+	 * @return string
+	 */
+	public function accordion_schema( string $block_content, array $block ): string {
+		$attrs      = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : [];
+		$has_schema = ! empty( $attrs['hasSchema'] );
+
+		if ( ! $has_schema ) {
+			return $block_content;
+		}
+
+		$inner_blocks = isset( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] )
+			? $block['innerBlocks']
+			: [];
+
+		if ( ! empty( $attrs['isQueryMode'] ) || self::has_query_block( $inner_blocks ) ) {
+			return $block_content;
+		}
+
+		$schema = $this->build_faq_schema( $inner_blocks );
+
+		if ( empty( $schema['mainEntity'] ) ) {
+			return $block_content;
+		}
+
+		$json_ld_schema = wp_json_encode( $schema );
+
+		if ( empty( $json_ld_schema ) ) {
+			return $block_content;
+		}
+
+		add_action(
+			'wp_head',
+			function () use ( $json_ld_schema ) {
+				echo '<script class="matter-accordion-faqs-schema-graph" type="application/ld+json">' . wp_kses_data( $json_ld_schema ) . '</script>';
+			}
+		);
+
+		return $block_content;
+	}
+
+	/**
+	 * Build a FAQPage schema graph from static accordion items.
+	 *
+	 * @param array<int, array<string, mixed>> $inner_blocks Accordion inner blocks.
+	 * @return array<string, mixed>
+	 */
+	private function build_faq_schema( array $inner_blocks ): array {
+		$schema = [
+			'@context'   => 'https://schema.org',
+			'@type'      => 'FAQPage',
+			'mainEntity' => [],
+		];
+
+		foreach ( $inner_blocks as $inner_block ) {
+			if ( 'matter/accordion-item' !== ( $inner_block['blockName'] ?? '' ) ) {
+				continue;
+			}
+
+			$question = $this->extract_item_question( $inner_block );
+			$answer   = $this->extract_item_answer( $inner_block );
+
+			if ( '' === $question || '' === $answer ) {
+				continue;
+			}
+
+			$schema['mainEntity'][] = [
+				'@type'          => 'Question',
+				'name'           => $question,
+				'acceptedAnswer' => [
+					'@type' => 'Answer',
+					'text'  => $answer,
+				],
+			];
+		}
+
+		return $schema;
+	}
+
+	/**
+	 * Extract the question text from an accordion item's heading block.
+	 *
+	 * @param array<string, mixed> $item_block Accordion item parsed block.
+	 * @return string
+	 */
+	private function extract_item_question( array $item_block ): string {
+		foreach ( $item_block['innerBlocks'] ?? [] as $child ) {
+			if ( 'matter/accordion-heading' !== ( $child['blockName'] ?? '' ) ) {
+				continue;
+			}
+
+			$title = isset( $child['attrs']['title'] ) ? (string) $child['attrs']['title'] : '';
+
+			return trim( wp_strip_all_tags( $title ) );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Extract the answer text from an accordion item's panel block.
+	 *
+	 * @param array<string, mixed> $item_block Accordion item parsed block.
+	 * @return string
+	 */
+	private function extract_item_answer( array $item_block ): string {
+		foreach ( $item_block['innerBlocks'] ?? [] as $child ) {
+			if ( 'matter/accordion-panel' !== ( $child['blockName'] ?? '' ) ) {
+				continue;
+			}
+
+			$parts = [];
+
+			foreach ( $child['innerBlocks'] ?? [] as $answer_block ) {
+				$parts[] = $answer_block['innerHTML'] ?? '';
+			}
+
+			$text = wp_strip_all_tags( implode( '', $parts ) );
+			$text = preg_replace( '/\s+/u', ' ', $text );
+
+			return trim( is_string( $text ) ? $text : '' );
+		}
+
+		return '';
 	}
 }
