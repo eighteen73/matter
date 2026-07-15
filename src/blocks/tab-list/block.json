@@ -7,8 +7,12 @@
 	"description": "Display the tab buttons for a tabbed interface.",
 	"category": "widgets",
 	"textdomain": "matter",
-	"parent": [ "matter/tabs" ],
-	"allowedBlocks": [ "matter/tab-button" ],
+	"parent": [
+		"matter/tabs"
+	],
+	"allowedBlocks": [
+		"matter/tab-button"
+	],
 	"usesContext": [
 		"matter/tabs-id",
 		"matter/tabs-list",
@@ -34,6 +38,7 @@
 		"reusable": false,
 		"visibility": false,
 		"lock": false,
+		"contentRole": true,
 		"color": {
 			"background": true,
 			"text": true,

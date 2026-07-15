@@ -20,6 +20,7 @@ import { arrowRight, arrowUpLeft, arrowUpRight } from '@wordpress/icons';
 
 import clsx from 'clsx';
 
+import ContentOnlyTextControl from '../../components/content-only-text-control';
 import { getBlockStyles } from '../../utils/block-styles';
 
 const PLACEMENT_OPTIONS = [
@@ -81,6 +82,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					}))}
 				/>
 			</BlockControls>
+
+			<ContentOnlyTextControl
+				label={__('Label', 'matter')}
+				value={label}
+				onChange={(value) => setAttributes({ label: value })}
+			/>
 
 			<InspectorControls>
 				<ToolsPanel

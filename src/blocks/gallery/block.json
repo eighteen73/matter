@@ -7,8 +7,15 @@
 	"category": "media",
 	"icon": "format-gallery",
 	"description": "A gallery of images with grid or carousel display and an optional lightbox.",
-	"keywords": ["gallery", "images", "carousel", "lightbox"],
-	"allowedBlocks": ["core/image"],
+	"keywords": [
+		"gallery",
+		"images",
+		"carousel",
+		"lightbox"
+	],
+	"allowedBlocks": [
+		"core/image"
+	],
 	"attributes": {
 		"generatedId": {
 			"type": "string",
@@ -17,7 +24,10 @@
 		"type": {
 			"type": "string",
 			"default": "grid",
-			"enum": ["grid", "carousel"]
+			"enum": [
+				"grid",
+				"carousel"
+			]
 		},
 		"aspectRatio": {
 			"type": "string",
@@ -53,7 +63,10 @@
 		},
 		"lightboxThumbnailFocalPoint": {
 			"type": "object",
-			"default": { "x": 0.5, "y": 0.5 }
+			"default": {
+				"x": 0.5,
+				"y": 0.5
+			}
 		},
 		"lightboxThumbnailGap": {
 			"type": "string",
@@ -105,7 +118,8 @@
 		},
 		"viewAllText": {
 			"type": "string",
-			"default": "View Gallery"
+			"default": "View Gallery",
+			"role": "content"
 		},
 		"carouselConfig": {
 			"type": "object",
@@ -146,15 +160,20 @@
 	},
 	"supports": {
 		"anchor": true,
-		"align": ["wide", "full"],
+		"align": [
+			"wide",
+			"full"
+		],
 		"color": {
 			"text": true,
 			"background": true,
 			"gradients": true,
 			"link": false
 		},
+		"contentRole": true,
 		"html": false,
 		"interactivity": true,
+		"listView": true,
 		"spacing": {
 			"margin": true,
 			"padding": true,
@@ -170,7 +189,6 @@
 			"allowInheriting": false,
 			"allowEditing": true,
 			"allowSizingOnChildren": true,
-
 			"default": {
 				"type": "grid",
 				"columnCount": 3

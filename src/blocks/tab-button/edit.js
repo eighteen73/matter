@@ -13,15 +13,22 @@ import {
 	RichText,
 } from '@wordpress/block-editor';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useCallback } from '@wordpress/element';
+import { useCallback, useEffect } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
+import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
 import Media from '../../components/media';
 import { useEffectiveActiveTabIndex } from '../tabs/utils/use-effective-active-tab-index';
 
-export default function Edit({ attributes, setAttributes, clientId, context }) {
+export default function Edit({
+	attributes,
+	setAttributes,
+	clientId,
+	context,
+	isSelected,
+}) {
 	const { label, mediaId, mediaType, focalPoint, posterId } = attributes;
 	const effectiveActiveIndex = useEffectiveActiveTabIndex(context);
 
@@ -47,24 +54,39 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 
 	const isActive = blockIndex === effectiveActiveIndex;
 
+	const activateTab = useCallback(() => {
+		if (tabsClientId && blockIndex !== effectiveActiveIndex) {
+			__unstableMarkNextChangeAsNotPersistent();
+			updateBlockAttributes(tabsClientId, {
+				editorActiveTabIndex: blockIndex,
+			});
+		}
+	}, [
+		tabsClientId,
+		blockIndex,
+		effectiveActiveIndex,
+		updateBlockAttributes,
+		__unstableMarkNextChangeAsNotPersistent,
+	]);
+
+	// contentOnly selection often selects the block without a reliable click;
+	// keep the visible panel in sync whenever this tab button is selected.
+	useEffect(() => {
+		if (isSelected) {
+			activateTab();
+		}
+	}, [isSelected, activateTab]);
+
+	const handleMouseDown = useCallback(() => {
+		activateTab();
+	}, [activateTab]);
+
 	const handleClick = useCallback(
 		(event) => {
 			event.preventDefault();
-
-			if (tabsClientId && blockIndex !== effectiveActiveIndex) {
-				__unstableMarkNextChangeAsNotPersistent();
-				updateBlockAttributes(tabsClientId, {
-					editorActiveTabIndex: blockIndex,
-				});
-			}
+			activateTab();
 		},
-		[
-			tabsClientId,
-			blockIndex,
-			effectiveActiveIndex,
-			updateBlockAttributes,
-			__unstableMarkNextChangeAsNotPersistent,
-		]
+		[activateTab]
 	);
 
 	const blockProps = useBlockProps({
@@ -73,30 +95,34 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		tabIndex: -1,
 		type: 'button',
 		'aria-selected': isActive,
+		onMouseDown: handleMouseDown,
 		onClick: handleClick,
 	});
 
 	return (
-		<button {...blockProps}>
-			<Media
-				mediaId={mediaId}
-				mediaType={mediaType}
-				posterId={posterId}
-				focalPoint={focalPoint}
-				setAttributes={setAttributes}
-				videoClassName="wp-block-matter-tab-button__video"
-				imageClassName="wp-block-matter-tab-button__image"
-			/>
+		<>
+			<AddTabToolbarButton />
+			<button {...blockProps}>
+				<Media
+					mediaId={mediaId}
+					mediaType={mediaType}
+					posterId={posterId}
+					focalPoint={focalPoint}
+					setAttributes={setAttributes}
+					videoClassName="wp-block-matter-tab-button__video"
+					imageClassName="wp-block-matter-tab-button__image"
+				/>
 
-			<RichText
-				tagName="span"
-				className="wp-block-matter-tab-button__label"
-				withoutInteractiveFormatting
-				placeholder={__('Tab title', 'matter')}
-				value={label}
-				onChange={(newLabel) => setAttributes({ label: newLabel })}
-				allowedFormats={[]}
-			/>
-		</button>
+				<RichText
+					tagName="span"
+					className="wp-block-matter-tab-button__label"
+					withoutInteractiveFormatting
+					placeholder={__('Tab title', 'matter')}
+					value={label}
+					onChange={(newLabel) => setAttributes({ label: newLabel })}
+					allowedFormats={[]}
+				/>
+			</button>
+		</>
 	);
 }

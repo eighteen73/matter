@@ -12,6 +12,9 @@ import { __ } from '@wordpress/i18n';
  * order, and panel links. Legacy content without buttons is migrated on load.
  */
 
+/** Shared lock so toolbar Add tab and sync do not race. */
+export const addingTabLock = { current: false };
+
 function migrateLegacyButtons({
 	tabPanels,
 	tabListClientId,
@@ -189,7 +192,8 @@ export function useTabButtonsSync({
 			!tabListClientId ||
 			!tabPanelsClientId ||
 			isSyncingRef.current ||
-			isAddingTabRef?.current
+			isAddingTabRef?.current ||
+			addingTabLock.current
 		) {
 			return;
 		}

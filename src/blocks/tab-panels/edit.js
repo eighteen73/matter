@@ -11,6 +11,7 @@ import { useMemo } from '@wordpress/element';
 
 import { storeColorValue } from '../../utils/colors';
 import { getBlockStyles } from '../../utils/block-styles';
+import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
 import ColorControl from '../../components/color-control';
 
 const TAB_PANELS_TEMPLATE = [['matter/tab-panel'], ['matter/tab-panel']];
@@ -39,6 +40,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 
 	return (
 		<>
+			<AddTabToolbarButton />
 			<InspectorControls group="color">
 				<ColorControl
 					label={__('Tab panel active', 'matter')}
