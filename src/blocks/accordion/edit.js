@@ -5,24 +5,9 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	InspectorControls,
-	BlockControls,
-	HeadingLevelDropdown,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import {
-	ToggleControl,
-	Notice,
-	ToolbarButton,
-	ToolbarGroup,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanel as ToolsPanel,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToggleGroupControl as ToggleGroupControl,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-} from '@wordpress/components';
+import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { createBlock } from '@wordpress/blocks';
@@ -35,19 +20,14 @@ import './editor.scss';
 import BlockVariationPicker from '../../components/block-variation-picker';
 import useBlockId from '../../utils/use-block-id';
 import { ITEM_TEMPLATE } from './variations';
+import SchemaSettings from './components/schemaSettings';
+import Settings from './components/settings';
+import ToolbarSettings from './components/toolbarSettings';
 
 const DEFAULT_TEMPLATE = [ITEM_TEMPLATE];
 
 function Edit({ clientId, attributes, setAttributes, isSelected }) {
-	const {
-		autoclose,
-		iconPosition,
-		showIcon,
-		headingLevel,
-		isQueryMode,
-		openFirstItem,
-		hasSchema,
-	} = attributes;
+	const { isQueryMode } = attributes;
 
 	const { insertBlock, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
@@ -137,166 +117,32 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 				</Notice>
 			)}
 
-			{isSelected && !isQuery && (
-				<BlockControls>
-					<ToolbarGroup>
-						<ToolbarButton onClick={addAccordionItem}>
-							{__('Add item', 'matter')}
-						</ToolbarButton>
-					</ToolbarGroup>
-				</BlockControls>
-			)}
-
-			<BlockControls group="block">
-				<HeadingLevelDropdown
-					value={headingLevel}
-					onChange={(value) => setAttributes({ headingLevel: value })}
-				/>
-			</BlockControls>
+			<ToolbarSettings
+				attributes={attributes}
+				setAttributes={setAttributes}
+				isSelected={isSelected}
+				isQuery={isQuery}
+				addAccordionItem={addAccordionItem}
+			/>
 
 			<InspectorControls>
-				<ToolsPanel
-					label={__('Settings', 'matter')}
-					resetAll={() => {
-						setAttributes({
-							autoclose: false,
-							openFirstItem: true,
-							showIcon: true,
-							iconPosition: 'right',
-						});
-
-						if (!isQuery && firstItem) {
-							updateBlockAttributes(firstItem.clientId, {
-								openByDefault: true,
-							});
-						}
-					}}
-				>
-					<ToolsPanelItem
-						hasValue={() => !!autoclose}
-						label={__('Auto-close', 'matter')}
-						onDeselect={() => setAttributes({ autoclose: false })}
-						isShownByDefault
-					>
-						<ToggleControl
-							__nextHasNoMarginBottom
-							label={__('Auto-close', 'matter')}
-							help={__(
-								'Automatically close accordion items when a new one is opened.',
-								'matter'
-							)}
-							checked={autoclose}
-							onChange={(value) =>
-								setAttributes({ autoclose: value })
-							}
-						/>
-					</ToolsPanelItem>
-
-					<ToolsPanelItem
-						hasValue={() => !!openFirstItem}
-						label={__('Open first item', 'matter')}
-						onDeselect={() => syncFirstItemOpen(false)}
-						isShownByDefault
-					>
-						<ToggleControl
-							__nextHasNoMarginBottom
-							label={__('Open first item', 'matter')}
-							help={__(
-								'Open the first item by default.',
-								'matter'
-							)}
-							checked={openFirstItem}
-							onChange={syncFirstItemOpen}
-						/>
-					</ToolsPanelItem>
-
-					<ToolsPanelItem
-						hasValue={() => !showIcon}
-						label={__('Show icon', 'matter')}
-						onDeselect={() => setAttributes({ showIcon: true })}
-						isShownByDefault
-					>
-						<ToggleControl
-							__nextHasNoMarginBottom
-							label={__('Show icon', 'matter')}
-							help={__(
-								'Display a plus icon next to the accordion heading.',
-								'matter'
-							)}
-							checked={showIcon}
-							onChange={(value) =>
-								setAttributes({
-									showIcon: value,
-									iconPosition: value
-										? iconPosition
-										: 'right',
-								})
-							}
-						/>
-					</ToolsPanelItem>
-
-					{showIcon && (
-						<ToolsPanelItem
-							hasValue={() => iconPosition !== 'right'}
-							label={__('Icon position', 'matter')}
-							onDeselect={() =>
-								setAttributes({ iconPosition: 'right' })
-							}
-							isShownByDefault
-						>
-							<ToggleGroupControl
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-								label={__('Icon position', 'matter')}
-								value={iconPosition}
-								onChange={(value) =>
-									setAttributes({
-										iconPosition: value,
-									})
-								}
-								isBlock
-							>
-								<ToggleGroupControlOption
-									value="left"
-									label={__('Left', 'matter')}
-								/>
-								<ToggleGroupControlOption
-									value="right"
-									label={__('Right', 'matter')}
-								/>
-							</ToggleGroupControl>
-						</ToolsPanelItem>
-					)}
-				</ToolsPanel>
+				<Settings
+					attributes={attributes}
+					setAttributes={setAttributes}
+					isQuery={isQuery}
+					firstItem={firstItem}
+					updateBlockAttributes={updateBlockAttributes}
+					syncFirstItemOpen={syncFirstItemOpen}
+				/>
 
 				{!isQueryMode && (
-					<ToolsPanel
-						label={__('Schema Settings', 'matter')}
-						resetAll={() => setAttributes({ hasSchema: false })}
-					>
-						<ToolsPanelItem
-							hasValue={() => !!hasSchema}
-							label={__('Output schema for FAQs', 'matter')}
-							onDeselect={() =>
-								setAttributes({ hasSchema: false })
-							}
-							isShownByDefault
-						>
-							<ToggleControl
-								label={__('Output schema for FAQs', 'matter')}
-								help={__(
-									'If using for FAQs, enable this for SEO.',
-									'matter'
-								)}
-								checked={hasSchema}
-								onChange={(value) =>
-									setAttributes({ hasSchema: value })
-								}
-							/>
-						</ToolsPanelItem>
-					</ToolsPanel>
+					<SchemaSettings
+						attributes={attributes}
+						setAttributes={setAttributes}
+					/>
 				)}
 			</InspectorControls>
+
 			<div {...innerBlocksProps} />
 		</>
 	);
