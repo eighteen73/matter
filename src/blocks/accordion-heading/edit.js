@@ -74,7 +74,7 @@ export default function Edit({ attributes, setAttributes, context }) {
 						}
 						placeholder={__('Accordion title', 'matter')}
 						className="wp-block-matter-accordion-heading__toggle-title"
-						allowedFormats={[]}
+						allowedFormats={['core/bold', 'core/italic']}
 					/>
 				)}
 				{showIcon && iconPosition === 'right' && (
