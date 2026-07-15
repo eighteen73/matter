@@ -37,6 +37,10 @@
 		"isQueryMode": {
 			"type": "boolean",
 			"default": false
+		},
+		"hasSchema": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"providesContext": {
