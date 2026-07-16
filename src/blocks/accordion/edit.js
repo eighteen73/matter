@@ -4,7 +4,6 @@
 import {
 	useBlockProps,
 	useInnerBlocksProps,
-	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { Notice } from '@wordpress/components';
@@ -20,9 +19,8 @@ import './editor.scss';
 import BlockVariationPicker from '../../components/block-variation-picker';
 import useBlockId from '../../utils/use-block-id';
 import { ITEM_TEMPLATE } from './variations';
-import SchemaSettings from './components/schemaSettings';
-import Settings from './components/settings';
-import ToolbarSettings from './components/toolbarSettings';
+import AccordionBlockControls from './components/block-controls';
+import AccordionInspectorControls from './components/inspector-controls';
 
 const DEFAULT_TEMPLATE = [ITEM_TEMPLATE];
 
@@ -123,6 +121,27 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		insertBlock(newItem, undefined, clientId);
 	};
 
+	const inspectorControls = (
+		<AccordionInspectorControls
+			attributes={attributes}
+			setAttributes={setAttributes}
+			isQuery={isQuery}
+			firstItem={firstItem}
+			updateBlockAttributes={updateBlockAttributes}
+			syncFirstItemOpen={syncFirstItemOpen}
+		/>
+	);
+
+	const blockControls = (
+		<AccordionBlockControls
+			attributes={attributes}
+			setAttributes={setAttributes}
+			isSelected={isSelected}
+			isQuery={isQuery}
+			addAccordionItem={addAccordionItem}
+		/>
+	);
+
 	if (innerBlocks.length === 0) {
 		return (
 			<BlockVariationPicker
@@ -145,29 +164,9 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 				</Notice>
 			)}
 
-			<ToolbarSettings
-				attributes={attributes}
-				setAttributes={setAttributes}
-				isSelected={isSelected}
-				isQuery={isQuery}
-				addAccordionItem={addAccordionItem}
-			/>
+			{blockControls}
 
-			<InspectorControls>
-				<Settings
-					attributes={attributes}
-					setAttributes={setAttributes}
-					isQuery={isQuery}
-					firstItem={firstItem}
-					updateBlockAttributes={updateBlockAttributes}
-					syncFirstItemOpen={syncFirstItemOpen}
-				/>
-
-				<SchemaSettings
-					attributes={attributes}
-					setAttributes={setAttributes}
-				/>
-			</InspectorControls>
+			{inspectorControls}
 
 			<div {...innerBlocksProps} />
 		</>

@@ -5,7 +5,7 @@ import { ToolbarGroup, ToolbarButton } from '@wordpress/components';
 import { BlockControls, HeadingLevelDropdown } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
-export default function ToolbarSettings({
+export default function AccordionBlockControls({
 	attributes,
 	setAttributes,
 	isSelected,
