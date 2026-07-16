@@ -1,0 +1,66 @@
+.wp-block-matter-accordion-heading {
+	$block: &;
+
+	--_toggle--size: var(--matter-accordion--toggle--size, var(--wp--custom--matter-accordion--toggle--size, 0.6em));
+	--_toggle--padding: var(--matter-accordion--toggle--padding, var(--wp--custom--matter-accordion--toggle--padding, 0));
+	--_toggle--background: var(--matter-accordion--toggle--background, var(--wp--custom--matter-accordion--toggle--background, transparent));
+	--_toggle--gap: var(--matter-accordion--toggle--gap, var(--wp--custom--matter-accordion--toggle--gap, 0.5em));
+	--_title--font-size: var(--matter-accordion--title--font-size, var(--wp--custom--matter-accordion--title--font-size, inherit));
+
+	color: inherit;
+	font-size: var(--_title--font-size);
+
+	#{$block}__toggle {
+		align-items: center;
+		background: none;
+		border: none;
+		color: inherit;
+		cursor: pointer;
+		display: flex;
+		font-family: inherit;
+		font-size: inherit;
+		font-style: inherit;
+		font-weight: inherit;
+		letter-spacing: inherit;
+		line-height: inherit;
+		overflow: hidden;
+		text-align: inherit;
+		text-decoration: inherit;
+		text-transform: inherit;
+		width: 100%;
+		word-spacing: inherit;
+
+		&:not(:focus-visible) {
+			outline: none;
+		}
+	}
+
+	#{$block}__toggle-title {
+		flex: 1;
+	}
+
+	#{$block}__toggle-icon-wrapper {
+		align-items: center;
+		background-color: var(--_toggle--background);
+		display: flex;
+		justify-content: center;
+		padding: var(--_toggle--padding);
+	}
+
+	#{$block}__toggle-icon {
+		background-color: currentcolor;
+		display: block;
+		height: var(--_toggle--size);
+		mask-image: url("../../../assets/svg/caret-down.svg");
+		mask-repeat: no-repeat;
+		mask-size: contain;
+		width: var(--_toggle--size);
+	}
+
+	&.has-icon-left #{$block}__toggle-icon-wrapper {
+		margin-inline-end: var(--_toggle--gap);
+	}
+	&.has-icon-right #{$block}__toggle-icon-wrapper {
+		margin-inline-start: var(--_toggle--gap);
+	}
+}

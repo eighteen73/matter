@@ -129,6 +129,44 @@ The content shown when a tab is active.
 
 ---
 
+### [Accordion](/src/blocks/accordion/)
+
+A foldable layout that groups content in collapsible sections, matching core accordion structure (heading + panel per item). Supports Interactivity API toggle behaviour, auto-close, heading level / icon controls, and a Query Loop variation (one item per post).
+
+Frontend JS uses private (`matter/accordion/private`) and public (`matter/accordion`) Interactivity stores.
+
+#### Attributes
+
+- generatedId (auto-managed; prefer a custom anchor)
+- autoclose
+- showIcon
+- iconPosition
+- headingLevel
+- isQueryMode
+
+#### Child blocks
+
+##### [Accordion Item](/src/blocks/accordion-item/)
+
+One accordion section (heading + panel). Can live under the accordion or inside a Query Loop post template.
+
+- openByDefault
+- inQueryLoop
+
+###### [Accordion Heading](/src/blocks/accordion-heading/)
+
+The toggle control (`hN` + button). In query mode the title comes from the post.
+
+- title
+
+###### [Accordion Panel](/src/blocks/accordion-panel/)
+
+The revealed content region.
+
+Opt out of registration with `add_filter( 'matter_register_accordion', '__return_false' );` (and matching filters for child block slugs).
+
+---
+
 ### [Collapsible](/src/blocks/collapsible/)
 
 An interactive section that reveals content when triggered. Useful for toggles and inline expandable panels. Accepts a Trigger or Hamburger Trigger, plus Collapsible Content.
