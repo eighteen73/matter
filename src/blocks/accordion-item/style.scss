@@ -7,7 +7,7 @@
 	}
 
 	> .wp-block-matter-accordion-heading
-	.wp-block-matter-accordion-heading__toggle-icon {
+	.wp-block-matter-accordion-heading__toggle-icon::after {
 		transition: transform var(--_transition-duration) ease-in-out;
 	}
 
@@ -15,7 +15,7 @@
 		transition: grid-template-rows var(--_transition-duration) ease-in-out;
 	}
 
-	&.is-open > .wp-block-matter-accordion-heading .wp-block-matter-accordion-heading__toggle-icon {
+	&.is-open > .wp-block-matter-accordion-heading .wp-block-matter-accordion-heading__toggle-icon::after {
 		transform: rotate(var(--_icon-rotation));
 	}
 

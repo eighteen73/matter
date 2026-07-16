@@ -2,6 +2,8 @@
 	$block: &;
 
 	--_toggle--size: var(--matter-accordion--toggle--size, var(--wp--custom--matter-accordion--toggle--size, 1em));
+	--_toggle--padding: var(--matter-accordion--toggle--padding, var(--wp--custom--matter-accordion--toggle--padding, 0));
+	--_toggle--background: var(--matter-accordion--toggle--background, var(--wp--custom--matter-accordion--toggle--background, transparent));
 	--_toggle--gap: var(--matter-accordion--toggle--gap, var(--wp--custom--matter-accordion--toggle--gap, 0.5em));
 	--_title--font-size: var(--matter-accordion--title--font-size, var(--wp--custom--matter-accordion--title--font-size, inherit));
 
@@ -31,10 +33,6 @@
 		&:not(:focus-visible) {
 			outline: none;
 		}
-
-		&:hover #{$block}__toggle-title {
-			text-decoration: underline;
-		}
 	}
 
 	#{$block}__toggle-title {
@@ -43,14 +41,21 @@
 
 	#{$block}__toggle-icon {
 		align-items: center;
-		background-color: currentcolor;
+		background-color: var(--_toggle--background);
 		display: flex;
-		height: var(--_toggle--size);
 		justify-content: center;
-		mask-image: url("../../../assets/svg/caret-down.svg");
-		mask-repeat: no-repeat;
-		mask-size: contain;
-		width: var(--_toggle--size);
+		padding: var(--_toggle--padding);
+
+		&::after {
+			background-color: currentcolor;
+			content: "";
+			display: block;
+			height: var(--_toggle--size);
+			mask-image: url("../../../assets/svg/caret-down.svg");
+			mask-repeat: no-repeat;
+			mask-size: contain;
+			width: var(--_toggle--size);
+		}
 	}
 
 	&.has-icon-left #{$block}__toggle-icon {
