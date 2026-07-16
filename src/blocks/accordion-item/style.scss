@@ -2,6 +2,8 @@
 	--_transition-duration: var(--matter-accordion-item--transition-duration, var(--wp--custom--matter-accordion-item--transition-duration, 300ms));
 	--_icon-rotation: var(--matter-accordion-item--icon-rotation, var(--wp--custom--matter-accordion-item--icon-rotation, 180deg));
 
+	transition: gap var(--_transition-duration) ease-in-out;
+
 	@media (prefers-reduced-motion: reduce) {
 		--_transition-duration: 0ms;
 	}
@@ -17,6 +19,10 @@
 
 	&.is-open > .wp-block-matter-accordion-heading .wp-block-matter-accordion-heading__toggle-icon::after {
 		transform: rotate(var(--_icon-rotation));
+	}
+
+	&:not(.is-open) {
+		gap: 0 !important; //stylelint-disable-line declaration-no-important
 	}
 
 	.wp-block-matter-accordion-panel {
