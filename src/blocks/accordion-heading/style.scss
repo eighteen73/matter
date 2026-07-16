@@ -1,7 +1,7 @@
 .wp-block-matter-accordion-heading {
 	$block: &;
 
-	--_toggle--size: var(--matter-accordion--toggle--size, var(--wp--custom--matter-accordion--toggle--size, 1em));
+	--_toggle--size: var(--matter-accordion--toggle--size, var(--wp--custom--matter-accordion--toggle--size, 0.6em));
 	--_toggle--padding: var(--matter-accordion--toggle--padding, var(--wp--custom--matter-accordion--toggle--padding, 0));
 	--_toggle--background: var(--matter-accordion--toggle--background, var(--wp--custom--matter-accordion--toggle--background, transparent));
 	--_toggle--gap: var(--matter-accordion--toggle--gap, var(--wp--custom--matter-accordion--toggle--gap, 0.5em));
