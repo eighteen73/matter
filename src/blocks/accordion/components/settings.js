@@ -30,14 +30,14 @@ export default function Settings({
 			resetAll={() => {
 				setAttributes({
 					autoclose: false,
-					openFirstItem: true,
+					openFirstItem: false,
 					showIcon: true,
 					iconPosition: 'right',
 				});
 
 				if (!isQuery && firstItem) {
 					updateBlockAttributes(firstItem.clientId, {
-						openByDefault: true,
+						openByDefault: false,
 					});
 				}
 			}}

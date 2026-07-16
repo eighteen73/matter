@@ -6,7 +6,7 @@ import { accordion as accordionIcon, loop } from '@wordpress/icons';
 
 const ITEM_TEMPLATE = [
 	'matter/accordion-item',
-	{ openByDefault: true },
+	{},
 	[
 		['matter/accordion-heading', {}],
 		[
