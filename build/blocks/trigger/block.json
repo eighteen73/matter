@@ -29,7 +29,8 @@
     },
     "accessibleLabel": {
       "type": "string",
-      "default": ""
+      "default": "",
+      "role": "content"
     },
     "overlayContext": {
       "type": "object",
@@ -39,6 +40,8 @@
   "supports": {
     "html": false,
     "interactivity": true,
+    "contentRole": true,
+    "listView": true,
     "lock": false,
     "reusable": false
   },

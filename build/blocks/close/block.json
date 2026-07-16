@@ -18,7 +18,8 @@
   "attributes": {
     "label": {
       "type": "string",
-      "default": "Close"
+      "default": "Close",
+      "role": "content"
     },
     "showLabel": {
       "type": "boolean",

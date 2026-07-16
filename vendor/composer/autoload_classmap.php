@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Eighteen73\\Matter\\Blocks\\Accordion' => $baseDir . '/includes/classes/Blocks/Accordion.php',
     'Eighteen73\\Matter\\Blocks\\BlockId' => $baseDir . '/includes/classes/Blocks/BlockId.php',
     'Eighteen73\\Matter\\Blocks\\Carousel' => $baseDir . '/includes/classes/Blocks/Carousel.php',
     'Eighteen73\\Matter\\Blocks\\CarouselThumbnails' => $baseDir . '/includes/classes/Blocks/CarouselThumbnails.php',

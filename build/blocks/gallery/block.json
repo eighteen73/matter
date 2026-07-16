@@ -118,7 +118,8 @@
     },
     "viewAllText": {
       "type": "string",
-      "default": "View Gallery"
+      "default": "View Gallery",
+      "role": "content"
     },
     "carouselConfig": {
       "type": "object",
@@ -169,8 +170,10 @@
       "gradients": true,
       "link": false
     },
+    "contentRole": true,
     "html": false,
     "interactivity": true,
+    "listView": true,
     "spacing": {
       "margin": true,
       "padding": true,

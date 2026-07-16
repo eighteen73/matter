@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter;
 
+use Eighteen73\Matter\Blocks\Accordion;
 use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
@@ -35,6 +36,7 @@ class Plugin {
 		Registry::instance()->setup();
 		Overlay::instance()->setup();
 		Tabs::instance()->setup();
+		Accordion::instance()->setup();
 		Gallery::instance()->setup();
 	}
 

@@ -16,6 +16,7 @@
       "gradients": true,
       "link": false
     },
+    "contentRole": true,
     "html": false,
     "lock": false,
     "reusable": false,

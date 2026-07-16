@@ -84,6 +84,8 @@
       "wide",
       "full"
     ],
+    "contentRole": true,
+    "listView": true,
     "lock": false,
     "layout": {
       "default": {

@@ -19,7 +19,8 @@
     },
     "label": {
       "type": "string",
-      "default": "Open menu"
+      "default": "Open menu",
+      "role": "content"
     },
     "showLabel": {
       "type": "boolean",
@@ -52,6 +53,8 @@
     },
     "html": false,
     "interactivity": true,
+    "contentRole": true,
+    "listView": true,
     "lock": false,
     "reusable": false,
     "spacing": {

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/accordion",
+  "version": "0.1.0",
+  "title": "Accordion",
+  "description": "Displays a foldable layout that groups content in collapsible sections.",
+  "keywords": [
+    "accordion",
+    "toggle",
+    "faq",
+    "collapse"
+  ],
+  "category": "widgets",
+  "textdomain": "matter",
+  "allowedBlocks": [
+    "matter/accordion-item",
+    "core/query"
+  ],
+  "attributes": {
+    "generatedId": {
+      "type": "string",
+      "default": ""
+    },
+    "iconPosition": {
+      "type": "string",
+      "default": "right"
+    },
+    "showIcon": {
+      "type": "boolean",
+      "default": true
+    },
+    "autoclose": {
+      "type": "boolean",
+      "default": true
+    },
+    "openFirstItem": {
+      "type": "boolean",
+      "default": false
+    },
+    "headingLevel": {
+      "type": "number",
+      "default": 3,
+      "role": "content"
+    },
+    "isQueryMode": {
+      "type": "boolean",
+      "default": false
+    },
+    "hasSchema": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "providesContext": {
+    "matter/accordion-icon-position": "iconPosition",
+    "matter/accordion-show-icon": "showIcon",
+    "matter/accordion-heading-level": "headingLevel",
+    "matter/accordion-isQueryMode": "isQueryMode"
+  },
+  "supports": {
+    "align": true,
+    "anchor": true,
+    "html": false,
+    "interactivity": true,
+    "contentRole": true,
+    "listView": true,
+    "color": {
+      "background": true,
+      "gradients": true,
+      "text": true,
+      "link": false
+    },
+    "layout": {
+      "default": {
+        "type": "flex",
+        "flexWrap": "nowrap",
+        "justifyContent": "stretch",
+        "verticalAlignment": "stretch",
+        "orientation": "vertical"
+      },
+      "allowEditing": false
+    },
+    "spacing": {
+      "padding": true,
+      "margin": true,
+      "blockGap": true
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": false,
+        "radius": false,
+        "style": false,
+        "width": false
+      }
+    },
+    "typography": {
+      "fontSize": true,
+      "__experimentalSkipSerialization": [
+        "fontSize"
+      ]
+    },
+    "ariaLabel": true,
+    "renaming": true
+  },
+  "selectors": {
+    "root": ".wp-block-matter-accordion",
+    "typography": {
+      "root": ".wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title",
+      "fontSize": ".wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title"
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScriptModule": "file:./view.js",
+  "render": "file:./render.php"
+}

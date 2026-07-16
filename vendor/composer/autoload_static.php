@@ -22,6 +22,7 @@ class ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Eighteen73\\Matter\\Blocks\\Accordion' => __DIR__ . '/../..' . '/includes/classes/Blocks/Accordion.php',
         'Eighteen73\\Matter\\Blocks\\BlockId' => __DIR__ . '/../..' . '/includes/classes/Blocks/BlockId.php',
         'Eighteen73\\Matter\\Blocks\\Carousel' => __DIR__ . '/../..' . '/includes/classes/Blocks/Carousel.php',
         'Eighteen73\\Matter\\Blocks\\CarouselThumbnails' => __DIR__ . '/../..' . '/includes/classes/Blocks/CarouselThumbnails.php',

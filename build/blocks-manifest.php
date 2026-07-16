@@ -1,6 +1,363 @@
 <?php
 // This file is generated. Do not modify it manually.
 return array(
+	'accordion' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/accordion',
+		'version' => '0.1.0',
+		'title' => 'Accordion',
+		'description' => 'Displays a foldable layout that groups content in collapsible sections.',
+		'keywords' => array(
+			'accordion',
+			'toggle',
+			'faq',
+			'collapse'
+		),
+		'category' => 'widgets',
+		'textdomain' => 'matter',
+		'allowedBlocks' => array(
+			'matter/accordion-item',
+			'core/query'
+		),
+		'attributes' => array(
+			'generatedId' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'iconPosition' => array(
+				'type' => 'string',
+				'default' => 'right'
+			),
+			'showIcon' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'autoclose' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'openFirstItem' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'headingLevel' => array(
+				'type' => 'number',
+				'default' => 3,
+				'role' => 'content'
+			),
+			'isQueryMode' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'hasSchema' => array(
+				'type' => 'boolean',
+				'default' => false
+			)
+		),
+		'providesContext' => array(
+			'matter/accordion-icon-position' => 'iconPosition',
+			'matter/accordion-show-icon' => 'showIcon',
+			'matter/accordion-heading-level' => 'headingLevel',
+			'matter/accordion-isQueryMode' => 'isQueryMode'
+		),
+		'supports' => array(
+			'align' => true,
+			'anchor' => true,
+			'html' => false,
+			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true,
+			'color' => array(
+				'background' => true,
+				'gradients' => true,
+				'text' => true,
+				'link' => false
+			),
+			'layout' => array(
+				'default' => array(
+					'type' => 'flex',
+					'flexWrap' => 'nowrap',
+					'justifyContent' => 'stretch',
+					'verticalAlignment' => 'stretch',
+					'orientation' => 'vertical'
+				),
+				'allowEditing' => false
+			),
+			'spacing' => array(
+				'padding' => true,
+				'margin' => true,
+				'blockGap' => true
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
+			),
+			'typography' => array(
+				'fontSize' => true,
+				'__experimentalSkipSerialization' => array(
+					'fontSize'
+				)
+			),
+			'ariaLabel' => true,
+			'renaming' => true
+		),
+		'selectors' => array(
+			'root' => '.wp-block-matter-accordion',
+			'typography' => array(
+				'root' => '.wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title',
+				'fontSize' => '.wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title'
+			)
+		),
+		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css',
+		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'file:./view.js',
+		'render' => 'file:./render.php'
+	),
+	'accordion-heading' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/accordion-heading',
+		'version' => '0.1.0',
+		'title' => 'Accordion Heading',
+		'description' => 'Displays a heading that toggles the accordion panel.',
+		'category' => 'widgets',
+		'textdomain' => 'matter',
+		'parent' => array(
+			'matter/accordion-item'
+		),
+		'attributes' => array(
+			'title' => array(
+				'type' => 'string',
+				'default' => ''
+			)
+		),
+		'usesContext' => array(
+			'matter/accordion-id',
+			'matter/accordion-item-id',
+			'matter/accordion-icon-position',
+			'matter/accordion-show-icon',
+			'matter/accordion-heading-level',
+			'matter/accordion-isQueryMode',
+			'matter/accordion-open-by-default',
+			'postId',
+			'postType',
+			'queryId'
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'anchor' => true,
+			'interactivity' => true,
+			'lock' => false,
+			'contentRole' => true,
+			'listView' => true,
+			'color' => array(
+				'background' => true,
+				'gradients' => true,
+				'text' => true
+			),
+			'spacing' => array(
+				'padding' => true,
+				'__experimentalDefaultControls' => array(
+					'padding' => true
+				)
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
+			),
+			'typography' => array(
+				'fontSize' => true
+			),
+			'renaming' => false
+		),
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'render' => 'file:./render.php'
+	),
+	'accordion-item' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/accordion-item',
+		'version' => '0.1.0',
+		'title' => 'Accordion Item',
+		'description' => 'Wraps the heading and panel in one unit.',
+		'category' => 'widgets',
+		'textdomain' => 'matter',
+		'parent' => array(
+			'matter/accordion',
+			'core/post-template'
+		),
+		'ancestor' => array(
+			'matter/accordion'
+		),
+		'allowedBlocks' => array(
+			'matter/accordion-heading',
+			'matter/accordion-panel'
+		),
+		'attributes' => array(
+			'openByDefault' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'inQueryLoop' => array(
+				'type' => 'boolean',
+				'default' => false
+			)
+		),
+		'providesContext' => array(
+			'matter/accordion-open-by-default' => 'openByDefault'
+		),
+		'usesContext' => array(
+			'matter/accordion-id',
+			'matter/accordion-isQueryMode',
+			'matter/accordion-heading-level',
+			'matter/accordion-icon-position',
+			'matter/accordion-show-icon',
+			'postId',
+			'postType',
+			'queryId'
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true,
+			'color' => array(
+				'background' => true,
+				'gradients' => true,
+				'text' => true
+			),
+			'layout' => array(
+				'default' => array(
+					'type' => 'flex',
+					'flexWrap' => 'nowrap',
+					'justifyContent' => 'stretch',
+					'verticalAlignment' => 'stretch',
+					'orientation' => 'vertical'
+				),
+				'allowEditing' => false
+			),
+			'spacing' => array(
+				'margin' => false,
+				'padding' => true,
+				'blockGap' => true
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
+			),
+			'renaming' => true
+		),
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'render' => 'file:./render.php'
+	),
+	'accordion-panel' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/accordion-panel',
+		'version' => '0.1.0',
+		'title' => 'Accordion Panel',
+		'description' => 'Contains the hidden or revealed content beneath the heading.',
+		'category' => 'widgets',
+		'textdomain' => 'matter',
+		'parent' => array(
+			'matter/accordion-item'
+		),
+		'attributes' => array(
+			'templateLock' => array(
+				'type' => array(
+					'string',
+					'boolean'
+				),
+				'enum' => array(
+					'all',
+					'insert',
+					'contentOnly',
+					false
+				),
+				'default' => false
+			)
+		),
+		'usesContext' => array(
+			'matter/accordion-id',
+			'matter/accordion-item-id',
+			'matter/accordion-open-by-default',
+			'matter/accordion-isQueryMode'
+		),
+		'supports' => array(
+			'lock' => false,
+			'html' => false,
+			'reusable' => false,
+			'interactivity' => true,
+			'allowedBlocks' => true,
+			'contentRole' => true,
+			'listView' => true,
+			'color' => array(
+				'background' => true,
+				'gradients' => true,
+				'text' => true
+			),
+			'spacing' => array(
+				'padding' => true,
+				'blockGap' => true,
+				'__experimentalDefaultControls' => array(
+					'padding' => true,
+					'blockGap' => true
+				)
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
+			),
+			'typography' => array(
+				'fontSize' => true
+			),
+			'layout' => array(
+				'allowEditing' => false
+			),
+			'renaming' => false
+		),
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'render' => 'file:./render.php'
+	),
 	'carousel' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
@@ -384,7 +741,8 @@ return array(
 		'attributes' => array(
 			'label' => array(
 				'type' => 'string',
-				'default' => 'Close'
+				'default' => 'Close',
+				'role' => 'content'
 			),
 			'showLabel' => array(
 				'type' => 'boolean',
@@ -505,7 +863,9 @@ return array(
 		'supports' => array(
 			'anchor' => true,
 			'html' => false,
-			'interactivity' => true
+			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
@@ -531,6 +891,7 @@ return array(
 				'gradients' => true,
 				'link' => false
 			),
+			'contentRole' => true,
 			'html' => false,
 			'lock' => false,
 			'reusable' => false,
@@ -600,7 +961,9 @@ return array(
 		'supports' => array(
 			'anchor' => true,
 			'html' => false,
-			'interactivity' => true
+			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
@@ -667,6 +1030,7 @@ return array(
 				'gradients' => true,
 				'link' => false
 			),
+			'contentRole' => true,
 			'html' => false,
 			'layout' => array(
 				'default' => array(
@@ -836,7 +1200,8 @@ return array(
 			),
 			'viewAllText' => array(
 				'type' => 'string',
-				'default' => 'View Gallery'
+				'default' => 'View Gallery',
+				'role' => 'content'
 			),
 			'carouselConfig' => array(
 				'type' => 'object',
@@ -889,8 +1254,10 @@ return array(
 				'gradients' => true,
 				'link' => false
 			),
+			'contentRole' => true,
 			'html' => false,
 			'interactivity' => true,
+			'listView' => true,
 			'spacing' => array(
 				'margin' => true,
 				'padding' => true,
@@ -1002,7 +1369,9 @@ return array(
 		'supports' => array(
 			'anchor' => true,
 			'html' => false,
-			'interactivity' => true
+			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
@@ -1051,6 +1420,7 @@ return array(
 				'gradients' => true,
 				'link' => false
 			),
+			'contentRole' => true,
 			'html' => false,
 			'lock' => false,
 			'reusable' => false,
@@ -1117,7 +1487,8 @@ return array(
 			),
 			'label' => array(
 				'type' => 'string',
-				'default' => 'Next'
+				'default' => 'Next',
+				'role' => 'content'
 			),
 			'showLabel' => array(
 				'type' => 'boolean',
@@ -1262,6 +1633,8 @@ return array(
 				'wide',
 				'full'
 			),
+			'contentRole' => true,
+			'listView' => true,
 			'lock' => false,
 			'layout' => array(
 				'default' => array(
@@ -1324,22 +1697,27 @@ return array(
 		'attributes' => array(
 			'label' => array(
 				'type' => 'string',
-				'default' => ''
+				'default' => '',
+				'role' => 'content'
 			),
 			'tabPanelClientId' => array(
 				'type' => 'string'
 			),
 			'mediaId' => array(
-				'type' => 'number'
+				'type' => 'number',
+				'role' => 'content'
 			),
 			'mediaType' => array(
-				'type' => 'string'
+				'type' => 'string',
+				'role' => 'content'
 			),
 			'posterId' => array(
-				'type' => 'number'
+				'type' => 'number',
+				'role' => 'content'
 			),
 			'focalPoint' => array(
-				'type' => 'object'
+				'type' => 'object',
+				'role' => 'content'
 			)
 		),
 		'usesContext' => array(
@@ -1416,6 +1794,7 @@ return array(
 			'reusable' => false,
 			'visibility' => false,
 			'lock' => false,
+			'contentRole' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -1473,7 +1852,8 @@ return array(
 				'default' => false
 			),
 			'label' => array(
-				'type' => 'string'
+				'type' => 'string',
+				'role' => 'content'
 			)
 		),
 		'parent' => array(
@@ -1497,6 +1877,7 @@ return array(
 			'anchor' => true,
 			'html' => false,
 			'reusable' => false,
+			'contentRole' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -1564,6 +1945,7 @@ return array(
 			'reusable' => false,
 			'visibility' => false,
 			'lock' => false,
+			'contentRole' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -1673,6 +2055,7 @@ return array(
 			),
 			'html' => false,
 			'interactivity' => true,
+			'contentRole' => true,
 			'spacing' => array(
 				'blockGap' => true,
 				'margin' => true,
@@ -1740,7 +2123,8 @@ return array(
 			),
 			'accessibleLabel' => array(
 				'type' => 'string',
-				'default' => ''
+				'default' => '',
+				'role' => 'content'
 			),
 			'overlayContext' => array(
 				'type' => 'object',
@@ -1752,6 +2136,8 @@ return array(
 		'supports' => array(
 			'html' => false,
 			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true,
 			'lock' => false,
 			'reusable' => false
 		),
@@ -1786,7 +2172,8 @@ return array(
 			),
 			'label' => array(
 				'type' => 'string',
-				'default' => 'Open menu'
+				'default' => 'Open menu',
+				'role' => 'content'
 			),
 			'showLabel' => array(
 				'type' => 'boolean',
@@ -1819,6 +2206,8 @@ return array(
 			),
 			'html' => false,
 			'interactivity' => true,
+			'contentRole' => true,
+			'listView' => true,
 			'lock' => false,
 			'reusable' => false,
 			'spacing' => array(

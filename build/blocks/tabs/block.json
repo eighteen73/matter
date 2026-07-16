@@ -79,6 +79,7 @@
     },
     "html": false,
     "interactivity": true,
+    "contentRole": true,
     "spacing": {
       "blockGap": true,
       "margin": true,

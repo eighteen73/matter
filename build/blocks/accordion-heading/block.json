@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/accordion-heading",
+  "version": "0.1.0",
+  "title": "Accordion Heading",
+  "description": "Displays a heading that toggles the accordion panel.",
+  "category": "widgets",
+  "textdomain": "matter",
+  "parent": [
+    "matter/accordion-item"
+  ],
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "usesContext": [
+    "matter/accordion-id",
+    "matter/accordion-item-id",
+    "matter/accordion-icon-position",
+    "matter/accordion-show-icon",
+    "matter/accordion-heading-level",
+    "matter/accordion-isQueryMode",
+    "matter/accordion-open-by-default",
+    "postId",
+    "postType",
+    "queryId"
+  ],
+  "supports": {
+    "html": false,
+    "reusable": false,
+    "anchor": true,
+    "interactivity": true,
+    "lock": false,
+    "contentRole": true,
+    "listView": true,
+    "color": {
+      "background": true,
+      "gradients": true,
+      "text": true
+    },
+    "spacing": {
+      "padding": true,
+      "__experimentalDefaultControls": {
+        "padding": true
+      }
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": false,
+        "radius": false,
+        "style": false,
+        "width": false
+      }
+    },
+    "typography": {
+      "fontSize": true
+    },
+    "renaming": false
+  },
+  "editorScript": "file:./index.js",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}
