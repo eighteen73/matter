@@ -55,12 +55,16 @@ export default function Edit({ attributes, setAttributes, context }) {
 			>
 				{showIcon && iconPosition === 'left' && (
 					<span
-						className="wp-block-matter-accordion-heading__toggle-icon"
+						className="wp-block-matter-accordion-heading__toggle-icon-wrapper"
 						aria-hidden="true"
 					>
-						+
+						<span
+							className="wp-block-matter-accordion-heading__toggle-icon"
+							aria-hidden="true"
+						></span>
 					</span>
 				)}
+
 				{isQueryMode && postTitle ? (
 					<span className="wp-block-matter-accordion-heading__toggle-title">
 						{displayTitle}
@@ -77,11 +81,17 @@ export default function Edit({ attributes, setAttributes, context }) {
 						allowedFormats={['core/bold', 'core/italic']}
 					/>
 				)}
+
 				{showIcon && iconPosition === 'right' && (
 					<span
-						className="wp-block-matter-accordion-heading__toggle-icon"
+						className="wp-block-matter-accordion-heading__toggle-icon-wrapper"
 						aria-hidden="true"
-					></span>
+					>
+						<span
+							className="wp-block-matter-accordion-heading__toggle-icon"
+							aria-hidden="true"
+						></span>
+					</span>
 				)}
 			</button>
 		</TagName>

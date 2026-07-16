@@ -39,29 +39,28 @@
 		flex: 1;
 	}
 
-	#{$block}__toggle-icon {
+	#{$block}__toggle-icon-wrapper {
 		align-items: center;
 		background-color: var(--_toggle--background);
 		display: flex;
 		justify-content: center;
 		padding: var(--_toggle--padding);
-
-		&::after {
-			background-color: currentcolor;
-			content: "";
-			display: block;
-			height: var(--_toggle--size);
-			mask-image: url("../../../assets/svg/caret-down.svg");
-			mask-repeat: no-repeat;
-			mask-size: contain;
-			width: var(--_toggle--size);
-		}
 	}
 
-	&.has-icon-left #{$block}__toggle-icon {
+	#{$block}__toggle-icon {
+		background-color: currentcolor;
+		display: block;
+		height: var(--_toggle--size);
+		mask-image: url("../../../assets/svg/caret-down.svg");
+		mask-repeat: no-repeat;
+		mask-size: contain;
+		width: var(--_toggle--size);
+	}
+
+	&.has-icon-left #{$block}__toggle-icon-wrapper {
 		margin-inline-end: var(--_toggle--gap);
 	}
-	&.has-icon-right #{$block}__toggle-icon {
+	&.has-icon-right #{$block}__toggle-icon-wrapper {
 		margin-inline-start: var(--_toggle--gap);
 	}
 }

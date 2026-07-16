@@ -9,7 +9,7 @@
 	}
 
 	> .wp-block-matter-accordion-heading
-	.wp-block-matter-accordion-heading__toggle-icon::after {
+	.wp-block-matter-accordion-heading__toggle-icon {
 		transition: transform var(--_transition-duration) ease-in-out;
 	}
 
@@ -17,7 +17,7 @@
 		transition: grid-template-rows var(--_transition-duration) ease-in-out;
 	}
 
-	&.is-open > .wp-block-matter-accordion-heading .wp-block-matter-accordion-heading__toggle-icon::after {
+	&.is-open > .wp-block-matter-accordion-heading .wp-block-matter-accordion-heading__toggle-icon {
 		transform: rotate(var(--_icon-rotation));
 	}
 
