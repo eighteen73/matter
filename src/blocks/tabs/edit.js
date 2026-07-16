@@ -8,11 +8,10 @@ import {
 	store as blockEditorStore,
 	InspectorControls,
 } from '@wordpress/block-editor';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { useMemo, useCallback, useRef } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
+import { useMemo } from '@wordpress/element';
 import {
 	ToggleControl,
-	Button,
 	Notice,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,
@@ -25,13 +24,14 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import './editor.scss';
-import { useTabButtonsSync, insertTabPair } from './utils/sync-tab-buttons';
+import { useTabButtonsSync, addingTabLock } from './utils/sync-tab-buttons';
 import {
 	buildTabsListFromPosts,
 	buildManualTabEntry,
 	findQueryBlock,
 	getQueryPostsForEditor,
 } from './utils/query-tabs-list';
+import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
 import BlockVariationPicker from '../../components/block-variation-picker';
 import BreakpointSelectorControl from '../../components/breakpoint-selector-control';
 import useBlockId from '../../utils/use-block-id';
@@ -87,19 +87,10 @@ function Edit({ clientId, attributes, setAttributes }) {
 			[clientId]
 		);
 
-	const {
-		insertBlock,
-		updateBlockAttributes,
-		selectBlock,
-		__unstableMarkNextChangeAsNotPersistent,
-	} = useDispatch(blockEditorStore);
-
-	const isAddingTabRef = useRef(false);
-
 	useTabButtonsSync({
 		tabListClientId,
 		tabPanelsClientId,
-		isAddingTabRef,
+		isAddingTabRef: addingTabLock,
 		enabled: !isQueryMode,
 	});
 
@@ -115,56 +106,6 @@ function Edit({ clientId, attributes, setAttributes }) {
 		},
 		[isQueryMode, queryBlock]
 	);
-
-	const handleAddTabAfter = useCallback(
-		(newTabIndex) => {
-			__unstableMarkNextChangeAsNotPersistent();
-			updateBlockAttributes(clientId, {
-				editorActiveTabIndex: newTabIndex,
-			});
-
-			if (tabListClientId) {
-				selectBlock(tabListClientId);
-			}
-		},
-		[
-			clientId,
-			tabListClientId,
-			updateBlockAttributes,
-			selectBlock,
-			__unstableMarkNextChangeAsNotPersistent,
-		]
-	);
-
-	const handleAddTab = useCallback(async () => {
-		if (!tabPanelsClientId || !tabListClientId) {
-			return;
-		}
-
-		const insertAt = tabPanels.length;
-
-		isAddingTabRef.current = true;
-
-		try {
-			await insertTabPair({
-				insertBlock,
-				tabPanelsClientId,
-				tabListClientId,
-				insertAt,
-				defaultLabel: __('Tab', 'matter'),
-			});
-
-			handleAddTabAfter(insertAt);
-		} finally {
-			isAddingTabRef.current = false;
-		}
-	}, [
-		tabPanels.length,
-		tabPanelsClientId,
-		tabListClientId,
-		insertBlock,
-		handleAddTabAfter,
-	]);
 
 	const contextValue = useMemo(() => {
 		const tabList = isQueryMode
@@ -235,6 +176,7 @@ function Edit({ clientId, attributes, setAttributes }) {
 					)}
 				</Notice>
 			)}
+			<AddTabToolbarButton />
 			<InspectorControls>
 				<ToolsPanel label={__('Settings', 'matter')}>
 					<ToolsPanelItem
@@ -373,23 +315,6 @@ function Edit({ clientId, attributes, setAttributes }) {
 
 			<BlockContextProvider value={contextValue}>
 				<div {...innerBlockProps}>{innerBlockProps.children}</div>
-
-				{!isQueryMode && (
-					<Button
-						variant="secondary"
-						text={__('Add tab', 'matter')}
-						onClick={handleAddTab}
-						disabled={!tabPanelsClientId || !tabListClientId}
-						style={{
-							width: '50%',
-							justifyContent: 'center',
-							marginTop: '1rem',
-							marginLeft: 'auto',
-							marginRight: 'auto',
-							display: 'flex',
-						}}
-					/>
-				)}
 			</BlockContextProvider>
 		</>
 	);

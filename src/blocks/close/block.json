@@ -4,14 +4,22 @@
 	"name": "matter/close",
 	"version": "0.1.0",
 	"title": "Close",
-	"keywords": [ "close", "dismiss", "button" ],
+	"keywords": [
+		"close",
+		"dismiss",
+		"button"
+	],
 	"category": "widgets",
 	"description": "A close button for modal and drawer content.",
-	"ancestor": [ "matter/drawer-content", "matter/modal-content" ],
+	"ancestor": [
+		"matter/drawer-content",
+		"matter/modal-content"
+	],
 	"attributes": {
 		"label": {
 			"type": "string",
-			"default": "Close"
+			"default": "Close",
+			"role": "content"
 		},
 		"showLabel": {
 			"type": "boolean",
@@ -19,7 +27,11 @@
 		},
 		"position": {
 			"type": "string",
-			"enum": [ "inline", "top-left", "top-right" ],
+			"enum": [
+				"inline",
+				"top-left",
+				"top-right"
+			],
 			"default": "inline"
 		},
 		"positionOffset": {
@@ -71,7 +83,10 @@
 			}
 		}
 	},
-	"usesContext": [ "matter/drawer-id", "matter/modal-id" ],
+	"usesContext": [
+		"matter/drawer-id",
+		"matter/modal-id"
+	],
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"style": "file:./style-index.css",

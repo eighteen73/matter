@@ -22,6 +22,7 @@ import {
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
 
+import ContentOnlyTextControl from '../../components/content-only-text-control';
 import OverlayTargetControl from '../../components/overlay-target-control';
 import useOverlayTarget from '../../utils/use-overlay-target';
 import OverlayContextControl from './components/overlay-context-control';
@@ -133,6 +134,19 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 					</ToolbarGroup>
 				</BlockControls>
 			)}
+
+			<ContentOnlyTextControl
+				show={isContentTrigger}
+				label={__('Accessible label', 'matter')}
+				help={__(
+					'Used when the wrapped content does not provide a clear accessible name, such as a decorative image.',
+					'matter'
+				)}
+				value={attributes.accessibleLabel}
+				onChange={(accessibleLabel) =>
+					setAttributes({ accessibleLabel })
+				}
+			/>
 
 			<InspectorControls>
 				{!isNested && (

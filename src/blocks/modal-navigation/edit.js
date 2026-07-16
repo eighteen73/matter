@@ -15,6 +15,8 @@ import {
 import { __ } from '@wordpress/i18n';
 import { arrowLeft, arrowRight } from '@wordpress/icons';
 
+import ContentOnlyTextControl from '../../components/content-only-text-control';
+
 const DIRECTION_OPTIONS = [
 	{
 		value: 'previous',
@@ -66,6 +68,12 @@ export default function Edit({ attributes, setAttributes }) {
 					}))}
 				/>
 			</BlockControls>
+
+			<ContentOnlyTextControl
+				label={__('Label', 'matter')}
+				value={label}
+				onChange={(value) => setAttributes({ label: value })}
+			/>
 
 			<InspectorControls>
 				<ToolsPanel

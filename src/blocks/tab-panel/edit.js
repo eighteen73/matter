@@ -7,9 +7,13 @@ import {
 	useInnerBlocksProps,
 	store as blockEditorStore,
 	InspectorControls,
+	BlockControls,
+	useBlockEditingMode,
 } from '@wordpress/block-editor';
 import {
 	ToggleControl,
+	ToolbarButton,
+	ToolbarGroup,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -22,6 +26,7 @@ import clsx from 'clsx';
 /**
  * Internal dependencies
  */
+import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
 import {
 	findTabsClientId,
 	getTabPanelIndex,
@@ -44,6 +49,7 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 	const isQueryMode = context['matter/tabs-isQueryMode'] ?? false;
 	const effectiveActiveIndex = useEffectiveActiveTabIndex(context);
 	const activeTabIndex = context['matter/tabs-activeTabIndex'];
+	const isContentOnlyMode = useBlockEditingMode() === 'contentOnly';
 
 	const { blockIndex, hasInnerBlocksSelected, tabsClientId } = useSelect(
 		(select) => {
@@ -113,6 +119,23 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 	const isActiveTab = effectiveActiveIndex === blockIndex;
 	const isDefaultTab = activeTabIndex === blockIndex;
 
+	const setDefaultTab = (value) => {
+		if (!tabsClientId) {
+			return;
+		}
+
+		if (!value) {
+			updateBlockAttributes(tabsClientId, {
+				activeTabIndex: 0,
+			});
+			return;
+		}
+
+		updateBlockAttributes(tabsClientId, {
+			activeTabIndex: blockIndex,
+		});
+	};
+
 	const isSelectedTab = useMemo(() => {
 		if (inQueryLoop || isQueryMode) {
 			return true;
@@ -152,6 +175,19 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 
 	return (
 		<section {...innerBlocksProps}>
+			<AddTabToolbarButton />
+			{!inQueryLoop && !isQueryMode && isContentOnlyMode && (
+				<BlockControls group="other">
+					<ToolbarGroup>
+						<ToolbarButton
+							isPressed={isDefaultTab}
+							onClick={() => setDefaultTab(!isDefaultTab)}
+						>
+							{__('Default tab', 'matter')}
+						</ToolbarButton>
+					</ToolbarGroup>
+				</BlockControls>
+			)}
 			{!inQueryLoop && !isQueryMode && (
 				<InspectorControls>
 					<ToolsPanel label={__('Settings', 'matter')}>
@@ -169,19 +205,7 @@ export default function Edit({ attributes, clientId, context, isSelected }) {
 								label={__('Default tab', 'matter')}
 								help={__('Open this tab by default.', 'matter')}
 								checked={isDefaultTab}
-								onChange={(value) => {
-									if (!value || !tabsClientId) {
-										updateBlockAttributes(tabsClientId, {
-											activeTabIndex: 0,
-										});
-
-										return;
-									}
-
-									updateBlockAttributes(tabsClientId, {
-										activeTabIndex: blockIndex,
-									});
-								}}
+								onChange={setDefaultTab}
 							/>
 						</ToolsPanelItem>
 					</ToolsPanel>

@@ -7,26 +7,33 @@
 	"description": "A tab label button in a tabbed interface.",
 	"category": "widgets",
 	"textdomain": "matter",
-	"parent": [ "matter/tab-list" ],
+	"parent": [
+		"matter/tab-list"
+	],
 	"attributes": {
 		"label": {
 			"type": "string",
-			"default": ""
+			"default": "",
+			"role": "content"
 		},
 		"tabPanelClientId": {
 			"type": "string"
 		},
 		"mediaId": {
-			"type": "number"
+			"type": "number",
+			"role": "content"
 		},
 		"mediaType": {
-			"type": "string"
+			"type": "string",
+			"role": "content"
 		},
 		"posterId": {
-			"type": "number"
+			"type": "number",
+			"role": "content"
 		},
 		"focalPoint": {
-			"type": "object"
+			"type": "object",
+			"role": "content"
 		}
 	},
 	"usesContext": [

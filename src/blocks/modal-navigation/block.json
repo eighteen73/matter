@@ -16,7 +16,8 @@
 		},
 		"label": {
 			"type": "string",
-			"default": "Next"
+			"default": "Next",
+			"role": "content"
 		},
 		"showLabel": {
 			"type": "boolean",
