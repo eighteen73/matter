@@ -81,7 +81,6 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 	useEffect(() => {
 		if (hasQueryLoop !== isQueryMode) {
 			setAttributes({ isQueryMode: hasQueryLoop });
-			setAttributes({ hasSchema: false });
 		}
 	}, [hasQueryLoop, isQueryMode, setAttributes]);
 
@@ -164,12 +163,10 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 					syncFirstItemOpen={syncFirstItemOpen}
 				/>
 
-				{!isQueryMode && (
-					<SchemaSettings
-						attributes={attributes}
-						setAttributes={setAttributes}
-					/>
-				)}
+				<SchemaSettings
+					attributes={attributes}
+					setAttributes={setAttributes}
+				/>
 			</InspectorControls>
 
 			<div {...innerBlocksProps} />

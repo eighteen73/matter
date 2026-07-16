@@ -8,6 +8,9 @@
 namespace Eighteen73\Matter\Blocks;
 
 use Eighteen73\Matter\Singleton;
+use WP_Block;
+use WP_Post;
+use WP_Query;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -255,10 +258,6 @@ class Accordion {
 			? $block['innerBlocks']
 			: [];
 
-		if ( ! empty( $attrs['isQueryMode'] ) || self::has_query_block( $inner_blocks ) ) {
-			return $block_content;
-		}
-
 		$schema = $this->build_faq_schema( $inner_blocks );
 
 		if ( empty( $schema['mainEntity'] ) ) {
@@ -282,7 +281,7 @@ class Accordion {
 	}
 
 	/**
-	 * Build a FAQPage schema graph from static accordion items.
+	 * Build a FAQPage schema graph from static items or a query loop.
 	 *
 	 * @param array<int, array<string, mixed>> $inner_blocks Accordion inner blocks.
 	 * @return array<string, mixed>
@@ -295,7 +294,14 @@ class Accordion {
 		];
 
 		foreach ( $inner_blocks as $inner_block ) {
-			if ( 'matter/accordion-item' !== ( $inner_block['blockName'] ?? '' ) ) {
+			$block_name = $inner_block['blockName'] ?? '';
+
+			if ( 'core/query' === $block_name ) {
+				$this->append_query_faq_entities( $schema, $inner_block );
+				continue;
+			}
+
+			if ( 'matter/accordion-item' !== $block_name ) {
 				continue;
 			}
 
@@ -306,17 +312,190 @@ class Accordion {
 				continue;
 			}
 
-			$schema['mainEntity'][] = [
-				'@type'          => 'Question',
-				'name'           => $question,
-				'acceptedAnswer' => [
-					'@type' => 'Answer',
-					'text'  => $answer,
-				],
-			];
+			$schema['mainEntity'][] = $this->make_faq_entity( $question, $answer );
 		}
 
 		return $schema;
+	}
+
+	/**
+	 * Append FAQ entities for each post in a nested query loop.
+	 *
+	 * @param array<string, mixed> $schema      FAQPage schema (by reference).
+	 * @param array<string, mixed> $query_block Parsed core/query block.
+	 * @return void
+	 */
+	private function append_query_faq_entities( array &$schema, array $query_block ): void {
+		$item_block = $this->find_query_accordion_item( $query_block );
+		if ( null === $item_block ) {
+			return;
+		}
+
+		$panel_block = null;
+		foreach ( $item_block['innerBlocks'] ?? [] as $child ) {
+			if ( 'matter/accordion-panel' === ( $child['blockName'] ?? '' ) ) {
+				$panel_block = $child;
+				break;
+			}
+		}
+
+		if ( null === $panel_block ) {
+			return;
+		}
+
+		$query = $this->get_query_posts_from_block( $query_block );
+		if ( null === $query || empty( $query->posts ) ) {
+			return;
+		}
+
+		foreach ( $query->posts as $post ) {
+			if ( ! $post instanceof WP_Post ) {
+				continue;
+			}
+
+			$question = self::normalize_schema_text( get_the_title( $post ) );
+			$answer   = $this->extract_panel_answer_for_post( $panel_block, $post );
+
+			if ( '' === $question || '' === $answer ) {
+				continue;
+			}
+
+			$schema['mainEntity'][] = $this->make_faq_entity( $question, $answer );
+		}
+	}
+
+	/**
+	 * Find the accordion item template inside a query block's post-template.
+	 *
+	 * @param array<string, mixed> $query_block Parsed core/query block.
+	 * @return array<string, mixed>|null
+	 */
+	private function find_query_accordion_item( array $query_block ): ?array {
+		foreach ( $query_block['innerBlocks'] ?? [] as $child ) {
+			if ( 'core/post-template' !== ( $child['blockName'] ?? '' ) ) {
+				continue;
+			}
+
+			foreach ( $child['innerBlocks'] ?? [] as $item ) {
+				if ( 'matter/accordion-item' === ( $item['blockName'] ?? '' ) ) {
+					return $item;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Run the same query the nested post-template block would use.
+	 *
+	 * build_query_vars_from_query_block() reads query settings from block context,
+	 * not attributes, so we simulate the post-template context here.
+	 *
+	 * @param array<string, mixed> $query_block Parsed query block.
+	 * @return WP_Query|null
+	 */
+	private function get_query_posts_from_block( array $query_block ): ?WP_Query {
+		$query_attrs = $query_block['attrs'] ?? [];
+		$query       = $query_attrs['query'] ?? [];
+
+		if ( ! empty( $query['inherit'] ) ) {
+			global $wp_query;
+
+			if ( in_the_loop() ) {
+				$inherited_query = clone $wp_query;
+				$inherited_query->rewind_posts();
+
+				return $inherited_query;
+			}
+
+			return $wp_query;
+		}
+
+		if ( ! function_exists( 'build_query_vars_from_query_block' ) ) {
+			return null;
+		}
+
+		$available_context = [
+			'query' => $query,
+		];
+
+		if ( isset( $query_attrs['queryId'] ) ) {
+			$available_context['queryId'] = $query_attrs['queryId'];
+		}
+
+		$block_for_query = new WP_Block(
+			[
+				'blockName'   => 'core/post-template',
+				'attrs'       => [],
+				'innerBlocks' => [],
+			],
+			$available_context
+		);
+
+		$query_vars = build_query_vars_from_query_block( $block_for_query, 1 );
+
+		return new WP_Query( $query_vars );
+	}
+
+	/**
+	 * Render accordion panel inner blocks for a post and return plain-text answer.
+	 *
+	 * @param array<string, mixed> $panel_block Accordion panel parsed block.
+	 * @param WP_Post              $post        Post from the query loop.
+	 * @return string
+	 */
+	private function extract_panel_answer_for_post( array $panel_block, WP_Post $post ): string {
+		setup_postdata( $post );
+
+		$parts = [];
+
+		foreach ( $panel_block['innerBlocks'] ?? [] as $answer_block ) {
+			$rendered = ( new WP_Block(
+				$answer_block,
+				[
+					'postId'   => $post->ID,
+					'postType' => $post->post_type,
+				]
+			) )->render();
+
+			$parts[] = is_string( $rendered ) ? $rendered : '';
+		}
+
+		wp_reset_postdata();
+
+		return self::normalize_schema_text( implode( '', $parts ) );
+	}
+
+	/**
+	 * Build a single FAQ Question entity.
+	 *
+	 * @param string $question Question text.
+	 * @param string $answer   Answer text.
+	 * @return array<string, mixed>
+	 */
+	private function make_faq_entity( string $question, string $answer ): array {
+		return [
+			'@type'          => 'Question',
+			'name'           => $question,
+			'acceptedAnswer' => [
+				'@type' => 'Answer',
+				'text'  => $answer,
+			],
+		];
+	}
+
+	/**
+	 * Strip tags and collapse whitespace for schema text fields.
+	 *
+	 * @param string $html Raw HTML or text.
+	 * @return string
+	 */
+	private static function normalize_schema_text( string $html ): string {
+		$text = wp_strip_all_tags( $html );
+		$text = preg_replace( '/\s+/u', ' ', $text );
+
+		return trim( is_string( $text ) ? $text : '' );
 	}
 
 	/**
@@ -333,7 +512,7 @@ class Accordion {
 
 			$title = isset( $child['attrs']['title'] ) ? (string) $child['attrs']['title'] : '';
 
-			return trim( wp_strip_all_tags( $title ) );
+			return self::normalize_schema_text( $title );
 		}
 
 		return '';
@@ -357,10 +536,7 @@ class Accordion {
 				$parts[] = $answer_block['innerHTML'] ?? '';
 			}
 
-			$text = wp_strip_all_tags( implode( '', $parts ) );
-			$text = preg_replace( '/\s+/u', ' ', $text );
-
-			return trim( is_string( $text ) ? $text : '' );
+			return self::normalize_schema_text( implode( '', $parts ) );
 		}
 
 		return '';
