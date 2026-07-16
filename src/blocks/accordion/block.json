@@ -32,7 +32,8 @@
 		},
 		"headingLevel": {
 			"type": "number",
-			"default": 3
+			"default": 3,
+			"role": "content"
 		},
 		"isQueryMode": {
 			"type": "boolean",
@@ -54,6 +55,8 @@
 		"anchor": true,
 		"html": false,
 		"interactivity": true,
+		"contentRole": true,
+		"listView": true,
 		"color": {
 			"background": true,
 			"gradients": true,

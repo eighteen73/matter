@@ -37,6 +37,8 @@
 		"html": false,
 		"reusable": false,
 		"interactivity": true,
+		"contentRole": true,
+		"listView": true,
 		"color": {
 			"background": true,
 			"gradients": true,

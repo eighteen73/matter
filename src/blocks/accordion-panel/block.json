@@ -27,6 +27,8 @@
 		"reusable": false,
 		"interactivity": true,
 		"allowedBlocks": true,
+		"contentRole": true,
+		"listView": true,
 		"color": {
 			"background": true,
 			"gradients": true,

@@ -32,6 +32,8 @@
 		"anchor": true,
 		"interactivity": true,
 		"lock": false,
+		"contentRole": true,
+		"listView": true,
 		"color": {
 			"background": true,
 			"gradients": true,

@@ -17,7 +17,7 @@ export default function AccordionBlockControls({
 	return (
 		<>
 			{isSelected && !isQuery && (
-				<BlockControls>
+				<BlockControls group="other">
 					<ToolbarGroup>
 						<ToolbarButton onClick={addAccordionItem}>
 							{__('Add item', 'matter')}
