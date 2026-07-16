@@ -44,6 +44,38 @@ class Accordion {
 	}
 
 	/**
+	 * Resolve a font-size support value to a CSS length/var.
+	 *
+	 * Mirrors Gallery::resolve_block_gap_value() for typography.fontSize.
+	 *
+	 * @param mixed $preset_slug  Preset slug from the fontSize attribute.
+	 * @param mixed $custom_size  Custom size from style.typography.fontSize.
+	 * @return string Empty when unset.
+	 */
+	public static function resolve_font_size_value( $preset_slug = null, $custom_size = null ): string {
+		if ( is_string( $preset_slug ) && '' !== $preset_slug ) {
+			return 'var(--wp--preset--font-size--' . _wp_to_kebab_case( $preset_slug ) . ')';
+		}
+
+		if ( ! is_string( $custom_size ) || '' === $custom_size ) {
+			return '';
+		}
+
+		if ( str_contains( $custom_size, 'var:preset|font-size|' ) ) {
+			$slug = _wp_to_kebab_case( substr( $custom_size, strrpos( $custom_size, '|' ) + 1 ) );
+			return "var(--wp--preset--font-size--{$slug})";
+		}
+
+		$resolved = wp_get_typography_font_size_value(
+			[
+				'size' => $custom_size,
+			]
+		);
+
+		return is_string( $resolved ) && '' !== $resolved ? $resolved : '';
+	}
+
+	/**
 	 * Resolve a stable item ID for a query loop accordion item.
 	 *
 	 * @param string $accordion_id   Accordion instance ID.

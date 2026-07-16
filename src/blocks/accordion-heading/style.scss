@@ -3,8 +3,10 @@
 
 	--_toggle--size: var(--matter-accordion--toggle--size, var(--wp--custom--matter-accordion--toggle--size, 1em));
 	--_toggle--gap: var(--matter-accordion--toggle--gap, var(--wp--custom--matter-accordion--toggle--gap, 0.5em));
+	--_title--font-size: var(--matter-accordion--title--font-size, var(--wp--custom--matter-accordion--title--font-size, inherit));
 
 	color: inherit;
+	font-size: var(--_title--font-size);
 
 	#{$block}__toggle {
 		align-items: center;

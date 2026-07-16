@@ -88,10 +88,18 @@
 			}
 		},
 		"typography": {
-			"fontSize": true
+			"fontSize": true,
+			"__experimentalSkipSerialization": [ "fontSize" ]
 		},
 		"ariaLabel": true,
 		"renaming": true
+	},
+	"selectors": {
+		"root": ".wp-block-matter-accordion",
+		"typography": {
+			"root": ".wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title",
+			"fontSize": ".wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title"
+		}
 	},
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",

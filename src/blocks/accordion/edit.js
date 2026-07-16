@@ -26,8 +26,33 @@ import ToolbarSettings from './components/toolbarSettings';
 
 const DEFAULT_TEMPLATE = [ITEM_TEMPLATE];
 
+/**
+ * Resolve fontSize support values to a CSS length/var.
+ *
+ * @param {string|undefined} fontSize Preset slug from the fontSize attribute.
+ * @param {Object|undefined} style    Block style object.
+ * @return {string|null} CSS value, or null when unset.
+ */
+function getTitleFontSizeCSSValue(fontSize, style) {
+	if (fontSize) {
+		return `var(--wp--preset--font-size--${fontSize})`;
+	}
+
+	const customSize = style?.typography?.fontSize;
+	if (!customSize || typeof customSize !== 'string') {
+		return null;
+	}
+
+	if (customSize.startsWith('var:preset|font-size|')) {
+		const slug = customSize.split('|').pop();
+		return slug ? `var(--wp--preset--font-size--${slug})` : null;
+	}
+
+	return customSize;
+}
+
 function Edit({ clientId, attributes, setAttributes, isSelected }) {
-	const { isQueryMode } = attributes;
+	const { isQueryMode, fontSize, style } = attributes;
 
 	const { insertBlock, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
@@ -70,8 +95,12 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		}
 	};
 
+	const titleFontSize = getTitleFontSizeCSSValue(fontSize, style);
 	const blockProps = useBlockProps({
 		role: 'group',
+		style: titleFontSize
+			? { '--matter-accordion--title--font-size': titleFontSize }
+			: undefined,
 	});
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {

@@ -5,6 +5,7 @@
  * @package Eighteen73\Matter
  */
 
+use Eighteen73\Matter\Blocks\Accordion;
 use Eighteen73\Matter\Blocks\BlockId;
 
 defined( 'ABSPATH' ) || exit;
@@ -42,6 +43,15 @@ $wrapper_attributes = [
 	'data-wp-init'                  => 'callbacks.onAccordionInit',
 	'data-wp-on-window--hashchange' => 'callbacks.hashChange',
 ];
+
+$title_font_size = Accordion::resolve_font_size_value(
+	$block_attributes['fontSize'] ?? null,
+	$block_attributes['style']['typography']['fontSize'] ?? null
+);
+
+if ( $title_font_size ) {
+	$wrapper_attributes['style'] = '--matter-accordion--title--font-size:' . $title_font_size . ';';
+}
 
 ?>
 
