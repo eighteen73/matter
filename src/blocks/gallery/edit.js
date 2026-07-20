@@ -66,6 +66,27 @@ const PLACEHOLDER_TEXT = __(
 );
 
 /**
+ * Managed child `scale` for FocalPointPicker.
+ * - 'cover' when gallery crops (non-auto aspect ratio, or grid imageCrop)
+ * - undefined when grid crop is off and ratio is auto (clear)
+ * - null when carousel has no aspect ratio (leave any manual scale alone)
+ *
+ * @param {string}  ratio Aspect ratio value.
+ * @param {boolean} crop  Grid crop-to-fill setting.
+ * @param {boolean} grid  Whether the gallery is in grid mode.
+ * @return {'cover'|undefined|null} Scale to sync, or null to leave alone.
+ */
+function getManagedImageScale(ratio, crop, grid) {
+	if (ratio && ratio !== 'auto') {
+		return 'cover';
+	}
+	if (grid) {
+		return crop ? 'cover' : undefined;
+	}
+	return null;
+}
+
+/**
  * Hide core's empty Layout inspector panel (PanelBody or ToolsPanel).
  *
  * @param {boolean} shouldHide Whether the Layout panel should be hidden.
@@ -274,10 +295,14 @@ export default function Edit(props) {
 		[clientId]
 	);
 
-	// Backfill scale on children that already have a synced aspect ratio so
-	// core FocalPointPicker unlocks without re-selecting the gallery ratio.
+	// Keep child scale in sync so FocalPointPicker unlocks whenever gallery crops.
 	useEffect(() => {
-		if (!aspectRatio || aspectRatio === 'auto') {
+		const managedScale = getManagedImageScale(
+			aspectRatio,
+			imageCrop,
+			isGrid
+		);
+		if (managedScale === null) {
 			return;
 		}
 
@@ -285,17 +310,27 @@ export default function Edit(props) {
 		const blocks = [];
 
 		innerBlockImages.forEach((block) => {
-			const { aspectRatio: childAspectRatio, scale } = block.attributes;
-			if (childAspectRatio && !scale) {
-				blocks.push(block.clientId);
-				changedAttributes[block.clientId] = { scale: 'cover' };
+			const currentScale = block.attributes.scale;
+			const isAlreadySynced =
+				currentScale === managedScale ||
+				(!currentScale && managedScale === undefined);
+			if (isAlreadySynced) {
+				return;
 			}
+			blocks.push(block.clientId);
+			changedAttributes[block.clientId] = { scale: managedScale };
 		});
 
 		if (blocks.length > 0) {
 			updateBlockAttributes(blocks, changedAttributes, true);
 		}
-	}, [aspectRatio, innerBlockImages, updateBlockAttributes]);
+	}, [
+		aspectRatio,
+		imageCrop,
+		isGrid,
+		innerBlockImages,
+		updateBlockAttributes,
+	]);
 
 	const images = useMemo(
 		() =>
@@ -520,6 +555,11 @@ export default function Edit(props) {
 		);
 
 		const hasAspectRatio = aspectRatio && aspectRatio !== 'auto';
+		const managedScale = getManagedImageScale(
+			aspectRatio,
+			imageCrop,
+			isGrid
+		);
 		const newBlocks = newImageList.map((image) =>
 			createBlock('core/image', {
 				id: image.id,
@@ -529,8 +569,8 @@ export default function Edit(props) {
 				alt: image.alt,
 				sizeSlug,
 				aspectRatio: hasAspectRatio ? aspectRatio : undefined,
-				// Core FocalPointPicker requires scale; match Dimensions tool.
-				scale: hasAspectRatio ? 'cover' : undefined,
+				// Core FocalPointPicker requires scale when gallery crops.
+				...(managedScale !== null ? { scale: managedScale } : {}),
 				lightbox: { enabled: false },
 				linkDestination: 'none',
 			})
@@ -556,10 +596,11 @@ export default function Edit(props) {
 		createErrorNotice(message, { type: 'snackbar' });
 	};
 
-	const setAspectRatio = (value) => {
+	const setAspectRatio = (value, crop = imageCrop) => {
 		setAttributes({ aspectRatio: value });
 
 		const hasAspectRatio = value && value !== 'auto';
+		const managedScale = getManagedImageScale(value, crop, isGrid);
 		const changedAttributes = {};
 		const blocks = [];
 
@@ -567,8 +608,7 @@ export default function Edit(props) {
 			blocks.push(block.clientId);
 			changedAttributes[block.clientId] = {
 				aspectRatio: hasAspectRatio ? value : undefined,
-				// Core FocalPointPicker requires scale; match Dimensions tool.
-				scale: hasAspectRatio ? 'cover' : undefined,
+				...(managedScale !== null ? { scale: managedScale } : {}),
 			};
 		});
 
@@ -737,7 +777,8 @@ export default function Edit(props) {
 								},
 							},
 						});
-						setAspectRatio('auto');
+						// Pass crop true so scale stays cover after reset (default crop on).
+						setAspectRatio('auto', true);
 						if (sizeSlug !== 'large') {
 							updateImagesSize('large');
 						}
@@ -856,7 +897,6 @@ export default function Edit(props) {
 							/>
 						</ToolsPanelItem>
 					)}
-
 					<ToolsPanelItem
 						hasValue={() => showCaptions === false}
 						label={__('Show captions', 'matter')}
