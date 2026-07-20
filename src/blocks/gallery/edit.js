@@ -274,6 +274,29 @@ export default function Edit(props) {
 		[clientId]
 	);
 
+	// Backfill scale on children that already have a synced aspect ratio so
+	// core FocalPointPicker unlocks without re-selecting the gallery ratio.
+	useEffect(() => {
+		if (!aspectRatio || aspectRatio === 'auto') {
+			return;
+		}
+
+		const changedAttributes = {};
+		const blocks = [];
+
+		innerBlockImages.forEach((block) => {
+			const { aspectRatio: childAspectRatio, scale } = block.attributes;
+			if (childAspectRatio && !scale) {
+				blocks.push(block.clientId);
+				changedAttributes[block.clientId] = { scale: 'cover' };
+			}
+		});
+
+		if (blocks.length > 0) {
+			updateBlockAttributes(blocks, changedAttributes, true);
+		}
+	}, [aspectRatio, innerBlockImages, updateBlockAttributes]);
+
 	const images = useMemo(
 		() =>
 			innerBlockImages.map((block) => ({
@@ -496,6 +519,7 @@ export default function Edit(props) {
 				)
 		);
 
+		const hasAspectRatio = aspectRatio && aspectRatio !== 'auto';
 		const newBlocks = newImageList.map((image) =>
 			createBlock('core/image', {
 				id: image.id,
@@ -504,7 +528,9 @@ export default function Edit(props) {
 				caption: image.caption,
 				alt: image.alt,
 				sizeSlug,
-				aspectRatio: aspectRatio === 'auto' ? undefined : aspectRatio,
+				aspectRatio: hasAspectRatio ? aspectRatio : undefined,
+				// Core FocalPointPicker requires scale; match Dimensions tool.
+				scale: hasAspectRatio ? 'cover' : undefined,
 				lightbox: { enabled: false },
 				linkDestination: 'none',
 			})
@@ -533,13 +559,16 @@ export default function Edit(props) {
 	const setAspectRatio = (value) => {
 		setAttributes({ aspectRatio: value });
 
+		const hasAspectRatio = value && value !== 'auto';
 		const changedAttributes = {};
 		const blocks = [];
 
 		getBlock(clientId).innerBlocks.forEach((block) => {
 			blocks.push(block.clientId);
 			changedAttributes[block.clientId] = {
-				aspectRatio: value === 'auto' ? undefined : value,
+				aspectRatio: hasAspectRatio ? value : undefined,
+				// Core FocalPointPicker requires scale; match Dimensions tool.
+				scale: hasAspectRatio ? 'cover' : undefined,
 			};
 		});
 
