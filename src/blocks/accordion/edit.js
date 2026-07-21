@@ -9,20 +9,38 @@ import {
 import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { createBlock } from '@wordpress/blocks';
+import {
+	createBlock,
+	createBlocksFromInnerBlocksTemplate,
+} from '@wordpress/blocks';
 import { useEffect } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
 import './editor.scss';
-import BlockVariationPicker from '../../components/block-variation-picker';
 import useBlockId from '../../utils/use-block-id';
-import { ITEM_TEMPLATE } from './variations';
+import {
+	MANUAL_ACCORDION_TEMPLATE,
+	QUERY_LOOP_ACCORDION_TEMPLATE,
+} from './variations';
 import AccordionBlockControls from './components/block-controls';
 import AccordionInspectorControls from './components/inspector-controls';
 
-const DEFAULT_TEMPLATE = [ITEM_TEMPLATE];
+/**
+ * Whether accordion inner blocks match the expected query/manual mode.
+ *
+ * @param {boolean} isQueryMode Whether accordion is in query mode.
+ * @param {Array}   innerBlocks Accordion inner blocks.
+ * @return {boolean} True when structure matches the mode.
+ */
+function hasMatchingStructure(isQueryMode, innerBlocks) {
+	const hasQueryBlock = innerBlocks.some(
+		(block) => block.name === 'core/query'
+	);
+
+	return isQueryMode ? hasQueryBlock : !hasQueryBlock;
+}
 
 /**
  * Resolve fontSize support values to a CSS length/var.
@@ -52,7 +70,7 @@ function getTitleFontSizeCSSValue(fontSize, style) {
 function Edit({ clientId, attributes, setAttributes, isSelected }) {
 	const { isQueryMode, fontSize, style } = attributes;
 
-	const { insertBlock, updateBlockAttributes } =
+	const { insertBlock, replaceInnerBlocks, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
 
 	const { duplicateAnchor } = useBlockId({
@@ -68,24 +86,34 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		[clientId]
 	);
 
-	const hasQueryLoop = innerBlocks.some(
-		(block) => block.name === 'core/query'
-	);
-	const isQuery = isQueryMode || hasQueryLoop;
+	useEffect(() => {
+		if (!innerBlocks.length) {
+			return;
+		}
+
+		if (hasMatchingStructure(isQueryMode, innerBlocks)) {
+			return;
+		}
+
+		const template = isQueryMode
+			? QUERY_LOOP_ACCORDION_TEMPLATE
+			: MANUAL_ACCORDION_TEMPLATE;
+
+		replaceInnerBlocks(
+			clientId,
+			createBlocksFromInnerBlocksTemplate(template),
+			false
+		);
+	}, [clientId, innerBlocks, isQueryMode, replaceInnerBlocks]);
+
 	const firstItem = innerBlocks.find(
 		(block) => block.name === 'matter/accordion-item'
 	);
 
-	useEffect(() => {
-		if (hasQueryLoop !== isQueryMode) {
-			setAttributes({ isQueryMode: hasQueryLoop });
-		}
-	}, [hasQueryLoop, isQueryMode, setAttributes]);
-
 	const syncFirstItemOpen = (value) => {
 		setAttributes({ openFirstItem: value });
 
-		if (!isQuery && firstItem) {
+		if (!isQueryMode && firstItem) {
 			updateBlockAttributes(firstItem.clientId, {
 				openByDefault: value,
 			});
@@ -101,12 +129,14 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 	});
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		template: isQuery ? undefined : DEFAULT_TEMPLATE,
+		template: isQueryMode ? undefined : MANUAL_ACCORDION_TEMPLATE,
 		templateInsertUpdatesSelection: true,
-		defaultBlock: isQuery ? undefined : { name: 'matter/accordion-item' },
-		directInsert: !isQuery,
+		defaultBlock: isQueryMode
+			? undefined
+			: { name: 'matter/accordion-item' },
+		directInsert: !isQueryMode,
 		renderAppender: false,
-		allowedBlocks: isQuery ? ['core/query'] : ['matter/accordion-item'],
+		allowedBlocks: isQueryMode ? ['core/query'] : ['matter/accordion-item'],
 	});
 
 	const addAccordionItem = () => {
@@ -125,7 +155,7 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		<AccordionInspectorControls
 			attributes={attributes}
 			setAttributes={setAttributes}
-			isQuery={isQuery}
+			isQuery={isQueryMode}
 			firstItem={firstItem}
 			updateBlockAttributes={updateBlockAttributes}
 			syncFirstItemOpen={syncFirstItemOpen}
@@ -137,21 +167,10 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 			attributes={attributes}
 			setAttributes={setAttributes}
 			isSelected={isSelected}
-			isQuery={isQuery}
+			isQuery={isQueryMode}
 			addAccordionItem={addAccordionItem}
 		/>
 	);
-
-	if (innerBlocks.length === 0) {
-		return (
-			<BlockVariationPicker
-				blockName="matter/accordion"
-				setAttributes={setAttributes}
-				clientId={clientId}
-				defaultTemplate={DEFAULT_TEMPLATE}
-			/>
-		);
-	}
 
 	return (
 		<>
