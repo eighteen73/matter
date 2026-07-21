@@ -8,6 +8,7 @@
 namespace Eighteen73\Matter\Blocks;
 
 use WP_Block_Metadata_Registry;
+use WP_Block_Type_Registry;
 use Eighteen73\Matter\Singleton;
 
 defined( 'ABSPATH' ) || exit;
@@ -19,6 +20,26 @@ class Registry {
 	use Singleton;
 
 	/**
+	 * Core blocks Matter replaces (parents + children).
+	 *
+	 * Hidden from the inserter via allowed_block_types_all.
+	 * Existing content using these blocks continues to render.
+	 *
+	 * @var string[]
+	 */
+	private const DISABLED_CORE_BLOCKS = [
+		'core/gallery',
+		'core/tabs',
+		'core/tab-list',
+		'core/tab-panels',
+		'core/tab-panel',
+		'core/accordion',
+		'core/accordion-item',
+		'core/accordion-heading',
+		'core/accordion-panel',
+	];
+
+	/**
 	 * Setup block registration hooks.
 	 *
 	 * @return void
@@ -27,6 +48,26 @@ class Registry {
 		add_action( 'init', [ $this, 'register_overlay_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register_lightbox_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register' ] );
+		add_filter( 'allowed_block_types_all', [ $this, 'disable_mirrored_core_blocks' ], 10, 2 );
+	}
+
+	/**
+	 * Remove core blocks that Matter replaces from the editor allow-list.
+	 *
+	 * @param bool|string[]            $allowed_block_types Allowed block types, or true for all.
+	 * @param \WP_Block_Editor_Context $editor_context      Editor context.
+	 * @return bool|string[]
+	 */
+	public function disable_mirrored_core_blocks( $allowed_block_types, $editor_context ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+		if ( true === $allowed_block_types ) {
+			$allowed_block_types = array_keys( WP_Block_Type_Registry::get_instance()->get_all_registered() );
+		}
+
+		if ( ! is_array( $allowed_block_types ) ) {
+			return $allowed_block_types;
+		}
+
+		return array_values( array_diff( $allowed_block_types, self::DISABLED_CORE_BLOCKS ) );
 	}
 
 	/**
