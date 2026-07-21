@@ -39,6 +39,7 @@
     "html": false,
     "reusable": false,
     "contentRole": true,
+    "listView": true,
     "color": {
       "background": true,
       "text": true,

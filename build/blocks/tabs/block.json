@@ -80,6 +80,7 @@
     "html": false,
     "interactivity": true,
     "contentRole": true,
+    "listView": true,
     "spacing": {
       "blockGap": true,
       "margin": true,

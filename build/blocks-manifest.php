@@ -1729,6 +1729,8 @@ return array(
 			'reusable' => false,
 			'lock' => false,
 			'inserter' => false,
+			'contentRole' => true,
+			'listView' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -1795,6 +1797,7 @@ return array(
 			'visibility' => false,
 			'lock' => false,
 			'contentRole' => true,
+			'listView' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -1878,6 +1881,7 @@ return array(
 			'html' => false,
 			'reusable' => false,
 			'contentRole' => true,
+			'listView' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -1946,6 +1950,7 @@ return array(
 			'visibility' => false,
 			'lock' => false,
 			'contentRole' => true,
+			'listView' => true,
 			'color' => array(
 				'background' => true,
 				'text' => true,
@@ -2056,6 +2061,7 @@ return array(
 			'html' => false,
 			'interactivity' => true,
 			'contentRole' => true,
+			'listView' => true,
 			'spacing' => array(
 				'blockGap' => true,
 				'margin' => true,
