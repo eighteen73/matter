@@ -69,7 +69,9 @@
 				"margin": false,
 				"padding": false
 			}
-		}
+		},
+		"contentRole": true,
+		"listView": true
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",

@@ -5,7 +5,11 @@ import { __ } from '@wordpress/i18n';
 import { Carousel } from '../../components/icons/carousel';
 
 export const STANDARD_CAROUSEL_TEMPLATE = [
-	['matter/carousel-viewport', { lock: { remove: true } }],
+	[
+		'matter/carousel-viewport',
+		{ lock: { remove: true }, allowedBlocks: ['matter/carousel-slide'] },
+		[['matter/carousel-slide']],
+	],
 	[
 		'core/group',
 		{

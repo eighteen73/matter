@@ -7,7 +7,11 @@ import { useSelect } from '@wordpress/data';
 
 import './editor.scss';
 
-const QUERY_ALLOWED_BLOCKS = ['core/query', 'woocommerce/product-collection'];
+const QUERY_ALLOWED_BLOCKS = [
+	'core/query',
+	'woocommerce/product-collection',
+	'matter/carousel-slide',
+];
 
 export default function Edit({ attributes, clientId }) {
 	const { allowedBlocks } = attributes;

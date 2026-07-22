@@ -4,13 +4,15 @@
 import {
 	useBlockProps,
 	useInnerBlocksProps,
-	InspectorControls,
 	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
-import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
+import {
+	createBlock,
+	createBlocksFromInnerBlocksTemplate,
+} from '@wordpress/blocks';
 
 /**
  * External dependencies
@@ -34,8 +36,8 @@ import {
 import { findDescendantBlock } from './utils/block-tree';
 import { buildCarouselStylesheet } from './utils/styles';
 import { shouldReplaceThumbBlocks } from './utils/thumbnails-sync';
-import AdvancedControls from './components/advanced-controls';
-import CarouselControls from './components/carousel-controls';
+import CarouselBlockControls from './components/block-controls';
+import CarouselInspectorControls from './components/inspector-controls';
 import breakpoints from '../../constants/breakpoints';
 import useBlockId from '../../utils/use-block-id';
 import {
@@ -332,9 +334,22 @@ export default function Edit({
 			: []
 	);
 
-	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const { insertBlock, replaceInnerBlocks } = useDispatch(blockEditorStore);
 
 	const carouselMode = getCarouselMode(className);
+
+	const addCarouselItem = () => {
+		if (!viewportBlock) {
+			return;
+		}
+
+		const newItem =
+			carouselMode === 'image'
+				? createBlock('core/image')
+				: createBlock('matter/carousel-slide');
+
+		insertBlock(newItem, undefined, viewportBlock.clientId);
+	};
 
 	useEffect(() => {
 		if (!innerBlocks.length) {
@@ -553,33 +568,41 @@ export default function Edit({
 				: false,
 	});
 
+	const blockControls = (
+		<CarouselBlockControls
+			isSelected={isSelected}
+			carouselMode={carouselMode}
+			addCarouselItem={addCarouselItem}
+		/>
+	);
+
+	const inspectorControls = (
+		<CarouselInspectorControls
+			baseOptions={uiOptions}
+			baseAutoplay={uiAutoplay}
+			baseFade={uiFade}
+			breakpointLayers={resolvedConfig.breakpointLayers}
+			onChangeBaseOption={setOption}
+			onChangeBaseAutoplay={setAutoplay}
+			onChangeBaseFade={setFade}
+			onChangeLayerOption={setLayerOption}
+			onChangeLayerAutoplay={setLayerAutoplay}
+			onChangeLayerFade={setLayerFade}
+			onResetLayer={resetLayer}
+			emblaConfig={resolvedConfig}
+			setAttributes={setAttributes}
+			advancedEmblaConfig={advancedEmblaConfig}
+			advancedEmblaConfigMerge={advancedEmblaConfigMerge}
+		/>
+	);
+
 	return (
 		<>
 			{carouselStylesheet && <style>{carouselStylesheet}</style>}
 
-			<InspectorControls group="settings">
-				<CarouselControls
-					baseOptions={uiOptions}
-					baseAutoplay={uiAutoplay}
-					baseFade={uiFade}
-					breakpointLayers={resolvedConfig.breakpointLayers}
-					onChangeBaseOption={setOption}
-					onChangeBaseAutoplay={setAutoplay}
-					onChangeBaseFade={setFade}
-					onChangeLayerOption={setLayerOption}
-					onChangeLayerAutoplay={setLayerAutoplay}
-					onChangeLayerFade={setLayerFade}
-					onResetLayer={resetLayer}
-					emblaConfig={resolvedConfig}
-					setAttributes={setAttributes}
-				/>
+			{blockControls}
 
-				<AdvancedControls
-					advancedEmblaConfig={advancedEmblaConfig}
-					advancedEmblaConfigMerge={advancedEmblaConfigMerge}
-					setAttributes={setAttributes}
-				/>
-			</InspectorControls>
+			{inspectorControls}
 
 			<div {...innerBlocksProps}>
 				<div className="embla" ref={emblaRef}>
