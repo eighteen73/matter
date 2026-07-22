@@ -177,6 +177,7 @@ export default function Edit(props) {
 		lightboxBackdropOpacity,
 		lightboxBackdropBlur,
 		showCaptions,
+		captionStyle,
 		imageLimit,
 		includeThumbnails,
 		thumbnailAspectRatio,
@@ -665,6 +666,10 @@ export default function Edit(props) {
 
 	const showViewAll = hasImageLimit && images.length > imageLimit;
 
+	const captionsEnabled = showCaptions !== false;
+	const resolvedCaptionStyle =
+		captionStyle === 'overlay' ? 'overlay' : 'toggle';
+
 	const blockProps = useBlockProps({
 		className: clsx(className, {
 			'wp-block-matter-gallery--grid': isGrid,
@@ -675,6 +680,8 @@ export default function Edit(props) {
 				isGrid &&
 				(imageCrop || (aspectRatio && aspectRatio !== 'auto')),
 			'has-aspect-ratio': !!(aspectRatio && aspectRatio !== 'auto'),
+			'has-captions': captionsEnabled,
+			[`has-caption-style-${resolvedCaptionStyle}`]: captionsEnabled,
 		}),
 	});
 
@@ -905,17 +912,48 @@ export default function Edit(props) {
 					>
 						<ToggleControl
 							label={__('Show captions', 'matter')}
-							checked={showCaptions !== false}
+							checked={captionsEnabled}
 							onChange={(value) =>
 								setAttributes({ showCaptions: value })
 							}
 							help={__(
-								'Show captions in the lightbox and via an info control on images that have one.',
+								'Show captions in the lightbox and on gallery images that have one.',
 								'matter'
 							)}
 							__nextHasNoMarginBottom
 						/>
 					</ToolsPanelItem>
+
+					{captionsEnabled && (
+						<ToolsPanelItem
+							hasValue={() => captionStyle !== 'toggle'}
+							label={__('Caption style', 'matter')}
+							onDeselect={() =>
+								setAttributes({ captionStyle: 'toggle' })
+							}
+							isShownByDefault
+						>
+							<ToggleGroupControl
+								label={__('Caption style', 'matter')}
+								value={resolvedCaptionStyle}
+								onChange={(value) =>
+									setAttributes({ captionStyle: value })
+								}
+								isBlock
+								__nextHasNoMarginBottom
+								__next40pxDefaultSize
+							>
+								<ToggleGroupControlOption
+									value="toggle"
+									label={__('Toggle', 'matter')}
+								/>
+								<ToggleGroupControlOption
+									value="overlay"
+									label={__('Overlay', 'matter')}
+								/>
+							</ToggleGroupControl>
+						</ToolsPanelItem>
+					)}
 
 					{isGrid && (
 						<>

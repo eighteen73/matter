@@ -50,6 +50,42 @@
 		display: none;
 	}
 
+	&.has-caption-style-overlay {
+		.wp-block-image {
+			position: relative;
+		}
+
+		.wp-block-image figcaption,
+		.wp-element-caption {
+			background: var(--_caption-popover--background-color);
+			bottom: 0;
+			box-sizing: border-box;
+			color: var(--_caption-popover--color);
+			display: block;
+			font-size: var(--_caption-popover--font-size);
+			left: 0;
+			line-height: 1.4;
+			margin: 0;
+			max-width: none;
+			padding: var(--_caption-popover--padding);
+			position: absolute;
+			right: 0;
+			text-align: left;
+			width: 100%;
+			z-index: 2;
+
+			a {
+				color: inherit;
+				text-decoration: underline;
+			}
+		}
+	}
+
+	.wp-block-image > a {
+		height: 100%;
+		width: 100%;
+	}
+
 	.wp-block-matter-gallery__item,
 	.wp-block-image.wp-block-matter-gallery__item {
 		position: relative;
