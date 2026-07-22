@@ -34,6 +34,10 @@ $lightbox_thumb_focal = isset( $block_attributes['lightboxThumbnailFocalPoint'] 
 	];
 $lightbox             = ! isset( $block_attributes['lightbox'] ) || ! empty( $block_attributes['lightbox'] ) || ( ! $is_carousel && $image_limit > 0 );
 $show_captions        = ! isset( $block_attributes['showCaptions'] ) || ! empty( $block_attributes['showCaptions'] );
+$caption_style        = isset( $block_attributes['captionStyle'] ) && 'overlay' === $block_attributes['captionStyle']
+	? 'overlay'
+	: 'toggle';
+$use_toggle_captions  = $show_captions && 'toggle' === $caption_style;
 $view_all_text        = isset( $block_attributes['viewAllText'] ) ? (string) $block_attributes['viewAllText'] : __( 'View gallery', 'matter' );
 
 $gallery_id = Gallery::resolve_base_id( $block_attributes );
@@ -76,6 +80,7 @@ if ( $lightbox && $total > 0 ) {
 					'lightboxThumbnailAspectRatio' => $lightbox_thumb_ratio,
 					'lightboxThumbnailFocalPoint'  => $lightbox_thumb_focal,
 					'showCaptions'                 => $show_captions,
+					'captionStyle'                 => $caption_style,
 					'thumbnailGap'                 => $lightbox_declarations['--matter-lightbox--thumbnail-gap'] ?? '',
 					'backdropColor'                => $lightbox_declarations['--matter-lightbox--backdrop-color'] ?? '',
 					'backdropOpacity'              => $block_attributes['lightboxBackdropOpacity'] ?? 85,
@@ -121,6 +126,11 @@ if ( $aspect_ratio && 'auto' !== $aspect_ratio ) {
 	$classes[] = 'has-aspect-ratio';
 }
 
+if ( $show_captions ) {
+	$classes[] = 'has-captions';
+	$classes[] = 'has-caption-style-' . $caption_style;
+}
+
 $wrapper_attributes = [
 	'id'                  => $gallery_id,
 	'class'               => implode( ' ', array_filter( $classes ) ),
@@ -128,7 +138,7 @@ $wrapper_attributes = [
 	'data-gallery-id'     => $gallery_id,
 ];
 
-if ( $show_captions ) {
+if ( $use_toggle_captions ) {
 	$wrapper_attributes['data-wp-on-window--pointerdown'] = 'actions.onCaptionOutsidePointerDown';
 	$wrapper_attributes['data-wp-on-document--keydown']   = 'actions.onCaptionKeydown';
 }
@@ -138,6 +148,7 @@ $gallery_context = [
 	'lightbox'     => $lightbox,
 	'type'         => $type,
 	'showCaptions' => $show_captions,
+	'captionStyle' => $caption_style,
 ];
 
 if ( $is_carousel ) {
@@ -191,7 +202,7 @@ if ( $is_carousel ) {
 			$gallery_id,
 			$index,
 			$lightbox,
-			$show_captions,
+			$use_toggle_captions,
 			$caption
 		);
 		echo '<div class="wp-block-matter-gallery__slide">' . $slide_html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -257,7 +268,7 @@ if ( $is_carousel ) {
 			$gallery_id,
 			$index,
 			$lightbox,
-			$show_captions,
+			$use_toggle_captions,
 			$caption
 		);
 		echo $image_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

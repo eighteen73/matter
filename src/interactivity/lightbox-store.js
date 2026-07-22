@@ -225,6 +225,13 @@ const { state, actions } = store(STORE, {
 			preloadNeighbors(images, safeIndex);
 		},
 		openFromContext: () => {
+			const { ref } = getElement();
+
+			// Early return if the clicked image has a link
+			if (ref?.querySelector('a[href]')) {
+				return;
+			}
+
 			const context = getContext();
 			actions.open({
 				galleryId: context?.galleryId,
