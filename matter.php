@@ -4,7 +4,7 @@
  * Plugin URI:        https://eighteen73.co.uk
  * Update URI:        https://eighteen73.co.uk
  * Description:       A collection of expertly crafted blocks for WordPress.
- * Version:           0.5.0
+ * Version:           0.5.1
  * Requires at least: 6.8
  * Requires PHP:      7.4
  * Requires Plugins:

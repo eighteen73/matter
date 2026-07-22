@@ -88,6 +88,14 @@
       "type": "boolean",
       "default": true
     },
+    "captionStyle": {
+      "type": "string",
+      "default": "toggle",
+      "enum": [
+        "toggle",
+        "overlay"
+      ]
+    },
     "imageLimit": {
       "type": "number",
       "default": 0

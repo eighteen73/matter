@@ -1170,6 +1170,14 @@ return array(
 				'type' => 'boolean',
 				'default' => true
 			),
+			'captionStyle' => array(
+				'type' => 'string',
+				'default' => 'toggle',
+				'enum' => array(
+					'toggle',
+					'overlay'
+				)
+			),
 			'imageLimit' => array(
 				'type' => 'number',
 				'default' => 0
