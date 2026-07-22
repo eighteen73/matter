@@ -50,6 +50,11 @@
 		display: none;
 	}
 
+	.wp-block-image > a {
+		height: 100%;
+		width: 100%;
+	}
+
 	.wp-block-matter-gallery__item,
 	.wp-block-image.wp-block-matter-gallery__item {
 		position: relative;
