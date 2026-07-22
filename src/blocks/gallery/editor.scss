@@ -1,6 +1,6 @@
 .wp-block-matter-gallery {
-	// Captions are hidden on the frontend; in the editor show a bottom overlay
-	// only while the image is selected so captions remain editable.
+	// Toggle style: hide figcaptions on the canvas except while an image is
+	// selected so captions remain editable. Overlay style: always show them.
 	.block-editor-block-list__block.wp-block-image,
 	.block-editor-block-list__block[data-type="core/image"] {
 		position: relative;
@@ -32,6 +32,16 @@
 
 		&.is-selected,
 		&.has-child-selected {
+			figcaption,
+			.wp-element-caption {
+				display: block;
+			}
+		}
+	}
+
+	&.has-caption-style-overlay {
+		.block-editor-block-list__block.wp-block-image,
+		.block-editor-block-list__block[data-type="core/image"] {
 			figcaption,
 			.wp-element-caption {
 				display: block;
