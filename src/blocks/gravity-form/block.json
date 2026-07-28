@@ -6,7 +6,11 @@
 	"title": "Gravity Form",
 	"category": "widgets",
 	"description": "Displays a Gravity Form",
-	"example": {},
+	"keywords": [
+		"form",
+		"forms",
+		"contact"
+	],
 	"attributes": {
 		"generatedId": {
 			"type": "string",
