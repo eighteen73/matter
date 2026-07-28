@@ -1,0 +1,54 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/gravity-form",
+	"version": "0.1.0",
+	"title": "Gravity Form",
+	"category": "widgets",
+	"description": "Displays a Gravity Form",
+	"example": {},
+	"attributes": {
+		"formId": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"align": true,
+		"anchor": true,
+		"html": false,
+		"contentRole": true,
+		"listView": true,
+		"color": {
+			"background": true,
+			"gradients": true,
+			"text": false
+		},
+		"spacing": {
+			"padding": true,
+			"blockGap": false,
+			"margin": true,
+			"__experimentalDefaultControls": {
+				"padding": true,
+				"margin": true
+			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
+		},
+		"renaming": false
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}
