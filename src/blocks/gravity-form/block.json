@@ -10,7 +10,28 @@
 	"attributes": {
 		"formId": {
 			"type": "string",
-			"default": ""
+			"default": "",
+			"role": "content"
+		},
+		"displayTitle": {
+			"type": "boolean",
+			"default": false
+		},
+		"displayDescription": {
+			"type": "boolean",
+			"default": false
+		},
+		"ajaxSubmission": {
+			"type": "boolean",
+			"default": true
+		},
+		"tabindex": {
+			"type": "number",
+			"default": 0
+		},
+		"fieldValues": {
+			"type": "object",
+			"default": null
 		}
 	},
 	"supports": {
@@ -18,7 +39,6 @@
 		"anchor": true,
 		"html": false,
 		"contentRole": true,
-		"listView": true,
 		"color": {
 			"background": true,
 			"gradients": true,

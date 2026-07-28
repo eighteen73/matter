@@ -41,7 +41,14 @@ function getFormOptions(forms) {
  * @return {Element} Element to render.
  */
 export default function Edit({ attributes, setAttributes }) {
-	const { formId = '' } = attributes;
+	const {
+		formId = '',
+		displayTitle,
+		displayDescription,
+		ajaxSubmission,
+		tabindex,
+		fieldValues,
+	} = attributes;
 	const blockProps = useBlockProps();
 	const forms = getForms();
 	const formOptions = getFormOptions(forms);
@@ -54,7 +61,14 @@ export default function Edit({ attributes, setAttributes }) {
 	const { content: previewHtml = '', status: previewStatus } =
 		useServerSideRender({
 			block: 'matter/gravity-form',
-			attributes: { formId },
+			attributes: {
+				formId,
+				displayTitle,
+				displayDescription,
+				ajaxSubmission,
+				tabindex,
+				fieldValues,
+			},
 			skipBlockSupportAttributes: true,
 		});
 

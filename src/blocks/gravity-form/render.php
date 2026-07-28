@@ -8,7 +8,23 @@
  * @package Matter\\GravityForm
  */
 
-$form_id = isset( $attributes['formId'] ) ? absint( $attributes['formId'] ) : 0;
+$form_id             = isset( $attributes['formId'] ) ? absint( $attributes['formId'] ) : 0;
+$display_title       = isset( $attributes['displayTitle'] ) ? (bool) $attributes['displayTitle'] : false;
+$display_description = isset( $attributes['displayDescription'] ) ? (bool) $attributes['displayDescription'] : false;
+$ajax_submission     = isset( $attributes['ajaxSubmission'] ) ? (bool) $attributes['ajaxSubmission'] : false;
+$tabindex            = isset( $attributes['tabindex'] ) ? (int) $attributes['tabindex'] : 0;
+
+$field_values = null;
+if ( ! empty( $attributes['fieldValues'] ) && is_array( $attributes['fieldValues'] ) ) {
+	$sanitized = [];
+	foreach ( $attributes['fieldValues'] as $key => $value ) {
+		if ( ! is_string( $key ) && ! is_numeric( $key ) ) {
+			continue;
+		}
+		$sanitized[ sanitize_key( (string) $key ) ] = sanitize_text_field( (string) $value );
+	}
+	$field_values = ! empty( $sanitized ) ? $sanitized : null;
+}
 
 if ( ! $form_id || ! function_exists( 'gravity_form' ) ) {
 	return;
@@ -21,7 +37,16 @@ if ( $is_rest_preview ) {
 	ob_start();
 }
 
-$form_markup = gravity_form( $form_id, false, false, false, null, false, 0, false );
+$form_markup = gravity_form(
+	$form_id,
+	$display_title,
+	$display_description,
+	false,
+	$field_values,
+	$ajax_submission,
+	$tabindex,
+	false
+);
 
 $incidental_output = '';
 if ( $is_rest_preview ) {
