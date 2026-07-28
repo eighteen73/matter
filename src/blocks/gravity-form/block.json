@@ -8,6 +8,10 @@
 	"description": "Displays a Gravity Form",
 	"example": {},
 	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
 		"formId": {
 			"type": "string",
 			"default": "",
@@ -65,7 +69,8 @@
 				"width": false
 			}
 		},
-		"renaming": false
+		"renaming": false,
+		"customCSS": false
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",

@@ -3,6 +3,7 @@ import { Disabled, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { postCommentsForm } from '@wordpress/icons';
 import { useServerSideRender } from '@wordpress/server-side-render';
+import useBlockId from '../../utils/use-block-id';
 import GravityFormInspectorControls from './components/inspector-controls';
 import GravityFormPlaceholder from './components/placeholder';
 
@@ -38,9 +39,10 @@ function getFormOptions(forms) {
  * @param {Object}   props               Block props.
  * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Update attributes.
+ * @param {string}   props.clientId      Block client ID.
  * @return {Element} Element to render.
  */
-export default function Edit({ attributes, setAttributes }) {
+export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
 		formId = '',
 		displayTitle,
@@ -48,6 +50,8 @@ export default function Edit({ attributes, setAttributes }) {
 		ajaxSubmission,
 		tabindex,
 		fieldValues,
+		generatedId,
+		anchor,
 	} = attributes;
 	const blockProps = useBlockProps();
 	const forms = getForms();
@@ -57,6 +61,14 @@ export default function Edit({ attributes, setAttributes }) {
 	);
 	const hasInvalidFormId = Boolean(formId) && !selectedForm;
 	const blockIcon = postCommentsForm;
+
+	useBlockId({
+		blockName: 'matter/gravity-form',
+		prefix: 'matter-gravity-form',
+		attributes,
+		setAttributes,
+		clientId,
+	});
 
 	const { content: previewHtml = '', status: previewStatus } =
 		useServerSideRender({
@@ -68,6 +80,8 @@ export default function Edit({ attributes, setAttributes }) {
 				ajaxSubmission,
 				tabindex,
 				fieldValues,
+				generatedId,
+				anchor,
 			},
 			skipBlockSupportAttributes: true,
 		});
