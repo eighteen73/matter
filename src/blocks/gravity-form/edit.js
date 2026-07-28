@@ -1,7 +1,7 @@
 import { useBlockProps } from '@wordpress/block-editor';
 import { Disabled, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { postCommentsForm } from '@wordpress/icons';
+import { GravityForm } from '../../components/icons/gravity-form';
 import { useServerSideRender } from '@wordpress/server-side-render';
 import useBlockId from '../../utils/use-block-id';
 import GravityFormInspectorControls from './components/inspector-controls';
@@ -60,7 +60,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		(form) => String(form.id) === String(formId)
 	);
 	const hasInvalidFormId = Boolean(formId) && !selectedForm;
-	const blockIcon = postCommentsForm;
+	const blockIcon = GravityForm;
 
 	useBlockId({
 		blockName: 'matter/gravity-form',
