@@ -7,8 +7,8 @@ import {
 	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect, useMemo } from '@wordpress/element';
+import { useDispatch, useSelect, select as syncSelect } from '@wordpress/data';
+import { useEffect, useMemo, useRef } from '@wordpress/element';
 import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
 
 /**
@@ -331,7 +331,8 @@ export default function Edit({
 			: []
 	);
 
-	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const { replaceInnerBlocks, selectBlock } = useDispatch(blockEditorStore);
+	const syncingSelectionRef = useRef(false);
 
 	const carouselMode = getCarouselMode(className);
 
@@ -522,17 +523,89 @@ export default function Edit({
 			removeHandlers.push(() => thumbsEmblaApi.destroy());
 		}
 
+		const syncEditorSelectionFromEmbla = () => {
+			if (hasQueryLoop || !viewportInnerBlocks.length) {
+				return;
+			}
+
+			const index = emblaApi.selectedScrollSnap();
+			const slide = viewportInnerBlocks[index];
+
+			if (!slide?.clientId) {
+				return;
+			}
+
+			const { getSelectedBlockClientId, getBlockParents } =
+				syncSelect(blockEditorStore);
+			const currentSelected = getSelectedBlockClientId();
+			const parents = currentSelected
+				? getBlockParents(currentSelected)
+				: [];
+			const alreadyOnSlide =
+				currentSelected === slide.clientId ||
+				parents.includes(slide.clientId);
+
+			if (alreadyOnSlide) {
+				return;
+			}
+
+			syncingSelectionRef.current = true;
+			selectBlock(slide.clientId);
+			queueMicrotask(() => {
+				syncingSelectionRef.current = false;
+			});
+		};
+
+		emblaApi.on('select', syncEditorSelectionFromEmbla);
+		removeHandlers.push(() => {
+			emblaApi.off('select', syncEditorSelectionFromEmbla);
+		});
+
 		return () => {
 			removeHandlers.forEach((removeHandler) => removeHandler());
 		};
 	}, [
 		clientId,
 		emblaApi,
+		hasQueryLoop,
 		innerBlocks,
+		selectBlock,
 		thumbsInnerBlocks,
 		viewportInnerBlocks,
 		setAttributes,
 	]);
+
+	const selectedBlockClientId = useSelect(
+		(select) => select(blockEditorStore).getSelectedBlockClientId(),
+		[]
+	);
+
+	useEffect(() => {
+		if (!emblaApi || !selectedBlockClientId || hasQueryLoop) {
+			return;
+		}
+
+		if (syncingSelectionRef.current) {
+			return;
+		}
+
+		const { getBlockParents } = syncSelect(blockEditorStore);
+		const parents = getBlockParents(selectedBlockClientId);
+		const chain = [selectedBlockClientId, ...parents];
+		const slideIndex = viewportInnerBlocks.findIndex((slide) =>
+			chain.includes(slide.clientId)
+		);
+
+		if (slideIndex < 0) {
+			return;
+		}
+
+		if (slideIndex === emblaApi.selectedScrollSnap()) {
+			return;
+		}
+
+		emblaApi.scrollTo(slideIndex);
+	}, [emblaApi, selectedBlockClientId, hasQueryLoop, viewportInnerBlocks]);
 
 	const isInnerBlockSelected = useSelect((select) =>
 		select('core/block-editor').hasSelectedInnerBlock(clientId, true)
