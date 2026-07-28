@@ -4,6 +4,7 @@ import { __ } from '@wordpress/i18n';
 import { GravityForm as GravityFormIcon } from '../../components/icons/gravity-form';
 import { useServerSideRender } from '@wordpress/server-side-render';
 import useBlockId from '../../utils/use-block-id';
+import GravityFormBlockControls from './components/block-controls';
 import GravityFormInspectorControls from './components/inspector-controls';
 import GravityFormPlaceholder from './components/placeholder';
 
@@ -86,13 +87,21 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			skipBlockSupportAttributes: true,
 		});
 
+	const inspectorControls = (
+		<GravityFormInspectorControls
+			attributes={attributes}
+			setAttributes={setAttributes}
+			formOptions={formOptions}
+		/>
+	);
+
+	const blockControls = <GravityFormBlockControls formId={formId} />;
+
 	return (
 		<>
-			<GravityFormInspectorControls
-				attributes={attributes}
-				setAttributes={setAttributes}
-				formOptions={formOptions}
-			/>
+			{blockControls}
+
+			{inspectorControls}
 
 			<div {...blockProps}>
 				<GravityFormPlaceholder

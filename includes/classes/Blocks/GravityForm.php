@@ -67,7 +67,8 @@ class GravityForm {
 			self::EDITOR_SCRIPT_HANDLE,
 			'matterGravityForm',
 			[
-				'forms' => $this->get_forms(),
+				'forms'    => $this->get_forms(),
+				'adminUrl' => admin_url( 'admin.php' ),
 			]
 		);
 	}
