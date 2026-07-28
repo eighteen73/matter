@@ -10,6 +10,8 @@
 
 use Eighteen73\Matter\Blocks\BlockId;
 
+defined( 'ABSPATH' ) || exit;
+
 $form_id             = isset( $attributes['formId'] ) ? absint( $attributes['formId'] ) : 0;
 $display_title       = isset( $attributes['displayTitle'] ) ? (bool) $attributes['displayTitle'] : false;
 $display_description = isset( $attributes['displayDescription'] ) ? (bool) $attributes['displayDescription'] : false;
@@ -47,7 +49,8 @@ $form_markup = gravity_form(
 	$field_values,
 	$ajax_submission,
 	$tabindex,
-	false
+	false,
+	'gravity-theme'
 );
 
 $incidental_output = '';
