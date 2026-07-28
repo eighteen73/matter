@@ -14,7 +14,8 @@
 		"lock": true,
 		"listView": true,
 		"reusable": false,
-		"contentRole": true
+		"contentRole": true,
+		"__experimentalExposeControlsToChildren": true
 	},
 	"attributes": {
 		"allowedBlocks": {

@@ -9,10 +9,7 @@ import {
 import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
-import {
-	createBlock,
-	createBlocksFromInnerBlocksTemplate,
-} from '@wordpress/blocks';
+import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
 import { useEffect } from '@wordpress/element';
 
 /**
@@ -67,10 +64,10 @@ function getTitleFontSizeCSSValue(fontSize, style) {
 	return customSize;
 }
 
-function Edit({ clientId, attributes, setAttributes, isSelected }) {
+function Edit({ clientId, attributes, setAttributes }) {
 	const { isQueryMode, fontSize, style } = attributes;
 
-	const { insertBlock, replaceInnerBlocks, updateBlockAttributes } =
+	const { replaceInnerBlocks, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
 
 	const { duplicateAnchor } = useBlockId({
@@ -139,18 +136,6 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		allowedBlocks: isQueryMode ? ['core/query'] : ['matter/accordion-item'],
 	});
 
-	const addAccordionItem = () => {
-		const newItem = createBlock('matter/accordion-item', {}, [
-			createBlock('matter/accordion-heading', {}),
-			createBlock('matter/accordion-panel', {}, [
-				createBlock('core/paragraph', {
-					placeholder: __('Type / to add content…', 'matter'),
-				}),
-			]),
-		]);
-		insertBlock(newItem, undefined, clientId);
-	};
-
 	const inspectorControls = (
 		<AccordionInspectorControls
 			attributes={attributes}
@@ -166,9 +151,6 @@ function Edit({ clientId, attributes, setAttributes, isSelected }) {
 		<AccordionBlockControls
 			attributes={attributes}
 			setAttributes={setAttributes}
-			isSelected={isSelected}
-			isQuery={isQueryMode}
-			addAccordionItem={addAccordionItem}
 		/>
 	);
 

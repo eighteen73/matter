@@ -9,10 +9,7 @@ import {
 } from '@wordpress/block-editor';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
-import {
-	createBlock,
-	createBlocksFromInnerBlocksTemplate,
-} from '@wordpress/blocks';
+import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
 
 /**
  * External dependencies
@@ -334,22 +331,9 @@ export default function Edit({
 			: []
 	);
 
-	const { insertBlock, replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
 
 	const carouselMode = getCarouselMode(className);
-
-	const addCarouselItem = () => {
-		if (!viewportBlock) {
-			return;
-		}
-
-		const newItem =
-			carouselMode === 'image'
-				? createBlock('core/image')
-				: createBlock('matter/carousel-slide');
-
-		insertBlock(newItem, undefined, viewportBlock.clientId);
-	};
 
 	useEffect(() => {
 		if (!innerBlocks.length) {
@@ -568,13 +552,7 @@ export default function Edit({
 				: false,
 	});
 
-	const blockControls = (
-		<CarouselBlockControls
-			isSelected={isSelected}
-			carouselMode={carouselMode}
-			addCarouselItem={addCarouselItem}
-		/>
-	);
+	const blockControls = <CarouselBlockControls />;
 
 	const inspectorControls = (
 		<CarouselInspectorControls
