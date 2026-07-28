@@ -6,8 +6,13 @@ import {
 import { useSelect } from '@wordpress/data';
 
 import './editor.scss';
+import CarouselBlockControls from '../carousel/components/block-controls';
 
-const QUERY_ALLOWED_BLOCKS = ['core/query', 'woocommerce/product-collection'];
+const QUERY_ALLOWED_BLOCKS = [
+	'core/query',
+	'woocommerce/product-collection',
+	'matter/carousel-slide',
+];
 
 export default function Edit({ attributes, clientId }) {
 	const { allowedBlocks } = attributes;
@@ -56,8 +61,12 @@ export default function Edit({ attributes, clientId }) {
 	);
 
 	return (
-		<div {...innerBlocksProps}>
-			<div className="embla__container">{children}</div>
-		</div>
+		<>
+			<CarouselBlockControls />
+
+			<div {...innerBlocksProps}>
+				<div className="embla__container">{children}</div>
+			</div>
+		</>
 	);
 }

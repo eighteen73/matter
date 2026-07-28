@@ -4,6 +4,15 @@
 		min-height: 40px;
 	}
 
+	// contentOnly locks non-content nav blocks as is-editing-disabled
+	// (pointer-events: none). Re-enable clicks so Embla can navigate while
+	// keeping the blocks themselves non-selectable.
+	.embla__button.is-editing-disabled,
+	.embla__dots.is-editing-disabled,
+	.wp-block-matter-carousel-thumbnails.is-editing-disabled {
+		pointer-events: auto;
+	}
+
 	.block-list-appender .block-editor-button-block-appender.block-editor-button-block-appender.block-editor-button-block-appender {
 		padding: 0;
 	}

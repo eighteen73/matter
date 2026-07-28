@@ -24,6 +24,59 @@ const ITEM_TEMPLATE = [
 	],
 ];
 
+export const MANUAL_ACCORDION_TEMPLATE = [ITEM_TEMPLATE];
+
+export const QUERY_LOOP_ACCORDION_TEMPLATE = [
+	[
+		'core/query',
+		{
+			query: {
+				perPage: 10,
+				pages: 0,
+				offset: 0,
+				postType: 'post',
+				order: 'desc',
+				orderBy: 'date',
+				author: '',
+				search: '',
+				exclude: [],
+				sticky: '',
+				inherit: false,
+			},
+		},
+		[
+			[
+				'core/post-template',
+				{},
+				[
+					[
+						'matter/accordion-item',
+						{ inQueryLoop: true },
+						[
+							['matter/accordion-heading', {}],
+							[
+								'matter/accordion-panel',
+								{},
+								[
+									[
+										'core/post-featured-image',
+										{
+											isLink: true,
+											aspectRatio: '16/9',
+										},
+									],
+									['core/post-title'],
+									['core/post-excerpt'],
+								],
+							],
+						],
+					],
+				],
+			],
+		],
+	],
+];
+
 const variations = [
 	{
 		name: 'accordion',
@@ -32,13 +85,14 @@ const variations = [
 			'Create collapsible sections with manual accordion items.',
 			'matter'
 		),
-		scope: ['block'],
+		scope: ['block', 'transform'],
 		icon: accordionIcon,
+		isDefault: true,
 		attributes: {
 			isQueryMode: false,
 		},
 		isActive: (blockAttributes) => !blockAttributes?.isQueryMode,
-		innerBlocks: [ITEM_TEMPLATE],
+		innerBlocks: MANUAL_ACCORDION_TEMPLATE,
 	},
 	{
 		name: 'query-loop-accordion',
@@ -47,62 +101,13 @@ const variations = [
 			'Create accordion items from a query loop (one item per post).',
 			'matter'
 		),
-		scope: ['block', 'inserter'],
+		scope: ['block', 'inserter', 'transform'],
 		icon: loop,
 		attributes: {
 			isQueryMode: true,
 		},
 		isActive: ['isQueryMode'],
-		innerBlocks: [
-			[
-				'core/query',
-				{
-					query: {
-						perPage: 10,
-						pages: 0,
-						offset: 0,
-						postType: 'post',
-						order: 'desc',
-						orderBy: 'date',
-						author: '',
-						search: '',
-						exclude: [],
-						sticky: '',
-						inherit: false,
-					},
-				},
-				[
-					[
-						'core/post-template',
-						{},
-						[
-							[
-								'matter/accordion-item',
-								{ inQueryLoop: true },
-								[
-									['matter/accordion-heading', {}],
-									[
-										'matter/accordion-panel',
-										{},
-										[
-											[
-												'core/post-featured-image',
-												{
-													isLink: true,
-													aspectRatio: '16/9',
-												},
-											],
-											['core/post-title'],
-											['core/post-excerpt'],
-										],
-									],
-								],
-							],
-						],
-					],
-				],
-			],
-		],
+		innerBlocks: QUERY_LOOP_ACCORDION_TEMPLATE,
 	},
 ];
 

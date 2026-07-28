@@ -8,8 +8,9 @@ import {
 	store as blockEditorStore,
 	InspectorControls,
 } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
-import { useMemo } from '@wordpress/element';
+import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useEffect, useMemo } from '@wordpress/element';
 import {
 	ToggleControl,
 	Notice,
@@ -32,11 +33,24 @@ import {
 	getQueryPostsForEditor,
 } from './utils/query-tabs-list';
 import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
-import BlockVariationPicker from '../../components/block-variation-picker';
 import BreakpointSelectorControl from '../../components/breakpoint-selector-control';
 import useBlockId from '../../utils/use-block-id';
+import { MANUAL_TABS_TEMPLATE, QUERY_LOOP_TABS_TEMPLATE } from './variations';
 
-const TABS_TEMPLATE = [['matter/tab-list'], ['matter/tab-panels']];
+/**
+ * Whether tab-panels children match the expected query/manual mode.
+ *
+ * @param {boolean} isQueryMode Whether tabs are in query mode.
+ * @param {Array}   tabPanels   Tab panels inner blocks.
+ * @return {boolean} True when structure matches the mode.
+ */
+function hasMatchingPanelsStructure(isQueryMode, tabPanels) {
+	const hasQueryBlock = tabPanels.some(
+		(block) => block.name === 'core/query'
+	);
+
+	return isQueryMode ? hasQueryBlock : !hasQueryBlock;
+}
 
 function Edit({ clientId, attributes, setAttributes }) {
 	const {
@@ -63,17 +77,18 @@ function Edit({ clientId, attributes, setAttributes }) {
 	});
 
 	const tabsId = anchor || generatedId || '';
+	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
 
 	const { tabPanels, tabButtons, tabPanelsClientId, tabListClientId } =
 		useSelect(
 			(select) => {
 				const { getBlocks } = select(blockEditorStore);
-				const innerBlocks = getBlocks(clientId);
+				const blocks = getBlocks(clientId);
 
-				const tabPanelsBlock = innerBlocks.find(
+				const tabPanelsBlock = blocks.find(
 					(block) => block.name === 'matter/tab-panels'
 				);
-				const tabListBlock = innerBlocks.find(
+				const tabListBlock = blocks.find(
 					(block) => block.name === 'matter/tab-list'
 				);
 
@@ -86,6 +101,43 @@ function Edit({ clientId, attributes, setAttributes }) {
 			},
 			[clientId]
 		);
+
+	const innerBlocks = useSelect(
+		(select) =>
+			select(blockEditorStore).getBlock(clientId)?.innerBlocks ?? [],
+		[clientId]
+	);
+
+	useEffect(() => {
+		if (!innerBlocks.length) {
+			return;
+		}
+
+		if (hasMatchingPanelsStructure(isQueryMode, tabPanels)) {
+			return;
+		}
+
+		const template = isQueryMode
+			? QUERY_LOOP_TABS_TEMPLATE
+			: MANUAL_TABS_TEMPLATE;
+
+		replaceInnerBlocks(
+			clientId,
+			createBlocksFromInnerBlocksTemplate(template),
+			false
+		);
+		setAttributes({
+			activeTabIndex: 0,
+			editorActiveTabIndex: 0,
+		});
+	}, [
+		clientId,
+		innerBlocks.length,
+		isQueryMode,
+		replaceInnerBlocks,
+		setAttributes,
+		tabPanels,
+	]);
 
 	useTabButtonsSync({
 		tabListClientId,
@@ -144,27 +196,10 @@ function Edit({ clientId, attributes, setAttributes }) {
 
 	const innerBlockProps = useInnerBlocksProps(blockProps, {
 		__experimentalCaptureToolbars: true,
-		template: TABS_TEMPLATE,
+		template: MANUAL_TABS_TEMPLATE,
 		templateLock: 'all',
 		renderAppender: false,
 	});
-
-	const innerBlocks = useSelect((select) =>
-		select('core/block-editor').getBlock(clientId)
-			? select('core/block-editor').getBlock(clientId).innerBlocks
-			: []
-	);
-
-	if (innerBlocks.length === 0) {
-		return (
-			<BlockVariationPicker
-				blockName="matter/tabs"
-				setAttributes={setAttributes}
-				clientId={clientId}
-				defaultTemplate={TABS_TEMPLATE}
-			/>
-		);
-	}
 
 	return (
 		<>

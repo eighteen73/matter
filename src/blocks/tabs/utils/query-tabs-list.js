@@ -6,7 +6,10 @@ import { store as coreDataStore } from '@wordpress/core-data';
 import { store as editorStore } from '@wordpress/editor';
 
 /**
- * Build entity query args from a core/query block's attributes.
+ * Build REST-safe entity query args from a core/query block's attributes.
+ *
+ * Mirrors core/post-template: omit editor-only keys (inherit, pages) and skip
+ * empty author/search/sticky values that break getEntityRecords resolution.
  *
  * @param {Object} queryAttributes Query block attributes.
  * @return {Object|null} Entity query args or null when invalid.
@@ -16,20 +19,58 @@ export function getEntityQueryArgs(queryAttributes) {
 		return null;
 	}
 
-	const { query } = queryAttributes;
+	const {
+		perPage,
+		offset = 0,
+		order,
+		orderBy,
+		author,
+		search,
+		exclude,
+		sticky,
+		parents,
+		format,
+	} = queryAttributes.query;
 
-	return {
-		per_page: query.perPage,
-		pages: query.pages,
-		offset: query.offset,
-		order: query.order,
-		orderby: query.orderBy,
-		author: query.author,
-		search: query.search,
-		exclude: query.exclude,
-		sticky: query.sticky,
-		inherit: query.inherit,
+	const entityQuery = {
+		offset: offset || 0,
+		order,
+		orderby: orderBy,
 	};
+
+	if (perPage) {
+		entityQuery.per_page = perPage;
+	}
+
+	if (author) {
+		entityQuery.author = author;
+	}
+
+	if (search) {
+		entityQuery.search = search;
+	}
+
+	if (exclude?.length) {
+		entityQuery.exclude = exclude;
+	}
+
+	if (parents?.length) {
+		entityQuery.parent = parents;
+	}
+
+	if (format?.length) {
+		entityQuery.format = format;
+	}
+
+	if (['exclude', 'only'].includes(sticky)) {
+		entityQuery.sticky = sticky === 'only';
+	}
+
+	if (['', 'ignore'].includes(sticky)) {
+		entityQuery.ignore_sticky = sticky === 'ignore';
+	}
+
+	return entityQuery;
 }
 
 /**
@@ -49,13 +90,21 @@ export function getQueryPostsForEditor(queryAttributes, select) {
 	const { getEntityRecords, getEntityRecord } = select(coreDataStore);
 
 	if (query.inherit) {
-		const inheritedPosts =
-			getEntityRecords('postType', postType, {
-				per_page: query.perPage ?? 10,
-				order: query.order,
-				orderby: query.orderBy,
-				inherit: true,
-			}) ?? [];
+		const inheritQuery = {
+			order: query.order,
+			orderby: query.orderBy,
+		};
+
+		if (query.perPage) {
+			inheritQuery.per_page = query.perPage;
+		}
+
+		const inheritedRaw = getEntityRecords(
+			'postType',
+			postType,
+			inheritQuery
+		);
+		const inheritedPosts = inheritedRaw ?? [];
 
 		if (inheritedPosts.length > 0) {
 			return inheritedPosts;
