@@ -90,134 +90,152 @@ export default function GravityFormInspectorControls({
 	};
 
 	return (
-		<InspectorControls>
-			<ToolsPanel
-				label={__('Settings', 'matter')}
-				resetAll={() => {
-					setAttributes({
-						formId: '',
-						displayTitle: false,
-						displayDescription: false,
-						ajaxSubmission: true,
-						tabindex: 0,
-						fieldValues: null,
-					});
-					setFieldValuesError('');
-					setFieldValuesDraft('');
-				}}
-			>
-				<ToolsPanelItem
-					label={__('Form', 'matter')}
-					hasValue={() => !!formId}
-					onDeselect={() => setAttributes({ formId: '' })}
-					isShownByDefault
+		<>
+			<InspectorControls group="content">
+				<ToolsPanel
+					label={__('Form Content', 'matter')}
+					resetAll={() => {
+						setAttributes({
+							formId: '',
+						});
+					}}
 				>
-					<FormSelect
-						attributes={attributes}
-						setAttributes={setAttributes}
-						formOptions={formOptions}
-					/>
-				</ToolsPanelItem>
+					<ToolsPanelItem
+						label={__('Form', 'matter')}
+						hasValue={() => !!formId}
+						onDeselect={() => setAttributes({ formId: '' })}
+						isShownByDefault
+					>
+						<FormSelect
+							attributes={attributes}
+							setAttributes={setAttributes}
+							formOptions={formOptions}
+						/>
+					</ToolsPanelItem>
+				</ToolsPanel>
+			</InspectorControls>
 
-				<ToolsPanelItem
-					label={__('Display Title', 'matter')}
-					hasValue={() => displayTitle}
-					onDeselect={() => setAttributes({ displayTitle: false })}
-					isShownByDefault
+			<InspectorControls>
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() => {
+						setAttributes({
+							displayTitle: false,
+							displayDescription: false,
+							ajaxSubmission: true,
+							tabindex: 0,
+							fieldValues: null,
+						});
+						setFieldValuesError('');
+						setFieldValuesDraft('');
+					}}
 				>
-					<ToggleControl
+					<ToolsPanelItem
 						label={__('Display Title', 'matter')}
-						help={__('Display the form title.', 'matter')}
-						checked={displayTitle}
-						onChange={(value) =>
-							setAttributes({ displayTitle: value })
+						hasValue={() => displayTitle}
+						onDeselect={() =>
+							setAttributes({ displayTitle: false })
 						}
-					/>
-				</ToolsPanelItem>
-
-				<ToolsPanelItem
-					label={__('Display Description', 'matter')}
-					hasValue={() => displayDescription}
-					onDeselect={() =>
-						setAttributes({ displayDescription: false })
-					}
-					isShownByDefault
-				>
-					<ToggleControl
-						label={__('Display Description', 'matter')}
-						help={__('Display the form description.', 'matter')}
-						checked={displayDescription}
-						onChange={(value) =>
-							setAttributes({ displayDescription: value })
-						}
-					/>
-				</ToolsPanelItem>
-
-				<ToolsPanelItem
-					label={__('Ajax Submission', 'matter')}
-					hasValue={() => ajaxSubmission}
-					onDeselect={() => setAttributes({ ajaxSubmission: true })}
-					isShownByDefault
-				>
-					<ToggleControl
-						label={__('AJAX Submission', 'matter')}
-						help={__(
-							'Submit the form via AJAX. This will prevent the page from reloading when the form is submitted.',
-							'matter'
-						)}
-						checked={ajaxSubmission}
-						onChange={(value) =>
-							setAttributes({ ajaxSubmission: value })
-						}
-					/>
-				</ToolsPanelItem>
-
-				<ToolsPanelItem
-					label={__('Tabindex', 'matter')}
-					hasValue={() => tabindex}
-					onDeselect={() => setAttributes({ tabindex: 0 })}
-				>
-					<NumberControl
-						label={__('Tabindex', 'matter')}
-						help={__(
-							'The tabindex of the form. 0 or -1 are recommended',
-							'matter'
-						)}
-						value={tabindex}
-						onChange={(value) => setAttributes({ tabindex: value })}
-					/>
-				</ToolsPanelItem>
-
-				{fieldValuesError ? (
-					<Notice status="error" isDismissible={false}>
-						{fieldValuesError}
-					</Notice>
-				) : null}
-
-				<ToolsPanelItem
-					label={__('Field Values', 'matter')}
-					hasValue={() => fieldValuesDraft.trim() !== ''}
-					onDeselect={clearFieldValues}
-				>
-					<TextareaControl
-						label={__('Field Values', 'matter')}
-						help={__(
-							'JSON object of dynamic population parameter keys and values (for example, {"some_field": "custom_value"}).',
-							'matter'
-						)}
-						value={fieldValuesDraft}
-						onChange={(value) => {
-							setFieldValuesDraft(value);
-							if (fieldValuesError) {
-								setFieldValuesError('');
+						isShownByDefault
+					>
+						<ToggleControl
+							label={__('Display Title', 'matter')}
+							help={__('Display the form title.', 'matter')}
+							checked={displayTitle}
+							onChange={(value) =>
+								setAttributes({ displayTitle: value })
 							}
-						}}
-						onBlur={handleFieldValuesBlur}
-						rows={6}
-						style={{ fontFamily: 'monospace' }}
-					/>
-				</ToolsPanelItem>
-			</ToolsPanel>
-		</InspectorControls>
+						/>
+					</ToolsPanelItem>
+
+					<ToolsPanelItem
+						label={__('Display Description', 'matter')}
+						hasValue={() => displayDescription}
+						onDeselect={() =>
+							setAttributes({ displayDescription: false })
+						}
+						isShownByDefault
+					>
+						<ToggleControl
+							label={__('Display Description', 'matter')}
+							help={__('Display the form description.', 'matter')}
+							checked={displayDescription}
+							onChange={(value) =>
+								setAttributes({ displayDescription: value })
+							}
+						/>
+					</ToolsPanelItem>
+
+					<ToolsPanelItem
+						label={__('Ajax Submission', 'matter')}
+						hasValue={() => ajaxSubmission}
+						onDeselect={() =>
+							setAttributes({ ajaxSubmission: true })
+						}
+						isShownByDefault
+					>
+						<ToggleControl
+							label={__('AJAX Submission', 'matter')}
+							help={__(
+								'Submit the form via AJAX. This will prevent the page from reloading when the form is submitted.',
+								'matter'
+							)}
+							checked={ajaxSubmission}
+							onChange={(value) =>
+								setAttributes({ ajaxSubmission: value })
+							}
+						/>
+					</ToolsPanelItem>
+
+					<ToolsPanelItem
+						label={__('Tabindex', 'matter')}
+						hasValue={() => tabindex}
+						onDeselect={() => setAttributes({ tabindex: 0 })}
+					>
+						<NumberControl
+							label={__('Tabindex', 'matter')}
+							help={__(
+								'The tabindex of the form. 0 or -1 are recommended',
+								'matter'
+							)}
+							value={tabindex}
+							onChange={(value) =>
+								setAttributes({ tabindex: value })
+							}
+						/>
+					</ToolsPanelItem>
+
+					{fieldValuesError ? (
+						<Notice status="error" isDismissible={false}>
+							{fieldValuesError}
+						</Notice>
+					) : null}
+
+					<ToolsPanelItem
+						label={__('Field Values', 'matter')}
+						hasValue={() => fieldValuesDraft.trim() !== ''}
+						onDeselect={clearFieldValues}
+					>
+						<TextareaControl
+							label={__('Field Values', 'matter')}
+							help={__(
+								'JSON object of dynamic population parameter keys and values (for example, {"some_field": "custom_value"}).',
+								'matter'
+							)}
+							value={fieldValuesDraft}
+							onChange={(value) => {
+								setFieldValuesDraft(value);
+								if (fieldValuesError) {
+									setFieldValuesError('');
+								}
+							}}
+							onBlur={handleFieldValuesBlur}
+							rows={6}
+							style={{ fontFamily: 'monospace' }}
+						/>
+					</ToolsPanelItem>
+				</ToolsPanel>
+			</InspectorControls>
+		</>
 	);
 }

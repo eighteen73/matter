@@ -1,4 +1,4 @@
-import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
+import { useBlockProps } from '@wordpress/block-editor';
 import { Disabled, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { postCommentsForm } from '@wordpress/icons';
@@ -72,19 +72,13 @@ export default function Edit({ attributes, setAttributes }) {
 			skipBlockSupportAttributes: true,
 		});
 
-	const inspectorControls = (
-		<GravityFormInspectorControls
-			attributes={attributes}
-			setAttributes={setAttributes}
-			formOptions={formOptions}
-		/>
-	);
-
 	return (
 		<>
-			<InspectorControls group="settings">
-				{inspectorControls}
-			</InspectorControls>
+			<GravityFormInspectorControls
+				attributes={attributes}
+				setAttributes={setAttributes}
+				formOptions={formOptions}
+			/>
 
 			<div {...blockProps}>
 				<GravityFormPlaceholder
