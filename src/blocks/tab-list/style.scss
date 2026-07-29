@@ -56,15 +56,15 @@
 	}
 
 	.wp-block-matter-tab-button {
-		--_active-color: var(--matter-tab-button--active-color, var(--wp--custom--matter-tab-button--active-color), currentcolor);
-		--_media-size: var(--matter-tab-button--media-size, var(--wp--custom--matter-tab-button--media-size), 56px);
-		--_media-border-radius: var(--matter-tab-button--media-border-radius, var(--wp--custom--matter-tab-button--media-border-radius), 100%);
-		--_media-gap: var(--matter-tab-button--media-gap, var(--wp--custom--matter-tab-button--media-gap), 10px);
-		--_padding: var(--matter-tab-button--padding, var(--wp--custom--matter-tab-button--padding), 0.5em);
-		--_border-radius: var(--matter-tab-button--border-radius, var(--wp--custom--matter-tab-button--border-radius), 0);
-		--_background-color: var(--matter-tab-button--background-color, var(--wp--custom--matter-tab-button--background-color), transparent);
-		--_color: var(--matter-tab-button--color, var(--wp--custom--matter-tab-button--color), currentcolor);
-		--_border: var(--matter-tab-button--border, var(--wp--custom--matter-tab-button--border), none);
+		--_active-color: var(--matter-tab-button--active-color, var(--wp--custom--matter-tab-button--active-color, currentcolor));
+		--_media-size: var(--matter-tab-button--media-size, var(--wp--custom--matter-tab-button--media-size, 56px));
+		--_media-border-radius: var(--matter-tab-button--media-border-radius, var(--wp--custom--matter-tab-button--media-border-radius, 100%));
+		--_media-gap: var(--matter-tab-button--media-gap, var(--wp--custom--matter-tab-button--media-gap, 10px));
+		--_padding: var(--matter-tab-button--padding, var(--wp--custom--matter-tab-button--padding, 0.5em));
+		--_border-radius: var(--matter-tab-button--border-radius, var(--wp--custom--matter-tab-button--border-radius, 0));
+		--_background-color: var(--matter-tab-button--background-color, var(--wp--custom--matter-tab-button--background-color, transparent));
+		--_color: var(--matter-tab-button--color, var(--wp--custom--matter-tab-button--color, currentcolor));
+		--_border: var(--matter-tab-button--border, var(--wp--custom--matter-tab-button--border, none));
 
 		align-items: center;
 		appearance: none;
