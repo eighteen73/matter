@@ -1,21 +1,23 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "matter/carousel-viewport",
+  "name": "matter/carousel-slide",
   "version": "0.1.0",
-  "title": "Viewport",
+  "title": "Slide",
   "category": "design",
-  "icon": "images-alt",
-  "description": "Carousel Viewport",
+  "description": "Carousel Slide",
   "ancestor": [
-    "matter/carousel"
+    "matter/carousel-viewport"
   ],
   "supports": {
+    "html": false,
     "lock": true,
-    "listView": true,
-    "reusable": false,
     "contentRole": true,
-    "__experimentalExposeControlsToChildren": true
+    "listView": true,
+    "layout": {
+      "allowEditing": false
+    },
+    "renaming": false
   },
   "attributes": {
     "allowedBlocks": {

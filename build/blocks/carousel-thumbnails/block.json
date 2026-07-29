@@ -20,6 +20,7 @@
     }
   },
   "supports": {
+    "contentRole": true,
     "lock": false,
     "layout": {
       "default": {

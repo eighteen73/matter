@@ -431,7 +431,9 @@ return array(
 					'margin' => false,
 					'padding' => false
 				)
-			)
+			),
+			'contentRole' => true,
+			'listView' => true
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
@@ -463,6 +465,7 @@ return array(
 			)
 		),
 		'supports' => array(
+			'contentRole' => true,
 			'color' => array(
 				'text' => false,
 				'background' => true,
@@ -505,6 +508,7 @@ return array(
 			)
 		),
 		'supports' => array(
+			'contentRole' => true,
 			'color' => array(
 				'text' => false,
 				'background' => true,
@@ -565,6 +569,7 @@ return array(
 			)
 		),
 		'supports' => array(
+			'contentRole' => true,
 			'color' => array(
 				'text' => false,
 				'background' => true,
@@ -647,6 +652,37 @@ return array(
 		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
+	'carousel-slide' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/carousel-slide',
+		'version' => '0.1.0',
+		'title' => 'Slide',
+		'category' => 'design',
+		'description' => 'Carousel Slide',
+		'ancestor' => array(
+			'matter/carousel-viewport'
+		),
+		'supports' => array(
+			'html' => false,
+			'lock' => true,
+			'contentRole' => true,
+			'listView' => true,
+			'layout' => array(
+				'allowEditing' => false
+			),
+			'renaming' => false
+		),
+		'attributes' => array(
+			'allowedBlocks' => array(
+				'type' => 'array'
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css',
+		'render' => 'file:./render.php'
+	),
 	'carousel-thumbnails' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
@@ -669,6 +705,7 @@ return array(
 			)
 		),
 		'supports' => array(
+			'contentRole' => true,
 			'lock' => false,
 			'layout' => array(
 				'default' => array(
@@ -709,7 +746,11 @@ return array(
 			'matter/carousel'
 		),
 		'supports' => array(
-			'lock' => true
+			'lock' => true,
+			'listView' => true,
+			'reusable' => false,
+			'contentRole' => true,
+			'__experimentalExposeControlsToChildren' => true
 		),
 		'attributes' => array(
 			'allowedBlocks' => array(
