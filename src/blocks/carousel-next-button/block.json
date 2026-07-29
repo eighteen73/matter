@@ -17,6 +17,7 @@
 		}
 	},
 	"supports": {
+		"contentRole": true,
 		"color": {
 			"text": false,
 			"background": true,

@@ -76,6 +76,7 @@
 			touch-action: pan-y pinch-zoom;
 
 			> * {
+				box-sizing: border-box;
 				flex: 0 0 var(--_slide--width);
 				margin: 0;
 				min-width: 0;

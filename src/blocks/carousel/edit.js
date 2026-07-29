@@ -4,13 +4,12 @@
 import {
 	useBlockProps,
 	useInnerBlocksProps,
-	InspectorControls,
 	InnerBlocks,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect, useMemo } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { useDispatch, useSelect, select as syncSelect } from '@wordpress/data';
+import { useEffect, useMemo, useRef } from '@wordpress/element';
+import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
 
 /**
  * External dependencies
@@ -21,7 +20,6 @@ import useEmblaCarousel from 'embla-carousel-react';
 /**
  * Internal dependencies
  */
-import SingleBlockTypeAppender from '../../components/single-block-type-appender';
 import {
 	addDotBtnsAndClickHandlers,
 	addPrevNextBtnsClickHandlers,
@@ -35,33 +33,56 @@ import {
 import { findDescendantBlock } from './utils/block-tree';
 import { buildCarouselStylesheet } from './utils/styles';
 import { shouldReplaceThumbBlocks } from './utils/thumbnails-sync';
-import AdvancedControls from './components/advanced-controls';
-import CarouselControls from './components/carousel-controls';
+import CarouselBlockControls from './components/block-controls';
+import CarouselInspectorControls from './components/inspector-controls';
 import breakpoints from '../../constants/breakpoints';
-import BlockVariationPicker from '../../components/block-variation-picker';
 import useBlockId from '../../utils/use-block-id';
+import {
+	STANDARD_CAROUSEL_TEMPLATE,
+	IMAGE_CAROUSEL_TEMPLATE,
+	POST_CAROUSEL_TEMPLATE,
+	getCarouselMode,
+} from './variations';
 
 import './editor.scss';
 
-const DEFAULT_CAROUSEL_TEMPLATE = [
-	['matter/carousel-viewport', { lock: { remove: true } }],
-	[
-		'core/group',
-		{
-			layout: {
-				type: 'flex',
-				justifyContent: 'space-between',
-				flexWrap: 'nowrap',
-				verticalAlignment: 'center',
-			},
-		},
-		[
-			['matter/carousel-previous-button'],
-			['matter/carousel-dots'],
-			['matter/carousel-next-button'],
-		],
-	],
-];
+/**
+ * Whether viewport children match the expected carousel mode.
+ *
+ * @param {'standard'|'image'|'post'} mode           Active carousel mode.
+ * @param {Array}                     viewportBlocks Viewport inner blocks.
+ * @param {Object|false}              viewportBlock  Viewport block.
+ * @return {boolean} True when structure matches the mode.
+ */
+function hasMatchingViewportStructure(mode, viewportBlocks, viewportBlock) {
+	const hasQueryBlock = viewportBlocks.some(
+		(block) =>
+			block.name === 'core/query' ||
+			block.name === 'woocommerce/product-collection'
+	);
+	const allowedBlock = viewportBlock?.attributes?.allowedBlocks?.[0] ?? null;
+
+	if (mode === 'post') {
+		return hasQueryBlock;
+	}
+
+	if (mode === 'image') {
+		return !hasQueryBlock && allowedBlock === 'core/image';
+	}
+
+	return (
+		!hasQueryBlock &&
+		allowedBlock !== 'core/image' &&
+		allowedBlock !== 'core/query' &&
+		allowedBlock !== 'woocommerce/product-collection'
+	);
+}
+
+const MODE_TEMPLATES = {
+	standard: STANDARD_CAROUSEL_TEMPLATE,
+	image: IMAGE_CAROUSEL_TEMPLATE,
+	post: POST_CAROUSEL_TEMPLATE,
+};
 
 export default function Edit({
 	clientId,
@@ -69,8 +90,12 @@ export default function Edit({
 	setAttributes,
 	isSelected,
 }) {
-	const { emblaConfig, advancedEmblaConfig, advancedEmblaConfigMerge } =
-		attributes;
+	const {
+		className,
+		emblaConfig,
+		advancedEmblaConfig,
+		advancedEmblaConfigMerge,
+	} = attributes;
 
 	useBlockId({
 		blockName: 'matter/carousel',
@@ -306,20 +331,45 @@ export default function Edit({
 			: []
 	);
 
-	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const { replaceInnerBlocks, selectBlock } = useDispatch(blockEditorStore);
+	const syncingSelectionRef = useRef(false);
+
+	const carouselMode = getCarouselMode(className);
+
+	useEffect(() => {
+		if (!innerBlocks.length) {
+			return;
+		}
+
+		if (
+			hasMatchingViewportStructure(
+				carouselMode,
+				viewportInnerBlocks,
+				viewportBlock
+			)
+		) {
+			return;
+		}
+
+		replaceInnerBlocks(
+			clientId,
+			createBlocksFromInnerBlocksTemplate(MODE_TEMPLATES[carouselMode]),
+			false
+		);
+	}, [
+		carouselMode,
+		clientId,
+		innerBlocks.length,
+		replaceInnerBlocks,
+		viewportBlock,
+		viewportInnerBlocks,
+	]);
 
 	const hasQueryLoop = viewportInnerBlocks.find(
 		(block) =>
 			block.name === 'core/query' ||
 			block.name === 'woocommerce/product-collection'
 	);
-
-	const viewportAllowedBlock =
-		viewportBlock?.attributes?.allowedBlocks?.[0] ?? null;
-
-	const isQueryOnlyViewport =
-		viewportAllowedBlock === 'core/query' ||
-		viewportAllowedBlock === 'woocommerce/product-collection';
 
 	const getContainer = () => {
 		if (!hasQueryLoop) {
@@ -473,17 +523,89 @@ export default function Edit({
 			removeHandlers.push(() => thumbsEmblaApi.destroy());
 		}
 
+		const syncEditorSelectionFromEmbla = () => {
+			if (hasQueryLoop || !viewportInnerBlocks.length) {
+				return;
+			}
+
+			const index = emblaApi.selectedScrollSnap();
+			const slide = viewportInnerBlocks[index];
+
+			if (!slide?.clientId) {
+				return;
+			}
+
+			const { getSelectedBlockClientId, getBlockParents } =
+				syncSelect(blockEditorStore);
+			const currentSelected = getSelectedBlockClientId();
+			const parents = currentSelected
+				? getBlockParents(currentSelected)
+				: [];
+			const alreadyOnSlide =
+				currentSelected === slide.clientId ||
+				parents.includes(slide.clientId);
+
+			if (alreadyOnSlide) {
+				return;
+			}
+
+			syncingSelectionRef.current = true;
+			selectBlock(slide.clientId);
+			queueMicrotask(() => {
+				syncingSelectionRef.current = false;
+			});
+		};
+
+		emblaApi.on('select', syncEditorSelectionFromEmbla);
+		removeHandlers.push(() => {
+			emblaApi.off('select', syncEditorSelectionFromEmbla);
+		});
+
 		return () => {
 			removeHandlers.forEach((removeHandler) => removeHandler());
 		};
 	}, [
 		clientId,
 		emblaApi,
+		hasQueryLoop,
 		innerBlocks,
+		selectBlock,
 		thumbsInnerBlocks,
 		viewportInnerBlocks,
 		setAttributes,
 	]);
+
+	const selectedBlockClientId = useSelect(
+		(select) => select(blockEditorStore).getSelectedBlockClientId(),
+		[]
+	);
+
+	useEffect(() => {
+		if (!emblaApi || !selectedBlockClientId || hasQueryLoop) {
+			return;
+		}
+
+		if (syncingSelectionRef.current) {
+			return;
+		}
+
+		const { getBlockParents } = syncSelect(blockEditorStore);
+		const parents = getBlockParents(selectedBlockClientId);
+		const chain = [selectedBlockClientId, ...parents];
+		const slideIndex = viewportInnerBlocks.findIndex((slide) =>
+			chain.includes(slide.clientId)
+		);
+
+		if (slideIndex < 0) {
+			return;
+		}
+
+		if (slideIndex === emblaApi.selectedScrollSnap()) {
+			return;
+		}
+
+		emblaApi.scrollTo(slideIndex);
+	}, [emblaApi, selectedBlockClientId, hasQueryLoop, viewportInnerBlocks]);
 
 	const isInnerBlockSelected = useSelect((select) =>
 		select('core/block-editor').hasSelectedInnerBlock(clientId, true)
@@ -495,7 +617,7 @@ export default function Edit({
 
 	const { children, ...innerBlocksProps } = useInnerBlocksProps(blockProps, {
 		orientation: 'vertical',
-		template: DEFAULT_CAROUSEL_TEMPLATE,
+		template: STANDARD_CAROUSEL_TEMPLATE,
 		templateLock: false,
 		renderAppender:
 			isSelected && !isInnerBlockSelected
@@ -503,73 +625,40 @@ export default function Edit({
 				: false,
 	});
 
-	if (innerBlocks.length === 0) {
-		return (
-			<BlockVariationPicker
-				blockName="matter/carousel"
-				setAttributes={setAttributes}
-				clientId={clientId}
-				defaultTemplate={DEFAULT_CAROUSEL_TEMPLATE}
-			/>
-		);
-	}
+	const blockControls = <CarouselBlockControls />;
+
+	const inspectorControls = (
+		<CarouselInspectorControls
+			baseOptions={uiOptions}
+			baseAutoplay={uiAutoplay}
+			baseFade={uiFade}
+			breakpointLayers={resolvedConfig.breakpointLayers}
+			onChangeBaseOption={setOption}
+			onChangeBaseAutoplay={setAutoplay}
+			onChangeBaseFade={setFade}
+			onChangeLayerOption={setLayerOption}
+			onChangeLayerAutoplay={setLayerAutoplay}
+			onChangeLayerFade={setLayerFade}
+			onResetLayer={resetLayer}
+			emblaConfig={resolvedConfig}
+			setAttributes={setAttributes}
+			advancedEmblaConfig={advancedEmblaConfig}
+			advancedEmblaConfigMerge={advancedEmblaConfigMerge}
+		/>
+	);
 
 	return (
 		<>
 			{carouselStylesheet && <style>{carouselStylesheet}</style>}
 
-			<InspectorControls group="settings">
-				<CarouselControls
-					baseOptions={uiOptions}
-					baseAutoplay={uiAutoplay}
-					baseFade={uiFade}
-					breakpointLayers={resolvedConfig.breakpointLayers}
-					onChangeBaseOption={setOption}
-					onChangeBaseAutoplay={setAutoplay}
-					onChangeBaseFade={setFade}
-					onChangeLayerOption={setLayerOption}
-					onChangeLayerAutoplay={setLayerAutoplay}
-					onChangeLayerFade={setLayerFade}
-					onResetLayer={resetLayer}
-					emblaConfig={resolvedConfig}
-					setAttributes={setAttributes}
-				/>
+			{blockControls}
 
-				<AdvancedControls
-					advancedEmblaConfig={advancedEmblaConfig}
-					advancedEmblaConfigMerge={advancedEmblaConfigMerge}
-					setAttributes={setAttributes}
-				/>
-			</InspectorControls>
+			{inspectorControls}
 
 			<div {...innerBlocksProps}>
 				<div className="embla" ref={emblaRef}>
 					{children}
 				</div>
-
-				{viewportBlock &&
-					viewportBlock?.attributes?.allowedBlocks?.length === 1 &&
-					!isQueryOnlyViewport &&
-					!hasQueryLoop &&
-					(isSelected || isInnerBlockSelected) && (
-						<SingleBlockTypeAppender
-							onClickAfter={() => {}}
-							variant="secondary"
-							text={__('Add item', 'matter')}
-							allowedBlock={
-								viewportBlock?.attributes?.allowedBlocks?.[0]
-							}
-							style={{
-								width: '50%',
-								justifyContent: 'center',
-								marginTop: '1rem',
-								marginLeft: 'auto',
-								marginRight: 'auto',
-								display: 'flex',
-							}}
-							clientId={viewportBlock.clientId}
-						/>
-					)}
 			</div>
 		</>
 	);
