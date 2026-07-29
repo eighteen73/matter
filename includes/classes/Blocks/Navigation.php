@@ -41,9 +41,17 @@ class Navigation {
 			return '';
 		}
 
+		$parsed_blocks = parse_blocks( (string) $menu_post->post_content );
+
+		// Match core/navigation: prime linked posts into object cache before resolving permalinks.
+		$post_ids = self::get_linked_post_ids( $parsed_blocks );
+		if ( $post_ids ) {
+			_prime_post_caches( $post_ids, false, false );
+		}
+
 		$submenu_index = 0;
 		$items         = self::render_items(
-			parse_blocks( (string) $menu_post->post_content ),
+			$parsed_blocks,
 			$type,
 			$submenu_opens_on_click,
 			$submenu_index
@@ -126,12 +134,13 @@ class Navigation {
 
 			if ( 'core/navigation-link' === $block_name ) {
 				$item_attributes = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
-				$items_markup   .= self::render_link_item( $item_attributes );
+				$items_markup   .= self::render_link_item( self::resolve_item_attributes( $item_attributes ) );
 				continue;
 			}
 
 			if ( 'core/navigation-submenu' === $block_name ) {
 				$item_attributes = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
+				$item_attributes = self::resolve_item_attributes( $item_attributes );
 				$children        = isset( $parsed_block['innerBlocks'] ) && is_array( $parsed_block['innerBlocks'] ) ? $parsed_block['innerBlocks'] : [];
 				$label           = isset( $item_attributes['label'] ) ? wp_strip_all_tags( (string) $item_attributes['label'] ) : '';
 				$raw_url         = isset( $item_attributes['url'] ) ? trim( (string) $item_attributes['url'] ) : '';
@@ -309,6 +318,85 @@ class Navigation {
 			),
 			esc_html__( 'View all', 'matter' )
 		);
+	}
+
+	/**
+	 * Collect post IDs referenced by navigation-link / navigation-submenu items.
+	 *
+	 * Mirrors block_core_navigation_get_post_ids() so _prime_post_caches() can
+	 * warm the object cache before permalink resolution.
+	 *
+	 * @param array<int, array<string, mixed>> $parsed_blocks Parsed navigation blocks.
+	 * @return array<int, int>
+	 */
+	private static function get_linked_post_ids( array $parsed_blocks ): array {
+		$post_ids = [];
+
+		foreach ( $parsed_blocks as $parsed_block ) {
+			$block_name = isset( $parsed_block['blockName'] ) ? (string) $parsed_block['blockName'] : '';
+
+			if ( in_array( $block_name, [ 'core/navigation-link', 'core/navigation-submenu' ], true ) ) {
+				$attrs = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
+				$id    = isset( $attrs['id'] ) ? absint( $attrs['id'] ) : 0;
+				$kind  = isset( $attrs['kind'] ) ? (string) $attrs['kind'] : '';
+
+				if ( $id && ( 'post-type' === $kind || empty( $kind ) ) ) {
+					$post_ids[] = $id;
+				}
+			}
+
+			if ( ! empty( $parsed_block['innerBlocks'] ) && is_array( $parsed_block['innerBlocks'] ) ) {
+				$post_ids = array_merge( $post_ids, self::get_linked_post_ids( $parsed_block['innerBlocks'] ) );
+			}
+		}
+
+		return array_values( array_unique( array_filter( $post_ids ) ) );
+	}
+
+	/**
+	 * Resolve live permalinks for bound / post-type navigation items.
+	 *
+	 * Core navigation-link does not call get_permalink() in its render callback.
+	 * Instead WP_Block::process_block_bindings() resolves
+	 * `metadata.bindings.url` → `core/post-data`/`link`, which itself calls
+	 * get_permalink(). Matter parses menu attrs manually (no WP_Block), so this
+	 * mirrors that binding behaviour. Linked posts should already be in object
+	 * cache via _prime_post_caches() in render().
+	 *
+	 * @param array<string, mixed> $item_attributes Item attributes.
+	 * @return array<string, mixed>
+	 */
+	private static function resolve_item_attributes( array $item_attributes ): array {
+		$id = isset( $item_attributes['id'] ) ? absint( $item_attributes['id'] ) : 0;
+
+		if ( ! $id ) {
+			return $item_attributes;
+		}
+
+		$binding_source = '';
+		if (
+			isset( $item_attributes['metadata']['bindings']['url']['source'] )
+			&& is_string( $item_attributes['metadata']['bindings']['url']['source'] )
+		) {
+			$binding_source = $item_attributes['metadata']['bindings']['url']['source'];
+		}
+
+		$kind = isset( $item_attributes['kind'] ) ? (string) $item_attributes['kind'] : '';
+
+		// Prefer Core's binding signal; also cover post-type links saved without bindings.
+		$should_resolve = ( 'core/post-data' === $binding_source ) || ( 'post-type' === $kind );
+
+		if ( ! $should_resolve ) {
+			return $item_attributes;
+		}
+
+		$permalink = get_permalink( $id );
+
+		if ( $permalink ) {
+			$item_attributes['url'] = $permalink;
+		}
+
+		return $item_attributes;
 	}
 
 	/**
