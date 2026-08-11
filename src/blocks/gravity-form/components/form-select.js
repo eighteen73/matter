@@ -1,5 +1,6 @@
 import { SelectControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import FormSelectHelp from './form-select-help';
 
 export default function FormSelect({ attributes, setAttributes, formOptions }) {
 	const { formId } = attributes;
@@ -10,6 +11,7 @@ export default function FormSelect({ attributes, setAttributes, formOptions }) {
 			value={formId}
 			options={formOptions}
 			onChange={(value) => setAttributes({ formId: value })}
+			help={<FormSelectHelp formId={formId} />}
 		/>
 	);
 }
