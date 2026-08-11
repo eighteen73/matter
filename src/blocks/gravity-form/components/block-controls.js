@@ -4,58 +4,32 @@
 import { BlockControls } from '@wordpress/block-editor';
 import { ToolbarButton } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { pencil, settings } from '@wordpress/icons';
-import { addQueryArgs } from '@wordpress/url';
+import { pencil } from '@wordpress/icons';
 
 /**
  * Block toolbar links to the Gravity Forms editor and settings screens.
  *
- * @param {Object} props        Component props.
- * @param {string} props.formId Selected form ID.
+ * @param {Object}   props               Component props.
+ * @param {string}   props.formId        Selected form ID.
+ * @param {Function} props.setAttributes Set block attributes.
  * @return {Element|null} Toolbar controls, or null when no form is selected.
  */
-export default function GravityFormBlockControls({ formId }) {
+export default function GravityFormBlockControls({ formId, setAttributes }) {
 	if (!formId) {
 		return null;
 	}
 
-	const adminUrl = window.matterGravityForm?.adminUrl ?? '';
-
-	if (!adminUrl) {
-		return null;
-	}
-
-	const editFormUrl = addQueryArgs(adminUrl, {
-		page: 'gf_edit_forms',
-		id: formId,
-	});
-
-	const formSettingsUrl = addQueryArgs(adminUrl, {
-		page: 'gf_edit_forms',
-		id: formId,
-		view: 'settings',
-	});
+	const resetForm = () => {
+		setAttributes({ formId: '' });
+	};
 
 	return (
 		<BlockControls group="other">
 			<ToolbarButton
-				as="a"
-				href={editFormUrl}
-				target="_blank"
-				rel="noopener noreferrer"
 				icon={pencil}
 				showTooltip
-				label={__('Edit Form', 'matter')}
-			/>
-
-			<ToolbarButton
-				as="a"
-				href={formSettingsUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-				icon={settings}
-				showTooltip
-				label={__('Form Settings', 'matter')}
+				label={__('Select a Form', 'matter')}
+				onClick={resetForm}
 			/>
 		</BlockControls>
 	);

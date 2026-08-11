@@ -95,7 +95,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		/>
 	);
 
-	const blockControls = <GravityFormBlockControls formId={formId} />;
+	const blockControls = (
+		<GravityFormBlockControls
+			formId={formId}
+			setAttributes={setAttributes}
+		/>
+	);
 
 	return (
 		<>
