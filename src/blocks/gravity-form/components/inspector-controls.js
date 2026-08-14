@@ -140,7 +140,6 @@ export default function GravityFormInspectorControls({
 					>
 						<ToggleControl
 							label={__('Display Title', 'matter')}
-							help={__('Display the form title.', 'matter')}
 							checked={displayTitle}
 							onChange={(value) =>
 								setAttributes({ displayTitle: value })
@@ -158,7 +157,6 @@ export default function GravityFormInspectorControls({
 					>
 						<ToggleControl
 							label={__('Display Description', 'matter')}
-							help={__('Display the form description.', 'matter')}
 							checked={displayDescription}
 							onChange={(value) =>
 								setAttributes({ displayDescription: value })
@@ -177,7 +175,7 @@ export default function GravityFormInspectorControls({
 						<ToggleControl
 							label={__('AJAX Submission', 'matter')}
 							help={__(
-								'Submit the form via AJAX. This will prevent the page from reloading when the form is submitted.',
+								'This will prevent the page from reloading when the form is submitted.',
 								'matter'
 							)}
 							checked={ajaxSubmission}
