@@ -39,6 +39,7 @@ class Registry {
 	private const EXTENSIONS = [
 		'icon'        => [ 'core/button' ],
 		'stack'       => [ 'core/columns' ],
+		'order'       => [ 'core/column' ],
 		'link'        => [ 'core/group' ],
 		'sticky'      => [ 'core/group' ],
 		'add-media'   => [ 'core/icon' ],
@@ -55,7 +56,6 @@ class Registry {
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register_block_styles' ] );
 		add_action( 'enqueue_block_assets', [ $this, 'enqueue_registry_stylesheets' ] );
-		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_registry_stylesheets' ] );
 		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_scripts' ] );
 		add_action( 'enqueue_block_assets', [ $this, 'enqueue_editor_styles' ] );
 
@@ -63,6 +63,7 @@ class Registry {
 		AddMedia::instance()->setup();
 		FocalPoint::instance()->setup();
 		Stack::instance()->setup();
+		Order::instance()->setup();
 	}
 
 	/**
@@ -187,16 +188,9 @@ class Registry {
 	 * @return void
 	 */
 	public function enqueue_registry_stylesheets(): void {
-		static $enqueued = [];
-
 		foreach ( $this->get_stylesheet_registries() as $registry ) {
 			$handle = $registry->get_handle();
-
-			if ( isset( $enqueued[ $handle ] ) ) {
-				continue;
-			}
-
-			$css = $registry->get_css();
+			$css    = $registry->get_css();
 
 			if ( empty( $css ) ) {
 				continue;
@@ -207,9 +201,10 @@ class Registry {
 			}
 
 			wp_enqueue_style( $handle );
-			wp_add_inline_style( $handle, $css );
 
-			$enqueued[ $handle ] = true;
+			if ( empty( wp_styles()->get_data( $handle, 'after' ) ) ) {
+				wp_add_inline_style( $handle, $css );
+			}
 		}
 	}
 
