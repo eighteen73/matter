@@ -1,0 +1,10 @@
+.matter-style-sync-toolbar-button {
+	&.is-pressed {
+		color: #fff;
+	}
+
+	&.is-pressed:hover:not(:disabled),
+	&.is-pressed:focus:not(:disabled) {
+		color: #fff;
+	}
+}

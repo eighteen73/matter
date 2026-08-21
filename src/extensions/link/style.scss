@@ -1,0 +1,9 @@
+.wp-block-group:where(.is-linked) {
+	position: relative;
+
+	.wp-block-group__link {
+		inset: 0;
+		margin: unset;
+		position: absolute;
+	}
+}

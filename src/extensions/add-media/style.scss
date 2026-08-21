@@ -1,0 +1,9 @@
+.wp-block-icon {
+	&.has-custom-icon svg.has-text-color {
+		path,
+		rect,
+		polygon {
+			fill: currentcolor !important; // stylelint-disable-line declaration-no-important
+		}
+	}
+}

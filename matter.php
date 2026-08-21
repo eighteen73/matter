@@ -5,7 +5,7 @@
  * Update URI:        https://eighteen73.co.uk
  * Description:       A collection of expertly crafted blocks for WordPress.
  * Version:           0.5.3
- * Requires at least: 6.8
+ * Requires at least: 7.1
  * Requires PHP:      7.4
  * Requires Plugins:
  * Author:            eighteen73
@@ -27,6 +27,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'MATTER_URL', plugin_dir_url( __FILE__ ) );
 define( 'MATTER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MATTER_INC', MATTER_PATH . 'includes/' );
+define( 'MATTER_VERSION', '0.5.3' );
 
 // Require the autoloader.
 $autoloader = MATTER_PATH . '/vendor/autoload.php';

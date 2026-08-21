@@ -13,6 +13,8 @@ use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
+use Eighteen73\Matter\Extensions\Registry as ExtensionRegistry;
+use Eighteen73\Matter\Icons\Registrar as IconRegistrar;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -40,6 +42,9 @@ class Plugin {
 		Accordion::instance()->setup();
 		Gallery::instance()->setup();
 		GravityForm::instance()->setup();
+
+		IconRegistrar::instance()->setup();
+		ExtensionRegistry::instance()->setup();
 	}
 
 	/**
@@ -60,14 +65,34 @@ class Plugin {
 	 *
 	 * @return void
 	 */
-	public static function activation(): void {}
+	public static function activation(): void {
+		ExtensionRegistry::clear_caches();
+	}
 
 	/**
 	 * Plugin deactivation.
 	 *
 	 * @return void
 	 */
-	public static function deactivation(): void {}
+	public static function deactivation(): void {
+		ExtensionRegistry::clear_caches();
+	}
+
+	/**
+	 * Whether the current environment should skip extension caches.
+	 *
+	 * @return bool
+	 */
+	public static function is_development_mode(): bool {
+		if ( defined( 'WP_DEVELOPMENT_MODE' ) ) {
+			$development_mode = constant( 'WP_DEVELOPMENT_MODE' );
+			if ( in_array( $development_mode, [ 'all', 'plugin' ], true ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	/**
 	 * Enqueue frontend scripts and styles.

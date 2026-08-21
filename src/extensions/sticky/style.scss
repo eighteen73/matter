@@ -1,0 +1,9 @@
+.is-position-sticky-top {
+	bottom: auto !important; // stylelint-disable-line declaration-no-important
+	top: var(--sticky-offset, 0) !important; // stylelint-disable-line declaration-no-important
+}
+
+.is-position-sticky-bottom {
+	bottom: var(--sticky-offset, 0) !important; // stylelint-disable-line declaration-no-important
+	top: auto !important; // stylelint-disable-line declaration-no-important
+}
