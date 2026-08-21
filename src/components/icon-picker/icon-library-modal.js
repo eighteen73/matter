@@ -1,9 +1,8 @@
 /**
  * Icon library modal.
  *
- * Browses icons registered through the WordPress 7.1 icon API.
- * Collections become tabs; `value` / `onSelect` use `{collection}/{name}`
- * so this can later be swapped for a public core IconPickerModal.
+ * Mirrors the WordPress 7.1 core Icon block inserter: fullscreen modal,
+ * sidebar search and collections, labeled icon grid.
  */
 
 import { __ } from '@wordpress/i18n';
@@ -13,15 +12,37 @@ import {
 	Modal,
 	SearchControl,
 	Spinner,
-	TabPanel,
 } from '@wordpress/components';
 import { chevronRight } from '@wordpress/icons';
 import { store as coreStore } from '@wordpress/core-data';
 import { useDebounce } from '@wordpress/compose';
 import { useMemo, useState } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
+import clsx from 'clsx';
 
 import { IconGrid } from './icon-grid';
+
+/**
+ * @param {Array}  collections
+ * @param {string} selectedCollection
+ * @param {string} defaultCollection
+ * @return {string} Collection slug.
+ */
+function getInitialCollectionSlug(
+	collections,
+	selectedCollection,
+	defaultCollection
+) {
+	if (collections?.some(({ slug }) => slug === selectedCollection)) {
+		return selectedCollection;
+	}
+
+	if (collections?.some(({ slug }) => slug === defaultCollection)) {
+		return defaultCollection;
+	}
+
+	return collections?.[0]?.slug ?? '';
+}
 
 /**
  * @param {Object}   props
@@ -31,8 +52,6 @@ import { IconGrid } from './icon-grid';
  * @param {string}   [props.defaultCollection]
  * @param {Array}    [props.extraOptions]
  * @param {Function} props.onSelect
- * @param {Function} [props.onReset]
- * @param {string}   [props.resetValue]
  * @param {Function} props.onRequestClose
  * @return {Element} The component.
  */
@@ -43,12 +62,11 @@ export const IconLibraryModal = ({
 	defaultCollection = 'matter',
 	extraOptions,
 	onSelect,
-	onReset,
-	resetValue = '',
 	onRequestClose,
 }) => {
 	const [inputValue, setInputValue] = useState('');
 	const [search, setSearch] = useState('');
+	const [currentCollection, setCurrentCollection] = useState(null);
 	const debouncedSetSearch = useDebounce(setSearch, 300);
 
 	const handleSearchChange = (next) => {
@@ -62,36 +80,35 @@ export const IconLibraryModal = ({
 		[]
 	);
 
-	const tabs = useMemo(() => {
-		const items = [
-			{ name: '', title: __('All', 'matter') },
-			...(collections ?? []).map((collection) => ({
-				name: collection.slug,
-				title: collection.label,
-			})),
-		];
-
-		return items.map((tab) => ({
-			...tab,
-			title: (
-				<>
-					{tab.title}
-					<Icon icon={chevronRight} />
-				</>
-			),
-		}));
-	}, [collections]);
-
-	const initialTabName = value?.includes('/')
+	const selectedCollection = value?.includes('/')
 		? value.split('/')[0]
-		: defaultCollection;
+		: null;
+
+	const collectionSlug =
+		currentCollection ??
+		getInitialCollectionSlug(
+			collections,
+			selectedCollection,
+			defaultCollection
+		);
+
+	const collectionTabs = useMemo(
+		() => [
+			{ slug: '', label: __('All', 'matter') },
+			...(collections ?? []).map((collection) => ({
+				slug: collection.slug,
+				label: collection.label,
+			})),
+		],
+		[collections]
+	);
 
 	return (
 		<Modal
-			className="matter-icon-library-modal"
-			title={title || __('Icon Library', 'matter')}
+			className="wp-block-icon__inserter-modal matter-icon-library-modal"
+			title={title || __('Icon library', 'matter')}
 			onRequestClose={onRequestClose}
-			size="large"
+			isFullScreen
 		>
 			{description && (
 				<p className="matter-icon-library-modal__description">
@@ -99,37 +116,47 @@ export const IconLibraryModal = ({
 				</p>
 			)}
 
-			<div className="matter-icon-library-modal__toolbar">
-				<SearchControl
-					__nextHasNoMarginBottom
-					value={inputValue}
-					onChange={handleSearchChange}
-				/>
-				{onReset && (
-					<Button
-						variant="tertiary"
-						onClick={() => {
-							onReset(resetValue);
-							onRequestClose();
-						}}
+			<div className="wp-block-icon__inserter">
+				<div className="wp-block-icon__inserter-sidebar">
+					<SearchControl
+						__nextHasNoMarginBottom
+						value={inputValue}
+						onChange={handleSearchChange}
+					/>
+					<div
+						className="matter-icon-library-modal__collections"
+						role="tablist"
+						aria-orientation="vertical"
 					>
-						{__('Reset Icon', 'matter')}
-					</Button>
-				)}
-			</div>
+						{collectionTabs.map((collection) => {
+							const isActive = collectionSlug === collection.slug;
 
-			<TabPanel
-				className="matter-icon-library-modal__tabs"
-				tabs={tabs}
-				initialTabName={
-					tabs.some((tab) => tab.name === initialTabName)
-						? initialTabName
-						: ''
-				}
-			>
-				{(tab) => (
+							return (
+								<Button
+									key={collection.slug || 'all'}
+									className={clsx(
+										'matter-icon-library-modal__collection',
+										{
+											'is-active': isActive,
+										}
+									)}
+									role="tab"
+									aria-selected={isActive}
+									onClick={() =>
+										setCurrentCollection(collection.slug)
+									}
+								>
+									{collection.label}
+									<Icon icon={chevronRight} />
+								</Button>
+							);
+						})}
+					</div>
+				</div>
+
+				<div className="wp-block-icon__inserter-panel">
 					<IconLibraryPanel
-						collection={tab.name}
+						collection={collectionSlug}
 						search={search}
 						value={value}
 						onSelect={(name) => {
@@ -137,13 +164,14 @@ export const IconLibraryModal = ({
 							onRequestClose();
 						}}
 						extraOptions={
-							tab.name === defaultCollection || tab.name === ''
+							collectionSlug === defaultCollection ||
+							collectionSlug === ''
 								? extraOptions
 								: []
 						}
 					/>
-				)}
-			</TabPanel>
+				</div>
+			</div>
 		</Modal>
 	);
 };
@@ -171,12 +199,8 @@ const IconLibraryPanel = ({
 			args.collection = collection;
 		}
 
-		if (search) {
-			args.search = search;
-		}
-
 		return args;
-	}, [collection, search]);
+	}, [collection]);
 
 	const { icons, hasResolved } = useSelect(
 		(select) => {
@@ -195,10 +219,9 @@ const IconLibraryPanel = ({
 		[query]
 	);
 
-	const filteredExtras = useMemo(() => {
+	const filteredIcons = useMemo(() => {
 		const term = search.trim().toLowerCase();
-
-		return (extraOptions || [])
+		const extras = (extraOptions || [])
 			.filter(
 				(option) => !term || option.label.toLowerCase().includes(term)
 			)
@@ -207,21 +230,32 @@ const IconLibraryPanel = ({
 				label: option.label,
 				text: option.icon,
 			}));
-	}, [extraOptions, search]);
+
+		const fromApi = (icons || []).filter((icon) => {
+			if (!term) {
+				return true;
+			}
+
+			return (
+				(icon.label || '').toLowerCase().includes(term) ||
+				(icon.name || '').toLowerCase().includes(term)
+			);
+		});
+
+		return [...fromApi, ...extras];
+	}, [extraOptions, icons, search]);
 
 	if (!hasResolved) {
 		return (
-			<div className="matter-icon-library-modal__loading">
+			<div
+				className="wp-block-icon__inserter-loading"
+				role="status"
+				aria-label={__('Loading…', 'matter')}
+			>
 				<Spinner />
 			</div>
 		);
 	}
 
-	return (
-		<IconGrid
-			icons={[...(icons || []), ...filteredExtras]}
-			value={value}
-			onSelect={onSelect}
-		/>
-	);
+	return <IconGrid icons={filteredIcons} value={value} onSelect={onSelect} />;
 };

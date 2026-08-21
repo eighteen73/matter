@@ -3,14 +3,19 @@
  */
 
 import { BlockControls, InspectorControls } from '@wordpress/block-editor';
+import { getBlockType } from '@wordpress/blocks';
 import {
+	Dropdown,
 	DropdownMenu,
+	MenuItem,
+	NavigableMenu,
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { reset, siteLogo } from '@wordpress/icons';
+import { pullLeft, pullRight } from '@wordpress/icons';
+import { DOWN } from '@wordpress/keycodes';
 
 import { registerBlockExtension } from '../../utils/register-block-extension';
 import clsx from 'clsx';
@@ -18,7 +23,6 @@ import clsx from 'clsx';
 import ColorControl from '../../components/color-control';
 import { IconLibraryModal } from '../../components/icon-picker';
 import '../../components/icon-picker/editor.scss';
-import { IconLeft, IconRight } from './icons';
 import './editor.scss';
 import './style.scss';
 
@@ -50,6 +54,29 @@ function normalizeIconName(namespacedName) {
 }
 
 /**
+ * @return {Element|string|undefined} Core Icon block icon.
+ */
+function getCoreIconBlockIcon() {
+	const icon = getBlockType('core/icon')?.icon;
+
+	if (icon && typeof icon === 'object' && icon.src) {
+		return icon.src;
+	}
+
+	return icon;
+}
+
+/**
+ * @param {KeyboardEvent} event Keyboard event from the replace toggle.
+ */
+function openDropdownOnArrowDown(event) {
+	if (event.keyCode === DOWN) {
+		event.preventDefault();
+		event.target.click();
+	}
+}
+
+/**
  * @param {Object}   props
  * @param {string}   props.clientId
  * @param {Object}   props.attributes
@@ -60,6 +87,7 @@ function BlockEdit({ clientId, attributes, setAttributes }) {
 	const { icon } = attributes;
 	const { position = 'after', color, name } = icon || {};
 	const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+	const hasIcon = Boolean(name);
 
 	const updateIcon = (newAttributes) => {
 		const updatedIcon = { ...icon, ...newAttributes };
@@ -77,51 +105,73 @@ function BlockEdit({ clientId, attributes, setAttributes }) {
 
 	return (
 		<>
-			<BlockControls>
+			<BlockControls group="other">
 				<ToolbarGroup>
-					<ToolbarButton
-						icon={siteLogo}
-						label={
-							icon
-								? __('Change Icon', 'matter')
-								: __('Add Icon', 'matter')
-						}
-						onClick={() => setIsLibraryOpen(true)}
-					/>
+					{hasIcon ? (
+						<Dropdown
+							popoverProps={{ variant: 'toolbar' }}
+							contentClassName="block-editor-media-replace-flow__options is-variant-toolbar"
+							renderToggle={({ isOpen, onToggle }) => (
+								<ToolbarButton
+									aria-expanded={isOpen}
+									aria-haspopup="true"
+									onClick={onToggle}
+									onKeyDown={openDropdownOnArrowDown}
+								>
+									{__('Replace icon', 'matter')}
+								</ToolbarButton>
+							)}
+							renderContent={({ onClose }) => (
+								<NavigableMenu className="block-editor-media-replace-flow__media-upload-menu">
+									<MenuItem
+										icon={getCoreIconBlockIcon()}
+										onClick={() => {
+											setIsLibraryOpen(true);
+											onClose();
+										}}
+									>
+										{__('Open Icon Library', 'matter')}
+									</MenuItem>
+									<MenuItem
+										onClick={() => {
+											removeIcon();
+											onClose();
+										}}
+									>
+										{__('Reset', 'matter')}
+									</MenuItem>
+								</NavigableMenu>
+							)}
+						/>
+					) : (
+						<ToolbarButton onClick={() => setIsLibraryOpen(true)}>
+							{__('Add icon', 'matter')}
+						</ToolbarButton>
+					)}
 
-					{icon && (
-						<>
-							<ToolbarButton
-								icon={reset}
-								label={__('Remove Icon', 'matter')}
-								onClick={removeIcon}
-							/>
-
-							<DropdownMenu
-								icon={
-									position === 'before' ? IconLeft : IconRight
-								}
-								label={__('Change icon position', 'matter')}
-								controls={[
-									{
-										title: __('Icon left', 'matter'),
-										icon: IconLeft,
-										isActive: position === 'before',
-										onClick: () => {
-											updateIcon({ position: 'before' });
-										},
+					{hasIcon && (
+						<DropdownMenu
+							icon={position === 'before' ? pullLeft : pullRight}
+							label={__('Change icon position', 'matter')}
+							controls={[
+								{
+									title: __('Icon left', 'matter'),
+									icon: pullLeft,
+									isActive: position === 'before',
+									onClick: () => {
+										updateIcon({ position: 'before' });
 									},
-									{
-										title: __('Icon right', 'matter'),
-										icon: IconRight,
-										isActive: position === 'after',
-										onClick: () => {
-											updateIcon({ position: 'after' });
-										},
+								},
+								{
+									title: __('Icon right', 'matter'),
+									icon: pullRight,
+									isActive: position === 'after',
+									onClick: () => {
+										updateIcon({ position: 'after' });
 									},
-								]}
-							/>
-						</>
+								},
+							]}
+						/>
 					)}
 				</ToolbarGroup>
 			</BlockControls>
@@ -131,7 +181,6 @@ function BlockEdit({ clientId, attributes, setAttributes }) {
 					value={normalizeIconName(name)}
 					defaultCollection={COLLECTION}
 					onSelect={(nextName) => updateIcon({ name: nextName })}
-					onReset={removeIcon}
 					onRequestClose={() => setIsLibraryOpen(false)}
 				/>
 			)}

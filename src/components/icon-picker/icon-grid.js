@@ -1,13 +1,19 @@
 /**
  * Icon grid component.
  *
- * Renders selectable icons from the WordPress 7.1 icon library
- * (`root/icon` REST entities).
+ * Uses the WordPress 7.1 core Icon library grid markup and class names
+ * so block-library editor styles apply unchanged.
+ *
+ * @see https://github.com/WordPress/gutenberg/blob/c217b2698e6193569d06e1a8b7749f33fde6d815/packages/block-library/src/icon/editor.scss
  */
 
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import { safeHTML } from '@wordpress/dom';
+import { useAsyncList } from '@wordpress/compose';
+import { getScrollContainer, safeHTML } from '@wordpress/dom';
+import { useLayoutEffect, useRef } from '@wordpress/element';
+
+const BATCH_SIZE = 20;
 
 /**
  * @param {Object}   props
@@ -16,37 +22,74 @@ import { safeHTML } from '@wordpress/dom';
  * @param {Function} props.onSelect
  * @return {Element} The component.
  */
-export const IconGrid = ({ icons, value, onSelect }) =>
-	!icons?.length ? (
-		<p className="matter-icon-grid__empty">
-			{__('No icons found.', 'matter')}
-		</p>
-	) : (
-		<div className="matter-icon-grid" role="listbox">
-			{icons.map((icon) => (
-				<Button
-					key={icon.name}
-					role="option"
-					aria-selected={icon.name === value}
-					className="matter-icon-grid__item"
-					isPressed={icon.name === value}
-					label={icon.label}
-					onClick={() => onSelect(icon.name)}
+export const IconGrid = ({ icons, value, onSelect }) => {
+	const shownIcons = useAsyncList(icons, { step: BATCH_SIZE });
+	const selectedIconRef = useRef();
+	const selectedIndex = icons?.findIndex((icon) => icon.name === value) ?? -1;
+	const isReadyToScroll =
+		selectedIndex >= 0 &&
+		(shownIcons.length >= selectedIndex + BATCH_SIZE ||
+			shownIcons.length === icons.length);
+
+	useLayoutEffect(() => {
+		const node = selectedIconRef.current;
+
+		if (!isReadyToScroll || !node) {
+			return;
+		}
+
+		if (getScrollContainer(node)?.scrollTop) {
+			return;
+		}
+
+		node.scrollIntoView({ block: 'center' });
+	}, [isReadyToScroll]);
+
+	return (
+		<div className="wp-block-icon__inserter-grid">
+			{!icons?.length ? (
+				<div className="wp-block-icon__inserter-grid-no-results">
+					<p>{__('No results found.', 'matter')}</p>
+				</div>
+			) : (
+				<div
+					className="wp-block-icon__inserter-grid-icons-list"
+					aria-label={__('Icon library', 'matter')}
 				>
-					{icon.content ? (
-						<span
-							className="matter-icon-grid__preview"
-							dangerouslySetInnerHTML={{
-								__html: safeHTML(icon.content),
-							}}
-						/>
-					) : (
-						<span className="matter-icon-grid__text">
-							{icon.text}
-						</span>
-					)}
-					<span className="screen-reader-text">{icon.label}</span>
-				</Button>
-			))}
+					{shownIcons.map((icon) => (
+						<Button
+							key={icon.name}
+							ref={
+								icon.name === value
+									? selectedIconRef
+									: undefined
+							}
+							className="wp-block-icon__inserter-grid-icons-list-item"
+							onClick={() => onSelect(icon.name)}
+							variant={
+								icon.name === value ? 'primary' : undefined
+							}
+							__next40pxDefaultSize
+						>
+							{icon.content ? (
+								<span
+									className="wp-block-icon__inserter-grid-icons-list-item-icon"
+									dangerouslySetInnerHTML={{
+										__html: safeHTML(icon.content),
+									}}
+								/>
+							) : (
+								<span className="wp-block-icon__inserter-grid-icons-list-item-icon">
+									{icon.text}
+								</span>
+							)}
+							<span className="wp-block-icon__inserter-grid-icons-list-item-title">
+								{icon.label}
+							</span>
+						</Button>
+					))}
+				</div>
+			)}
 		</div>
 	);
+};

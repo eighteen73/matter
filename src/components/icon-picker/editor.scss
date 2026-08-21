@@ -1,62 +1,128 @@
+@use "@wordpress/base-styles/variables" as *;
+@use "@wordpress/base-styles/colors" as *;
+@use "@wordpress/base-styles/mixins" as *;
+
+// Inserter layout and grid match Gutenberg's Icon block.
+// @see https://github.com/WordPress/gutenberg/blob/57c278ca272f3aa9a0e5e44b80c603a34f167e5b/packages/block-library/src/icon/editor.scss
 .matter-icon-library-modal {
-	.matter-icon-library-modal__toolbar {
-		align-items: center;
+	.wp-block-icon__inserter-sidebar {
 		display: flex;
-		gap: 12px;
-		margin-bottom: 16px;
+		flex-direction: column;
+		gap: $grid-unit-20;
+		justify-content: flex-start;
+		padding-bottom: $grid-unit-30;
+
+		@include break-medium() {
+			bottom: 0;
+			left: 0;
+			overflow-x: visible;
+			overflow-y: auto;
+			padding-inline: $grid-unit-30;
+			padding-top: $grid-unit-30;
+			position: absolute;
+			top: $header-height + $grid-unit-10;
+			width: $sidebar-width;
+		}
 	}
 
-	.matter-icon-library-modal__loading {
+	.wp-block-icon__inserter-panel {
+		@include break-medium() {
+			margin-inline-start: $sidebar-width;
+		}
+	}
+
+	.wp-block-icon__inserter-loading {
 		display: flex;
 		justify-content: center;
-		padding: 32px;
+		padding: $grid-unit-30;
 	}
 
-	.components-tab-panel__tabs-item svg {
-		fill: currentcolor;
-		height: 16px;
-		margin-left: 4px;
-		opacity: 0;
-		width: 16px;
+	.wp-block-icon__inserter-grid-icons-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 	}
 
-	.components-tab-panel__tabs-item:hover svg,
-	.components-tab-panel__tabs-item.is-active svg {
-		opacity: 1;
+	.wp-block-icon__inserter-grid-no-results {
+		display: flex;
+		justify-content: center;
 	}
-}
 
-.matter-icon-grid {
-	display: grid;
-	gap: 8px;
-	grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-}
+	.wp-block-icon__inserter-grid-icons-list-item {
+		display: flex;
+		flex-direction: column;
+		/* stylelint-disable-next-line declaration-no-important -- Matches core; Button's 40px height must yield to the labeled cell. */
+		height: auto !important;
+	}
 
-.matter-icon-grid__item {
-	align-items: center;
-	aspect-ratio: 1;
-	display: flex;
-	height: auto;
-	justify-content: center;
-	padding: 8px;
-}
+	.wp-block-icon__inserter-grid-icons-list-item-icon {
+		padding: $grid-unit-15;
 
-.matter-icon-grid__preview {
-	display: flex;
-	height: 32px;
-	width: 32px;
+		svg {
+			display: block;
+			height: $icon-size;
+			width: $icon-size;
+		}
+	}
 
-	svg {
-		fill: currentcolor;
-		height: 100%;
+	.wp-block-icon__inserter-grid-icons-list-item-title {
+		font-size: $font-size-small;
+		overflow-wrap: break-word;
+		padding: $grid-unit-05 $grid-unit-05 $grid-unit-10;
+	}
+
+	.matter-icon-library-modal__collections {
+		display: flex;
+		flex-direction: column;
+		position: relative;
+	}
+
+	.matter-icon-library-modal__collection.components-button {
+		background: transparent;
+		border: none;
+		border-radius: $radius-small;
+		box-shadow: none;
+		color: $gray-900;
+		font-size: $default-font-size;
+		font-weight: 400;
+		height: auto;
+		justify-content: space-between;
+		min-height: $grid-unit-50;
+		padding: $grid-unit-10 $grid-unit-15;
+		text-align: left;
 		width: 100%;
+
+		&:hover:not(:disabled),
+		&:focus:not(:disabled) {
+			background: transparent;
+			box-shadow: none;
+			color: $gray-900;
+		}
+
+		&.is-active {
+			background: $gray-100;
+		}
+
+		svg {
+			fill: currentcolor;
+			flex-shrink: 0;
+			height: $icon-size;
+			margin-inline-end: -$grid-unit-05;
+			opacity: 0;
+			width: $icon-size;
+		}
+
+		&:hover svg,
+		&:focus-visible svg,
+		&.is-active svg {
+			opacity: 1;
+		}
 	}
 }
 
 .matter-icon-picker-button {
 	align-items: center;
 	display: flex;
-	gap: 4px;
+	gap: $grid-unit-05;
 }
 
 .matter-icon-picker-button__preview {
@@ -64,17 +130,18 @@
 	border: 1px solid;
 	display: flex;
 	flex: 1;
-	gap: 8px;
+	gap: $grid-unit-10;
 	height: auto;
 	justify-content: flex-start;
-	padding: 8px;
+	padding: $grid-unit-10;
 	text-align: left;
 }
 
 .matter-icon-picker-button__icon {
+	align-items: center;
 	display: flex;
-	height: 24px;
-	width: 24px;
+	height: $icon-size;
+	width: $icon-size;
 
 	svg {
 		fill: currentcolor;
