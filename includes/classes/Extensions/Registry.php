@@ -43,7 +43,7 @@ class Registry {
 		'sticky'      => [ 'core/group' ],
 		'add-media'   => [ 'core/icon' ],
 		'placeholder' => [ 'core/heading', 'core/paragraph' ],
-		'style-sync'  => [ 'core/group' ],
+		'style-sync'  => [ 'core/group', 'core/column' ],
 		'focal-point' => [],
 	];
 

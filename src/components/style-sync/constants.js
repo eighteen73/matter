@@ -1,10 +1,13 @@
 /**
  * Syncable container block names.
  *
- * Groups only: a synced Group peers its similar siblings/cousins and maps
- * style changes anywhere in that Group's subtree by relative path.
+ * A synced container peers its similar siblings/cousins and maps style
+ * changes anywhere in that container's subtree by relative path.
+ *
+ * Groups are the explicit card wrapper. Columns are included so repeating
+ * column layouts sync without an extra Group inside each column.
  */
-export const SYNCABLE_BLOCK_NAMES = ['core/group'];
+export const SYNCABLE_BLOCK_NAMES = ['core/group', 'core/column'];
 
 /**
  * Block attribute that enables style sync on a container.

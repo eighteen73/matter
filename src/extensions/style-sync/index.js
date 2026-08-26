@@ -1,5 +1,5 @@
 /**
- * Group style sync: toolbar attribute plus editor plugin manager.
+ * Style sync: toolbar attribute on Groups and Columns, plus editor plugin.
  */
 
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -23,13 +23,17 @@ import {
 	applyStyleSyncToPeers,
 	disableStyleSyncOnActiveSet,
 	enableStyleSyncFromContainer,
+	enableStyleSyncOnBlocks,
 	isStyleSyncApplying,
 } from '../../components/style-sync/apply';
 import {
 	NOTICE_ID_OFFER,
 	NOTICE_ID_SYNCED,
 } from '../../components/style-sync/constants';
-import { resolveSyncContext } from '../../components/style-sync/matching';
+import {
+	isPeerInSyncSet,
+	resolveSyncContext,
+} from '../../components/style-sync/matching';
 
 const additionalAttributes = {
 	[STYLE_SYNC_ATTRIBUTE]: {
@@ -47,10 +51,10 @@ function BlockEdit({ clientId, attributes }) {
 	return <StyleSyncToolbar clientId={clientId} attributes={attributes} />;
 }
 
-registerBlockExtension(['core/group'], {
+registerBlockExtension(['core/group', 'core/column'], {
 	extensionName: 'matter/style-sync',
 	attributes: additionalAttributes,
-	classNameGenerator: () => '',
+	classNameGenerator: () => null,
 	Edit: BlockEdit,
 	order: 'after',
 });
@@ -107,6 +111,16 @@ function StyleSyncManager() {
 		previousSnapshotRef.current = snapshot;
 
 		const context = resolveSyncContext(registry.select, selectedClientId);
+
+		if (context?.mode === 'sync') {
+			const unstampedPeers = (context.peers || []).filter(
+				(block) => !isPeerInSyncSet(block)
+			);
+
+			if (unstampedPeers.length) {
+				enableStyleSyncOnBlocks(registry, context.peers);
+			}
+		}
 
 		if (context?.mode === 'offer') {
 			const similarCount = Math.max(context.similar?.length || 0, 1);

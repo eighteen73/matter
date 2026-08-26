@@ -10,6 +10,7 @@ export {
 	disableStyleSyncFromContainer,
 	disableStyleSyncOnActiveSet,
 	enableStyleSyncFromContainer,
+	enableStyleSyncOnBlocks,
 	enableStyleSyncOnSimilar,
 	isStyleSyncApplying,
 	withStyleSyncApplyGuard,

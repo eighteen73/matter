@@ -129,6 +129,26 @@ function setStyleSyncOnBlocks(updateBlockAttributes, blocks, value) {
 }
 
 /**
+ * Set styleSync true on the given containers.
+ *
+ * @param {Object}   registry Data registry.
+ * @param {Object[]} blocks   Containers to enable.
+ * @return {Object[]} Containers that were enabled.
+ */
+export function enableStyleSyncOnBlocks(registry, blocks) {
+	const { dispatch, batch } = registry;
+	const { updateBlockAttributes } = dispatch(blockEditorStore);
+
+	withStyleSyncApplyGuard(() => {
+		batch(() => {
+			setStyleSyncOnBlocks(updateBlockAttributes, blocks, true);
+		});
+	});
+
+	return blocks;
+}
+
+/**
  * Enable styleSync on a container and all similar siblings/cousins.
  *
  * @param {Object} registry          Data registry.
@@ -153,8 +173,8 @@ export function enableStyleSyncOnSimilar(registry, containerClientId) {
  * Enable styleSync from a toolbar toggle.
  *
  * Turns sync on for the container. When it has no similar peers (e.g. an outer
- * wrapper), also enables sync on the first nested similar set (card Groups) so
- * each card can opt out individually.
+ * wrapper), also enables sync on the first nested similar set (card Groups, or
+ * Columns when those cards have no Group wrapper) so each card can opt out.
  *
  * @param {Object} registry          Data registry.
  * @param {string} containerClientId Container client ID.

@@ -1,5 +1,5 @@
 /**
- * Style sync toolbar toggle for Group containers.
+ * Style sync toolbar toggle for Group and Column containers.
  */
 
 import { BlockControls } from '@wordpress/block-editor';

@@ -182,7 +182,7 @@ export function getActiveSyncPeers(select, containerClientId) {
 }
 
 /**
- * Walk syncable Group ancestors from nearest to root.
+ * Walk syncable container ancestors from nearest to root.
  *
  * @param {Function} select   Data select function.
  * @param {string}   clientId Starting client ID.
@@ -254,8 +254,11 @@ export function isBlockUnderClientId(select, rootClientId, clientId) {
 /**
  * Find the first set of similar syncable containers nested under a root.
  *
- * Used when enabling sync on a wrapper so card Groups also get styleSync
- * for per-card opt-out.
+ * Used when enabling sync on a wrapper so repeating cards also get
+ * styleSync for per-card opt-out.
+ *
+ * Prefers nested Groups over Columns. Columns are layout; a Group inside
+ * each column is the card, and opt-out should stay on that Group.
  *
  * @param {Function} select       Data select function.
  * @param {string}   rootClientId Root container client ID.
@@ -263,6 +266,8 @@ export function isBlockUnderClientId(select, rootClientId, clientId) {
  */
 export function findDescendantSimilarSet(select, rootClientId) {
 	const descendants = getSyncableDescendants(select, rootClientId);
+	let groupSet = [];
+	let fallbackSet = [];
 
 	for (const descendant of descendants) {
 		const similar = findSimilarContainers(select, descendant.clientId);
@@ -272,20 +277,31 @@ export function findDescendantSimilarSet(select, rootClientId) {
 				isBlockUnderClientId(select, rootClientId, block.clientId)
 			);
 
-		if (allUnderRoot) {
-			return similar;
+		if (!allUnderRoot) {
+			continue;
+		}
+
+		if (descendant.name === 'core/group') {
+			if (!groupSet.length) {
+				groupSet = similar;
+			}
+			continue;
+		}
+
+		if (!fallbackSet.length) {
+			fallbackSet = similar;
 		}
 	}
 
-	return [];
+	return groupSet.length ? groupSet : fallbackSet;
 }
 
 /**
  * Resolve sync context for a selected block.
  *
- * Walks Group ancestors and prefers the outermost active peer set that
- * contains the selection. That way a synced card Group maps style changes
- * anywhere in its subtree (nested Groups, headings, etc.) to peer cards.
+ * Walks syncable ancestors (Groups and Columns) and prefers the outermost
+ * active peer set that contains the selection. That way a synced card maps
+ * style changes anywhere in its subtree to peer cards.
  *
  * @param {Function} select   Data select function.
  * @param {string}   clientId Selected block client ID.
@@ -335,6 +351,33 @@ export function resolveSyncContext(select, clientId) {
 			};
 		}
 	});
+
+	if (!syncContext) {
+		const activeWrapper = findNearestActiveSyncContainer(select, clientId);
+
+		if (activeWrapper) {
+			const nested = findDescendantSimilarSet(
+				select,
+				activeWrapper.clientId
+			);
+			const activeCard = nested.find((block) =>
+				isBlockUnderClientId(select, block.clientId, clientId)
+			);
+			const stampedCount = nested.filter(isPeerInSyncSet).length;
+
+			// Wrapper was enabled when nested cards were not yet syncable
+			// (bare Columns). Treat the nested set as opted in.
+			if (activeCard && nested.length >= 2 && stampedCount === 0) {
+				syncContext = {
+					mode: 'sync',
+					container: activeCard,
+					peers: nested,
+					similar: nested,
+					activeAncestor: activeWrapper,
+				};
+			}
+		}
+	}
 
 	return syncContext || offerCandidate;
 }
