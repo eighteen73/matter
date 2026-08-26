@@ -4,6 +4,8 @@
 		&::after {
 			background-color: currentcolor;
 			color: var(--icon-color, currentcolor);
+			display: block;
+			flex-shrink: 0;
 			height: var(--icon-size, 1em);
 			mask-image: var(--icon);
 			mask-position: center;

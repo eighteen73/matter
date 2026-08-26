@@ -8,7 +8,6 @@
 namespace Eighteen73\Matter\Extensions;
 
 use Eighteen73\Matter\Plugin;
-use Eighteen73\Matter\Registries\IconMaskRegistry;
 use Eighteen73\Matter\Registries\StickyOffsetRegistry;
 use Eighteen73\Matter\Registries\StylesheetRegistryInterface;
 use Eighteen73\Matter\Singleton;
@@ -62,6 +61,7 @@ class Registry {
 		Link::instance()->setup();
 		AddMedia::instance()->setup();
 		FocalPoint::instance()->setup();
+		Icon::instance()->setup();
 		Stack::instance()->setup();
 		Order::instance()->setup();
 	}
@@ -73,7 +73,6 @@ class Registry {
 	 */
 	public static function clear_caches(): void {
 		delete_transient( self::CACHE_KEY );
-		IconMaskRegistry::instance()->clear_cache();
 		StickyOffsetRegistry::instance()->clear_cache();
 	}
 
@@ -215,7 +214,6 @@ class Registry {
 	 */
 	private function get_stylesheet_registries(): array {
 		return [
-			IconMaskRegistry::instance(),
 			StickyOffsetRegistry::instance(),
 		];
 	}
