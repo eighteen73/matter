@@ -77,8 +77,19 @@ const getToggleElement = (menuItem) =>
 const getNavigationElement = (element) =>
 	element?.closest(SELECTORS.navigation) || null;
 
-const getEventTargetElement = (event) =>
-	event?.target && event.target.nodeType === 1 ? event.target : null;
+const getEventTargetElement = (event) => {
+	const target = event?.target;
+
+	if (!target) {
+		return null;
+	}
+
+	if (target.nodeType === 1) {
+		return target;
+	}
+
+	return target.parentElement?.nodeType === 1 ? target.parentElement : null;
+};
 
 const getTopLevelLink = (item) =>
 	[...item.children].find(
@@ -630,18 +641,42 @@ const { state } = store(
 				const { ref } = getElement();
 				handleArrowKeyboard(event, context, ref);
 			}),
-			handleNavFocusOut: (event) => {
+			handleNavFocusOut: withSyncEvent((event) => {
 				const context = getContext();
 
 				if (context.menuType !== 'simple') {
 					return;
 				}
 
-				const { ref } = getElement();
 				const nextFocusedElement = event.relatedTarget;
 
+				// A null relatedTarget means focus moved to a non-focusable
+				// node. That happens both for clicks inside megamenu content
+				// (headings, images, padding) and for clicks on the page.
+				// Only close when we know where focus went; pointer dismissal
+				// is handled by closeOpenSubmenusOnOutsideClick.
+				if (!nextFocusedElement) {
+					return;
+				}
+
+				const { ref } = getElement();
 				closeSubmenusWithoutFocus(context, ref, nextFocusedElement);
-			},
+			}),
+			closeOpenSubmenusOnOutsideClick: withSyncEvent((event) => {
+				const context = getContext();
+
+				if (
+					context.menuType !== 'simple' ||
+					!context.openSubmenus.length
+				) {
+					return;
+				}
+
+				const { ref } = getElement();
+				const eventTarget = getEventTargetElement(event);
+
+				closeSubmenusWithoutFocus(context, ref, eventTarget);
+			}),
 		},
 	},
 	{ lock: true }
