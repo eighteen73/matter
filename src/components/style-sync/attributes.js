@@ -7,6 +7,7 @@ import { getBlockType } from '@wordpress/blocks';
 /**
  * Internal dependencies
  */
+import { stripOrderClasses } from '../../extensions/order/class-names';
 import {
 	hasAlignSupport,
 	hasAspectRatioSupport,
@@ -94,6 +95,21 @@ function canTransferAttribute(
 }
 
 /**
+ * Normalize a style attribute so column-order utilities are not synced.
+ *
+ * @param {string} attributeKey Attribute name.
+ * @param {*}      value        Attribute value.
+ * @return {*} Sanitized value.
+ */
+function sanitizeStyleAttribute(attributeKey, value) {
+	if (attributeKey !== 'className') {
+		return value;
+	}
+
+	return stripOrderClasses(value) || undefined;
+}
+
+/**
  * Extract transferable style attributes from a source block for a target.
  *
  * @param {Object} sourceBlock Source block.
@@ -113,8 +129,10 @@ export function getStyleAttributes(sourceBlock, targetBlock) {
 					targetBlock.name
 				)
 			) {
-				attributes[attributeKey] =
-					sourceBlock.attributes?.[attributeKey];
+				attributes[attributeKey] = sanitizeStyleAttribute(
+					attributeKey,
+					sourceBlock.attributes?.[attributeKey]
+				);
 			}
 			return attributes;
 		},
@@ -134,7 +152,7 @@ export function getStyleSnapshot(blockAttributes = {}) {
 
 	Object.keys(map).forEach((key) => {
 		if (key in blockAttributes) {
-			snapshot[key] = blockAttributes[key];
+			snapshot[key] = sanitizeStyleAttribute(key, blockAttributes[key]);
 		}
 	});
 

@@ -23,6 +23,8 @@ import { __, sprintf } from '@wordpress/i18n';
 import { registerBlockExtension } from '../../utils/register-block-extension';
 import clsx from 'clsx';
 
+import { stripOrderClasses } from './class-names';
+
 import './editor.scss';
 
 const ORDER_KEY_BY_DEVICE = {
@@ -46,26 +48,6 @@ const additionalAttributes = {
  */
 function isPositiveOrder(value) {
 	return Number.isInteger(value) && value > 0;
-}
-
-/**
- * @param {string} className Block className attribute.
- * @return {string} Class name without generated order utilities.
- */
-function stripOrderClasses(className) {
-	if (!className) {
-		return '';
-	}
-
-	return className
-		.split(/\s+/)
-		.filter(
-			(token) =>
-				token &&
-				token !== 'has-order-states' &&
-				!/^is-order-(default|at-tablet|at-mobile)-\d+$/.test(token)
-		)
-		.join(' ');
 }
 
 /**
