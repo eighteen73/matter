@@ -47,7 +47,7 @@ class Registrar {
 		wp_register_icon_collection(
 			self::COLLECTION,
 			[
-				'label'       => __( 'Matter', 'matter' ),
+				'label'       => get_bloginfo( 'name' ) ?: __( 'Matter', 'matter' ),
 				'description' => __( 'Icons provided by the Matter plugin.', 'matter' ),
 			]
 		);
