@@ -138,6 +138,16 @@ class Navigation {
 				continue;
 			}
 
+			if ( 'matter/navigation-megamenu' === $block_name ) {
+				$items_markup .= self::render_megamenu_item(
+					$parsed_block,
+					$type,
+					$submenu_opens_on_click,
+					$submenu_index
+				);
+				continue;
+			}
+
 			if ( 'core/navigation-submenu' === $block_name ) {
 				$item_attributes = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
 				$item_attributes = self::resolve_item_attributes( $item_attributes );
@@ -335,7 +345,7 @@ class Navigation {
 		foreach ( $parsed_blocks as $parsed_block ) {
 			$block_name = isset( $parsed_block['blockName'] ) ? (string) $parsed_block['blockName'] : '';
 
-			if ( in_array( $block_name, [ 'core/navigation-link', 'core/navigation-submenu' ], true ) ) {
+			if ( in_array( $block_name, [ 'core/navigation-link', 'core/navigation-submenu', 'matter/navigation-megamenu' ], true ) ) {
 				$attrs = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
 				$id    = isset( $attrs['id'] ) ? absint( $attrs['id'] ) : 0;
 				$kind  = isset( $attrs['kind'] ) ? (string) $attrs['kind'] : '';
@@ -495,5 +505,104 @@ class Navigation {
 		}
 
 		return implode( ' ', $classes );
+	}
+
+	/**
+	 * Render a megamenu navigation item.
+	 *
+	 * @param array<string, mixed> $parsed_block            Parsed megamenu block.
+	 * @param string               $type                    Menu type.
+	 * @param bool                 $submenu_opens_on_click  Whether submenus open on click.
+	 * @param int                  &$submenu_index          Submenu index.
+	 * @return string
+	 */
+	private static function render_megamenu_item(
+		array $parsed_block,
+		string $type,
+		bool $submenu_opens_on_click,
+		int &$submenu_index
+	): string {
+		$item_attributes = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : [];
+		$item_attributes = self::resolve_item_attributes( $item_attributes );
+		$label           = isset( $item_attributes['label'] ) ? wp_strip_all_tags( (string) $item_attributes['label'] ) : '';
+		$menu_slug       = isset( $item_attributes['menuSlug'] ) ? sanitize_title( (string) $item_attributes['menuSlug'] ) : '';
+		$raw_url         = isset( $item_attributes['url'] ) ? trim( (string) $item_attributes['url'] ) : '';
+		$url             = '' !== $raw_url ? esc_url( $raw_url ) : '';
+		$width           = isset( $item_attributes['width'] ) ? (string) $item_attributes['width'] : 'content';
+		$width           = in_array( $width, [ 'content', 'wide', 'full' ], true ) ? $width : 'content';
+
+		if ( '' === $menu_slug ) {
+			return self::render_link_item( $item_attributes );
+		}
+
+		$panel_content = Megamenu::render_template_part( $menu_slug );
+
+		if ( '' === $panel_content ) {
+			return self::render_link_item( $item_attributes );
+		}
+
+		if ( '' === $label ) {
+			$label = __( 'Untitled menu item', 'matter' );
+		}
+
+		$target = ! empty( $item_attributes['opensInNewTab'] ) ? ' target="_blank"' : '';
+		$rel    = isset( $item_attributes['rel'] ) ? trim( (string) $item_attributes['rel'] ) : '';
+
+		if ( ! empty( $item_attributes['opensInNewTab'] ) ) {
+			$rel = trim( $rel . ' noopener noreferrer' );
+		}
+
+		$rel_attr = '' !== $rel ? ' rel="' . esc_attr( $rel ) . '"' : '';
+
+		++$submenu_index;
+		$submenu_id      = $submenu_index;
+		$submenu_dom_id  = 'matter-navigation-submenu-' . $submenu_id;
+		$show_hover_mode = 'simple' === $type && ! $submenu_opens_on_click;
+		$anchor_class    = 'content' === $width ? 'is-megamenu-anchored-to-parent' : 'is-megamenu-anchored-to-viewport';
+		$item_classes    = trim(
+			self::get_item_classes( $item_attributes, $panel_content, true ) . ' is-megamenu is-megamenu-width-' . $width . ' ' . $anchor_class
+		);
+		$item_context    = wp_interactivity_data_wp_context(
+			[
+				'submenuId' => $submenu_id,
+			]
+		);
+		$parent_content  = self::render_submenu_parent_content( $raw_url, $label, $target, $rel_attr );
+		$description     = isset( $item_attributes['description'] ) ? wp_strip_all_tags( (string) $item_attributes['description'] ) : '';
+
+		if ( '' !== $description ) {
+			$parent_content .= sprintf(
+				'<span class="wp-block-navigation-item__description">%s</span>',
+				esc_html( $description )
+			);
+		}
+
+		$submenu_tabindex_attr = 'drill-down' === $type ? ' tabindex="-1"' : '';
+		$panel_inner           = sprintf(
+			'<div class="wp-block-matter-navigation__megamenu-content">%s</div>',
+			$panel_content
+		);
+
+		return sprintf(
+			'<li class="%9$s" %1$s data-wp-class--has-open-submenu="state.isSubmenuOpen" %2$s>%3$s<button type="button" class="wp-block-matter-navigation__submenu-toggle" data-wp-on--click="actions.toggleSubmenuOnClick" data-wp-bind--aria-expanded="state.isSubmenuOpen" aria-controls="%4$s" aria-label="%5$s"><span class="wp-block-matter-navigation__submenu-toggle-text">%6$s</span></button><div id="%4$s" class="wp-block-matter-navigation__submenu"%7$s inert data-wp-bind--aria-hidden="!state.isSubmenuOpen" data-wp-bind--inert="!state.isSubmenuOpen">%8$s%10$s</div></li>',
+			$item_context,
+			$show_hover_mode ? 'data-wp-on--mouseenter="actions.openSubmenuOnHover" data-wp-on--mouseleave="actions.closeSubmenuOnHover"' : '',
+			$parent_content,
+			esc_attr( $submenu_dom_id ),
+			esc_attr(
+				sprintf(
+					/* translators: %s: menu item label. */
+					__( 'Toggle submenu for %s', 'matter' ),
+					$label
+				)
+			),
+			esc_html( $label ),
+			$submenu_tabindex_attr,
+			'drill-down' === $type
+				? self::render_drill_down_submenu_header( $label, $url, $target, $rel_attr )
+				: '',
+			esc_attr( $item_classes ),
+			$panel_inner
+		);
 	}
 }

@@ -20,6 +20,7 @@ export const OFFSET_PROPERTIES = {
 
 export const SIZE_PROPERTIES = {
 	maxBlockSize: '--matter-navigation--submenu-max-block-size',
+	megamenuWidth: '--matter-navigation--megamenu-width',
 };
 
 const DEFAULT_BOUNDARY_PADDING = 8;
@@ -116,6 +117,14 @@ export const getBoundaryRect = (
 };
 
 export const getSubmenuPlacementMode = (menuItem, navigationElement) => {
+	if (menuItem.classList.contains('is-megamenu-anchored-to-viewport')) {
+		return 'megamenu-viewport';
+	}
+
+	if (menuItem.classList.contains('is-megamenu-anchored-to-parent')) {
+		return 'megamenu-parent';
+	}
+
 	const isVertical = navigationElement.classList.contains('is-vertical');
 	const isNested = !!menuItem.closest(SUBMENU_SELECTOR);
 
@@ -138,6 +147,7 @@ export const resetSubmenuPlacement = (submenuElement) => {
 	submenuElement.style.removeProperty(OFFSET_PROPERTIES.x);
 	submenuElement.style.removeProperty(OFFSET_PROPERTIES.y);
 	submenuElement.style.removeProperty(SIZE_PROPERTIES.maxBlockSize);
+	submenuElement.style.removeProperty(SIZE_PROPERTIES.megamenuWidth);
 };
 
 const setOffset = (submenuElement, offsetX, offsetY) => {
@@ -224,6 +234,67 @@ const setMaxBlockSize = (submenuElement, submenuRect, boundary, offsetY) => {
 	submenuElement.style.removeProperty(SIZE_PROPERTIES.maxBlockSize);
 };
 
+const clampHorizontally = (targetLeft, submenuWidth, boundary) => {
+	const minLeft = boundary.left;
+	const maxLeft = boundary.right - submenuWidth;
+
+	if (maxLeft < minLeft) {
+		return minLeft;
+	}
+
+	return Math.min(Math.max(targetLeft, minLeft), maxLeft);
+};
+
+const getVerticalOffset = (submenuRect, boundary) =>
+	submenuRect.top < boundary.top ? boundary.top - submenuRect.top : 0;
+
+const positionMegamenuParent = (submenuElement, menuItem, boundary) => {
+	applyPlacementState(submenuElement);
+
+	const submenuRect = measureSubmenuRect(submenuElement);
+	const menuItemRect = menuItem.getBoundingClientRect();
+	const centeredLeft =
+		menuItemRect.left + menuItemRect.width / 2 - submenuRect.width / 2;
+	const targetLeft = clampHorizontally(
+		centeredLeft,
+		submenuRect.width,
+		boundary
+	);
+	const offsetX = targetLeft - submenuRect.left;
+	const offsetY = getVerticalOffset(submenuRect, boundary);
+
+	setOffset(submenuElement, offsetX, offsetY);
+	setMaxBlockSize(submenuElement, submenuRect, boundary, offsetY);
+};
+
+const positionMegamenuViewport = (submenuElement, menuItem, boundary) => {
+	const isFull = menuItem.classList.contains('is-megamenu-width-full');
+	const viewport = getViewportRect();
+
+	if (isFull) {
+		submenuElement.style.setProperty(
+			SIZE_PROPERTIES.megamenuWidth,
+			`${viewport.width}px`
+		);
+	}
+
+	applyPlacementState(submenuElement);
+
+	const submenuRect = measureSubmenuRect(submenuElement);
+	const targetLeft = isFull
+		? viewport.left
+		: clampHorizontally(
+				viewport.left + (viewport.width - submenuRect.width) / 2,
+				submenuRect.width,
+				boundary
+			);
+	const offsetX = targetLeft - submenuRect.left;
+	const offsetY = getVerticalOffset(submenuRect, boundary);
+
+	setOffset(submenuElement, offsetX, offsetY);
+	setMaxBlockSize(submenuElement, submenuRect, boundary, offsetY);
+};
+
 export const positionSubmenu = (menuItem, navigationElement) => {
 	const submenuElement = getSubmenuElement(menuItem);
 
@@ -238,6 +309,17 @@ export const positionSubmenu = (menuItem, navigationElement) => {
 
 	const placementMode = getSubmenuPlacementMode(menuItem, navigationElement);
 	const boundary = getBoundaryRect(submenuElement);
+
+	if (placementMode === 'megamenu-parent') {
+		positionMegamenuParent(submenuElement, menuItem, boundary);
+		return;
+	}
+
+	if (placementMode === 'megamenu-viewport') {
+		positionMegamenuViewport(submenuElement, menuItem, boundary);
+		return;
+	}
+
 	const menuItemRect = menuItem.getBoundingClientRect();
 	let submenuRect = measureSubmenuRect(submenuElement);
 	let overflow = getOverflowAmounts(submenuRect, boundary);

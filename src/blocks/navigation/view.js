@@ -16,10 +16,13 @@ const SELECTORS = {
 	topLevelContainer: '.wp-block-matter-navigation__container',
 	toggle: '.wp-block-matter-navigation__submenu-toggle',
 	submenu: '.wp-block-matter-navigation__submenu',
+	megamenuContent: '.wp-block-matter-navigation__megamenu-content',
 	focusableSubmenuItems:
 		'.wp-block-navigation-item__content, .wp-block-matter-navigation__back, .wp-block-matter-navigation__view-all, .wp-block-matter-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
 		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle, :scope > .wp-block-navigation__submenu-items > .is-submenu-label > .wp-block-matter-navigation__submenu > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content',
+	megamenuFocusableItems:
+		'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
 };
 
 const CLICK_OPEN_MODE = 'click';
@@ -161,6 +164,22 @@ const getFocusableSubmenuItems = (menuItem) => {
 
 	if (!submenuElement) {
 		return [];
+	}
+
+	if (menuItem.classList.contains('is-megamenu')) {
+		const headerFocusables = [
+			...submenuElement.querySelectorAll(
+				':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all'
+			),
+		];
+		const content = submenuElement.querySelector(SELECTORS.megamenuContent);
+		const contentFocusables = content
+			? [...content.querySelectorAll(SELECTORS.megamenuFocusableItems)]
+			: [];
+
+		return [...headerFocusables, ...contentFocusables].filter(
+			isVisibleElement
+		);
 	}
 
 	return [
@@ -434,8 +453,11 @@ const handleArrowKeyboard = (event, context, navigationElement) => {
 
 	if (isInSubmenu && activeMenuItem) {
 		const focusableSubmenuItems = getFocusableSubmenuItems(activeMenuItem);
-		const currentSubmenuItem =
-			eventTarget.closest(SELECTORS.focusableSubmenuItems) || null;
+		const currentSubmenuItem = activeMenuItem.classList.contains(
+			'is-megamenu'
+		)
+			? eventTarget
+			: eventTarget.closest(SELECTORS.focusableSubmenuItems) || null;
 		const moveSubmenuFocus = (step) => {
 			if (!currentSubmenuItem) {
 				return false;
