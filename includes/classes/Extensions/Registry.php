@@ -38,6 +38,7 @@ class Registry {
 	private const EXTENSIONS = [
 		'icon'        => [ 'core/button' ],
 		'stack'       => [ 'core/columns' ],
+		'reverse'     => [ 'core/columns' ],
 		'order'       => [ 'core/column' ],
 		'link'        => [ 'core/group' ],
 		'sticky'      => [ 'core/group' ],
@@ -63,6 +64,7 @@ class Registry {
 		FocalPoint::instance()->setup();
 		Icon::instance()->setup();
 		Stack::instance()->setup();
+		Reverse::instance()->setup();
 		Order::instance()->setup();
 	}
 
