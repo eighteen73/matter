@@ -10,6 +10,7 @@ namespace Eighteen73\Matter;
 use Eighteen73\Matter\Blocks\Accordion;
 use Eighteen73\Matter\Blocks\Gallery;
 use Eighteen73\Matter\Blocks\GravityForm;
+use Eighteen73\Matter\Blocks\Megamenu;
 use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
@@ -40,6 +41,7 @@ class Plugin {
 		Accordion::instance()->setup();
 		Gallery::instance()->setup();
 		GravityForm::instance()->setup();
+		Megamenu::instance()->setup();
 	}
 
 	/**
