@@ -37,8 +37,19 @@ function getInitialCollectionSlug(
 		return selectedCollection;
 	}
 
-	if (collections?.some(({ slug }) => slug === defaultCollection)) {
+	if (
+		defaultCollection &&
+		collections?.some(({ slug }) => slug === defaultCollection)
+	) {
 		return defaultCollection;
+	}
+
+	const themeCollection = collections?.find(
+		({ slug }) => slug && slug !== 'core'
+	);
+
+	if (themeCollection) {
+		return themeCollection.slug;
 	}
 
 	return collections?.[0]?.slug ?? '';
@@ -59,7 +70,7 @@ export const IconLibraryModal = ({
 	value,
 	title,
 	description,
-	defaultCollection = 'matter',
+	defaultCollection,
 	extraOptions,
 	onSelect,
 	onRequestClose,
@@ -164,8 +175,9 @@ export const IconLibraryModal = ({
 							onRequestClose();
 						}}
 						extraOptions={
-							collectionSlug === defaultCollection ||
-							collectionSlug === ''
+							collectionSlug === '' ||
+							(defaultCollection &&
+								collectionSlug === defaultCollection)
 								? extraOptions
 								: []
 						}

@@ -28,8 +28,6 @@ import '../../components/icon-picker/editor.scss';
 import './editor.scss';
 import './style.scss';
 
-const COLLECTION = 'matter';
-
 const additionalAttributes = {
 	icon: {
 		type: 'object',
@@ -224,7 +222,6 @@ function BlockEdit({ clientId, attributes, setAttributes }) {
 			{isLibraryOpen && (
 				<IconLibraryModal
 					value={name}
-					defaultCollection={COLLECTION}
 					onSelect={(nextName) => updateIcon({ name: nextName })}
 					onRequestClose={() => setIsLibraryOpen(false)}
 				/>

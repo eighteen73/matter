@@ -11,10 +11,9 @@ use Eighteen73\Matter\Blocks\Accordion;
 use Eighteen73\Matter\Blocks\Gallery;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Overlay;
-use Eighteen73\Matter\Blocks\Registry;
+use Eighteen73\Matter\Blocks\Registry as BlocksRegistry;
 use Eighteen73\Matter\Blocks\Tabs;
 use Eighteen73\Matter\Extensions\Registry as ExtensionRegistry;
-use Eighteen73\Matter\Icons\Registrar as IconRegistrar;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,14 +35,13 @@ class Plugin {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
 
 		// Register blocks.
-		Registry::instance()->setup();
+		BlocksRegistry::instance()->setup();
 		Overlay::instance()->setup();
 		Tabs::instance()->setup();
 		Accordion::instance()->setup();
 		Gallery::instance()->setup();
 		GravityForm::instance()->setup();
 
-		IconRegistrar::instance()->setup();
 		ExtensionRegistry::instance()->setup();
 	}
 
