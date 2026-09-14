@@ -1347,6 +1347,89 @@ return array(
 		'viewScriptModule' => 'file:./view.js',
 		'render' => 'file:./render.php'
 	),
+	'gravity-form' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/gravity-form',
+		'version' => '0.1.0',
+		'title' => 'Gravity Form',
+		'category' => 'widgets',
+		'description' => 'Displays a Gravity Form',
+		'keywords' => array(
+			'form',
+			'forms',
+			'contact'
+		),
+		'attributes' => array(
+			'generatedId' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'formId' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
+			),
+			'displayTitle' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'displayDescription' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'ajaxSubmission' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'tabindex' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'fieldValues' => array(
+				'type' => 'object',
+				'default' => null
+			)
+		),
+		'supports' => array(
+			'align' => true,
+			'anchor' => true,
+			'html' => false,
+			'contentRole' => true,
+			'color' => array(
+				'background' => true,
+				'gradients' => true,
+				'text' => false
+			),
+			'spacing' => array(
+				'padding' => true,
+				'blockGap' => false,
+				'margin' => true,
+				'__experimentalDefaultControls' => array(
+					'padding' => true,
+					'margin' => true
+				)
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => false,
+					'radius' => false,
+					'style' => false,
+					'width' => false
+				)
+			),
+			'renaming' => false,
+			'customCSS' => false
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'render' => 'file:./render.php'
+	),
 	'modal' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,

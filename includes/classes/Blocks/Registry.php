@@ -40,6 +40,18 @@ class Registry {
 	];
 
 	/**
+	 * Third party blocks that Matter replaces (parents + children).
+	 *
+	 * Hidden from the inserter via allowed_block_types_all.
+	 * Existing content using these blocks continues to render.
+	 *
+	 * @var string[]
+	 */
+	private const DISABLED_THIRD_PARTY_BLOCKS = [
+		'gravityforms/form',
+	];
+
+	/**
 	 * Setup block registration hooks.
 	 *
 	 * @return void
@@ -67,7 +79,7 @@ class Registry {
 			return $allowed_block_types;
 		}
 
-		return array_values( array_diff( $allowed_block_types, self::DISABLED_CORE_BLOCKS ) );
+		return array_values( array_diff( $allowed_block_types, self::DISABLED_CORE_BLOCKS, self::DISABLED_THIRD_PARTY_BLOCKS ) );
 	}
 
 	/**
