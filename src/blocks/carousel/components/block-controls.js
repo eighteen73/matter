@@ -50,7 +50,7 @@ function findCarouselClientId(clientId, getBlock, getBlockRootClientId) {
 export default function CarouselBlockControls() {
 	const { clientId } = useBlockEditContext();
 
-	const { viewportClientId, carouselMode } = useSelect(
+	const { viewportClientId, carouselMode, allowedBlocks } = useSelect(
 		(select) => {
 			const { getBlock, getBlockRootClientId } = select(blockEditorStore);
 
@@ -64,6 +64,7 @@ export default function CarouselBlockControls() {
 				return {
 					viewportClientId: null,
 					carouselMode: 'post',
+					allowedBlocks: [],
 				};
 			}
 
@@ -77,6 +78,7 @@ export default function CarouselBlockControls() {
 				carouselMode: getCarouselMode(
 					carouselBlock?.attributes?.className
 				),
+				allowedBlocks: viewportBlock?.attributes?.allowedBlocks ?? [],
 			};
 		},
 		[clientId]
@@ -89,13 +91,18 @@ export default function CarouselBlockControls() {
 			return;
 		}
 
-		const newItem =
-			carouselMode === 'image'
-				? createBlock('core/image')
-				: createBlock('matter/carousel-slide');
+		// Variations set allowedBlocks on the viewport. A single entry is the
+		// default item type; otherwise keep the built-in image/slide fallback.
+		let blockName = 'matter/carousel-slide';
 
-		insertBlock(newItem, undefined, viewportClientId);
-	}, [viewportClientId, carouselMode, insertBlock]);
+		if (allowedBlocks.length === 1) {
+			blockName = allowedBlocks[0];
+		} else if (carouselMode === 'image') {
+			blockName = 'core/image';
+		}
+
+		insertBlock(createBlock(blockName), undefined, viewportClientId);
+	}, [viewportClientId, carouselMode, allowedBlocks, insertBlock]);
 
 	if (carouselMode === 'post' || !viewportClientId) {
 		return null;
