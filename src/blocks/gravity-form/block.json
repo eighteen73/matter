@@ -1,0 +1,83 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/gravity-form",
+	"version": "0.1.0",
+	"title": "Gravity Form",
+	"category": "widgets",
+	"description": "Displays a Gravity Form",
+	"keywords": [
+		"form",
+		"forms",
+		"contact"
+	],
+	"attributes": {
+		"generatedId": {
+			"type": "string",
+			"default": ""
+		},
+		"formId": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"displayTitle": {
+			"type": "boolean",
+			"default": false
+		},
+		"displayDescription": {
+			"type": "boolean",
+			"default": false
+		},
+		"ajaxSubmission": {
+			"type": "boolean",
+			"default": true
+		},
+		"tabindex": {
+			"type": "number",
+			"default": 0
+		},
+		"fieldValues": {
+			"type": "object",
+			"default": null
+		}
+	},
+	"supports": {
+		"align": true,
+		"anchor": true,
+		"html": false,
+		"contentRole": true,
+		"color": {
+			"background": true,
+			"gradients": true,
+			"text": false
+		},
+		"spacing": {
+			"padding": true,
+			"blockGap": false,
+			"margin": true,
+			"__experimentalDefaultControls": {
+				"padding": true,
+				"margin": true
+			}
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true,
+			"__experimentalDefaultControls": {
+				"color": false,
+				"radius": false,
+				"style": false,
+				"width": false
+			}
+		},
+		"renaming": false,
+		"customCSS": false
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
+}
