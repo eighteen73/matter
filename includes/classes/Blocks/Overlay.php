@@ -59,6 +59,42 @@ class Overlay {
 	}
 
 	/**
+	 * Wrapper attributes for modal/drawer hosts, without an HTML id.
+	 *
+	 * Core `supports.anchor` stamps `id` onto this wrapper. The public ID
+	 * belongs on the inner `<dialog>` so `getElementById()` can open it.
+	 *
+	 * @param array<string, string> $extra_attributes Extra wrapper attributes.
+	 * @return string
+	 */
+	public static function get_host_wrapper_attributes( array $extra_attributes = [] ): string {
+		$attributes = get_block_wrapper_attributes( $extra_attributes );
+
+		if ( '' === $attributes || ! str_contains( $attributes, 'id=' ) ) {
+			return $attributes;
+		}
+
+		if ( ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
+			return trim( (string) preg_replace( '/\sid="[^"]*"/', '', $attributes, 1 ) );
+		}
+
+		$processor = new \WP_HTML_Tag_Processor( '<div ' . $attributes . '></div>' );
+
+		if ( ! $processor->next_tag() ) {
+			return $attributes;
+		}
+
+		$processor->remove_attribute( 'id' );
+		$updated = $processor->get_updated_html();
+
+		if ( preg_match( '/^<div(\s+.*)><\/div>$/s', $updated, $matches ) ) {
+			return trim( $matches[1] );
+		}
+
+		return $attributes;
+	}
+
+	/**
 	 * Provide computed overlay IDs to descendant blocks during server rendering.
 	 *
 	 * Overlay IDs are computed from anchor / generatedId (and legacy targetId),
