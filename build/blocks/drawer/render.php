@@ -9,6 +9,7 @@
  */
 
 use Eighteen73\Matter\Blocks\Drawer;
+use Eighteen73\Matter\Blocks\Overlay;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -22,7 +23,7 @@ Drawer::register_state( $drawer_id );
 <div
 	<?php
 	echo wp_kses_data(
-		get_block_wrapper_attributes(
+		Overlay::get_host_wrapper_attributes(
 			[
 				'data-wp-interactive' => 'matter/overlay',
 				'data-wp-init'        => 'callbacks.onInit',
