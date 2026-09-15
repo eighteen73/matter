@@ -68,6 +68,34 @@ const getContextId = () => {
 	return context?.id;
 };
 
+const escapeSelectorId = (id) =>
+	typeof CSS !== 'undefined' && typeof window.CSS.escape === 'function'
+		? window.CSS.escape(id)
+		: String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+/**
+ * Resolve the overlay dialog. Prefer the <dialog> when a custom HTML
+ * anchor also stamps id onto the outer wrapper (duplicate IDs).
+ *
+ * @param {string} id Overlay public ID.
+ * @return {HTMLDialogElement|null} Dialog element.
+ */
+const getDialogElement = (id) => {
+	if (!id) {
+		return null;
+	}
+
+	const dialog = document.querySelector(`dialog#${escapeSelectorId(id)}`);
+
+	if (dialog) {
+		return dialog;
+	}
+
+	const element = document.getElementById(id);
+
+	return element?.tagName === 'DIALOG' ? element : null;
+};
+
 const resolveId = (passthroughId = false) =>
 	typeof passthroughId === 'string' ? passthroughId : privateState.id;
 
@@ -612,7 +640,7 @@ const syncDialogElement = (id) => {
 		return;
 	}
 
-	const dialogElement = document.getElementById(id);
+	const dialogElement = getDialogElement(id);
 
 	if (!dialogElement) {
 		return;
@@ -677,13 +705,7 @@ const { actions: privateActions, state: privateState } = store(
 				return getInstanceForId(privateState.id);
 			},
 			get dialogElement() {
-				const { id } = privateState;
-
-				if (!id) {
-					return null;
-				}
-
-				return document.getElementById(id);
+				return getDialogElement(privateState.id);
 			},
 		},
 		actions: {

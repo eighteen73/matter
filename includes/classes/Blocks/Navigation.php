@@ -218,15 +218,54 @@ class Navigation {
 				continue;
 			}
 
-			if ( in_array( $block_name, [ 'core/page-list', 'core/search', 'core/social-links', 'core/buttons', 'core/spacer' ], true ) ) {
-				$items_markup .= sprintf(
-					'<li class="wp-block-navigation-item has-block-content">%s</li>',
-					render_block( $parsed_block )
-				);
+			if ( '' === $block_name ) {
+				continue;
 			}
+
+			$items_markup .= self::render_generic_item( $parsed_block );
 		}
 
 		return $items_markup;
+	}
+
+	/**
+	 * Render a saved menu inner block that is not a navigation link or submenu.
+	 *
+	 * Links and submenus need Matter markup for accordion/drill-down. Everything
+	 * else (search, buttons, trigger, etc.) uses the block's own renderer.
+	 * Insertion is gated by core/navigation allowedBlocks in the editor.
+	 *
+	 * @param array<string, mixed> $parsed_block Parsed block.
+	 * @return string
+	 */
+	private static function render_generic_item( array $parsed_block ): string {
+		$block_name = isset( $parsed_block['blockName'] ) ? (string) $parsed_block['blockName'] : '';
+
+		/**
+		 * Filters whether a saved navigation inner block should render.
+		 *
+		 * Links and submenus never hit this filter. Return false to skip a block.
+		 *
+		 * @param bool                 $should_render Whether to render the block. Default true.
+		 * @param string               $block_name    Block name.
+		 * @param array<string, mixed> $parsed_block  Parsed block.
+		 */
+		$should_render = apply_filters( 'matter_navigation_render_inner_block', true, $block_name, $parsed_block );
+
+		if ( ! $should_render ) {
+			return '';
+		}
+
+		$content = render_block( $parsed_block );
+
+		if ( '' === trim( $content ) ) {
+			return '';
+		}
+
+		return sprintf(
+			'<li class="wp-block-navigation-item has-block-content">%s</li>',
+			$content
+		);
 	}
 
 	/**
