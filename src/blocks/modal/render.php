@@ -9,6 +9,7 @@
  */
 
 use Eighteen73\Matter\Blocks\Modal;
+use Eighteen73\Matter\Blocks\Overlay;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -62,7 +63,7 @@ wp_interactivity_state(
 <div
 	<?php
 	echo wp_kses_data(
-		get_block_wrapper_attributes(
+		Overlay::get_host_wrapper_attributes(
 			[
 				'data-wp-interactive' => 'matter/overlay',
 				'data-wp-init'        => 'callbacks.onInit',
