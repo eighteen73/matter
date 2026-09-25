@@ -31,6 +31,7 @@ class ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24
         'Eighteen73\\Matter\\Blocks\\Drawer' => __DIR__ . '/../..' . '/includes/classes/Blocks/Drawer.php',
         'Eighteen73\\Matter\\Blocks\\Gallery' => __DIR__ . '/../..' . '/includes/classes/Blocks/Gallery.php',
         'Eighteen73\\Matter\\Blocks\\GravityForm' => __DIR__ . '/../..' . '/includes/classes/Blocks/GravityForm.php',
+        'Eighteen73\\Matter\\Blocks\\Megamenu' => __DIR__ . '/../..' . '/includes/classes/Blocks/Megamenu.php',
         'Eighteen73\\Matter\\Blocks\\Modal' => __DIR__ . '/../..' . '/includes/classes/Blocks/Modal.php',
         'Eighteen73\\Matter\\Blocks\\Navigation' => __DIR__ . '/../..' . '/includes/classes/Blocks/Navigation.php',
         'Eighteen73\\Matter\\Blocks\\Overlay' => __DIR__ . '/../..' . '/includes/classes/Blocks/Overlay.php',

@@ -16,6 +16,7 @@ return array(
     'Eighteen73\\Matter\\Blocks\\Drawer' => $baseDir . '/includes/classes/Blocks/Drawer.php',
     'Eighteen73\\Matter\\Blocks\\Gallery' => $baseDir . '/includes/classes/Blocks/Gallery.php',
     'Eighteen73\\Matter\\Blocks\\GravityForm' => $baseDir . '/includes/classes/Blocks/GravityForm.php',
+    'Eighteen73\\Matter\\Blocks\\Megamenu' => $baseDir . '/includes/classes/Blocks/Megamenu.php',
     'Eighteen73\\Matter\\Blocks\\Modal' => $baseDir . '/includes/classes/Blocks/Modal.php',
     'Eighteen73\\Matter\\Blocks\\Navigation' => $baseDir . '/includes/classes/Blocks/Navigation.php',
     'Eighteen73\\Matter\\Blocks\\Overlay' => $baseDir . '/includes/classes/Blocks/Overlay.php',

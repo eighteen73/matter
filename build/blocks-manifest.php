@@ -1814,6 +1814,99 @@ return array(
 		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
+	'navigation-megamenu' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/navigation-megamenu',
+		'version' => '0.1.0',
+		'title' => 'Megamenu',
+		'category' => 'theme',
+		'description' => 'Add a megamenu to your navigation, powered by a template part.',
+		'keywords' => array(
+			'megamenu',
+			'mega menu',
+			'navigation',
+			'submenu',
+			'dropdown'
+		),
+		'parent' => array(
+			'core/navigation'
+		),
+		'example' => array(
+			
+		),
+		'attributes' => array(
+			'label' => array(
+				'type' => 'string',
+				'role' => 'content'
+			),
+			'type' => array(
+				'type' => 'string'
+			),
+			'description' => array(
+				'type' => 'string'
+			),
+			'rel' => array(
+				'type' => 'string'
+			),
+			'id' => array(
+				'type' => 'number'
+			),
+			'opensInNewTab' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'url' => array(
+				'type' => 'string',
+				'role' => 'content'
+			),
+			'title' => array(
+				'type' => 'string'
+			),
+			'kind' => array(
+				'type' => 'string'
+			),
+			'menuSlug' => array(
+				'type' => 'string'
+			),
+			'width' => array(
+				'type' => 'string',
+				'enum' => array(
+					'content',
+					'wide',
+					'full'
+				),
+				'default' => 'content'
+			)
+		),
+		'usesContext' => array(
+			'showSubmenuIcon',
+			'openSubmenusOnClick'
+		),
+		'supports' => array(
+			'anchor' => true,
+			'reusable' => false,
+			'html' => false,
+			'lock' => false,
+			'typography' => array(
+				'fontSize' => true,
+				'lineHeight' => true,
+				'__experimentalFontFamily' => true,
+				'__experimentalFontWeight' => true,
+				'__experimentalFontStyle' => true,
+				'__experimentalTextTransform' => true,
+				'__experimentalTextDecoration' => true,
+				'__experimentalLetterSpacing' => true,
+				'__experimentalDefaultControls' => array(
+					'fontSize' => true
+				)
+			),
+			'__experimentalSlashInserter' => true
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css'
+	),
 	'tab-button' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
