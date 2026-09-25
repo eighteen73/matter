@@ -69,6 +69,10 @@
 			margin-top: calc(var(--_slide--gap-top) * -1);
 		}
 
+		.wp-block-woocommerce-product-collection {
+			margin-bottom: 0;
+		}
+
 		.embla__container:has(> *:not(.wp-block-query, .wp-block-woocommerce-product-collection)),
 		.wp-block-post-template,
 		.wp-block-woocommerce-product-template {
@@ -83,6 +87,19 @@
 				padding-left: var(--_slide--gap-left);
 				padding-top: var(--_slide--gap-top);
 				transform: translate3d(0, 0, 0);
+			}
+		}
+
+		// Product Collection's own column layout would wrap slides and set
+		// their widths. Keep a single non-wrapping row sized by slides-to-show.
+		.wp-block-woocommerce-product-template.wc-block-product-template {
+			flex-wrap: nowrap;
+			gap: 0;
+
+			> li.wc-block-product {
+				flex: 0 0 var(--_slide--width);
+				max-width: none;
+				width: auto;
 			}
 		}
 	}
