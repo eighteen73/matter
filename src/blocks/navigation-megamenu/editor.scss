@@ -1,0 +1,26 @@
+.wp-block-matter-navigation-megamenu {
+	align-items: center;
+	display: flex;
+	gap: 0.25em;
+}
+
+.wp-block-matter-navigation-megamenu__edit-template.components-button {
+	align-self: flex-start;
+	width: auto;
+}
+
+.wp-block-matter-navigation-megamenu__toggle-icon {
+	align-items: center;
+	display: inline-flex;
+	height: 0.6em;
+	justify-content: center;
+	width: 0.6em;
+
+	svg {
+		display: block;
+		fill: none;
+		height: 100%;
+		stroke: currentcolor;
+		width: 100%;
+	}
+}
