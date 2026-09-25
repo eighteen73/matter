@@ -41,6 +41,7 @@ import {
 	STANDARD_CAROUSEL_TEMPLATE,
 	IMAGE_CAROUSEL_TEMPLATE,
 	POST_CAROUSEL_TEMPLATE,
+	PRODUCT_CAROUSEL_TEMPLATE,
 	getCarouselMode,
 } from './variations';
 
@@ -49,13 +50,13 @@ import './editor.scss';
 /**
  * Whether viewport children match the expected carousel mode.
  *
- * @param {'standard'|'image'|'post'} mode           Active carousel mode.
- * @param {Array}                     viewportBlocks Viewport inner blocks.
- * @param {Object|false}              viewportBlock  Viewport block.
+ * @param {'standard'|'image'|'post'|'product'} mode           Active carousel mode.
+ * @param {Array}                               viewportBlocks Viewport inner blocks.
+ * @param {Object|false}                        viewportBlock  Viewport block.
  * @return {boolean} True when structure matches the mode.
  */
 function hasMatchingViewportStructure(mode, viewportBlocks, viewportBlock) {
-	const hasQueryBlock = viewportBlocks.some(
+	const queryBlock = viewportBlocks.find(
 		(block) =>
 			block.name === 'core/query' ||
 			block.name === 'woocommerce/product-collection'
@@ -63,15 +64,19 @@ function hasMatchingViewportStructure(mode, viewportBlocks, viewportBlock) {
 	const allowedBlock = viewportBlock?.attributes?.allowedBlocks?.[0] ?? null;
 
 	if (mode === 'post') {
-		return hasQueryBlock;
+		return queryBlock?.name === 'core/query';
+	}
+
+	if (mode === 'product') {
+		return queryBlock?.name === 'woocommerce/product-collection';
 	}
 
 	if (mode === 'image') {
-		return !hasQueryBlock && allowedBlock === 'core/image';
+		return !queryBlock && allowedBlock === 'core/image';
 	}
 
 	return (
-		!hasQueryBlock &&
+		!queryBlock &&
 		allowedBlock !== 'core/image' &&
 		allowedBlock !== 'core/query' &&
 		allowedBlock !== 'woocommerce/product-collection'
@@ -82,6 +87,7 @@ const MODE_TEMPLATES = {
 	standard: STANDARD_CAROUSEL_TEMPLATE,
 	image: IMAGE_CAROUSEL_TEMPLATE,
 	post: POST_CAROUSEL_TEMPLATE,
+	product: PRODUCT_CAROUSEL_TEMPLATE,
 };
 
 export default function Edit({
@@ -394,11 +400,18 @@ export default function Edit({
 	const editorSlidesSelector =
 		':scope > .block-editor-block-list__block:not(.block-list-appender)';
 
+	// Product previews are list items, and the active product's duplicate
+	// preview is hidden. Posts keep the block-list selector.
+	const slidesSelector =
+		hasQueryLoop?.name === 'woocommerce/product-collection'
+			? ':scope > li.wc-block-product:not([style*="display: none"]):not([style*="display:none"])'
+			: editorSlidesSelector;
+
 	const [emblaRef, emblaApi] = useEmblaCarousel(
 		{
 			...emblaOptions,
 			container: getContainer(),
-			slides: editorSlidesSelector,
+			slides: slidesSelector,
 			watchFocus: false,
 		},
 		emblaPlugins
@@ -439,6 +452,62 @@ export default function Edit({
 
 		emblaApi.reInit();
 	}, [emblaApi, viewportInnerBlocks.length]);
+
+	useEffect(() => {
+		if (
+			!emblaApi ||
+			hasQueryLoop?.name !== 'woocommerce/product-collection'
+		) {
+			return undefined;
+		}
+
+		const root = emblaApi.rootNode?.();
+
+		if (!root) {
+			return undefined;
+		}
+
+		let templateNode = root.querySelector(
+			'.wp-block-woocommerce-product-template'
+		);
+		let templateObserver;
+
+		const watchTemplate = (node) => {
+			templateObserver?.disconnect();
+
+			if (!node) {
+				return;
+			}
+
+			templateObserver = new window.MutationObserver(() => {
+				emblaApi.reInit();
+			});
+			templateObserver.observe(node, { childList: true });
+		};
+
+		watchTemplate(templateNode);
+
+		const rootObserver = new window.MutationObserver(() => {
+			const nextTemplate = root.querySelector(
+				'.wp-block-woocommerce-product-template'
+			);
+
+			if (nextTemplate === templateNode) {
+				return;
+			}
+
+			templateNode = nextTemplate;
+			watchTemplate(templateNode);
+			emblaApi.reInit();
+		});
+
+		rootObserver.observe(root, { childList: true, subtree: true });
+
+		return () => {
+			templateObserver?.disconnect();
+			rootObserver.disconnect();
+		};
+	}, [emblaApi, hasQueryLoop?.name]);
 
 	useEffect(() => {
 		if (!thumbsBlock) {

@@ -140,6 +140,11 @@
 		row-gap: var(--_submenu--gap);
 	}
 
+	// Megamenu template part content.
+	.wp-block-matter-navigation__megamenu-content {
+		min-height: 0;
+	}
+
 	// Item with open submenu
 	.has-open-submenu {
 		> .wp-block-matter-navigation__submenu {
@@ -151,6 +156,8 @@
 
 	// Simple menu type
 	&.is-menu-type-simple {
+		position: relative;
+
 		.has-open-submenu > .wp-block-matter-navigation__submenu:not(.is-submenu-positioned) {
 			opacity: 0;
 			pointer-events: none;
@@ -316,6 +323,37 @@
 				visibility: visible;
 			}
 		}
+
+		// Megamenu panels: width implies anchoring.
+		.is-megamenu > .wp-block-matter-navigation__submenu {
+			padding: 0;
+		}
+
+		.is-megamenu-width-content > .wp-block-matter-navigation__submenu {
+			max-width: calc(100vw - calc(var(--wp--style--root--padding-left) + var(--wp--style--root--padding-right)));
+			width: var(--wp--style--global--content-size);
+		}
+
+		.is-megamenu-width-wide > .wp-block-matter-navigation__submenu {
+			max-width: calc(100vw - calc(var(--wp--style--root--padding-left) + var(--wp--style--root--padding-right)));
+			width: var(--wp--style--global--wide-size);
+		}
+
+		.is-megamenu-width-full > .wp-block-matter-navigation__submenu {
+			max-width: none;
+			width: var(--matter-navigation--megamenu-width, 100%);
+		}
+
+		.is-megamenu-anchored-to-viewport {
+			position: static;
+		}
+
+		&.is-vertical .is-megamenu > .wp-block-matter-navigation__submenu {
+			bottom: auto;
+			left: var(--matter-navigation--submenu-inline-start, calc(var(--_submenu--padding) * -1));
+			right: auto;
+			top: var(--matter-navigation--submenu-block-start, 100%);
+		}
 	}
 
 	// Accordion menu type
@@ -351,7 +389,8 @@
 			transition: grid-template-rows var(--_transition-duration) ease-in-out;
 			width: 100%;
 
-			> .wp-block-navigation__submenu-items {
+			> .wp-block-navigation__submenu-items,
+			> .wp-block-matter-navigation__megamenu-content {
 				min-height: 0;
 			}
 		}
@@ -369,7 +408,8 @@
 				grid-template-rows: 1fr;
 				row-gap: inherit;
 
-				> .wp-block-navigation__submenu-items {
+				> .wp-block-navigation__submenu-items,
+				> .wp-block-matter-navigation__megamenu-content {
 					row-gap: inherit;
 				}
 			}
@@ -541,6 +581,16 @@
 
 		&:not(.has-submenu-view-all) .wp-block-matter-navigation__view-all {
 			display: none;
+		}
+
+		.is-megamenu > .wp-block-matter-navigation__submenu {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.wp-block-matter-navigation__megamenu-content {
+			flex: 1 1 auto;
+			overflow-y: auto;
 		}
 	}
 }

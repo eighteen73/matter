@@ -16,10 +16,13 @@ const SELECTORS = {
 	topLevelContainer: '.wp-block-matter-navigation__container',
 	toggle: '.wp-block-matter-navigation__submenu-toggle',
 	submenu: '.wp-block-matter-navigation__submenu',
+	megamenuContent: '.wp-block-matter-navigation__megamenu-content',
 	focusableSubmenuItems:
 		'.wp-block-navigation-item__content, .wp-block-matter-navigation__back, .wp-block-matter-navigation__view-all, .wp-block-matter-navigation__submenu-toggle',
 	directSubmenuFocusableItems:
 		':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content, :scope > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-matter-navigation__submenu-toggle, :scope > .wp-block-navigation__submenu-items > .is-submenu-label > .wp-block-matter-navigation__submenu > .wp-block-navigation__submenu-items > .wp-block-navigation-item > .wp-block-navigation-item__content',
+	megamenuFocusableItems:
+		'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
 };
 
 const CLICK_OPEN_MODE = 'click';
@@ -74,8 +77,19 @@ const getToggleElement = (menuItem) =>
 const getNavigationElement = (element) =>
 	element?.closest(SELECTORS.navigation) || null;
 
-const getEventTargetElement = (event) =>
-	event?.target && event.target.nodeType === 1 ? event.target : null;
+const getEventTargetElement = (event) => {
+	const target = event?.target;
+
+	if (!target) {
+		return null;
+	}
+
+	if (target.nodeType === 1) {
+		return target;
+	}
+
+	return target.parentElement?.nodeType === 1 ? target.parentElement : null;
+};
 
 const getTopLevelLink = (item) =>
 	[...item.children].find(
@@ -161,6 +175,22 @@ const getFocusableSubmenuItems = (menuItem) => {
 
 	if (!submenuElement) {
 		return [];
+	}
+
+	if (menuItem.classList.contains('is-megamenu')) {
+		const headerFocusables = [
+			...submenuElement.querySelectorAll(
+				':scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__back, :scope > .wp-block-matter-navigation__submenu-header > .wp-block-matter-navigation__view-all'
+			),
+		];
+		const content = submenuElement.querySelector(SELECTORS.megamenuContent);
+		const contentFocusables = content
+			? [...content.querySelectorAll(SELECTORS.megamenuFocusableItems)]
+			: [];
+
+		return [...headerFocusables, ...contentFocusables].filter(
+			isVisibleElement
+		);
 	}
 
 	return [
@@ -434,8 +464,11 @@ const handleArrowKeyboard = (event, context, navigationElement) => {
 
 	if (isInSubmenu && activeMenuItem) {
 		const focusableSubmenuItems = getFocusableSubmenuItems(activeMenuItem);
-		const currentSubmenuItem =
-			eventTarget.closest(SELECTORS.focusableSubmenuItems) || null;
+		const currentSubmenuItem = activeMenuItem.classList.contains(
+			'is-megamenu'
+		)
+			? eventTarget
+			: eventTarget.closest(SELECTORS.focusableSubmenuItems) || null;
 		const moveSubmenuFocus = (step) => {
 			if (!currentSubmenuItem) {
 				return false;
@@ -608,18 +641,42 @@ const { state } = store(
 				const { ref } = getElement();
 				handleArrowKeyboard(event, context, ref);
 			}),
-			handleNavFocusOut: (event) => {
+			handleNavFocusOut: withSyncEvent((event) => {
 				const context = getContext();
 
 				if (context.menuType !== 'simple') {
 					return;
 				}
 
-				const { ref } = getElement();
 				const nextFocusedElement = event.relatedTarget;
 
+				// A null relatedTarget means focus moved to a non-focusable
+				// node. That happens both for clicks inside megamenu content
+				// (headings, images, padding) and for clicks on the page.
+				// Only close when we know where focus went; pointer dismissal
+				// is handled by closeOpenSubmenusOnOutsideClick.
+				if (!nextFocusedElement) {
+					return;
+				}
+
+				const { ref } = getElement();
 				closeSubmenusWithoutFocus(context, ref, nextFocusedElement);
-			},
+			}),
+			closeOpenSubmenusOnOutsideClick: withSyncEvent((event) => {
+				const context = getContext();
+
+				if (
+					context.menuType !== 'simple' ||
+					!context.openSubmenus.length
+				) {
+					return;
+				}
+
+				const { ref } = getElement();
+				const eventTarget = getEventTargetElement(event);
+
+				closeSubmenusWithoutFocus(context, ref, eventTarget);
+			}),
 		},
 	},
 	{ lock: true }

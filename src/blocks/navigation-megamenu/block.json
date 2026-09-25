@@ -1,0 +1,76 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/navigation-megamenu",
+	"version": "0.1.0",
+	"title": "Megamenu",
+	"category": "theme",
+	"description": "Add a megamenu to your navigation, powered by a template part.",
+	"keywords": ["megamenu", "mega menu", "navigation", "submenu", "dropdown"],
+	"parent": ["core/navigation"],
+	"example": {},
+	"attributes": {
+		"label": {
+			"type": "string",
+			"role": "content"
+		},
+		"type": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string"
+		},
+		"rel": {
+			"type": "string"
+		},
+		"id": {
+			"type": "number"
+		},
+		"opensInNewTab": {
+			"type": "boolean",
+			"default": false
+		},
+		"url": {
+			"type": "string",
+			"role": "content"
+		},
+		"title": {
+			"type": "string"
+		},
+		"kind": {
+			"type": "string"
+		},
+		"menuSlug": {
+			"type": "string"
+		},
+		"width": {
+			"type": "string",
+			"enum": ["content", "wide", "full"],
+			"default": "content"
+		}
+	},
+	"usesContext": ["showSubmenuIcon", "openSubmenusOnClick"],
+	"supports": {
+		"anchor": true,
+		"reusable": false,
+		"html": false,
+		"lock": false,
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontFamily": true,
+			"__experimentalFontWeight": true,
+			"__experimentalFontStyle": true,
+			"__experimentalTextTransform": true,
+			"__experimentalTextDecoration": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalDefaultControls": {
+				"fontSize": true
+			}
+		},
+		"__experimentalSlashInserter": true
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css"
+}

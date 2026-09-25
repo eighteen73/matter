@@ -87,7 +87,11 @@ export default function CarouselBlockControls() {
 	const { insertBlock } = useDispatch(blockEditorStore);
 
 	const handleAddItem = useCallback(() => {
-		if (!viewportClientId || carouselMode === 'post') {
+		if (
+			!viewportClientId ||
+			carouselMode === 'post' ||
+			carouselMode === 'product'
+		) {
 			return;
 		}
 
@@ -104,7 +108,11 @@ export default function CarouselBlockControls() {
 		insertBlock(createBlock(blockName), undefined, viewportClientId);
 	}, [viewportClientId, carouselMode, allowedBlocks, insertBlock]);
 
-	if (carouselMode === 'post' || !viewportClientId) {
+	if (
+		carouselMode === 'post' ||
+		carouselMode === 'product' ||
+		!viewportClientId
+	) {
 		return null;
 	}
 
