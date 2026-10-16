@@ -344,28 +344,65 @@ class Navigation {
 	 * @return string
 	 */
 	private static function render_drill_down_submenu_header( string $label, string $url, string $target, string $rel_attr ): string {
+		$context = [
+			'label'    => $label,
+			'url'      => $url,
+			'target'   => $target,
+			'rel_attr' => $rel_attr,
+		];
+
+		/**
+		 * Filters the drill-down back button text.
+		 *
+		 * @param string               $text    Back button text.
+		 * @param array<string,string> $context Parent item context: label, url, target, rel_attr.
+		 */
+		$back_text = (string) apply_filters( 'matter_navigation_drill_down_back_text', __( 'Back', 'matter' ), $context );
+
+		/**
+		 * Filters the drill-down back button aria-label.
+		 *
+		 * @param string               $aria_label Back button aria-label.
+		 * @param array<string,string> $context    Parent item context: label, url, target, rel_attr.
+		 */
+		$back_aria_label = (string) apply_filters(
+			'matter_navigation_drill_down_back_aria_label',
+			/* translators: %s: parent menu item label. */
+			sprintf( __( 'Back to %s', 'matter' ), $label ),
+			$context
+		);
+
+		/**
+		 * Filters the drill-down "view all" link text.
+		 *
+		 * @param string               $text    View all link text.
+		 * @param array<string,string> $context Parent item context: label, url, target, rel_attr.
+		 */
+		$view_all_text = (string) apply_filters( 'matter_navigation_drill_down_view_all_text', __( 'View all', 'matter' ), $context );
+
+		/**
+		 * Filters the drill-down "view all" link aria-label.
+		 *
+		 * @param string               $aria_label View all link aria-label.
+		 * @param array<string,string> $context    Parent item context: label, url, target, rel_attr.
+		 */
+		$view_all_aria_label = (string) apply_filters(
+			'matter_navigation_drill_down_view_all_aria_label',
+			/* translators: %s: parent menu item label. */
+			sprintf( __( 'View all %s', 'matter' ), $label ),
+			$context
+		);
+
 		return sprintf(
 			'<div class="wp-block-matter-navigation__submenu-header"><button type="button" class="wp-block-matter-navigation__back" data-wp-on--click="actions.closeSubmenuOnClick" aria-label="%1$s"><span class="wp-block-matter-navigation__back-text">%2$s</span></button><span class="wp-block-matter-navigation__parent-label">%3$s</span><a class="wp-block-matter-navigation__view-all" href="%4$s"%5$s%6$s aria-label="%7$s">%8$s</a></div>',
-			esc_attr(
-				sprintf(
-					/* translators: %s: parent menu item label. */
-					__( 'Back to %s', 'matter' ),
-					$label
-				)
-			),
-			esc_html__( 'Back', 'matter' ),
+			esc_attr( $back_aria_label ),
+			esc_html( $back_text ),
 			esc_html( $label ),
 			'' !== $url ? $url : '#',
 			$target,
 			$rel_attr,
-			esc_attr(
-				sprintf(
-					/* translators: %s: parent menu item label. */
-					__( 'View all %s', 'matter' ),
-					$label
-				)
-			),
-			esc_html__( 'View all', 'matter' )
+			esc_attr( $view_all_aria_label ),
+			esc_html( $view_all_text )
 		);
 	}
 
