@@ -34,7 +34,7 @@ class Tabs {
 	 * @return void
 	 */
 	public function setup(): void {
-		add_filter( 'render_block_context', [ $this, 'provide_context' ], 10, 2 );
+		add_filter( 'render_block_context', [ $this, 'provide_context' ], 10, 3 );
 	}
 
 	/**
@@ -276,19 +276,26 @@ class Tabs {
 	/**
 	 * Provide tabs list context during server-side rendering.
 	 *
+	 * Inside a Query Loop the ID is suffixed with the post ID, so each repeated
+	 * tabs instance gets unique panel IDs and its own panel index counter.
+	 *
 	 * @param array<string, mixed> $context      Default block context.
 	 * @param array<string, mixed> $parsed_block The block being rendered.
+	 * @param \WP_Block|null       $parent_block Parent block instance.
 	 * @return array<string, mixed>
 	 */
-	public function provide_context( array $context, array $parsed_block ): array {
+	public function provide_context( array $context, array $parsed_block, $parent_block = null ): array {
 		if ( 'matter/tabs' !== ( $parsed_block['blockName'] ?? '' ) ) {
 			return $context;
 		}
 
-		$tabs_id = BlockId::resolve_base_id(
+		$context = Context::provide( $context, $parent_block );
+
+		$tabs_id = BlockId::resolve_id(
 			isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] )
 				? $parsed_block['attrs']
 				: [],
+			$context,
 			'matter-tabs-'
 		);
 

@@ -2315,7 +2315,10 @@ return array(
 		),
 		'usesContext' => array(
 			'matter/tabs-list',
-			'matter/tabs-id'
+			'matter/tabs-id',
+			'postId',
+			'postType',
+			'queryId'
 		),
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
