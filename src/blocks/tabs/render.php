@@ -20,7 +20,7 @@ if ( ! $block_instance instanceof \WP_Block ) {
 	return;
 }
 
-$tabs_id                     = $block_instance->context['matter/tabs-id'] ?? BlockId::resolve_base_id( $block_attributes, 'matter-tabs-' );
+$tabs_id                     = $block_instance->context['matter/tabs-id'] ?? BlockId::resolve_id( $block_attributes, $block_instance->context, 'matter-tabs-' );
 $tabs_list                   = $block_instance->context['matter/tabs-list'] ?? [];
 $active_tab_index            = $block_attributes['activeTabIndex'] ?? 0;
 $deep_linking                = $block_attributes['deepLinking'] ?? false;

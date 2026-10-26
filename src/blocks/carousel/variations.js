@@ -176,15 +176,17 @@ export const PRODUCT_CAROUSEL_TEMPLATE = [
  * @return {'standard'|'image'|'post'|'product'} Active mode.
  */
 export function getCarouselMode(className = '') {
-	if (className === 'is-style-post-carousel') {
+	const classes = (className || '').split(/\s+/).filter(Boolean);
+
+	if (classes.includes('is-style-post-carousel')) {
 		return 'post';
 	}
 
-	if (className === 'is-style-product-carousel') {
+	if (classes.includes('is-style-product-carousel')) {
 		return 'product';
 	}
 
-	if (className === 'is-style-image-carousel') {
+	if (classes.includes('is-style-image-carousel')) {
 		return 'image';
 	}
 
@@ -222,7 +224,8 @@ const variations = [
 		},
 		scope: ['block', 'inserter', 'transform'],
 		innerBlocks: IMAGE_CAROUSEL_TEMPLATE,
-		isActive: ['className'],
+		isActive: (blockAttributes) =>
+			getCarouselMode(blockAttributes?.className) === 'image',
 	},
 	{
 		name: 'post-carousel',
@@ -237,7 +240,8 @@ const variations = [
 		},
 		scope: ['block', 'inserter', 'transform'],
 		innerBlocks: POST_CAROUSEL_TEMPLATE,
-		isActive: ['className'],
+		isActive: (blockAttributes) =>
+			getCarouselMode(blockAttributes?.className) === 'post',
 	},
 	{
 		name: 'product-carousel',
@@ -252,7 +256,8 @@ const variations = [
 		},
 		scope: ['block', 'inserter', 'transform'],
 		innerBlocks: PRODUCT_CAROUSEL_TEMPLATE,
-		isActive: ['className'],
+		isActive: (blockAttributes) =>
+			getCarouselMode(blockAttributes?.className) === 'product',
 	},
 ];
 
