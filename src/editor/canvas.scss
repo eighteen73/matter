@@ -1,0 +1,18 @@
+// Editor canvas (iframe) styles for Matter's core block extensions.
+
+// Button icon preview.
+.wp-block-button.has-icon > .wp-block-button__link::after {
+	background-color: currentcolor;
+	content: "";
+	display: inline-block;
+	height: 1em;
+	margin-inline-start: 0.5em;
+	mask: var(--matter-button-icon) center / contain no-repeat;
+	vertical-align: -0.125em;
+	width: 1em;
+}
+
+// Image focal point preview.
+.wp-block-image[style*="--matter-focal-point"] img {
+	object-position: var(--matter-focal-point);
+}

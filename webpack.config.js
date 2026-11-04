@@ -21,6 +21,7 @@ const scriptEntries = {
 };
 
 const styleEntries = {
+	'editor/canvas': src('editor/canvas.scss'),
 	'menu/base': src('menu/styles/base.scss'),
 	'menu/dropdown': src('menu/styles/dropdown.scss'),
 	'menu/accordion': src('menu/styles/accordion.scss'),

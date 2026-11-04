@@ -70,7 +70,6 @@ class Sections {
 		add_filter( 'register_block_type_args', [ $this, 'default_render' ], 10, 2 );
 		add_filter( 'block_categories_all', [ $this, 'register_category' ] );
 		add_action( 'init', [ $this, 'register_block_support' ], 5 );
-		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ] );
 	}
 
 	/**
@@ -227,43 +226,16 @@ class Sections {
 	}
 
 	/**
-	 * Enqueue the editor script that registers sections and block supports.
+	 * Names of all registered section blocks.
 	 *
-	 * @return void
+	 * @return string[]
 	 */
-	public function enqueue_editor_assets(): void {
-		$asset_file = MATTER_PATH . 'build/editor/index.asset.php';
-
-		if ( ! file_exists( $asset_file ) ) {
-			return;
-		}
-
-		$asset = require $asset_file;
-
-		wp_enqueue_script( 'matter-editor', MATTER_URL . 'build/editor/index.js', $asset['dependencies'], $asset['version'], true );
-
-		if ( file_exists( MATTER_PATH . 'build/editor/index.css' ) ) {
-			wp_enqueue_style( 'matter-editor', MATTER_URL . 'build/editor/index.css', [], $asset['version'] );
-		}
-
-		$sections = array_values(
+	public static function names(): array {
+		return array_values(
 			array_map(
 				fn( WP_Block_Type $block_type ) => $block_type->name,
 				array_filter( WP_Block_Type_Registry::get_instance()->get_all_registered(), [ self::class, 'is_section' ] )
 			)
 		);
-
-		wp_add_inline_script(
-			'matter-editor',
-			'window.matterEditor = ' . wp_json_encode(
-				[
-					'sections' => $sections,
-					'schemes'  => \Eighteen73\Matter\Supports\Scheme::instance()->get_editor_data(),
-				]
-			) . ';',
-			'before'
-		);
-
-		wp_set_script_translations( 'matter-editor', 'matter' );
 	}
 }

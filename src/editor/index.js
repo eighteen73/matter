@@ -23,6 +23,8 @@ import { __ } from '@wordpress/i18n';
  */
 import SchemeControl from './components/scheme-control';
 import SectionEdit from './components/section-edit';
+import './extensions/button-icon';
+import './extensions/focal-point';
 import './index.scss';
 
 const { sections = [] } = window.matterEditor ?? {};

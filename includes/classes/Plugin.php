@@ -10,6 +10,8 @@ namespace Eighteen73\Matter;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\Registry;
+use Eighteen73\Matter\Extensions\ButtonIcon;
+use Eighteen73\Matter\Extensions\FocalPoint;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
@@ -38,9 +40,12 @@ class Plugin {
 		GravityForm::instance()->setup();
 		Variants::instance()->setup();
 
-		// Sections and block supports.
+		// Sections, block supports and core block extensions.
 		Sections::instance()->setup();
 		Scheme::instance()->setup();
+		ButtonIcon::instance()->setup();
+		FocalPoint::instance()->setup();
+		Editor::instance()->setup();
 
 		// Menus, panels and other PHP-rendered components.
 		Assets::instance()->setup();
