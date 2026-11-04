@@ -111,8 +111,8 @@ class Overlay {
 	 * @return string
 	 */
 	public static function render( string $type, array $attributes, string $content, WP_Block $block, array $extra = [] ): string {
-		$slots   = Sections::slots( $content, [ 'trigger', 'content' ] );
-		$base    = self::id( $attributes, $type );
+		$slots = Sections::slots( $content, [ 'trigger', 'content' ] );
+		$base  = self::id( $attributes, $type );
 		// Inside a Query Loop each post gets its own overlay.
 		$post_id = Instances::in_query_loop() ? (int) ( $block->context['postId'] ?? 0 ) : 0;
 		$id      = $post_id ? $base . '-' . $post_id : $base;
