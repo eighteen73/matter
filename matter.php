@@ -5,8 +5,8 @@
  * Update URI:        https://eighteen73.co.uk
  * Description:       A collection of expertly crafted blocks for WordPress.
  * Version:           0.7.2
- * Requires at least: 6.8
- * Requires PHP:      7.4
+ * Requires at least: 7.1
+ * Requires PHP:      8.3
  * Requires Plugins:
  * Author:            eighteen73
  * Author URI:        https://eighteen73.co.uk
@@ -24,6 +24,7 @@ namespace Eighteen73\Matter;
 defined( 'ABSPATH' ) || exit;
 
 // Useful global constants.
+define( 'MATTER_VERSION', '0.7.2' );
 define( 'MATTER_URL', plugin_dir_url( __FILE__ ) );
 define( 'MATTER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MATTER_INC', MATTER_PATH . 'includes/' );

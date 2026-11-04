@@ -14,6 +14,7 @@ use Eighteen73\Matter\Blocks\Megamenu;
 use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
+use Eighteen73\Matter\Supports\Scheme;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -42,6 +43,9 @@ class Plugin {
 		Gallery::instance()->setup();
 		GravityForm::instance()->setup();
 		Megamenu::instance()->setup();
+
+		// Block supports.
+		Scheme::instance()->setup();
 	}
 
 	/**
