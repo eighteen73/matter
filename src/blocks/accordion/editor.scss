@@ -1,11 +1,12 @@
-// Editor: items are always open, so the panel's clipping (used for the
-// open/close animation) would cut off block toolbars and inserters.
-.wp-block-matter-accordion-item__panel {
-	transition: none;
+// Editor: items open and close as on the front end (edit.js). Once fully
+// open, content may overflow so block toolbars and inserters aren't clipped.
+.wp-block-matter-accordion-item.is-settled > .wp-block-matter-accordion-item__panel > .wp-block-matter-accordion-item__content {
+	overflow: visible;
+}
 
-	> .wp-block-matter-accordion-item__content {
-		overflow: visible;
-	}
+// The inner blocks wrapper (editor only) is the content's only child.
+.wp-block-matter-accordion-item__blocks > :first-child {
+	margin-block-start: 0;
 }
 
 // The title (inside the toggle, as on the front end) is a text field.

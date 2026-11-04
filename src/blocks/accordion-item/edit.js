@@ -4,29 +4,108 @@
 import {
 	InspectorControls,
 	RichText,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useEntityProp } from '@wordpress/core-data';
+import { useSelect } from '@wordpress/data';
+import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 const TEMPLATE = [
 	['core/paragraph', { placeholder: __('Item content…', 'matter') }],
 ];
 
-export default function Edit({ attributes, setAttributes, context }) {
+// Matches the front end's grid-rows transition (style.scss).
+const TRANSITION_MS = 300;
+
+/**
+ * The accordion item that contains the current selection, if any.
+ *
+ * @param {Function} select Data registry select.
+ * @return {string|undefined} Item client ID.
+ */
+function selectedItem(select) {
+	const { getSelectedBlockClientId, getBlockParents, getBlockName } =
+		select(blockEditorStore);
+	const selected = getSelectedBlockClientId();
+
+	if (!selected) {
+		return undefined;
+	}
+
+	return [selected, ...getBlockParents(selected, true)].find(
+		(id) => getBlockName(id) === 'matter/accordion-item'
+	);
+}
+
+/**
+ * An accordion item, as on the front end: closed until opened. Selecting the
+ * item (e.g. clicking its title to edit it) opens it; the caret toggles it.
+ * With "Only one item open at a time", selecting another item closes it.
+ *
+ * @param {Object}   props
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Attribute setter.
+ * @param {Object}   props.context       Block context.
+ * @param {string}   props.clientId      Block client ID.
+ * @return {Element} Item editor.
+ */
+export default function Edit({ attributes, setAttributes, context, clientId }) {
 	const { title, open } = attributes;
 	const { postId, postType } = context;
 	const level = Math.min(6, Math.max(2, context['matter/headingLevel'] ?? 3));
 	const HeadingTag = `h${level}`;
 	const [postTitle] = useEntityProp('postType', postType, 'title', postId);
 
+	const { activeItem, isFirst } = useSelect(
+		(select) => ({
+			activeItem: selectedItem(select),
+			isFirst: select(blockEditorStore).getBlockIndex(clientId) === 0,
+		}),
+		[clientId]
+	);
+
+	const autoclose = !!context['matter/autoclose'];
+	const [isOpen, setIsOpen] = useState(
+		open || (isFirst && !!context['matter/openFirst'])
+	);
+	const [isSettled, setIsSettled] = useState(isOpen);
+
+	// Follow the selection: open when it moves into this item; close when it
+	// moves to another item and only one may be open.
+	useEffect(() => {
+		if (activeItem === clientId) {
+			setIsOpen(true);
+		} else if (activeItem && autoclose) {
+			setIsOpen(false);
+		}
+	}, [activeItem, clientId, autoclose]);
+
+	// Content may overflow (block toolbars, inserters) once fully open.
+	useEffect(() => {
+		if (!isOpen) {
+			setIsSettled(false);
+
+			return;
+		}
+
+		const timer = setTimeout(() => setIsSettled(true), TRANSITION_MS);
+
+		return () => clearTimeout(timer);
+	}, [isOpen]);
+
 	const blockProps = useBlockProps({
-		className: 'is-open',
+		className: [isOpen && 'is-open', isSettled && 'is-settled']
+			.filter(Boolean)
+			.join(' '),
 	});
+	// An inner wrapper keeps the theme's `__content > :last-child` spacing
+	// stable while the editor adds and removes its block appender.
 	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'wp-block-matter-accordion-item__content' },
+		{ className: 'wp-block-matter-accordion-item__blocks' },
 		{ template: TEMPLATE }
 	);
 
@@ -48,7 +127,20 @@ export default function Edit({ attributes, setAttributes, context }) {
 			</InspectorControls>
 			<div {...blockProps}>
 				<HeadingTag className="wp-block-matter-accordion-item__heading">
-					<div className="wp-block-matter-accordion-item__toggle">
+					{/* Clicks on the title edit it; elsewhere (the caret) toggle. */}
+					{/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- Editor only; the title is the focusable element. */}
+					<div
+						className="wp-block-matter-accordion-item__toggle"
+						onClick={(event) => {
+							if (
+								!event.target.closest(
+									'.wp-block-matter-accordion-item__title'
+								)
+							) {
+								setIsOpen(!isOpen);
+							}
+						}}
+					>
 						<RichText
 							tagName="span"
 							className="wp-block-matter-accordion-item__title"
@@ -62,7 +154,9 @@ export default function Edit({ attributes, setAttributes, context }) {
 					</div>
 				</HeadingTag>
 				<div className="wp-block-matter-accordion-item__panel">
-					<div {...innerBlocksProps} />
+					<div className="wp-block-matter-accordion-item__content">
+						<div {...innerBlocksProps} />
+					</div>
 				</div>
 			</div>
 		</>

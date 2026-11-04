@@ -7,7 +7,10 @@
 	"category": "widgets",
 	"icon": "minus",
 	"description": "A title and the content it reveals.",
-	"parent": [ "matter/accordion", "core/post-template" ],
+	"parent": [
+		"matter/accordion",
+		"core/post-template"
+	],
 	"attributes": {
 		"title": {
 			"type": "string",
@@ -19,7 +22,13 @@
 			"default": false
 		}
 	},
-	"usesContext": [ "matter/headingLevel", "postId", "postType" ],
+	"usesContext": [
+		"matter/headingLevel",
+		"matter/autoclose",
+		"matter/openFirst",
+		"postId",
+		"postType"
+	],
 	"supports": {
 		"html": false,
 		"reusable": false

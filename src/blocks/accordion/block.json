@@ -7,7 +7,12 @@
 	"category": "widgets",
 	"icon": "list-view",
 	"description": "Expandable items of content. Add items by hand, or list posts with a query.",
-	"keywords": [ "faq", "toggle", "expand", "collapse" ],
+	"keywords": [
+		"faq",
+		"toggle",
+		"expand",
+		"collapse"
+	],
 	"attributes": {
 		"headingLevel": {
 			"type": "number",
@@ -27,7 +32,9 @@
 		}
 	},
 	"providesContext": {
-		"matter/headingLevel": "headingLevel"
+		"matter/headingLevel": "headingLevel",
+		"matter/autoclose": "autoclose",
+		"matter/openFirst": "openFirst"
 	},
 	"supports": {
 		"html": false,
