@@ -20,7 +20,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 ### Changed
 
 - **Accordion:** two blocks (accordion, item), with FAQ schema output inline.
-- **Tabs:** two blocks (tabs, tab). The tab list is built on the server.
+- **Tabs:** two blocks (tabs, tab). The tab list is built on the server. Horizontal or vertical, and optionally a dropdown (native select) below a breakpoint.
 - **Carousel:** one block. Slides are its inner blocks or a query's items, and behaviour comes from variants.
 - **Gallery:** grid or carousel style, with a native `<dialog>` lightbox. Embla is now bundled once.
 - **Modal, drawer and collapsible:** single blocks with an optional trigger area and a content area, also opened by any link to `#id`. Modal and drawer use native `<dialog>` and can be made non-closable (e.g. an age gate). Per-post overlays in Query Loops, and grouped modals with previous/next. Edit/Close in the editor. There's a new `matter/overlay` store.

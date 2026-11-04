@@ -12,8 +12,11 @@ import { createBlock } from '@wordpress/blocks';
 import {
 	Button,
 	PanelBody,
+	SelectControl,
 	TextControl,
 	ToggleControl,
+	__experimentalToggleGroupControl as ToggleGroupControl, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Stable in practice since 6.2.
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useMemo, useState } from '@wordpress/element';
@@ -28,7 +31,8 @@ import { ActiveTabContext } from './context';
 const ALLOWED_BLOCKS = ['matter/tab', 'core/query'];
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { label, deepLink } = attributes;
+	const { label, deepLink, orientation, dropdownBelow } = attributes;
+	const breakpoints = Object.keys(window.matterEditor?.breakpoints ?? {});
 	const [activeId, setActiveId] = useState(null);
 
 	const { tabs, isQuery } = useSelect(
@@ -54,7 +58,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[currentId, isQuery]
 	);
 
-	const blockProps = useBlockProps();
+	const blockProps = useBlockProps({
+		className: orientation === 'vertical' ? 'is-vertical' : undefined,
+	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-tabs__panels' },
 		{
@@ -96,11 +102,60 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						checked={deepLink}
 						onChange={(value) => setAttributes({ deepLink: value })}
 					/>
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+						isBlock
+						label={__('Orientation', 'matter')}
+						value={orientation}
+						onChange={(value) =>
+							setAttributes({ orientation: value })
+						}
+					>
+						<ToggleGroupControlOption
+							value="horizontal"
+							label={__('Horizontal', 'matter')}
+						/>
+						<ToggleGroupControlOption
+							value="vertical"
+							label={__('Vertical', 'matter')}
+						/>
+					</ToggleGroupControl>
+					{breakpoints.length > 0 && (
+						<SelectControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							label={__('Show as a dropdown', 'matter')}
+							help={__(
+								'On smaller screens, replace the tabs with a dropdown menu.',
+								'matter'
+							)}
+							value={dropdownBelow}
+							options={[
+								{ label: __('Never', 'matter'), value: '' },
+								...breakpoints.map((name) => ({
+									label: sprintf(
+										/* translators: %s: breakpoint name, e.g. lg */
+										__('Below %s', 'matter'),
+										name
+									),
+									value: name,
+								})),
+							]}
+							onChange={(value) =>
+								setAttributes({ dropdownBelow: value })
+							}
+						/>
+					)}
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>
 				{!isQuery && (
-					<div className="wp-block-matter-tabs__list" role="tablist">
+					<div
+						className="wp-block-matter-tabs__list"
+						role="tablist"
+						aria-orientation={orientation}
+					>
 						{tabs.map((tab, index) => {
 							const isActive = tab.clientId === currentId;
 

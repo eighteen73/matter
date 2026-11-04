@@ -1,8 +1,9 @@
 /**
  * Tabs behaviour (store: matter/tabs).
  *
- * Automatic activation: arrow keys move between tabs and select them;
- * Home/End jump to the first/last. A URL hash matching a panel (or something
+ * Automatic activation: arrow keys (Up/Down for vertical tabs) move between
+ * tabs and select them; Home/End jump to the first/last. Below its dropdown
+ * breakpoint the list is replaced by a native select. A URL hash matching a panel (or something
  * inside one) selects that tab on load; with deep linking, selecting a tab
  * updates the hash.
  */
@@ -19,6 +20,16 @@ import {
 
 const PANEL = '.wp-block-matter-tab';
 
+const activate = (tabId) => {
+	const context = getContext();
+
+	context.active = tabId;
+
+	if (context.deepLink) {
+		window.history.replaceState(null, '', `#${tabId}`);
+	}
+};
+
 const { state } = store('matter/tabs', {
 	state: {
 		get isActive() {
@@ -32,13 +43,10 @@ const { state } = store('matter/tabs', {
 	},
 	actions: {
 		select() {
-			const context = getContext();
-
-			context.active = context.tabId;
-
-			if (context.deepLink) {
-				window.history.replaceState(null, '', `#${context.tabId}`);
-			}
+			activate(getContext().tabId);
+		},
+		selectFromMenu: (event) => {
+			activate(event.target.value);
 		},
 		onKeydown: withSyncEvent((event) => {
 			const { ref } = getElement();
@@ -46,9 +54,14 @@ const { state } = store('matter/tabs', {
 				...ref.parentElement.querySelectorAll(':scope > [role="tab"]'),
 			];
 			const index = tabs.indexOf(ref);
+			const vertical =
+				ref.parentElement.getAttribute('aria-orientation') ===
+				'vertical';
+			const next = tabs[(index + 1) % tabs.length];
+			const previous = tabs[(index - 1 + tabs.length) % tabs.length];
 			const targets = {
-				ArrowRight: tabs[(index + 1) % tabs.length],
-				ArrowLeft: tabs[(index - 1 + tabs.length) % tabs.length],
+				[vertical ? 'ArrowDown' : 'ArrowRight']: next,
+				[vertical ? 'ArrowUp' : 'ArrowLeft']: previous,
 				Home: tabs[0],
 				End: tabs[tabs.length - 1],
 			};

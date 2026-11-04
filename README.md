@@ -26,7 +26,7 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 | Block | Purpose | Editor options |
 | --- | --- | --- |
 | `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
-| `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash). |
+| `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown below a breakpoint (a native select; CSS generated per breakpoint, front end only). |
 | `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. | Name. Behaviour comes from the chosen variant. |
 | `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. | Grid/Carousel style, lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |

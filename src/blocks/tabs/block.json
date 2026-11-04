@@ -16,6 +16,18 @@
 		"deepLink": {
 			"type": "boolean",
 			"default": false
+		},
+		"orientation": {
+			"type": "string",
+			"enum": [
+				"horizontal",
+				"vertical"
+			],
+			"default": "horizontal"
+		},
+		"dropdownBelow": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

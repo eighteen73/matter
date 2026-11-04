@@ -69,6 +69,7 @@ class Editor {
 					'sections'        => Sections::names(),
 					'schemes'         => Scheme::instance()->get_editor_data(),
 					'iconCollections' => ButtonIcon::collections(),
+					'breakpoints'     => Breakpoints::all(),
 				]
 			) . ';',
 			'before'
