@@ -25,9 +25,9 @@
 			],
 			"default": "horizontal"
 		},
-		"dropdownBelow": {
-			"type": "string",
-			"default": ""
+		"dropdown": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {

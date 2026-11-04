@@ -8,7 +8,18 @@
 }
 
 .wp-block-matter-tabs__tab {
+	align-items: center;
 	cursor: pointer;
+	display: inline-flex;
+}
+
+.wp-block-matter-tabs__icon {
+	display: flex;
+	flex: none;
+
+	svg {
+		fill: currentcolor;
+	}
 }
 
 .wp-block-matter-tab[hidden] {
@@ -26,7 +37,8 @@
 	}
 }
 
-// Shown below the dropdown breakpoint (rules generated per breakpoint).
+// Shown on smaller screens (has-dropdown): below the variant's breakpoint
+// (rules generated per breakpoint), or by the theme's own CSS.
 .wp-block-matter-tabs__select {
 	display: none;
 }
@@ -46,8 +58,14 @@
 	color: inherit;
 	font: inherit;
 	font-weight: 600;
+	gap: 0.5em;
 	margin-block-end: -1px;
 	padding: 0.75em 0;
+}
+
+:where(.wp-block-matter-tabs__icon) svg {
+	height: 1.25em;
+	width: 1.25em;
 }
 
 :where(.wp-block-matter-tabs__tab[aria-selected="true"]) {

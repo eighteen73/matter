@@ -44,6 +44,13 @@ class Variants {
 			'arrows'         => true,
 			'dots'           => true,
 		],
+		'matter/tabs'     => [
+			'label'         => 'Default',
+			// Breakpoint below which tabs set to "Show as a dropdown on
+			// smaller screens" switch to the dropdown. False: the theme does
+			// it in CSS (`.wp-block-matter-tabs.has-dropdown`).
+			'dropdownBelow' => 'md',
+		],
 		'matter/gallery'  => [
 			'label'     => 'Default',
 			// Registered image size used for every image in the gallery (the

@@ -1,6 +1,6 @@
 <?php
 /**
- * Tab panel. Its label is recorded for the parent Tabs block, which renders
+ * Tab panel. Its label (and optional icon) is recorded for the parent Tabs block, which renders
  * the tab list. Inside a Query Loop an empty label falls back to the post title.
  *
  * @param array    $attributes Block attributes.
@@ -19,7 +19,13 @@ if ( '' === $matter_label && ! empty( $block->context['postId'] ) ) {
 }
 
 $matter_parent   = Instances::current( 'matter/tabs' ) ?? wp_unique_id( 'tabs-' );
-$matter_position = Instances::add( 'matter/tabs', [ 'label' => $matter_label ] );
+$matter_position = Instances::add(
+	'matter/tabs',
+	[
+		'label' => $matter_label,
+		'icon'  => (string) ( $attributes['icon'] ?? '' ),
+	]
+);
 $matter_id       = $matter_parent . '-' . ( $matter_position ? $matter_position : wp_unique_id() );
 
 printf(

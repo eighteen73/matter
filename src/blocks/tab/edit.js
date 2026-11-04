@@ -2,10 +2,12 @@
  * WordPress dependencies
  */
 import {
+	InspectorControls,
 	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
+import { PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useContext, useEffect, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -13,13 +15,14 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
+import { IconControl } from '../../components/icon-picker';
 import { ActiveTabContext } from '../tabs/context';
 
 const TEMPLATE = [
 	['core/paragraph', { placeholder: __('Tab content…', 'matter') }],
 ];
 
-export default function Edit({ clientId }) {
+export default function Edit({ attributes, setAttributes, clientId }) {
 	const { activeId, setActiveId } = useContext(ActiveTabContext);
 
 	// Selecting this tab (or anything in it), e.g. from List View, shows it.
@@ -52,5 +55,18 @@ export default function Edit({ clientId }) {
 		template: TEMPLATE,
 	});
 
-	return <div {...innerBlocksProps} />;
+	return (
+		<>
+			<InspectorControls>
+				<PanelBody title={__('Settings', 'matter')}>
+					<IconControl
+						label={__('Icon', 'matter')}
+						value={attributes.icon}
+						onChange={(icon) => setAttributes({ icon: icon ?? '' })}
+					/>
+				</PanelBody>
+			</InspectorControls>
+			<div {...innerBlocksProps} />
+		</>
+	);
 }

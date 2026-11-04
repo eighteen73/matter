@@ -3,7 +3,9 @@
  * Tabs: a tab list built from the tabs that rendered inside it, then the panels.
  *
  * Tabs can be vertical (list beside the panels), and can show as a dropdown
- * (a native select) below a breakpoint.
+ * (a native select) on smaller screens. The theme decides where "smaller"
+ * starts: the variant option `dropdownBelow` (a breakpoint, default md), or
+ * false to style `.wp-block-matter-tabs.has-dropdown` in its own CSS.
  *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered tab panels.
@@ -14,6 +16,8 @@
 
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Breakpoints;
+use Eighteen73\Matter\Icons;
+use Eighteen73\Matter\Variants;
 
 $matter_id   = Instances::current( 'matter/tabs' ) ?? wp_unique_id( 'tabs-' );
 $matter_tabs = Instances::items( 'matter/tabs' );
@@ -53,17 +57,17 @@ foreach ( $matter_tabs as $matter_index => $matter_tab ) {
 	);
 
 	$matter_buttons .= sprintf(
-		'<button type="button" role="tab" id="%1$s-tab" class="wp-block-matter-tabs__tab" aria-controls="%1$s" %2$s data-wp-bind--aria-selected="state.isActive" data-wp-bind--tabindex="state.tabIndex" data-wp-on--click="actions.select" data-wp-on--keydown="actions.onKeydown">%3$s</button>',
+		'<button type="button" role="tab" id="%1$s-tab" class="wp-block-matter-tabs__tab" aria-controls="%1$s" %2$s data-wp-bind--aria-selected="state.isActive" data-wp-bind--tabindex="state.tabIndex" data-wp-on--click="actions.select" data-wp-on--keydown="actions.onKeydown">%3$s<span class="wp-block-matter-tabs__label">%4$s</span></button>',
 		esc_attr( $matter_tab_id ),
 		wp_interactivity_data_wp_context( [ 'tabId' => $matter_tab_id ] ),
+		Icons::render( (string) ( $matter_tab['icon'] ?? '' ), 'wp-block-matter-tabs__icon' ),
 		wp_kses_post( $matter_tab_label )
 	);
 }
 
 $matter_label    = trim( (string) ( $attributes['label'] ?? '' ) );
 $matter_vertical = 'vertical' === ( $attributes['orientation'] ?? '' );
-$matter_dropdown = (string) ( $attributes['dropdownBelow'] ?? '' );
-$matter_dropdown = Breakpoints::get( $matter_dropdown ) ? $matter_dropdown : '';
+$matter_dropdown = ! empty( $attributes['dropdown'] );
 $matter_classes  = [];
 
 if ( $matter_vertical ) {
@@ -72,25 +76,30 @@ if ( $matter_vertical ) {
 
 $matter_select = '';
 
-if ( '' !== $matter_dropdown ) {
-	$matter_classes[] = 'has-dropdown-below-' . $matter_dropdown;
+if ( $matter_dropdown ) {
+	$matter_classes[] = 'has-dropdown';
+	$matter_below     = (string) ( Variants::get( 'matter/tabs', $attributes )['dropdownBelow'] ?? '' );
 
-	// One rule set per breakpoint, shared by every tabs block using it.
-	static $matter_dropdown_styles = [];
+	if ( '' !== $matter_below && Breakpoints::get( $matter_below ) ) {
+		$matter_classes[] = 'has-dropdown-below-' . $matter_below;
 
-	if ( ! isset( $matter_dropdown_styles[ $matter_dropdown ] ) ) {
-		$matter_dropdown_styles[ $matter_dropdown ] = true;
+		// One rule set per breakpoint, shared by every tabs block using it.
+		static $matter_dropdown_styles = [];
 
-		$matter_scope = '.wp-block-matter-tabs.has-dropdown-below-' . $matter_dropdown;
+		if ( ! isset( $matter_dropdown_styles[ $matter_below ] ) ) {
+			$matter_dropdown_styles[ $matter_below ] = true;
 
-		wp_add_inline_style(
-			'matter-tabs-style',
-			sprintf(
-				'@media %1$s{%2$s{display:block}%2$s>.wp-block-matter-tabs__list{display:none}%2$s>.wp-block-matter-tabs__select{display:block}}',
-				Breakpoints::range( null, $matter_dropdown ),
-				$matter_scope
-			)
-		);
+			$matter_scope = '.wp-block-matter-tabs.has-dropdown-below-' . $matter_below;
+
+			wp_add_inline_style(
+				'matter-tabs-style',
+				sprintf(
+					'@media %1$s{%2$s{display:block}%2$s>.wp-block-matter-tabs__list{display:none}%2$s>.wp-block-matter-tabs__select{display:block}}',
+					Breakpoints::range( null, $matter_below ),
+					$matter_scope
+				)
+			);
+		}
 	}
 
 	$matter_select = sprintf(

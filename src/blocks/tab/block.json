@@ -7,15 +7,25 @@
 	"category": "widgets",
 	"icon": "excerpt-view",
 	"description": "A tab's label and content.",
-	"parent": [ "matter/tabs", "core/post-template" ],
+	"parent": [
+		"matter/tabs",
+		"core/post-template"
+	],
 	"attributes": {
 		"label": {
 			"type": "string",
 			"default": "",
 			"role": "content"
+		},
+		"icon": {
+			"type": "string",
+			"default": ""
 		}
 	},
-	"usesContext": [ "postId", "postType" ],
+	"usesContext": [
+		"postId",
+		"postType"
+	],
 	"supports": {
 		"html": false,
 		"reusable": false

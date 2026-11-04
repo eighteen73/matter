@@ -12,7 +12,6 @@ import { createBlock } from '@wordpress/blocks';
 import {
 	Button,
 	PanelBody,
-	SelectControl,
 	TextControl,
 	ToggleControl,
 	__experimentalToggleGroupControl as ToggleGroupControl, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Stable in practice since 6.2.
@@ -21,18 +20,31 @@ import {
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useMemo, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
+import { safeHTML } from '@wordpress/dom';
 import { plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
  */
+import { IconControl, useIcon } from '../../components/icon-picker';
 import { ActiveTabContext } from './context';
+
+function TabIcon({ name }) {
+	const icon = useIcon(name);
+
+	return icon?.content ? (
+		<span
+			className="wp-block-matter-tabs__icon"
+			aria-hidden="true"
+			dangerouslySetInnerHTML={{ __html: safeHTML(icon.content) }}
+		/>
+	) : null;
+}
 
 const ALLOWED_BLOCKS = ['matter/tab', 'core/query'];
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { label, deepLink, orientation, dropdownBelow } = attributes;
-	const breakpoints = Object.keys(window.matterEditor?.breakpoints ?? {});
+	const { label, deepLink, orientation, dropdown } = attributes;
 	const [activeId, setActiveId] = useState(null);
 
 	const { tabs, isQuery } = useSelect(
@@ -52,6 +64,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const currentId = tabs.some((tab) => tab.clientId === activeId)
 		? activeId
 		: tabs[0]?.clientId;
+
+	const currentTab = tabs.find((tab) => tab.clientId === currentId);
 
 	const contextValue = useMemo(
 		() => ({ activeId: isQuery ? null : currentId, setActiveId }),
@@ -121,33 +135,33 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							label={__('Vertical', 'matter')}
 						/>
 					</ToggleGroupControl>
-					{breakpoints.length > 0 && (
-						<SelectControl
-							__nextHasNoMarginBottom
-							__next40pxDefaultSize
-							label={__('Show as a dropdown', 'matter')}
-							help={__(
-								'On smaller screens, replace the tabs with a dropdown menu.',
-								'matter'
-							)}
-							value={dropdownBelow}
-							options={[
-								{ label: __('Never', 'matter'), value: '' },
-								...breakpoints.map((name) => ({
-									label: sprintf(
-										/* translators: %s: breakpoint name, e.g. lg */
-										__('Below %s', 'matter'),
-										name
-									),
-									value: name,
-								})),
-							]}
-							onChange={(value) =>
-								setAttributes({ dropdownBelow: value })
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__(
+							'Show as a dropdown on smaller screens',
+							'matter'
+						)}
+						help={__(
+							'Replace the tabs with a dropdown menu where there is less room.',
+							'matter'
+						)}
+						checked={dropdown}
+						onChange={(value) => setAttributes({ dropdown: value })}
+					/>
+				</PanelBody>
+				{currentTab && !isQuery && (
+					<PanelBody title={__('Current tab', 'matter')}>
+						<IconControl
+							label={__('Icon', 'matter')}
+							value={currentTab.attributes.icon}
+							onChange={(icon) =>
+								updateBlockAttributes(currentTab.clientId, {
+									icon: icon ?? '',
+								})
 							}
 						/>
-					)}
-				</PanelBody>
+					</PanelBody>
+				)}
 			</InspectorControls>
 			<div {...blockProps}>
 				{!isQuery && (
@@ -173,9 +187,11 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 										}
 									}}
 								>
+									<TabIcon name={tab.attributes.icon} />
 									{isActive ? (
 										<RichText
 											tagName="span"
+											className="wp-block-matter-tabs__label"
 											value={tab.attributes.label}
 											onChange={(value) =>
 												updateBlockAttributes(
@@ -191,7 +207,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 											allowedFormats={[]}
 										/>
 									) : (
-										<span>
+										<span className="wp-block-matter-tabs__label">
 											{tab.attributes.label ||
 												sprintf(
 													/* translators: %d: tab number */
