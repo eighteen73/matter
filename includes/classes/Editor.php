@@ -70,6 +70,7 @@ class Editor {
 					'schemes'         => Scheme::instance()->get_editor_data(),
 					'iconCollections' => ButtonIcon::collections(),
 					'breakpoints'     => Breakpoints::all(),
+					'variants'        => Variants::all(),
 				]
 			) . ';',
 			'before'

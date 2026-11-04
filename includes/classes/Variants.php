@@ -44,6 +44,13 @@ class Variants {
 			'arrows'         => true,
 			'dots'           => true,
 		],
+		'matter/gallery'  => [
+			'label'     => 'Default',
+			// Registered image size used for every image in the gallery (the
+			// crop ratio is the theme's CSS, per variant). Carousel options
+			// above also apply to the gallery's carousel layout.
+			'imageSize' => 'large',
+		],
 	];
 
 	/**

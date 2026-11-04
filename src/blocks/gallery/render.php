@@ -2,8 +2,12 @@
 /**
  * Gallery: core/image blocks in a grid or carousel, with an optional lightbox.
  *
- * The carousel style reuses the carousel block's markup and behaviour (and
- * the theme's carousel variant options under `matter/gallery`).
+ * The theme's variant (block style) decides the image size (`imageSize`) and,
+ * in its CSS, the crop ratio, so every image matches. The grid can show only
+ * the first few images, with a "View all" button opening the lightbox.
+ *
+ * The carousel layout reuses the carousel block's markup and behaviour, with
+ * the carousel's default options overridden by the gallery variant's.
  *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered images.
@@ -15,8 +19,12 @@
 use Eighteen73\Matter\Blocks\Carousel;
 use Eighteen73\Matter\Variants;
 
+$matter_options  = Variants::get( 'matter/gallery', $attributes );
 $matter_lightbox = ! empty( $attributes['lightbox'] );
-$matter_carousel = str_contains( (string) ( $attributes['className'] ?? '' ), 'is-style-carousel' );
+$matter_carousel = 'carousel' === ( $attributes['layout'] ?? '' );
+$matter_limit    = $matter_carousel ? 0 : max( 0, (int) ( $attributes['limit'] ?? 0 ) );
+$matter_size     = (string) ( $matter_options['imageSize'] ?? '' );
+$matter_size     = in_array( $matter_size, get_intermediate_image_sizes(), true ) || 'full' === $matter_size ? $matter_size : '';
 $matter_images   = [];
 
 // Lightbox data from the images' attachments (captions, larger sizes).
@@ -35,6 +43,51 @@ foreach ( $block->inner_blocks as $matter_inner ) {
 		'caption' => $matter_attachment ? (string) wp_get_attachment_caption( $matter_attachment ) : '',
 	];
 }
+
+// One image size for every image, and hide images beyond the limit.
+$matter_processor = new WP_HTML_Tag_Processor( $content );
+$matter_figure    = 0;
+
+while ( $matter_processor->next_tag() ) {
+	$matter_tag = $matter_processor->get_tag();
+
+	if ( 'FIGURE' === $matter_tag && $matter_processor->has_class( 'wp-block-image' ) ) {
+		++$matter_figure;
+
+		if ( $matter_limit && $matter_figure > $matter_limit ) {
+			$matter_processor->set_attribute( 'hidden', true );
+		}
+
+		continue;
+	}
+
+	if ( 'IMG' !== $matter_tag || '' === $matter_size ) {
+		continue;
+	}
+
+	if ( ! preg_match( '/\bwp-image-(\d+)\b/', (string) $matter_processor->get_attribute( 'class' ), $matter_match ) ) {
+		continue;
+	}
+
+	$matter_src = wp_get_attachment_image_src( (int) $matter_match[1], $matter_size );
+
+	if ( ! $matter_src ) {
+		continue;
+	}
+
+	$matter_processor->set_attribute( 'src', $matter_src[0] );
+	$matter_processor->set_attribute( 'width', (string) $matter_src[1] );
+	$matter_processor->set_attribute( 'height', (string) $matter_src[2] );
+
+	$matter_srcset = wp_get_attachment_image_srcset( (int) $matter_match[1], $matter_size );
+
+	if ( $matter_srcset ) {
+		$matter_processor->set_attribute( 'srcset', $matter_srcset );
+		$matter_processor->set_attribute( 'sizes', (string) wp_get_attachment_image_sizes( (int) $matter_match[1], $matter_size ) );
+	}
+}
+
+$content = $matter_processor->get_updated_html();
 
 // Add an "enlarge" button to each figure (a real control, not a clickable image).
 if ( $matter_lightbox && $matter_images ) {
@@ -90,7 +143,7 @@ if ( $matter_carousel ) {
 
 	$matter_items = Carousel::render(
 		$content,
-		array_merge( Variants::get( 'matter/carousel', [] ), Variants::get( 'matter/gallery', $attributes ) ),
+		array_merge( Variants::get( 'matter/carousel', [] ), $matter_options ),
 		'class="wp-block-matter-gallery__items wp-block-matter-carousel"',
 		$matter_label
 	);
@@ -98,9 +151,30 @@ if ( $matter_carousel ) {
 	$matter_items = sprintf( '<div class="wp-block-matter-gallery__items">%s</div>', $content );
 }
 
+// "View all": opens the lightbox, or reveals the hidden images without one.
+if ( $matter_limit && $matter_figure > $matter_limit ) {
+	/**
+	 * Filters the gallery's "View all" button text.
+	 *
+	 * @param string $text  Button text.
+	 * @param int    $total Number of images.
+	 */
+	$matter_more_text = (string) apply_filters(
+		'matter_gallery_view_all_text',
+		/* translators: %d: number of images */
+		sprintf( _n( 'View all %d image', 'View all %d images', $matter_figure, 'matter' ), $matter_figure ),
+		$matter_figure
+	);
+
+	$matter_items .= sprintf(
+		'<button type="button" class="wp-block-matter-gallery__more" data-wp-on--click="actions.viewAll">%s</button>',
+		esc_html( $matter_more_text )
+	);
+}
+
 printf(
 	'<div %1$s data-wp-interactive="matter/gallery" %2$s>%3$s%4$s</div>',
-	get_block_wrapper_attributes(), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	get_block_wrapper_attributes( [ 'class' => $matter_carousel ? 'is-carousel' : 'is-grid' ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
 			'images'  => $matter_images,

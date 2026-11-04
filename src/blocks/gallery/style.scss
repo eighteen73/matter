@@ -1,9 +1,19 @@
-// Gallery. Grid layout and image cropping are presentational defaults; the
-// carousel style takes its layout from the carousel block's CSS.
+// Gallery. Grid layout and image cropping are presentational defaults (themes
+// set the crop per variant, e.g. `.is-style-landscape img { aspect-ratio: 4/3 }`);
+// the carousel layout takes its layout from the carousel block's CSS.
 
 .wp-block-matter-gallery__items .wp-block-image {
 	margin: 0;
 	position: relative;
+}
+
+// Images beyond the grid's limit (shown in the lightbox, or by "View all").
+.wp-block-matter-gallery__items > .wp-block-image[hidden] {
+	display: none;
+}
+
+.wp-block-matter-gallery__more {
+	cursor: pointer;
 }
 
 // The enlarge button covers its image.
@@ -92,13 +102,13 @@ dialog.wp-block-matter-gallery__lightbox {
 }
 
 // Presentational defaults.
-:where(.wp-block-matter-gallery:not(.is-style-carousel) .wp-block-matter-gallery__items) {
+:where(.wp-block-matter-gallery:not(.is-carousel) .wp-block-matter-gallery__items) {
 	display: grid;
 	gap: 1rem;
 	grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
 }
 
-:where(.wp-block-matter-gallery:not(.is-style-carousel) .wp-block-image img) {
+:where(.wp-block-matter-gallery .wp-block-image img) {
 	aspect-ratio: 1;
 	height: auto;
 	object-fit: cover;
@@ -133,4 +143,14 @@ dialog.wp-block-matter-gallery__lightbox {
 	border: 0;
 	color: inherit;
 	padding: 0.5rem;
+}
+
+:where(.wp-block-matter-gallery__more) {
+	appearance: none;
+	background: none;
+	border: 1px solid currentcolor;
+	color: inherit;
+	font: inherit;
+	margin-block-start: 1rem;
+	padding: 0.5em 1em;
 }

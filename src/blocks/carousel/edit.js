@@ -2,34 +2,111 @@
  * WordPress dependencies
  */
 import {
+	BlockControls,
 	InspectorControls,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { PanelBody, TextControl } from '@wordpress/components';
+import { createBlock } from '@wordpress/blocks';
+import {
+	Button,
+	PanelBody,
+	TextControl,
+	ToolbarButton,
+	ToolbarGroup,
+} from '@wordpress/components';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { plus } from '@wordpress/icons';
 
 /**
- * In the editor slides sit in a horizontally scrolling row; the variant (block
- * style) decides behaviour and the theme's CSS decides slide widths.
+ * Internal dependencies
+ */
+import {
+	CarouselControls,
+	selectedSlideIndex,
+	useLiveCarousel,
+	variantOptions,
+} from '../../carousel/editor/live-carousel';
+
+const TEMPLATE = [['core/image'], ['core/image'], ['core/image']];
+
+/**
+ * A live carousel: the variant (block style) decides behaviour and the theme's
+ * CSS decides slide widths, as on the front end. Slides can't be dragged in
+ * the editor; use the arrows, dots or select a block to move.
  *
  * @param {Object}   props
  * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Attribute setter.
+ * @param {string}   props.clientId      Block client ID.
  * @return {Element} Carousel editor.
  */
-export default function Edit({ attributes, setAttributes }) {
-	const blockProps = useBlockProps();
+export default function Edit({ attributes, setAttributes, clientId }) {
+	const options = variantOptions('matter/carousel', attributes.className);
+	const carousel = useLiveCarousel(options);
+
+	const { lastSlide, slideCount, selectedSlide } = useSelect(
+		(select) => {
+			const blocks = select(blockEditorStore).getBlocks(clientId);
+
+			return {
+				lastSlide: blocks[blocks.length - 1],
+				slideCount: blocks.length,
+				selectedSlide: selectedSlideIndex(
+					select,
+					clientId,
+					blockEditorStore
+				),
+			};
+		},
+		[clientId]
+	);
+	const { insertBlock } = useDispatch(blockEditorStore);
+	const { scrollToSlide } = carousel;
+
+	// Bring the slide being edited into view.
+	useEffect(() => {
+		scrollToSlide(selectedSlide);
+	}, [selectedSlide, slideCount, scrollToSlide]);
+
+	const isQuery = lastSlide?.name === 'core/query';
+
+	// A new, empty slide like the last one (e.g. another card).
+	const addSlide = () =>
+		insertBlock(
+			createBlock(lastSlide?.name ?? 'core/image'),
+			slideCount,
+			clientId
+		);
+
+	const blockProps = useBlockProps({
+		className: ['is-initialised', carousel.isQuery && 'is-query']
+			.filter(Boolean)
+			.join(' '),
+	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-carousel__track' },
 		{
-			template: [['core/image'], ['core/image'], ['core/image']],
+			template: TEMPLATE,
 			orientation: 'horizontal',
+			renderAppender: false,
 		}
 	);
 
 	return (
 		<>
+			{!isQuery && (
+				<BlockControls group="block">
+					<ToolbarGroup>
+						<ToolbarButton icon={plus} onClick={addSlide}>
+							{__('Add slide', 'matter')}
+						</ToolbarButton>
+					</ToolbarGroup>
+				</BlockControls>
+			)}
 			<InspectorControls>
 				<PanelBody title={__('Settings', 'matter')}>
 					<TextControl
@@ -46,9 +123,25 @@ export default function Edit({ attributes, setAttributes }) {
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>
-				<div className="wp-block-matter-carousel__viewport">
+				<div
+					className="wp-block-matter-carousel__viewport"
+					ref={carousel.ref}
+				>
 					<div {...innerBlocksProps} />
 				</div>
+				<CarouselControls carousel={carousel} options={options} />
+				{!isQuery && (
+					<div className="matter-carousel-editor__actions">
+						<Button
+							variant="secondary"
+							size="small"
+							icon={plus}
+							onClick={addSlide}
+						>
+							{__('Add slide', 'matter')}
+						</Button>
+					</div>
+				)}
 			</div>
 		</>
 	);

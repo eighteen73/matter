@@ -1,10 +1,5 @@
-// Editor: the carousel style shows images in a sideways-scrolling row.
-.wp-block-matter-gallery.is-style-carousel .wp-block-matter-gallery__items {
-	display: flex;
-	gap: 1em;
-	overflow-x: auto;
-
-	> * {
-		flex: 0 0 min(20rem, 80%);
-	}
+// Editor: the carousel layout is a live carousel (src/carousel/editor); in the
+// grid, images beyond "Images to show" are dimmed (rule written by edit.js).
+.wp-block-matter-gallery .wp-block-matter-gallery__more {
+	cursor: default;
 }

@@ -6,9 +6,25 @@
 	"title": "Gallery",
 	"category": "media",
 	"icon": "format-gallery",
-	"description": "Images in a grid or carousel that open in a lightbox.",
-	"keywords": [ "images", "photos", "lightbox" ],
+	"description": "Images in a grid or carousel that open in a lightbox. The theme's variants set the crop and image size.",
+	"keywords": [
+		"images",
+		"photos",
+		"lightbox"
+	],
 	"attributes": {
+		"layout": {
+			"type": "string",
+			"enum": [
+				"grid",
+				"carousel"
+			],
+			"default": "grid"
+		},
+		"limit": {
+			"type": "number",
+			"default": 0
+		},
 		"lightbox": {
 			"type": "boolean",
 			"default": true
@@ -19,10 +35,6 @@
 			"role": "content"
 		}
 	},
-	"styles": [
-		{ "name": "grid", "label": "Grid", "isDefault": true },
-		{ "name": "carousel", "label": "Carousel" }
-	],
 	"supports": {
 		"html": false,
 		"anchor": true,

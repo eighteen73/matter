@@ -1,9 +1,7 @@
-// Editor: slides scroll sideways instead of running a live carousel.
-.wp-block-matter-carousel .wp-block-matter-carousel__viewport {
-	overflow-x: auto;
-}
-
-.wp-block-matter-carousel .wp-block-matter-carousel__track > .block-list-appender {
-	align-self: center;
-	flex: 0 0 auto;
+// Editor: a live carousel (see src/carousel/editor). Editor-only actions sit
+// below the controls.
+.matter-carousel-editor__actions {
+	display: flex;
+	justify-content: center;
+	margin-block-start: 0.75em;
 }

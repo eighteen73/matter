@@ -44,6 +44,24 @@ const { actions } = store('matter/gallery', {
 			context.index = context.imageIndex;
 			getDialog(ref)?.showModal();
 		},
+		// "View all" (grid with a limit): open the lightbox at the first image,
+		// or reveal the hidden images when there's no lightbox.
+		viewAll() {
+			const context = getContext();
+			const { ref } = getElement();
+			const dialog = getDialog(ref);
+
+			if (dialog) {
+				context.index = 0;
+				dialog.showModal();
+				return;
+			}
+
+			ref.closest('.wp-block-matter-gallery')
+				.querySelectorAll('.wp-block-matter-gallery__items > [hidden]')
+				.forEach((figure) => figure.removeAttribute('hidden'));
+			ref.hidden = true;
+		},
 		close() {
 			getDialog(getElement().ref)?.close();
 		},
@@ -77,10 +95,20 @@ const { actions } = store('matter/gallery', {
 			const { ref } = getElement();
 			const { index } = getContext();
 
-			// Return focus to the enlarge button for the image being viewed.
-			ref.closest('.wp-block-matter-gallery')
-				?.querySelectorAll('.wp-block-matter-gallery__open')
-				[index]?.focus();
+			// Return focus to the enlarge button for the image being viewed, or
+			// to "View all" when that image is hidden.
+			const gallery = ref.closest('.wp-block-matter-gallery');
+			const button = gallery?.querySelectorAll(
+				'.wp-block-matter-gallery__open'
+			)[index];
+
+			if (button && !button.closest('[hidden]')) {
+				button.focus();
+			} else {
+				gallery
+					?.querySelector('.wp-block-matter-gallery__more')
+					?.focus();
+			}
 		},
 	},
 });

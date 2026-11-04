@@ -27,8 +27,8 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 | --- | --- | --- |
 | `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
 | `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown below a breakpoint (a native select; CSS generated per breakpoint, front end only). |
-| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. | Name. Behaviour comes from the chosen variant. |
-| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. | Grid/Carousel style, lightbox on/off, name. |
+| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. | Name. Behaviour comes from the chosen variant. |
+| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. The theme's variants set the image size (`imageSize`) and, in CSS, the crop ratio, so images always match. | Layout (grid/carousel), images to show (the rest open from "View all N images"), lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
 | `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
 | `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
