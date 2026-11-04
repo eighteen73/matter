@@ -155,7 +155,7 @@ class Sections {
 	 * @param string $block_name Block name.
 	 * @return array
 	 */
-	public function default_render( array $args, string $block_name ): array {
+	public function default_render( array $args, string $block_name ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- Filter signature.
 		if ( self::is_section( $args ) && empty( $args['render_callback'] ) ) {
 			$args['render_callback'] = [ self::class, 'render_default' ];
 		}

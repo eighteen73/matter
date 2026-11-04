@@ -2,7 +2,7 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/gravity-form",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"title": "Gravity Form",
 	"category": "widgets",
 	"description": "Displays a Gravity Form",
@@ -12,10 +12,6 @@
 		"contact"
 	],
 	"attributes": {
-		"generatedId": {
-			"type": "string",
-			"default": ""
-		},
 		"formId": {
 			"type": "string",
 			"default": "",
@@ -43,36 +39,8 @@
 		}
 	},
 	"supports": {
-		"align": true,
-		"anchor": true,
 		"html": false,
-		"contentRole": true,
-		"color": {
-			"background": true,
-			"gradients": true,
-			"text": false
-		},
-		"spacing": {
-			"padding": true,
-			"blockGap": false,
-			"margin": true,
-			"__experimentalDefaultControls": {
-				"padding": true,
-				"margin": true
-			}
-		},
-		"__experimentalBorder": {
-			"color": true,
-			"radius": true,
-			"style": true,
-			"width": true,
-			"__experimentalDefaultControls": {
-				"color": false,
-				"radius": false,
-				"style": false,
-				"width": false
-			}
-		},
+		"anchor": true,
 		"renaming": false,
 		"customCSS": false
 	},

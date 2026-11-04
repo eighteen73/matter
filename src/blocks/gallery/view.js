@@ -1,161 +1,86 @@
+/**
+ * Gallery lightbox (store: matter/gallery).
+ *
+ * A native <dialog> per gallery: arrow keys and buttons move between images,
+ * Escape / backdrop / close button close it, and focus returns to the image's
+ * enlarge button.
+ */
+
+/**
+ * WordPress dependencies
+ */
 import {
-	store,
 	getContext,
 	getElement,
+	store,
 	withSyncEvent,
 } from '@wordpress/interactivity';
-import EmblaCarousel from 'embla-carousel';
 
-import {
-	prepareCarouselBlockState,
-	buildCarouselPlugins,
-} from '../../utils/carousel/config';
-import {
-	addPrevNextBtnsClickHandlers,
-	addThumbsClickHandlers,
-} from '../../utils/carousel/handlers';
+const getDialog = (element) =>
+	element
+		.closest('.wp-block-matter-gallery')
+		?.querySelector('.wp-block-matter-gallery__lightbox');
 
-const STORE = 'matter/gallery';
-
-const captionKey = (galleryId, index) => `${galleryId}:${index}`;
-
-const { state, actions } = store(STORE, {
+const { actions } = store('matter/gallery', {
 	state: {
-		openCaptionKey: null,
-		get isCaptionOpen() {
-			const context = getContext();
-			if (!context || typeof context.index !== 'number') {
-				return false;
-			}
-			return (
-				state.openCaptionKey ===
-				captionKey(context.galleryId, context.index)
-			);
+		get image() {
+			const { images, index } = getContext();
+
+			return images[index] ?? {};
 		},
-		get captionTriggerLabel() {
-			const context = getContext();
-			if (!context) {
-				return '';
-			}
-			return state.isCaptionOpen
-				? context.captionHideLabel || 'Hide caption'
-				: context.captionShowLabel || 'Show caption';
+		get counter() {
+			const { images, index, counter } = getContext();
+
+			return counter
+				.replace('%1$d', index + 1)
+				.replace('%2$d', images.length);
 		},
 	},
 	actions: {
-		toggleCaption: withSyncEvent((event) => {
-			event.preventDefault();
-			event.stopPropagation();
+		open() {
 			const context = getContext();
-			if (!context || typeof context.index !== 'number') {
-				return;
-			}
-			const key = captionKey(context.galleryId, context.index);
-			state.openCaptionKey = state.openCaptionKey === key ? null : key;
-		}),
-		closeCaption: () => {
-			state.openCaptionKey = null;
-		},
-		onCaptionOutsidePointerDown: withSyncEvent((event) => {
-			if (!state.openCaptionKey) {
-				return;
-			}
-			const target = event.target;
-			if (
-				target?.closest?.(
-					'.wp-block-matter-gallery__caption-trigger, .wp-block-matter-gallery__caption-popover'
-				)
-			) {
-				return;
-			}
-			actions.closeCaption();
-		}),
-		onCaptionKeydown: withSyncEvent((event) => {
-			if (!state.openCaptionKey || event.key !== 'Escape') {
-				return;
-			}
-			event.preventDefault();
-			event.stopPropagation();
-			actions.closeCaption();
-		}),
-	},
-	callbacks: {
-		loadCarousel: () => {
-			const context = getContext(STORE);
-
-			if (context?.type !== 'carousel') {
-				return;
-			}
-
 			const { ref } = getElement();
-			const viewportNode = ref.querySelector(
-				'.wp-block-matter-gallery__viewport'
-			);
-			const containerNode = ref.querySelector(
-				'.wp-block-matter-gallery__track'
-			);
 
-			if (!viewportNode || !containerNode) {
-				return;
+			context.index = context.imageIndex;
+			getDialog(ref)?.showModal();
+		},
+		close() {
+			getDialog(getElement().ref)?.close();
+		},
+		prev() {
+			const context = getContext();
+
+			context.index =
+				(context.index - 1 + context.images.length) %
+				context.images.length;
+		},
+		next() {
+			const context = getContext();
+
+			context.index = (context.index + 1) % context.images.length;
+		},
+		onKeydown: withSyncEvent((event) => {
+			if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				actions.prev();
+			} else if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				actions.next();
 			}
-
-			const { carouselOptions, pluginState } = prepareCarouselBlockState({
-				carouselConfig: context.carouselConfig,
-				advancedCarouselConfig: context.advancedCarouselConfig,
-				advancedCarouselConfigMerge:
-					context.advancedCarouselConfigMerge,
-			});
-
-			const carouselApi = EmblaCarousel(
-				viewportNode,
-				{
-					...carouselOptions,
-					container: containerNode,
-					slides: '.wp-block-matter-gallery__slide',
-				},
-				buildCarouselPlugins(pluginState)
-			);
-
-			context.carouselApi = carouselApi;
-
-			const prevButtonNode = ref.querySelector(
-				'.wp-block-matter-gallery__button--previous'
-			);
-			const nextButtonNode = ref.querySelector(
-				'.wp-block-matter-gallery__button--next'
-			);
-			const thumbsViewportNode = ref.querySelector(
-				'.wp-block-matter-gallery__thumbs-viewport'
-			);
-			const thumbsContainerNode = ref.querySelector(
-				'.wp-block-matter-gallery__thumbs-track'
-			);
-
-			if (prevButtonNode && nextButtonNode) {
-				const removePrevNextBtnsClickHandlers =
-					addPrevNextBtnsClickHandlers(
-						carouselApi,
-						prevButtonNode,
-						nextButtonNode
-					);
-				carouselApi.on('destroy', removePrevNextBtnsClickHandlers);
+		}),
+		onBackdropClick: withSyncEvent((event) => {
+			if (event.target === getElement().ref) {
+				event.target.close();
 			}
+		}),
+		onClose() {
+			const { ref } = getElement();
+			const { index } = getContext();
 
-			if (thumbsViewportNode && thumbsContainerNode) {
-				const thumbsCarouselApi = EmblaCarousel(thumbsViewportNode, {
-					containScroll: 'keepSnaps',
-					container: thumbsContainerNode,
-					dragFree: true,
-				});
-				const removeThumbsClickHandlers = addThumbsClickHandlers(
-					carouselApi,
-					thumbsCarouselApi,
-					thumbsContainerNode
-				);
-
-				carouselApi.on('destroy', removeThumbsClickHandlers);
-				carouselApi.on('destroy', () => thumbsCarouselApi.destroy());
-			}
+			// Return focus to the enlarge button for the image being viewed.
+			ref.closest('.wp-block-matter-gallery')
+				?.querySelectorAll('.wp-block-matter-gallery__open')
+				[index]?.focus();
 		},
 	},
 });

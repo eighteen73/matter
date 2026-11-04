@@ -32,7 +32,6 @@ const styleEntries = {
 
 const moduleEntries = {
 	'overlay/view': src('overlay/view.js'),
-	'interactivity/lightbox-store': src('interactivity/lightbox-store.js'),
 	'menu/view': src('menu/view.js'),
 	'panel/view': src('panel/view.js'),
 };

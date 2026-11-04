@@ -54,7 +54,6 @@ class Registry {
 	 * @return void
 	 */
 	public function setup(): void {
-		add_action( 'init', [ $this, 'register_lightbox_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register' ] );
 		add_filter( 'register_block_type_args', [ $this, 'hide_replaced_blocks' ], 10, 2 );
 	}
@@ -77,29 +76,6 @@ class Registry {
 		}
 
 		return $args;
-	}
-
-	/**
-	 * Register the shared lightbox store script module.
-	 *
-	 * @return void
-	 */
-	public function register_lightbox_store_module(): void {
-		$script_path = MATTER_PATH . 'build/interactivity/lightbox-store.js';
-		$asset_path  = MATTER_PATH . 'build/interactivity/lightbox-store.asset.php';
-
-		if ( ! file_exists( $script_path ) ) {
-			return;
-		}
-
-		$asset = file_exists( $asset_path ) ? require $asset_path : [];
-
-		wp_register_script_module(
-			'matter/lightbox-store',
-			MATTER_URL . 'build/interactivity/lightbox-store.js',
-			$asset['dependencies'] ?? [],
-			$asset['version'] ?? false,
-		);
 	}
 
 	/**

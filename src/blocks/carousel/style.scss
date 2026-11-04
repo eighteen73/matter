@@ -1,169 +1,121 @@
-@use "../../constants/breakpoints" as bp;
+// Carousel. Functional rules only: themes set slide widths and gaps, e.g.
+//     .wp-block-matter-carousel.is-style-cards .wp-block-matter-carousel__track > * {
+//         flex-basis: calc((100% - 2 * var(--gap)) / 3);
+//     }
+// Slides are the track's children, or a Query Loop's / Product Collection's items.
 
-@mixin carousel-controls-hidden {
-	.wp-block-matter-carousel-previous-button,
-	.wp-block-matter-carousel-next-button,
-	.wp-block-matter-carousel-dots,
-	.wp-block-matter-carousel-progress,
-	.wp-block-matter-carousel-thumbs {
-		display: none;
+.wp-block-matter-carousel__viewport {
+	overflow: hidden;
+}
+
+.wp-block-matter-carousel__track,
+.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) {
+	display: flex;
+	flex-wrap: nowrap;
+	margin: 0;
+	padding: 0;
+	touch-action: pan-y pinch-zoom;
+}
+
+.wp-block-matter-carousel__track > *,
+.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) > * {
+	flex: 0 0 100%;
+	margin: 0;
+	min-width: 0;
+}
+
+// Before Embla starts, show the first slide only (avoids a flash of all slides).
+.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track > :not(:first-child) {
+	visibility: hidden;
+}
+
+.wp-block-matter-carousel__controls {
+	align-items: center;
+	display: flex;
+}
+
+.wp-block-matter-carousel__dots {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.wp-block-matter-carousel__prev,
+.wp-block-matter-carousel__next,
+.wp-block-matter-carousel__play,
+.wp-block-matter-carousel__dot {
+	cursor: pointer;
+}
+
+.wp-block-matter-carousel__prev,
+.wp-block-matter-carousel__next,
+.wp-block-matter-carousel__play {
+	align-items: center;
+	display: inline-flex;
+	justify-content: center;
+
+	&::before {
+		background-color: currentcolor;
+		content: "";
+		height: 1em;
+		mask: url("../../../assets/svg/arrow-left.svg") center / contain no-repeat;
+		width: 1em;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.4;
 	}
 }
 
-@mixin carousel-controls-visible {
-	.wp-block-matter-carousel-previous-button,
-	.wp-block-matter-carousel-next-button {
-		display: inline-flex;
-	}
-
-	.wp-block-matter-carousel-dots {
-		display: flex;
-	}
-
-	.wp-block-matter-carousel-progress {
-		display: block;
-	}
-
-	.wp-block-matter-carousel-thumbs {
-		display: block;
-	}
+.wp-block-matter-carousel__next::before {
+	mask-image: url("../../../assets/svg/arrow-right.svg");
 }
 
-.wp-block-matter-carousel {
-	--_slides-to-show: var(--matter-carousel--slides-to-show, var(--wp--custom--matter-carousel--slides-to-show-base, 1));
-	--_slide--gap: var(--matter-carousel--slide--gap, var(--wp--custom--matter-carousel--slide--gap-base, 0));
-	--_slide--gap-left: var(--matter-carousel--slide--gap-left, var(--wp--custom--matter-carousel--slide--gap-left-base, 0));
-	--_slide--gap-top: var(--matter-carousel--slide--gap-top, var(--wp--custom--matter-carousel--slide--gap-top-base, 0));
-	--_slide--width: calc(100% / var(--_slides-to-show));
-	--_direction: var(--matter-carousel--direction, var(--wp--custom--matter-carousel--direction-base, row));
-	--_container-height: var(--matter-carousel--container-height, var(--wp--custom--matter-carousel--container-height-base, auto));
+// Pause icon (two bars); a play triangle while paused.
+.wp-block-matter-carousel__play::before {
+	background:
+		linear-gradient(currentcolor, currentcolor) left / 35% 100% no-repeat,
+		linear-gradient(currentcolor, currentcolor) right / 35% 100% no-repeat;
+	mask-image: none;
+	width: 0.875em;
+}
 
-	&.carousel-disabled {
-		@include carousel-controls-hidden;
-	}
+.wp-block-matter-carousel__play[aria-pressed="true"]::before {
+	background: currentcolor;
+	clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
 
-	@each $name, $size in bp.$breakpoints {
-		@media (--#{$name}) {
-			&.carousel-disabled-on-#{$name} {
-				@include carousel-controls-hidden;
-			}
+// Presentational defaults.
+:where(.wp-block-matter-carousel__controls) {
+	gap: 0.75em;
+	justify-content: center;
+	margin-block-start: 1em;
+}
 
-			&.carousel-enabled-on-#{$name} {
-				@include carousel-controls-visible;
-			}
-		}
-	}
+:where(.wp-block-matter-carousel__dots) {
+	gap: 0.5em;
+}
 
-	.embla {
-		overflow: hidden;
-		position: relative;
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play) {
+	background: none;
+	border: 1px solid currentcolor;
+	border-radius: 50%;
+	color: inherit;
+	height: 2.5em;
+	padding: 0;
+	width: 2.5em;
+}
 
-		.embla__viewport {
-			overflow: hidden;
-		}
+:where(.wp-block-matter-carousel__dot) {
+	background: currentcolor;
+	border: 0;
+	border-radius: 50%;
+	height: 0.625em;
+	opacity: 0.3;
+	padding: 0;
+	width: 0.625em;
+}
 
-		.embla__container {
-			flex-direction: var(--_direction);
-			height: var(--_container-height);
-			margin-left: calc(var(--_slide--gap-left) * -1);
-			margin-top: calc(var(--_slide--gap-top) * -1);
-		}
-
-		.wp-block-woocommerce-product-collection {
-			margin-bottom: 0;
-		}
-
-		.embla__container:has(> *:not(.wp-block-query, .wp-block-woocommerce-product-collection)),
-		.wp-block-post-template,
-		.wp-block-woocommerce-product-template {
-			display: flex;
-			touch-action: pan-y pinch-zoom;
-
-			> * {
-				box-sizing: border-box;
-				flex: 0 0 var(--_slide--width);
-				margin: 0;
-				min-width: 0;
-				padding-left: var(--_slide--gap-left);
-				padding-top: var(--_slide--gap-top);
-				transform: translate3d(0, 0, 0);
-			}
-		}
-
-		// Product Collection's own column layout would wrap slides and set
-		// their widths. Keep a single non-wrapping row sized by slides-to-show.
-		.wp-block-woocommerce-product-template.wc-block-product-template {
-			flex-wrap: nowrap;
-			gap: 0;
-
-			> li.wc-block-product {
-				flex: 0 0 var(--_slide--width);
-				max-width: none;
-				width: auto;
-			}
-		}
-	}
-
-	.wp-block-matter-carousel-next-button,
-	.wp-block-matter-carousel-previous-button {
-		--_size: var(--matter-carousel--button--size, var(--wp--custom--matter-carousel--button--size, 32px));
-		--_icon-size: var(--matter-carousel--button--icon-size, var(--wp--custom--matter-carousel--button--icon-size, 50%));
-		--_gap: var(--matter-carousel--button--gap, var(--wp--preset--spacing--md, 12px));
-		--_background-color: var(--matter-carousel--button--background-color, var(--wp--custom--matter-carousel--button--background-color, transparent));
-		--_border-radius: var(--matter-carousel--button--border-radius, var(--wp--custom--matter-carousel--button--border-radius, 50%));
-		--_icon-color: var(--matter-carousel--button--icon-color, var(--wp--custom--matter-carousel--button--icon-color, currentcolor));
-
-		align-items: center;
-		appearance: none;
-		background-color: var(--_background-color);
-		border: 0;
-		border-radius: var(--_border-radius);
-		cursor: pointer;
-		display: inline-flex;
-		height: var(--_size);
-		justify-content: center;
-		margin: 0;
-		padding: 0;
-		position: relative;
-		text-decoration: none;
-		touch-action: manipulation;
-		width: var(--_size);
-
-		&:where(.has-background) {
-			background-color: var(--_background-color);
-		}
-
-		&:disabled {
-			opacity: 0.3;
-		}
-
-		.embla__button-label {
-			text-indent: -9999px;
-
-			&::after {
-				background-color: var(--_icon-color);
-				border-radius: inherit;
-				content: "";
-				inset: 0;
-				mask-position: center;
-				mask-repeat: no-repeat;
-				mask-size: var(--_icon-size);
-				position: absolute;
-			}
-		}
-
-		&:where(.embla__button--previous) {
-			.embla__button-label::after {
-				mask-image: url("../../../assets/svg/arrow-left.svg");
-			}
-		}
-
-		&:where(.embla__button--next) {
-			justify-self: flex-end;
-
-			.embla__button-label::after {
-				mask-image: url("../../../assets/svg/arrow-right.svg");
-			}
-		}
-	}
+:where(.wp-block-matter-carousel__dot[aria-current]) {
+	opacity: 1;
 }

@@ -8,8 +8,6 @@
  * @package Matter\\GravityForm
  */
 
-use Eighteen73\Matter\Blocks\BlockId;
-
 defined( 'ABSPATH' ) || exit;
 
 $form_id             = isset( $attributes['formId'] ) ? absint( $attributes['formId'] ) : 0;
@@ -58,21 +56,7 @@ if ( $is_rest_preview ) {
 	$incidental_output = ob_get_clean();
 }
 
-$block_context = ( isset( $block ) && $block instanceof WP_Block )
-	? $block->context
-	: [];
-
-$block_id = BlockId::resolve_id(
-	$attributes ?? [],
-	$block_context,
-	'matter-gravity-form-'
-);
-
-$wrapper_attributes = get_block_wrapper_attributes(
-	[
-		'id' => $block_id,
-	]
-);
+$wrapper_attributes = get_block_wrapper_attributes();
 ?>
 <div <?php echo wp_kses_data( $wrapper_attributes ); ?>>
 	<?php

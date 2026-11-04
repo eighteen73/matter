@@ -7,9 +7,8 @@
 
 namespace Eighteen73\Matter;
 
-use Eighteen73\Matter\Blocks\Instances;
-use Eighteen73\Matter\Blocks\Gallery;
 use Eighteen73\Matter\Blocks\GravityForm;
+use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
@@ -32,22 +31,20 @@ class Plugin {
 	 */
 	public function setup(): void {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
-		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
 
-		// Register blocks.
+		// Blocks.
 		Registry::instance()->setup();
 		Instances::instance()->setup();
-		Gallery::instance()->setup();
 		GravityForm::instance()->setup();
-
-		// Menus and other PHP-rendered components.
-		Assets::instance()->setup();
-		Megamenu::instance()->setup();
+		Variants::instance()->setup();
 
 		// Sections and block supports.
 		Sections::instance()->setup();
 		Scheme::instance()->setup();
+
+		// Menus, panels and other PHP-rendered components.
+		Assets::instance()->setup();
+		Megamenu::instance()->setup();
 
 		// Site settings.
 		Settings::instance()->setup();
@@ -59,38 +56,6 @@ class Plugin {
 	 * @return void
 	 */
 	public function load_textdomain(): void {
-		load_plugin_textdomain(
-			'matter',
-			false,
-			MATTER_PATH . '/languages'
-		);
+		load_plugin_textdomain( 'matter', false, dirname( plugin_basename( MATTER_PATH . 'matter.php' ) ) . '/languages' );
 	}
-
-	/**
-	 * Plugin activation.
-	 *
-	 * @return void
-	 */
-	public static function activation(): void {}
-
-	/**
-	 * Plugin deactivation.
-	 *
-	 * @return void
-	 */
-	public static function deactivation(): void {}
-
-	/**
-	 * Enqueue frontend scripts and styles.
-	 *
-	 * @return void
-	 */
-	public function enqueue_scripts(): void {}
-
-	/**
-	 * Enqueue admin scripts and styles.
-	 *
-	 * @return void
-	 */
-	public function enqueue_admin_scripts(): void {}
 }

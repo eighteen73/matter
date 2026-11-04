@@ -1,60 +1,24 @@
 <?php
 /**
- * The following variables are exposed to the file:
- *     $attributes (array): The block attributes.
- *     $content (string): The block default content.
- *     $block (WP_Block): The block instance.
+ * Carousel: each inner block is a slide, or the items of a Query Loop /
+ * Product Collection. Behaviour comes from the chosen variant (block style);
+ * slide widths and spacing come from theme CSS.
  *
- * @package Eighteen73\Matter\Carousel
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Rendered slides.
+ * @param WP_Block $block      Block instance.
+ *
+ * @package Eighteen73\Matter
  */
 
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Variants;
 
-defined( 'ABSPATH' ) || exit;
-
-$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
-$carousel_id      = Carousel::resolve_id( $block_attributes, $block_context );
-
-$carousel_classes = implode( ' ', Carousel::generate_carousel_classes( $block_attributes ) );
-$carousel_context = Carousel::build_carousel_context( $carousel_id, $block_attributes );
-$generated_styles = Carousel::generate_styles( $carousel_id, $block_attributes );
-
-if ( ! empty( $generated_styles ) ) {
-	wp_enqueue_block_support_styles( $generated_styles, 10 );
-}
-
-wp_interactivity_state(
-	'matter/carousel/private',
-	[
-		'items' => [
-			$carousel_id => [
-				'instance' => null,
-			],
-		],
-	]
+$matter_html = Carousel::render(
+	$content,
+	Variants::get( 'matter/carousel', $attributes ),
+	get_block_wrapper_attributes(),
+	trim( (string) ( $attributes['label'] ?? '' ) )
 );
-?>
 
-<div
-	<?php
-	echo wp_kses_data(
-		get_block_wrapper_attributes(
-			[
-				'id'                  => $carousel_id,
-				'data-wp-interactive' => 'matter/carousel',
-				'data-wp-init'        => 'callbacks.loadCarousel',
-				'class'               => $carousel_classes,
-			]
-		)
-		. ' '
-		. wp_interactivity_data_wp_context( $carousel_context )
-	);
-	?>
->
-	<div
-		class="embla"
-	>
-		<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-	</div>
-</div>
+echo $matter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Carousel::render().

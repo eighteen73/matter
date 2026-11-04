@@ -1,233 +1,173 @@
-import { store, getElement, getContext } from '@wordpress/interactivity';
-
-import EmblaCarousel from 'embla-carousel';
-
-import {
-	buildEmblaPlugins,
-	prepareEmblaBlockState,
-} from './utils/embla-block-config';
-import {
-	addPrevNextBtnsClickHandlers,
-	addDotBtnsAndClickHandlers,
-	addThumbsClickHandlers,
-	setupProgressBar,
-} from './utils/embla';
-
-const PRIVATE_STORE = 'matter/carousel/private';
-const PUBLIC_STORE = 'matter/carousel';
-
-const createReadOnlyProxy = (object) =>
-	new Proxy(object, {
-		get(target, prop) {
-			const value = target[prop];
-
-			if (typeof value === 'object' && value !== null) {
-				return createReadOnlyProxy(value);
-			}
-
-			return value;
-		},
-		set() {
-			return false;
-		},
-		deleteProperty() {
-			return false;
-		},
-	});
-
-const getContextId = () => getContext(PUBLIC_STORE)?.id;
-
-const resolveId = (passthroughId = false) =>
-	typeof passthroughId === 'string' ? passthroughId : privateState.id;
-
-const resolvePublicId = (passthroughId = false) =>
-	typeof passthroughId === 'string' ? passthroughId : getContextId();
-
-const getItem = (id) => privateState.items[id];
-
-const getInstanceForId = (id) => getItem(id)?.instance || null;
+/**
+ * Carousel behaviour (store: matter/carousel), powered by Embla.
+ *
+ * Slides are the track's children, or the items of a Query Loop / Product
+ * Collection inside it. Slide widths and gaps are set in theme CSS; options
+ * (loop, align, slidesToScroll, autoplay) come from the block's variant.
+ */
 
 /**
- * Initialise Embla and register the instance on the private store.
- *
- * @return {void}
+ * WordPress dependencies
  */
-const loadCarousel = () => {
-	const { ref } = getElement();
-	const context = getContext(PUBLIC_STORE);
-	const id = context?.id;
+import {
+	getContext,
+	getElement,
+	store,
+	withScope,
+} from '@wordpress/interactivity';
 
-	if (!id || !ref) {
-		return;
-	}
+/**
+ * External dependencies
+ */
+import EmblaCarousel from 'embla-carousel';
+import Autoplay from 'embla-carousel-autoplay';
 
-	const viewportNode = ref.querySelector('.embla__viewport');
-	const containerNode = ref.querySelector('.embla__container');
+const QUERY_LISTS =
+	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template';
 
-	if (!viewportNode || !containerNode) {
-		return;
-	}
+const instances = new WeakMap();
 
-	const queryLoop =
-		containerNode.querySelector('.wp-block-post-template') ||
-		containerNode.querySelector('.wp-block-woocommerce-product-template');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-	const { emblaOptions, pluginState } = prepareEmblaBlockState({
-		emblaConfig: context.emblaConfig,
-		advancedEmblaConfig: context.advancedEmblaConfig,
-		advancedEmblaConfigMerge: context.advancedEmblaConfigMerge,
+/**
+ * Minimal sprintf for translated labels: `%1$d`, `%2$d` and `%d`.
+ *
+ * @param {string}    template Label template.
+ * @param {...number} values   Values.
+ * @return {string} Label.
+ */
+const format = (template, ...values) =>
+	template
+		.replace(/%(\d)\$d/g, (_, position) => values[position - 1])
+		.replace('%d', values[0]);
+
+/**
+ * Label slides and rebuild the dots for the current scroll snaps.
+ *
+ * @param {Object}  embla   Embla instance.
+ * @param {Element} root    Carousel element.
+ * @param {Object}  context Carousel context.
+ */
+const updateUi = (embla, root, context) => {
+	const slides = embla.slideNodes();
+
+	slides.forEach((slide, index) => {
+		slide.setAttribute('role', 'group');
+		slide.setAttribute('aria-roledescription', 'slide');
+		slide.setAttribute(
+			'aria-label',
+			format(context.labels.slide, index + 1, slides.length)
+		);
 	});
 
-	const instance = EmblaCarousel(
-		viewportNode,
-		{
-			...emblaOptions,
-			container: queryLoop ? queryLoop : containerNode,
-		},
-		buildEmblaPlugins(pluginState)
-	);
+	const dots = root.querySelector('.wp-block-matter-carousel__dots');
 
-	if (!privateState.items[id]) {
-		privateState.items[id] = {};
-	}
+	if (dots) {
+		const snaps = embla.scrollSnapList();
 
-	privateState.items[id].instance = instance;
+		if (dots.children.length !== snaps.length) {
+			dots.replaceChildren(
+				...snaps.map((_, index) => {
+					const dot = document.createElement('button');
 
-	const prevButtonNode = ref.querySelector('.embla__button--previous');
-	const nextButtonNode = ref.querySelector('.embla__button--next');
-	const dotsNode = ref.querySelector('.embla__dots');
-	const thumbsViewportNode = ref.querySelector('.embla__thumbs__viewport');
-	const thumbsContainerNode = ref.querySelector('.embla__thumbs__container');
-	const progressNode = ref.querySelector('.embla__progress__bar');
+					dot.type = 'button';
+					dot.className = 'wp-block-matter-carousel__dot';
+					dot.setAttribute(
+						'aria-label',
+						format(context.labels.goTo, index + 1)
+					);
+					dot.addEventListener('click', () => embla.scrollTo(index));
 
-	if (prevButtonNode && nextButtonNode) {
-		const removePrevNextBtnsClickHandlers = addPrevNextBtnsClickHandlers(
-			instance,
-			prevButtonNode,
-			nextButtonNode
+					return dot;
+				})
+			);
+		}
+
+		[...dots.children].forEach((dot, index) =>
+			dot.toggleAttribute(
+				'aria-current',
+				index === embla.selectedScrollSnap()
+			)
 		);
-
-		instance.on('destroy', removePrevNextBtnsClickHandlers);
-	}
-
-	if (dotsNode) {
-		const removeDotBtnsAndClickHandlers = addDotBtnsAndClickHandlers(
-			instance,
-			dotsNode
-		);
-
-		instance.on('destroy', removeDotBtnsAndClickHandlers);
-	}
-
-	if (thumbsViewportNode && thumbsContainerNode) {
-		const thumbsInstance = EmblaCarousel(thumbsViewportNode, {
-			containScroll: 'keepSnaps',
-			container: thumbsContainerNode,
-			dragFree: true,
-		});
-		const removeThumbsClickHandlers = addThumbsClickHandlers(
-			instance,
-			thumbsInstance,
-			thumbsContainerNode
-		);
-
-		instance.on('destroy', removeThumbsClickHandlers);
-		instance.on('destroy', () => thumbsInstance.destroy());
-	}
-
-	if (progressNode) {
-		const { applyProgress, removeProgress } = setupProgressBar(
-			instance,
-			progressNode
-		);
-
-		instance
-			.on('init', applyProgress)
-			.on('reInit', applyProgress)
-			.on('scroll', applyProgress)
-			.on('slideFocus', applyProgress)
-			.on('destroy', removeProgress);
 	}
 };
 
-const { actions: privateActions, state: privateState } = store(
-	PRIVATE_STORE,
-	{
-		state: {
-			items: {},
-			get id() {
-				return getContextId();
-			},
-			get item() {
-				return getItem(privateState.id);
-			},
-			get instance() {
-				return getInstanceForId(privateState.id);
-			},
-		},
-		actions: {
-			getInstance: (passthroughId = false) =>
-				getInstanceForId(resolveId(passthroughId)),
-			scrollNext: (passthroughId = false, instant = false) => {
-				privateActions.getInstance(passthroughId)?.scrollNext(instant);
-			},
-			scrollPrev: (passthroughId = false, instant = false) => {
-				privateActions.getInstance(passthroughId)?.scrollPrev(instant);
-			},
-			scrollTo: (passthroughId = false, index = 0, instant = false) => {
-				const instance = privateActions.getInstance(passthroughId);
-
-				if (!instance || typeof index !== 'number') {
-					return;
-				}
-
-				instance.scrollTo(index, instant);
-			},
-			reInit: (passthroughId = false) => {
-				privateActions.getInstance(passthroughId)?.reInit();
-			},
-		},
-		callbacks: {
-			loadCarousel,
-		},
-	},
-	{
-		lock: true,
-	}
-);
-
-store(PUBLIC_STORE, {
-	state: {
-		get items() {
-			return createReadOnlyProxy(privateState.items);
-		},
-		get item() {
-			const { item } = privateState;
-
-			return item ? createReadOnlyProxy(item) : undefined;
-		},
-		get instance() {
-			return privateState.instance;
-		},
-	},
+store('matter/carousel', {
 	actions: {
-		getInstance(id = false) {
-			return privateActions.getInstance(resolvePublicId(id));
+		prev() {
+			instances
+				.get(getElement().ref.closest('.wp-block-matter-carousel'))
+				?.scrollPrev();
 		},
-		scrollNext(id = false, instant = false) {
-			privateActions.scrollNext(resolvePublicId(id), instant);
+		next() {
+			instances
+				.get(getElement().ref.closest('.wp-block-matter-carousel'))
+				?.scrollNext();
 		},
-		scrollPrev(id = false, instant = false) {
-			privateActions.scrollPrev(resolvePublicId(id), instant);
-		},
-		scrollTo(id = false, index = 0, instant = false) {
-			privateActions.scrollTo(resolvePublicId(id), index, instant);
-		},
-		reInit(id = false) {
-			privateActions.reInit(resolvePublicId(id));
+		togglePlay() {
+			const autoplay = instances
+				.get(getElement().ref.closest('.wp-block-matter-carousel'))
+				?.plugins()?.autoplay;
+
+			if (!autoplay) {
+				return;
+			}
+
+			const context = getContext();
+
+			if (context.isPlaying) {
+				autoplay.stop();
+			} else {
+				autoplay.play();
+			}
+
+			context.isPlaying = !context.isPlaying;
 		},
 	},
 	callbacks: {
-		loadCarousel,
+		init() {
+			const context = getContext();
+			const { ref } = getElement();
+			const viewport = ref.querySelector(
+				'.wp-block-matter-carousel__viewport'
+			);
+			const track = ref.querySelector('.wp-block-matter-carousel__track');
+			const queryList = track.querySelector(QUERY_LISTS);
+
+			ref.classList.toggle('is-query', !!queryList);
+
+			const plugins = [];
+
+			if (context.autoplay && !reducedMotion.matches) {
+				plugins.push(
+					Autoplay({
+						delay: context.autoplay,
+						stopOnInteraction: false,
+						stopOnMouseEnter: true,
+						stopOnFocusIn: true,
+					})
+				);
+			} else {
+				context.isPlaying = false;
+			}
+
+			const embla = EmblaCarousel(
+				viewport,
+				{ ...context.options, container: queryList || track },
+				plugins
+			);
+
+			instances.set(ref, embla);
+
+			const sync = withScope(() => {
+				context.canPrev = embla.canScrollPrev();
+				context.canNext = embla.canScrollNext();
+				updateUi(embla, ref, context);
+			});
+
+			embla.on('init', sync).on('select', sync).on('reInit', sync);
+			sync();
+			ref.classList.add('is-initialised');
+		},
 	},
 });

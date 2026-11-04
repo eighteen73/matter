@@ -1,26 +1,9 @@
-.wp-block-matter-carousel {
-	.embla,
-	.embla .embla__viewport {
-		min-height: 40px;
-	}
+// Editor: slides scroll sideways instead of running a live carousel.
+.wp-block-matter-carousel .wp-block-matter-carousel__viewport {
+	overflow-x: auto;
+}
 
-	// contentOnly locks non-content nav blocks as is-editing-disabled
-	// (pointer-events: none). Re-enable clicks so Embla can navigate while
-	// keeping the blocks themselves non-selectable.
-	.embla__button.is-editing-disabled,
-	.embla__dots.is-editing-disabled,
-	.wp-block-matter-carousel-thumbnails.is-editing-disabled {
-		pointer-events: auto;
-	}
-
-	.block-list-appender .block-editor-button-block-appender.block-editor-button-block-appender.block-editor-button-block-appender {
-		padding: 0;
-	}
-
-	.wp-block + .block-list-appender .block-editor-button-block-appender {
-		background-color: #1e1e1e;
-		box-shadow: none;
-		color: #fff;
-		height: 24px;
-	}
+.wp-block-matter-carousel .wp-block-matter-carousel__track > .block-list-appender {
+	align-self: center;
+	flex: 0 0 auto;
 }
