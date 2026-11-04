@@ -19,34 +19,14 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
 import clsx from 'clsx';
 
-const TEMPLATE = [
-	['matter/accordion-heading'],
-	[
-		'matter/accordion-panel',
-		{},
-		[
-			[
-				'core/paragraph',
-				{
-					placeholder: __('Type / to add content…', 'matter'),
-				},
-			],
-		],
-	],
-];
-
-const QUERY_TEMPLATE = [
-	['matter/accordion-heading'],
-	[
-		'matter/accordion-panel',
-		{},
-		[
-			['core/post-featured-image', { isLink: true, aspectRatio: '16/9' }],
-			['core/post-title'],
-			['core/post-excerpt'],
-		],
-	],
-];
+/*
+ * The panel's inner blocks are deliberately omitted here. With
+ * `templateLock: 'all'`, Gutenberg re-synchronises this template on every
+ * editor load and trims nested inner blocks to the template's length, which
+ * would strip all but the first block from the panel. The panel block supplies
+ * its own default content (manual or query mode) when it is empty.
+ */
+const TEMPLATE = [['matter/accordion-heading'], ['matter/accordion-panel']];
 
 export default function Edit({
 	attributes,
@@ -131,7 +111,7 @@ export default function Edit({
 	});
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		template: inQueryLoop ? QUERY_TEMPLATE : TEMPLATE,
+		template: TEMPLATE,
 		templateLock: 'all',
 		directInsert: true,
 		templateInsertUpdatesSelection: true,
