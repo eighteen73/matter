@@ -13,10 +13,8 @@
  */
 import { InspectorControls, InnerBlocks } from '@wordpress/block-editor';
 import { getBlockType, registerBlockType } from '@wordpress/blocks';
-import { PanelBody } from '@wordpress/components';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { addFilter } from '@wordpress/hooks';
-import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
@@ -60,12 +58,12 @@ addFilter(
 				<>
 					<BlockEdit {...props} />
 					<InspectorControls group="styles">
-						<PanelBody title={__('Colour', 'matter')}>
+						<div className="matter-scheme-panel">
 							<SchemeControl
 								value={attributes.scheme}
 								onChange={(scheme) => setAttributes({ scheme })}
 							/>
-						</PanelBody>
+						</div>
 					</InspectorControls>
 				</>
 			);

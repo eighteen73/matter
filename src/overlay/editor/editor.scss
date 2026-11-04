@@ -1,9 +1,39 @@
-// Overlays are edited inline as labelled boxes.
+// Overlay blocks in the editor: the trigger area sits in the page; the
+// content opens as an overlay on the canvas (modal, drawer) or in place
+// (collapsible) with the Edit/Close button.
+
 .matter-overlay-editor {
 	border: 1px dashed currentcolor;
 	border-radius: 4px;
-	padding: 2.5em 1.5em 1.5em;
+	padding: 0.75em;
+}
+
+// The block wrapper shares the dialog's class: undo the closed-dialog rules.
+.matter-overlay-editor:is(.wp-block-matter-modal, .wp-block-matter-drawer) {
+	background: none;
+	display: block;
+	height: auto;
+	inset: auto;
+	max-height: none;
+	max-width: none;
+	opacity: 1;
 	position: relative;
+	scale: none;
+	transform: none;
+	transition: none;
+	width: auto;
+}
+
+.matter-overlay-editor__areas > * + * {
+	margin-block-start: 0.75em;
+}
+
+.matter-overlay-editor__bar {
+	align-items: center;
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+	margin-block-end: 0.5em;
 }
 
 .matter-overlay-editor__label {
@@ -13,9 +43,55 @@
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	font-size: 11px;
 	font-weight: 500;
-	inset-block-start: 0.5em;
-	inset-inline-start: 0.5em;
 	line-height: 1;
 	padding: 4px 6px;
-	position: absolute;
+}
+
+// The content slot (second area). Child combinators keep nested overlays apart.
+$content: "> .matter-overlay-editor__areas > :is(.wp-block-matter-modal__content, .wp-block-matter-drawer__content, .wp-block-matter-collapsible__content)";
+
+.matter-overlay-editor:not(.is-editor-open) #{$content} {
+	display: none;
+}
+
+// Modal and drawer content opens over the canvas.
+.matter-overlay-editor.is-editor-open:is(.is-overlay-modal, .is-overlay-drawer) #{$content} {
+	background: var(--scheme--background, #fff);
+	box-shadow: 0 1rem 3rem rgb(0 0 0 / 30%);
+	color: var(--scheme--text, inherit);
+	margin: 0;
+	overflow-y: auto;
+	padding: 2rem;
+	position: fixed;
+	z-index: 100001;
+}
+
+.matter-overlay-editor.is-editor-open.is-overlay-modal #{$content} {
+	border-radius: 8px;
+	height: fit-content;
+	inset: 0;
+	margin: auto;
+	max-height: calc(100vh - 4rem);
+	max-width: calc(100vw - 4rem);
+	width: 40rem;
+}
+
+.matter-overlay-editor.is-editor-open.is-overlay-drawer #{$content} {
+	inset-block: 0;
+	inset-inline-end: 0;
+	width: min(100vw, 26rem);
+}
+
+.matter-overlay-editor__backdrop {
+	background: rgb(0 0 0 / 50%);
+	border: 0;
+	cursor: pointer;
+	inset: 0;
+	padding: 0;
+	position: fixed;
+	z-index: 100000;
+}
+
+.matter-overlay-editor.is-editor-open.is-overlay-drawer.is-position-left #{$content} {
+	inset-inline: 0 auto;
 }

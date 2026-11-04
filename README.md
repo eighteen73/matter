@@ -29,15 +29,22 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 | `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash). |
 | `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. | Name. Behaviour comes from the chosen variant. |
 | `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. | Grid/Carousel style, lightbox on/off, name. |
-| `matter/modal` | Content in a dialog. | ID, name, open automatically (load, scroll, URL parameter), stay closed for N days. |
-| `matter/drawer` | Content that slides in from the left or right. | As modal, plus side. |
-| `matter/collapsible` | Content hidden in place until revealed. | ID. |
+| `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
+| `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
+| `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
 | `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
 | `matter/slot` | A named content area inside a section (added automatically). | None. |
 
-**Opening overlays.** Any link to `#id` or element with `aria-controls="id"` opens the modal, drawer or collapsible with that ID. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup`.
+**Opening overlays.**
+- The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
+- Any link to `#id`, or element with `aria-controls="id"`, anywhere on the page also opens it. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup`.
+- **Query Loops:** an overlay inside a post template gets one instance per post, with the ID `{id}-{postId}`. Modals in a Query Loop are grouped automatically.
+- **Groups:** modals with the same group get previous/next buttons and an "n / N" position, cycling in page order.
+- **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate). A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
 
-Store API (`matter/overlay`): `actions.open( id )`, `actions.close( id )`, `actions.toggle( id )`, `actions.closeAll()`. Events: `matter-overlay-open` and `matter-overlay-close` (bubbling, `detail.id`).
+**In the editor**, the trigger area stays in the page. The content opens over the canvas (modal, drawer) or in place (collapsible) with the **Edit / Close** button, and opens automatically while anything in it is selected.
+
+Store API (`matter/overlay`): `actions.open( id )`, `actions.close( id )`, `actions.toggle( id )`, `actions.next( id )`, `actions.previous( id )`, `actions.closeAll()`. Events: `matter-overlay-open` and `matter-overlay-close` (bubbling, `detail.id`).
 
 Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
 

@@ -16,3 +16,21 @@
 .wp-block-image[style*="--matter-focal-point"] img {
 	object-position: var(--matter-focal-point);
 }
+
+// Slot labels (e.g. an overlay's "Trigger" and "Content" areas).
+.wp-block-matter-slot__label {
+	color: #757575;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	line-height: 1.4;
+	margin-block-end: 0.5em;
+	text-transform: uppercase;
+}
+
+// Keep an empty slot's appender below its label (core positions it absolutely
+// when it isn't the only child).
+.wp-block-matter-slot > .block-list-appender {
+	position: static;
+}

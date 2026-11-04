@@ -53,6 +53,10 @@
 		"dismissDays": {
 			"type": "number",
 			"default": 0
+		},
+		"dismissible": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"supports": {
@@ -60,7 +64,31 @@
 		"reusable": false,
 		"interactivity": true,
 		"matter": {
-			"scheme": true
+			"scheme": true,
+			"section": false,
+			"slots": {
+				"trigger": {
+					"label": "Trigger (optional): opens the drawer"
+				},
+				"content": {
+					"label": "Content",
+					"template": [
+						[
+							"core/heading",
+							{
+								"level": 2,
+								"placeholder": "Heading"
+							}
+						],
+						[
+							"core/paragraph",
+							{
+								"placeholder": "Content\u2026"
+							}
+						]
+					]
+				}
+			}
 		}
 	},
 	"textdomain": "matter",
@@ -68,5 +96,8 @@
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
 	"viewScriptModule": "matter/overlay",
-	"render": "file:./render.php"
+	"render": "file:./render.php",
+	"usesContext": [
+		"postId"
+	]
 }

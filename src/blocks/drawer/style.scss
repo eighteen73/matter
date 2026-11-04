@@ -109,3 +109,7 @@ dialog.wp-block-matter-drawer {
 :where(.wp-block-matter-drawer__content) {
 	padding: 3rem 1.5rem 1.5rem;
 }
+
+.wp-block-matter-drawer__trigger[role="button"] {
+	cursor: pointer;
+}

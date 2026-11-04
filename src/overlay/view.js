@@ -2,7 +2,13 @@
  * Overlays (store: matter/overlay): modals, drawers and collapsibles.
  *
  * Anything that links to `#id` or has `aria-controls="id"` opens the overlay
- * with that ID, so editors use ordinary buttons and links as triggers.
+ * with that ID, so editors use ordinary buttons and links as triggers. A
+ * block's own trigger area (`data-matter-trigger`) opens it too: its first
+ * link or button, or the whole area when it has neither.
+ *
+ * Dialogs that can't be closed (`dismissible: false`, e.g. an age gate) ignore
+ * Escape and backdrop clicks; a link to `#id` inside them closes them.
+ * Modals sharing a `group` get previous/next navigation.
  * Overlays can also open from the URL hash, a URL parameter, on load or after
  * scrolling. Auto-opened overlays can stay dismissed for a number of days.
  *
@@ -86,10 +92,45 @@ const syncDocumentClass = () => {
 	);
 };
 
+/**
+ * The control inside a block's trigger area: its first link or button (a
+ * button block with no link gets `#id`), or the area itself (made into a
+ * button) when it has neither.
+ *
+ * @param {HTMLElement} area Trigger area.
+ * @return {HTMLElement} Trigger element.
+ */
+const areaTrigger = (area) => {
+	const control = area.querySelector('a, button');
+
+	if (control) {
+		if (control.tagName === 'A' && !control.hasAttribute('href')) {
+			control.setAttribute('href', `#${area.dataset.matterTrigger}`);
+		}
+
+		return control;
+	}
+
+	area.setAttribute('role', 'button');
+	area.setAttribute('tabindex', '0');
+	area.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			area.click();
+		}
+	});
+
+	return area;
+};
+
 const findTriggers = (id) => {
 	const escaped = window.CSS?.escape ? window.CSS.escape(id) : id;
 
-	return [
+	const areas = [
+		...document.querySelectorAll(`[data-matter-trigger="${escaped}"]`),
+	].map(areaTrigger);
+
+	const links = [
 		...document.querySelectorAll(
 			`a[href$="#${escaped}"], [aria-controls="${escaped}"]`
 		),
@@ -104,12 +145,57 @@ const findTriggers = (id) => {
 			url.hash === `#${id}` && url.pathname === window.location.pathname
 		);
 	});
+
+	return [...new Set([...areas, ...links])];
+};
+
+/**
+ * IDs of the overlays in a group, in page order (the server registers them in
+ * render order).
+ *
+ * @param {string} group Group name.
+ * @return {string[]} Overlay IDs.
+ */
+const groupMembers = (group) =>
+	group
+		? Object.keys(state.items).filter(
+				(id) => state.items[id].group === group
+			)
+		: [];
+
+/**
+ * Move from one grouped overlay to another.
+ *
+ * @param {string} id     Current overlay ID.
+ * @param {number} offset +1 for next, -1 for previous.
+ */
+const stepGroup = (id, offset) => {
+	const members = groupMembers(state.items[id]?.group);
+	const index = members.indexOf(id);
+
+	if (index < 0 || members.length < 2) {
+		return;
+	}
+
+	const target = members[(index + offset + members.length) % members.length];
+
+	state.items[id].isOpen = false;
+	state.items[target].isOpen = true;
 };
 
 const { state, actions } = store('matter/overlay', {
 	state: {
 		get isOpen() {
 			return !!state.items[getContext().id]?.isOpen;
+		},
+		// "2 / 5" for grouped overlays.
+		get groupPosition() {
+			const { id } = getContext();
+			const members = groupMembers(state.items[id]?.group);
+
+			return members.length > 1
+				? `${members.indexOf(id) + 1} / ${members.length}`
+				: '';
 		},
 	},
 	actions: {
@@ -133,6 +219,12 @@ const { state, actions } = store('matter/overlay', {
 			if (state.items[id]) {
 				state.items[id].isOpen = !state.items[id].isOpen;
 			}
+		},
+		next(idOrEvent) {
+			stepGroup(resolveId(idOrEvent), 1);
+		},
+		previous(idOrEvent) {
+			stepGroup(resolveId(idOrEvent), -1);
 		},
 		closeAll() {
 			Object.values(state.items).forEach((item) => {
@@ -165,7 +257,13 @@ const { state, actions } = store('matter/overlay', {
 
 				trigger.addEventListener('click', (event) => {
 					event.preventDefault();
-					item.autoOpened = false;
+
+					// Opening by hand isn't an automatic open; closing an
+					// automatic one (e.g. an age gate's own link) dismisses it.
+					if (!item.isOpen) {
+						item.autoOpened = false;
+					}
+
 					actions.toggle(id);
 				});
 			});
@@ -266,12 +364,22 @@ const { state, actions } = store('matter/overlay', {
 
 			syncDocumentClass();
 		},
+		// Escape: ignored by dialogs that can't be closed.
+		onCancel: withSyncEvent((event) => {
+			if (state.items[getContext().id]?.dismissible === false) {
+				event.preventDefault();
+			}
+		}),
 		// Clicking the ::backdrop targets the dialog itself.
 		onBackdropClick: withSyncEvent((event) => {
 			const { ref } = getElement();
+			const { id } = getContext();
 
-			if (event.target === ref) {
-				actions.close(getContext().id);
+			if (
+				event.target === ref &&
+				state.items[id]?.dismissible !== false
+			) {
+				actions.close(id);
 			}
 		}),
 	},

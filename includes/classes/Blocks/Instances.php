@@ -15,6 +15,9 @@
  * render_block(), Query Loops (fresh block instances per post) and blocks such
  * as WooCommerce's product details that construct WP_Block directly.
  *
+ * It also tracks whether a Query Loop's post template is rendering, so blocks
+ * can tell a per-post render from the page's own post context.
+ *
  * @package Eighteen73\Matter
  */
 
@@ -35,6 +38,18 @@ class Instances {
 	 * Container blocks that are tracked.
 	 */
 	private const CONTAINERS = [ 'matter/accordion', 'matter/tabs' ];
+
+	/**
+	 * Blocks that render their children once per post of a query.
+	 */
+	private const LOOPS = [ 'core/post-template', 'woocommerce/product-template' ];
+
+	/**
+	 * Depth of query loop templates currently rendering.
+	 *
+	 * @var int
+	 */
+	private static int $loop_depth = 0;
 
 	/**
 	 * IDs of containers currently rendering, per block name (innermost last).
@@ -76,6 +91,10 @@ class Instances {
 	 * @return array
 	 */
 	public function start( array $parsed_block, array $source_block = [], ?\WP_Block $parent_block = null ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
+		if ( in_array( $parsed_block['blockName'] ?? '', self::LOOPS, true ) ) {
+			++self::$loop_depth;
+		}
+
 		if ( null === $parent_block || ! in_array( $parent_block->name, self::CONTAINERS, true ) ) {
 			return $parsed_block;
 		}
@@ -103,6 +122,10 @@ class Instances {
 	 * @return string
 	 */
 	public function finish( string $block_content, array $parsed_block, ?\WP_Block $instance = null ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
+		if ( in_array( $parsed_block['blockName'] ?? '', self::LOOPS, true ) ) {
+			self::$loop_depth = max( 0, self::$loop_depth - 1 );
+		}
+
 		$key = null !== $instance ? spl_object_id( $instance ) : null;
 
 		if ( null !== $key && isset( self::$active[ $key ] ) ) {
@@ -111,6 +134,16 @@ class Instances {
 		}
 
 		return $block_content;
+	}
+
+	/**
+	 * Whether a Query Loop's post template is rendering (so `postId` context is
+	 * a loop item rather than the page's own post).
+	 *
+	 * @return bool
+	 */
+	public static function in_query_loop(): bool {
+		return self::$loop_depth > 0;
 	}
 
 	/**

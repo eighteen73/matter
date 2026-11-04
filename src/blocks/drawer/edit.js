@@ -16,7 +16,13 @@ export default function Edit(props) {
 	const { attributes, setAttributes } = props;
 
 	return (
-		<OverlayEdit type="drawer" {...props}>
+		<OverlayEdit
+			{...props}
+			type="drawer"
+			className={`is-position-${
+				attributes.position === 'left' ? 'left' : 'right'
+			}`}
+		>
 			<ToggleGroupControl
 				__nextHasNoMarginBottom
 				__next40pxDefaultSize

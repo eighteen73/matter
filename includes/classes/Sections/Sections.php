@@ -134,7 +134,8 @@ class Sections {
 	public static function is_section( WP_Block_Type|array $block_type ): bool {
 		$supports = $block_type instanceof WP_Block_Type ? $block_type->supports : ( $block_type['supports'] ?? [] );
 
-		return ! empty( $supports['matter']['slots'] ) && is_array( $supports['matter']['slots'] );
+		// Blocks can use slots without being sections (e.g. overlays): `"section": false`.
+		return ! empty( $supports['matter']['slots'] ) && is_array( $supports['matter']['slots'] ) && false !== ( $supports['matter']['section'] ?? true );
 	}
 
 	/**
@@ -144,7 +145,9 @@ class Sections {
 	 * @return string[]
 	 */
 	public static function get_slot_names( WP_Block_Type $block_type ): array {
-		return self::is_section( $block_type ) ? array_map( 'strval', array_keys( $block_type->supports['matter']['slots'] ) ) : [];
+		$slots = $block_type->supports['matter']['slots'] ?? [];
+
+		return is_array( $slots ) ? array_map( 'strval', array_keys( $slots ) ) : [];
 	}
 
 	/**

@@ -1,6 +1,11 @@
-// Collapsible: hidden in place (the `hidden` attribute) until revealed.
+// Collapsible: the content is hidden in place (the `hidden` attribute) until
+// revealed by its trigger area or any link to its #ID.
 // No presentational defaults; themes style .wp-block-matter-collapsible.
 
-.wp-block-matter-collapsible[hidden] {
+.wp-block-matter-collapsible__content[hidden] {
 	display: none;
+}
+
+.wp-block-matter-collapsible__trigger[role="button"] {
+	cursor: pointer;
 }

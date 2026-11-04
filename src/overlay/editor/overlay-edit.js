@@ -1,15 +1,18 @@
 /**
  * Shared editor for overlay blocks (modal, drawer, collapsible).
  *
- * Content is edited inline in a labelled box rather than in a live dialog,
- * which keeps editing simple. The overlay opens from any link or button that
- * points at `#id`, so the ID is shown (and copyable) in the inspector.
+ * Two slots: an optional trigger area that stays on the page, and the content.
+ * The content opens over the canvas (modal, drawer) or in place (collapsible)
+ * with the Edit/Close button, and opens automatically while anything inside
+ * it is selected. Links to `#id` also open the overlay, so the ID is shown
+ * (and copyable) in the inspector.
  */
 
 /**
  * WordPress dependencies
  */
 import {
+	BlockControls,
 	InspectorControls,
 	store as blockEditorStore,
 	useBlockProps,
@@ -23,6 +26,8 @@ import {
 	RangeControl,
 	TextControl,
 	ToggleControl,
+	ToolbarButton,
+	ToolbarGroup,
 } from '@wordpress/components';
 import { useCopyToClipboard } from '@wordpress/compose';
 import { useSelect } from '@wordpress/data';
@@ -34,9 +39,10 @@ import { __, sprintf } from '@wordpress/i18n';
  */
 import UrlTriggersControl from './url-triggers-control';
 
+// Trigger and content areas: slots configured in each block's block.json.
 const TEMPLATE = [
-	['core/heading', { level: 2, placeholder: __('Heading', 'matter') }],
-	['core/paragraph', { placeholder: __('Content…', 'matter') }],
+	['matter/slot', { name: 'trigger' }],
+	['matter/slot', { name: 'content' }],
 ];
 
 const LABELS = {
@@ -91,10 +97,13 @@ export default function OverlayEdit({
 	setAttributes,
 	clientId,
 	children,
+	className,
 }) {
 	const {
 		overlayId,
 		label,
+		dismissible,
+		group,
 		openOnLoad,
 		openDelay,
 		openOnScroll,
@@ -103,7 +112,40 @@ export default function OverlayEdit({
 		dismissDays,
 	} = attributes;
 	const isDialog = type !== 'collapsible';
+	const [isOpen, setIsOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
+
+	// Open while anything in the content area is selected.
+	const isEditingContent = useSelect(
+		(select) => {
+			const { getBlocks, isBlockSelected, hasSelectedInnerBlock } =
+				select(blockEditorStore);
+			const content = getBlocks(clientId).find(
+				(block) => block.attributes.name === 'content'
+			);
+
+			return (
+				!!content &&
+				(isBlockSelected(content.clientId) ||
+					hasSelectedInnerBlock(content.clientId, true))
+			);
+		},
+		[clientId]
+	);
+
+	useEffect(() => {
+		if (isEditingContent) {
+			setIsOpen(true);
+		}
+	}, [isEditingContent]);
+
+	const toggleLabel = isOpen
+		? __('Close', 'matter')
+		: sprintf(
+				/* translators: %s: overlay type, e.g. modal */
+				__('Edit %s', 'matter'),
+				LABELS[type].toLowerCase()
+			);
 	const copyRef = useCopyToClipboard(`#${overlayId}`, () => {
 		setCopied(true);
 		window.setTimeout(() => setCopied(false), 2000);
@@ -111,10 +153,24 @@ export default function OverlayEdit({
 
 	useUniqueOverlayId(clientId, overlayId, type, setAttributes);
 
-	const blockProps = useBlockProps({ className: 'matter-overlay-editor' });
+	const blockProps = useBlockProps({
+		className: [
+			'matter-overlay-editor',
+			`is-overlay-${type}`,
+			isOpen && 'is-editor-open',
+			className,
+		]
+			.filter(Boolean)
+			.join(' '),
+	});
 	const innerBlocksProps = useInnerBlocksProps(
-		{ className: `wp-block-matter-${type}__content` },
-		{ template: TEMPLATE }
+		{ className: 'matter-overlay-editor__areas' },
+		{
+			allowedBlocks: ['matter/slot'],
+			template: TEMPLATE,
+			templateLock: 'all',
+			renderAppender: false,
+		}
 	);
 
 	return (
@@ -169,6 +225,46 @@ export default function OverlayEdit({
 							value={label}
 							onChange={(value) =>
 								setAttributes({ label: value })
+							}
+						/>
+					)}
+					{isDialog && (
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={__('Can be closed', 'matter')}
+							help={
+								dismissible
+									? __(
+											'Close button, Escape and clicking outside close it.',
+											'matter'
+										)
+									: __(
+											'No close button, and Escape or clicking outside do nothing (e.g. an age gate). Close it with a button inside that links to its #ID.',
+											'matter'
+										)
+							}
+							checked={dismissible}
+							onChange={(value) =>
+								setAttributes({ dismissible: value })
+							}
+						/>
+					)}
+					{type === 'modal' && (
+						<TextControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							label={__('Group', 'matter')}
+							help={__(
+								'Modals sharing a group get previous/next buttons. Modals in a Query Loop are grouped automatically.',
+								'matter'
+							)}
+							value={group}
+							onChange={(value) =>
+								setAttributes({
+									group: value
+										.toLowerCase()
+										.replace(/[^a-z0-9-_]/g, '-'),
+								})
 							}
 						/>
 					)}
@@ -249,11 +345,35 @@ export default function OverlayEdit({
 					</PanelBody>
 				)}
 			</InspectorControls>
+			<BlockControls group="block">
+				<ToolbarGroup>
+					<ToolbarButton onClick={() => setIsOpen(!isOpen)}>
+						{toggleLabel}
+					</ToolbarButton>
+				</ToolbarGroup>
+			</BlockControls>
 			<div {...blockProps}>
-				<div className="matter-overlay-editor__label">
-					{LABELS[type]} · #{overlayId}
+				<div className="matter-overlay-editor__bar">
+					<span className="matter-overlay-editor__label">
+						{LABELS[type]} · #{overlayId}
+					</span>
+					<Button
+						variant="secondary"
+						size="small"
+						onClick={() => setIsOpen(!isOpen)}
+					>
+						{toggleLabel}
+					</Button>
 				</div>
 				<div {...innerBlocksProps} />
+				{isOpen && isDialog && (
+					<button
+						type="button"
+						className="matter-overlay-editor__backdrop"
+						aria-label={__('Close', 'matter')}
+						onClick={() => setIsOpen(false)}
+					/>
+				)}
 			</div>
 		</>
 	);

@@ -60,5 +60,16 @@ export default function Edit({ attributes: { name }, clientId }) {
 				: InnerBlocks.ButtonBlockAppender,
 	});
 
-	return <div {...innerBlocksProps} />;
+	const { children, ...wrapperProps } = innerBlocksProps;
+
+	return (
+		<div {...wrapperProps}>
+			{config.label && (
+				<div className="wp-block-matter-slot__label">
+					{config.label}
+				</div>
+			)}
+			{children}
+		</div>
+	);
 }
