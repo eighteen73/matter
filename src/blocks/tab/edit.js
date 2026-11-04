@@ -26,10 +26,24 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const { activeId, setActiveId } = useContext(ActiveTabContext);
 
 	// Selecting this tab (or anything in it), e.g. from List View, shows it.
-	const isSelected = useSelect(
-		(select) =>
-			select(blockEditorStore).hasSelectedInnerBlock(clientId, true) ||
-			select(blockEditorStore).isBlockSelected(clientId),
+	const { isSelected, isQueryItem } = useSelect(
+		(select) => {
+			const {
+				hasSelectedInnerBlock,
+				isBlockSelected,
+				getBlockRootClientId,
+				getBlockName,
+			} = select(blockEditorStore);
+
+			return {
+				isSelected:
+					hasSelectedInnerBlock(clientId, true) ||
+					isBlockSelected(clientId),
+				isQueryItem:
+					getBlockName(getBlockRootClientId(clientId)) ===
+					'core/post-template',
+			};
+		},
 		[clientId]
 	);
 
@@ -57,15 +71,20 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<>
-			<InspectorControls>
-				<PanelBody title={__('Settings', 'matter')}>
-					<IconControl
-						label={__('Icon', 'matter')}
-						value={attributes.icon}
-						onChange={(icon) => setAttributes({ icon: icon ?? '' })}
-					/>
-				</PanelBody>
-			</InspectorControls>
+			{/* A query's tabs have no editable label row: choose the icon here. */}
+			{isQueryItem && (
+				<InspectorControls>
+					<PanelBody title={__('Settings', 'matter')}>
+						<IconControl
+							label={__('Icon', 'matter')}
+							value={attributes.icon}
+							onChange={(icon) =>
+								setAttributes({ icon: icon ?? '' })
+							}
+						/>
+					</PanelBody>
+				</InspectorControls>
+			)}
 			<div {...innerBlocksProps} />
 		</>
 	);

@@ -14,3 +14,21 @@
 .wp-block-matter-tabs.is-vertical .wp-block-matter-tabs__list {
 	align-items: stretch;
 }
+
+// The editable tab's icon is a button that opens the icon library.
+.wp-block-matter-tabs .matter-tabs-editor__icon-button.components-button {
+	color: inherit;
+	height: auto;
+	min-width: 0;
+	padding: 0;
+
+	// No icon yet: a quiet "Add icon" button.
+	&:not(:has(.wp-block-matter-tabs__icon)) {
+		opacity: 0.5;
+
+		&:hover,
+		&:focus-visible {
+			opacity: 1;
+		}
+	}
+}
