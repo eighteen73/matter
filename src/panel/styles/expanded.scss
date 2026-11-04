@@ -1,0 +1,12 @@
+// Panel: inline mode.
+// Authored against `.is-expanded`. Matter swaps it for the panel's instance
+// class and wraps these rules in the panel's "from breakpoint" media query.
+// Panels and toggles share the instance class.
+
+.matter-panel-toggle.is-expanded {
+	display: none;
+}
+
+.matter-panel.is-expanded .is-panel-only {
+	display: none;
+}

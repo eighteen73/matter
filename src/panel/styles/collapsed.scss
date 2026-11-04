@@ -1,0 +1,88 @@
+// Panel: off-canvas mode.
+// Authored against `.is-collapsed`. Matter swaps it for the panel's instance
+// class and wraps these rules in the panel's "below breakpoint" media query.
+
+.matter-panel.is-collapsed {
+	--matter-panel--duration: 0.3s;
+
+	@media (prefers-reduced-motion: reduce) {
+		--matter-panel--duration: 0s;
+	}
+
+	.matter-panel__content {
+		display: flex;
+		flex-direction: column;
+		inset-block: var(--wp-admin--admin-bar--height, 0) 0;
+		inset-inline-end: 0;
+		max-width: 100vw;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		position: fixed;
+		transform: translateX(100%);
+		transition:
+			transform var(--matter-panel--duration),
+			visibility var(--matter-panel--duration);
+		visibility: hidden;
+		z-index: 1000;
+	}
+
+	&.is-from-left .matter-panel__content {
+		inset-inline: 0 auto;
+		transform: translateX(-100%);
+	}
+
+	&.is-from-top .matter-panel__content {
+		inset-block: var(--wp-admin--admin-bar--height, 0) auto;
+		inset-inline: 0;
+		max-height: 100dvh;
+		transform: translateY(-100%);
+	}
+
+	&.is-open .matter-panel__content {
+		transform: none;
+		visibility: visible;
+	}
+
+	.matter-panel__backdrop {
+		display: block;
+		inset: 0;
+		opacity: 0;
+		position: fixed;
+		transition:
+			opacity var(--matter-panel--duration),
+			visibility var(--matter-panel--duration);
+		visibility: hidden;
+		z-index: 999;
+	}
+
+	&.is-open .matter-panel__backdrop {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.matter-panel__close {
+		align-self: flex-end;
+		display: inline-flex;
+	}
+
+	.is-inline-only {
+		display: none;
+	}
+}
+
+// Presentational defaults.
+:where(.matter-panel.is-collapsed .matter-panel__content) {
+	background: var(--scheme--background, #fff);
+	color: var(--scheme--text, inherit);
+	gap: 1.5em;
+	padding: 1.5em;
+	width: min(100vw, 26rem);
+}
+
+:where(.matter-panel.is-collapsed.is-from-top .matter-panel__content) {
+	width: 100%;
+}
+
+:where(.matter-panel.is-collapsed .matter-panel__backdrop) {
+	background: rgb(0 0 0 / 50%);
+}

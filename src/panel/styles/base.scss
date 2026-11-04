@@ -1,0 +1,84 @@
+// Panel and panel toggle: rules shared by both modes.
+// Mode rules live in collapsed.scss (off-canvas) and expanded.scss (inline),
+// which Matter wraps in the panel's breakpoint media queries at render time.
+
+html.has-panel-open {
+	overflow: hidden;
+}
+
+// Only the off-canvas mode uses these.
+.matter-panel__backdrop,
+.matter-panel__close {
+	display: none;
+}
+
+.matter-panel-toggle,
+.matter-panel__close {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	gap: 0.5em;
+	padding: 0;
+}
+
+.matter-panel-toggle {
+	display: inline-flex;
+}
+
+.matter-panel-toggle.has-hidden-label .matter-panel-toggle__label,
+.matter-panel__close-label {
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+// Hamburger: three bars that become a cross while the panel is open.
+.matter-panel-toggle__icon {
+	display: inline-flex;
+	flex-direction: column;
+	height: 1em;
+	justify-content: space-between;
+	width: 1.375em;
+
+	> span {
+		background-color: currentcolor;
+		border-radius: 1px;
+		height: 2px;
+		transition:
+			transform 300ms,
+			opacity 300ms;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+}
+
+.matter-panel-toggle[aria-expanded="true"] .matter-panel-toggle__icon > span {
+	&:nth-child(1) {
+		transform: translateY(calc(0.5em - 1px)) rotate(45deg);
+	}
+
+	&:nth-child(2) {
+		opacity: 0;
+	}
+
+	&:nth-child(3) {
+		transform: translateY(calc(-0.5em + 1px)) rotate(-45deg);
+	}
+}
+
+.matter-panel__close::before {
+	background-color: currentcolor;
+	content: "";
+	height: 1.25em;
+	mask: url("../../../assets/svg/x.svg") center / contain no-repeat;
+	width: 1.25em;
+}

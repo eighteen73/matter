@@ -1,0 +1,113 @@
+// Menu: rules shared by every menu type.
+// Functional rules use single classes. Presentational defaults are wrapped in
+// :where() (zero specificity) so themes can restyle with plain class selectors.
+// Type-specific layout lives in dropdown/accordion/drill-down.scss.
+
+.matter-menu {
+	--matter-menu--duration: 0.3s;
+
+	@media (prefers-reduced-motion: reduce) {
+		--matter-menu--duration: 0s;
+	}
+}
+
+.matter-menu__items,
+.matter-menu__submenu-items,
+.matter-menu__column-items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.matter-menu__item {
+	position: relative;
+}
+
+.matter-menu__link {
+	align-items: center;
+	display: inline-flex;
+	gap: 0.5em;
+}
+
+.matter-menu__toggle,
+.matter-menu__back {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.5em;
+	padding: 0;
+	text-align: inherit;
+}
+
+.matter-menu__toggle::after,
+.matter-menu__back::before {
+	background-color: currentcolor;
+	content: "";
+	flex: none;
+	height: 0.75em;
+	mask: url("../../../assets/svg/caret-down.svg") center / contain no-repeat;
+	transition: rotate var(--matter-menu--duration);
+	width: 0.75em;
+}
+
+.matter-menu__back::before {
+	mask-image: url("../../../assets/svg/caret-left.svg");
+}
+
+// The toggle's text stands in for the parent link only in some modes.
+.matter-menu__toggle-text {
+	display: none;
+}
+
+// Submenus stay in the DOM (for transitions) but are hidden until open.
+.matter-menu__submenu {
+	visibility: hidden;
+}
+
+.matter-menu__item.is-open > .matter-menu__submenu {
+	visibility: visible;
+}
+
+// The drill-down header is only shown by the drill-down type.
+.matter-menu__submenu-header {
+	display: none;
+}
+
+// Static column parents (megamenu columns, `#` parents) always show children.
+.matter-menu__item.is-column {
+	display: flex;
+	flex-direction: column;
+}
+
+.matter-menu__description {
+	display: block;
+}
+
+:where(.matter-menu__link) {
+	color: inherit;
+	text-decoration: none;
+}
+
+:where(.matter-menu__link.is-label) {
+	font-weight: 600;
+}
+
+:where(.matter-menu__item.is-column) {
+	gap: 0.5em;
+}
+
+:where(.matter-menu__column-items) {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+
+:where(.matter-menu__description) {
+	font-size: 0.875em;
+	opacity: 0.75;
+}

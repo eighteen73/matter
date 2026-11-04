@@ -1,0 +1,101 @@
+// Menu type: drill-down.
+// Authored against `.is-type-drill-down`; see dropdown.scss for how responsive
+// menus re-scope these rules.
+
+.is-type-drill-down {
+	min-height: 100%;
+	overflow: hidden;
+	position: relative;
+
+	.matter-menu__items {
+		display: flex;
+		flex-direction: column;
+	}
+
+	// Items are static so every submenu panel covers the whole menu.
+	.matter-menu__item {
+		display: flex;
+		position: static;
+	}
+
+	.matter-menu__link {
+		flex: 1 1 auto;
+	}
+
+	// Parents open their panel; the parent page is linked from its header.
+	.has-submenu:not(.is-column) > .matter-menu__link {
+		display: none;
+	}
+
+	.matter-menu__toggle {
+		flex: 1 1 auto;
+		justify-content: space-between;
+	}
+
+	.matter-menu__toggle::after {
+		mask-image: url("../../../assets/svg/caret-right.svg");
+	}
+
+	.matter-menu__toggle-text {
+		display: inline;
+	}
+
+	// Submenus slide over the menu.
+	.matter-menu__submenu {
+		display: flex;
+		flex-direction: column;
+		inset: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		position: absolute;
+		transform: translateX(100%);
+		transition:
+			transform var(--matter-menu--duration),
+			visibility var(--matter-menu--duration);
+		z-index: 1;
+	}
+
+	.matter-menu__item.is-open > .matter-menu__submenu {
+		transform: none;
+	}
+
+	.matter-menu__submenu-header {
+		align-items: center;
+		display: flex;
+	}
+
+	.matter-menu__view-all {
+		margin-inline-start: auto;
+	}
+
+	.matter-menu__submenu-items,
+	.matter-menu__columns {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+// Presentational defaults.
+:where(.is-type-drill-down .matter-menu__submenu) {
+	background: var(--scheme--background, #fff);
+	color: var(--scheme--text, inherit);
+}
+
+:where(.is-type-drill-down .matter-menu__item) {
+	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 10%));
+	padding-block: 0.75em;
+}
+
+:where(.is-type-drill-down .matter-menu__item.is-column) {
+	border: 0;
+}
+
+:where(.is-type-drill-down .matter-menu__submenu-header) {
+	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 10%));
+	gap: 1em;
+	padding-block: 0.75em;
+}
+
+:where(.is-type-drill-down .matter-menu__parent-label) {
+	font-weight: 600;
+}

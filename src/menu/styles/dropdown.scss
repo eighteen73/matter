@@ -1,0 +1,156 @@
+// Menu type: dropdown.
+// Authored against `.is-type-dropdown`. For responsive menus Matter swaps
+// that class for the menu's instance class and wraps these rules in a media
+// query, so keep every rule scoped to `.is-type-dropdown`.
+
+.is-type-dropdown {
+	position: relative;
+
+	.matter-menu__items {
+		align-items: center;
+		display: flex;
+		flex-wrap: wrap;
+	}
+
+	&.is-vertical .matter-menu__items {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.matter-menu__item {
+		align-items: center;
+		display: flex;
+	}
+
+	&.is-vertical .matter-menu__item {
+		justify-content: space-between;
+	}
+
+	// Submenus: positioned panels. JS adds .is-positioned once measured so a
+	// panel never flashes in the wrong place, plus offsets to keep it on screen.
+	.matter-menu__submenu {
+		inset-block-start: 100%;
+		inset-inline-start: 0;
+		max-height: var(--matter-menu--max-height, none);
+		opacity: 0;
+		position: absolute;
+		transform: translate(var(--matter-menu--offset-x, 0), var(--matter-menu--offset-y, 0));
+		transition:
+			opacity var(--matter-menu--duration),
+			visibility var(--matter-menu--duration);
+		width: max-content;
+		z-index: 100;
+	}
+
+	.matter-menu__item.is-open > .matter-menu__submenu.is-positioned {
+		opacity: 1;
+	}
+
+	.matter-menu__submenu.is-flipped {
+		inset-inline-end: 0;
+		inset-inline-start: auto;
+	}
+
+	.matter-menu__submenu.is-scrollable {
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	// Nested submenus and vertical menus fly out to the side.
+	.matter-menu__submenu .matter-menu__submenu,
+	&.is-vertical .matter-menu__submenu {
+		inset-block-start: 0;
+		inset-inline-start: 100%;
+
+		&.is-flipped {
+			inset-inline-end: 100%;
+			inset-inline-start: auto;
+		}
+	}
+
+	.matter-menu__submenu .matter-menu__toggle::after,
+	&.is-vertical .matter-menu__toggle::after {
+		mask-image: url("../../../assets/svg/caret-right.svg");
+	}
+
+	&.is-horizontal .matter-menu__items > .is-open > .matter-menu__toggle::after {
+		rotate: 180deg;
+	}
+
+	.matter-menu__submenu-items {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.matter-menu__item.is-column {
+		align-items: flex-start;
+	}
+
+	// Megamenus: wide panels anchored to the menu, centred by JS.
+	.matter-menu__item.is-megamenu:not(.is-megamenu-content) {
+		position: static;
+	}
+
+	.is-megamenu > .matter-menu__submenu {
+		display: flex;
+		max-width: 100vw;
+	}
+
+	.is-megamenu-content > .matter-menu__submenu {
+		width: min(var(--wp--style--global--content-size, 48rem), 100vw);
+	}
+
+	.is-megamenu-wide > .matter-menu__submenu {
+		width: min(var(--wp--style--global--wide-size, 80rem), 100vw);
+	}
+
+	.is-megamenu-full > .matter-menu__submenu {
+		width: var(--matter-menu--megamenu-width, 100vw);
+	}
+
+	.matter-menu__columns {
+		display: grid;
+		flex: 1 1 auto;
+		grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+	}
+
+	// Click to open: the toggle replaces the parent link, which is reached via
+	// its submenu instead.
+	&.opens-on-click .has-submenu:not(.is-column) > .matter-menu__link {
+		display: none;
+	}
+
+	&.opens-on-click .matter-menu__toggle-text {
+		display: inline;
+	}
+}
+
+// Presentational defaults.
+:where(.is-type-dropdown .matter-menu__items) {
+	gap: 0.5em 1.5em;
+}
+
+:where(.is-type-dropdown .matter-menu__item) {
+	gap: 0.25em;
+}
+
+:where(.is-type-dropdown .matter-menu__submenu) {
+	background: var(--scheme--background, #fff);
+	border-radius: 4px;
+	box-shadow: 0 0.5em 1.5em rgb(0 0 0 / 12%);
+	color: var(--scheme--text, inherit);
+	padding: 0.75em 1em;
+}
+
+:where(.is-type-dropdown .matter-menu__submenu-items) {
+	gap: 0.5em;
+}
+
+:where(.is-type-dropdown .is-megamenu > .matter-menu__submenu) {
+	gap: 2em;
+	padding: 1.5em 2em;
+}
+
+:where(.is-type-dropdown .matter-menu__columns) {
+	gap: 1.5em 2em;
+}

@@ -1,0 +1,81 @@
+// Menu type: accordion.
+// Authored against `.is-type-accordion`; see dropdown.scss for how responsive
+// menus re-scope these rules.
+
+.is-type-accordion {
+	.matter-menu__items {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.matter-menu__item {
+		align-items: center;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+	}
+
+	.matter-menu__link {
+		flex: 1 1 auto;
+	}
+
+	// Submenus expand in place by animating grid rows from 0fr to 1fr.
+	.matter-menu__submenu {
+		display: grid;
+		flex-basis: 100%;
+		grid-auto-rows: 0fr;
+		grid-template-rows: 0fr;
+		transition:
+			grid-template-rows var(--matter-menu--duration),
+			grid-auto-rows var(--matter-menu--duration),
+			visibility var(--matter-menu--duration);
+
+		> * {
+			min-height: 0;
+			overflow: hidden;
+		}
+	}
+
+	.matter-menu__item.is-open > .matter-menu__submenu {
+		grid-auto-rows: 1fr;
+		grid-template-rows: 1fr;
+	}
+
+	.matter-menu__item.is-open > .matter-menu__toggle::after {
+		rotate: 180deg;
+	}
+
+	.matter-menu__submenu-items,
+	.matter-menu__columns {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&.opens-on-click .has-submenu:not(.is-column) > .matter-menu__link {
+		display: none;
+	}
+
+	&.opens-on-click .matter-menu__toggle {
+		flex: 1 1 auto;
+		justify-content: space-between;
+	}
+
+	&.opens-on-click .matter-menu__toggle-text {
+		display: inline;
+	}
+}
+
+// Presentational defaults.
+:where(.is-type-accordion .matter-menu__items),
+:where(.is-type-accordion .matter-menu__submenu-items),
+:where(.is-type-accordion .matter-menu__columns) {
+	gap: 0.75em;
+}
+
+:where(.is-type-accordion .matter-menu__item.is-open > .matter-menu__submenu) {
+	padding-block-start: 0.75em;
+}
+
+:where(.is-type-accordion .matter-menu__submenu) {
+	padding-inline-start: 1em;
+}
