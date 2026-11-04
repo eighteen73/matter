@@ -2,118 +2,31 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/tabs",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"title": "Tabs",
-	"description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
 	"category": "widgets",
-	"textdomain": "matter",
-	"allowedBlocks": [
-		"matter/tab-list",
-		"matter/tab-panels"
-	],
+	"icon": "index-card",
+	"description": "Content split into tabs. Add tabs by hand, or show posts with a query.",
 	"attributes": {
-		"generatedId": {
+		"label": {
 			"type": "string",
-			"default": ""
+			"default": "",
+			"role": "content"
 		},
-		"activeTabIndex": {
-			"type": "number",
-			"default": 0
-		},
-		"editorActiveTabIndex": {
-			"type": "number",
-			"role": "local"
-		},
-		"deepLinking": {
+		"deepLink": {
 			"type": "boolean",
 			"default": false
-		},
-		"deepLinkingUpdateHistory": {
-			"type": "boolean",
-			"default": false
-		},
-		"collapses": {
-			"type": "boolean",
-			"default": false
-		},
-		"collapsesOn": {
-			"type": "string",
-			"default": "lg"
-		},
-		"isQueryMode": {
-			"type": "boolean",
-			"default": false
-		},
-		"stackOnMobile": {
-			"type": "boolean",
-			"default": false
-		},
-		"stackedBreakpoint": {
-			"type": "string",
-			"default": "lg"
 		}
 	},
 	"supports": {
-		"align": true,
-		"anchor": true,
-		"color": {
-			"text": true,
-			"background": true,
-			"gradients": true,
-			"link": false
-		},
-		"layout": {
-			"default": {
-				"type": "flex",
-				"flexWrap": "nowrap",
-				"justifyContent": "stretch",
-				"verticalAlignment": "stretch",
-				"orientation": "vertical"
-			},
-			"allowSwitching": false,
-			"allowVerticalAlignment": true,
-			"allowJustification": false,
-			"allowOrientation": true,
-			"allowWrap": false,
-			"allowSizingOnChildren": true
-		},
 		"html": false,
+		"anchor": true,
 		"interactivity": true,
-		"contentRole": true,
-		"listView": true,
-		"spacing": {
-			"blockGap": true,
-			"margin": true,
-			"padding": true
-		},
-		"__experimentalBorder": {
-			"color": true,
-			"radius": true,
-			"style": true,
-			"width": true,
-			"__experimentalDefaultControls": {
-				"color": false,
-				"radius": false,
-				"style": false,
-				"width": false
-			}
-		},
-		"renaming": true
+		"matter": {
+			"scheme": true
+		}
 	},
-	"providesContext": {
-		"matter/tabs-activeTabIndex": "activeTabIndex",
-		"matter/tabs-editorActiveTabIndex": "editorActiveTabIndex",
-		"matter/tabs-collapses": "collapses",
-		"matter/tabs-collapsesOn": "collapsesOn",
-		"matter/tabs-isQueryMode": "isQueryMode"
-	},
-	"usesContext": [
-		"matter/tabs-list",
-		"matter/tabs-id",
-		"postId",
-		"postType",
-		"queryId"
-	],
+	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",

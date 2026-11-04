@@ -7,11 +7,10 @@
 
 namespace Eighteen73\Matter;
 
-use Eighteen73\Matter\Blocks\Accordion;
+use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\Gallery;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Registry;
-use Eighteen73\Matter\Blocks\Tabs;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
@@ -38,8 +37,7 @@ class Plugin {
 
 		// Register blocks.
 		Registry::instance()->setup();
-		Tabs::instance()->setup();
-		Accordion::instance()->setup();
+		Instances::instance()->setup();
 		Gallery::instance()->setup();
 		GravityForm::instance()->setup();
 

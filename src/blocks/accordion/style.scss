@@ -1,3 +1,80 @@
-.wp-block-matter-accordion {
-	box-sizing: border-box;
+// Accordion. Panels expand by animating grid rows; closed panels are inert.
+// Functional rules use plain classes; presentational defaults are in :where().
+
+.wp-block-matter-accordion-item__heading {
+	margin: 0;
+}
+
+.wp-block-matter-accordion-item__toggle {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: 1em;
+	justify-content: space-between;
+	text-align: start;
+	width: 100%;
+
+	&::after {
+		background-color: currentcolor;
+		content: "";
+		flex: none;
+		height: 0.75em;
+		mask: url("../../../assets/svg/caret-down.svg") center / contain no-repeat;
+		transition: rotate 300ms;
+		width: 0.75em;
+	}
+}
+
+.wp-block-matter-accordion-item.is-open > .wp-block-matter-accordion-item__heading > .wp-block-matter-accordion-item__toggle::after {
+	rotate: 180deg;
+}
+
+.wp-block-matter-accordion-item__panel {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition:
+		grid-template-rows 300ms,
+		visibility 300ms;
+	visibility: hidden;
+
+	> .wp-block-matter-accordion-item__content {
+		min-height: 0;
+		overflow: hidden;
+	}
+}
+
+.wp-block-matter-accordion-item.is-open > .wp-block-matter-accordion-item__panel {
+	grid-template-rows: 1fr;
+	visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wp-block-matter-accordion-item__panel,
+	.wp-block-matter-accordion-item__toggle::after {
+		transition: none;
+	}
+}
+
+// Presentational defaults (including the button reset, so themes can set
+// padding, borders and backgrounds with plain class selectors).
+:where(.wp-block-matter-accordion-item) {
+	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 15%));
+}
+
+:where(.wp-block-matter-accordion-item__toggle) {
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	font: inherit;
+	font-weight: 600;
+	padding: 1em 0;
+}
+
+:where(.wp-block-matter-accordion-item__content) > :first-child {
+	margin-block-start: 0;
+}
+
+:where(.wp-block-matter-accordion-item__content) > :last-child {
+	padding-block-end: 1em;
 }

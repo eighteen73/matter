@@ -8,7 +8,6 @@
 namespace Eighteen73\Matter\Blocks;
 
 use WP_Block_Metadata_Registry;
-use WP_Block_Type_Registry;
 use Eighteen73\Matter\Singleton;
 
 defined( 'ABSPATH' ) || exit;
@@ -22,8 +21,7 @@ class Registry {
 	/**
 	 * Core blocks Matter replaces (parents + children).
 	 *
-	 * Hidden from the inserter via allowed_block_types_all.
-	 * Existing content using these blocks continues to render.
+	 * Hidden from the inserter; existing content using them still renders.
 	 *
 	 * @var string[]
 	 */
@@ -42,8 +40,7 @@ class Registry {
 	/**
 	 * Third party blocks that Matter replaces (parents + children).
 	 *
-	 * Hidden from the inserter via allowed_block_types_all.
-	 * Existing content using these blocks continues to render.
+	 * Hidden from the inserter; existing content using them still renders.
 	 *
 	 * @var string[]
 	 */
@@ -59,26 +56,27 @@ class Registry {
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register_lightbox_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register' ] );
-		add_filter( 'allowed_block_types_all', [ $this, 'disable_mirrored_core_blocks' ], 10, 2 );
+		add_filter( 'register_block_type_args', [ $this, 'hide_replaced_blocks' ], 10, 2 );
 	}
 
 	/**
-	 * Remove core blocks that Matter replaces from the editor allow-list.
+	 * Hide blocks Matter replaces from the inserter.
 	 *
-	 * @param bool|string[]            $allowed_block_types Allowed block types, or true for all.
-	 * @param \WP_Block_Editor_Context $editor_context      Editor context.
-	 * @return bool|string[]
+	 * Uses supports.inserter rather than the allowed-blocks list, so blocks
+	 * registered only in JavaScript aren't affected and the theme's own
+	 * allow-list keeps working.
+	 *
+	 * @param array  $args       Block type args.
+	 * @param string $block_name Block name.
+	 * @return array
 	 */
-	public function disable_mirrored_core_blocks( $allowed_block_types, $editor_context ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-		if ( true === $allowed_block_types ) {
-			$allowed_block_types = array_keys( WP_Block_Type_Registry::get_instance()->get_all_registered() );
+	public function hide_replaced_blocks( array $args, string $block_name ): array {
+		if ( in_array( $block_name, array_merge( self::DISABLED_CORE_BLOCKS, self::DISABLED_THIRD_PARTY_BLOCKS ), true ) ) {
+			$args['supports']             = $args['supports'] ?? [];
+			$args['supports']['inserter'] = false;
 		}
 
-		if ( ! is_array( $allowed_block_types ) ) {
-			return $allowed_block_types;
-		}
-
-		return array_values( array_diff( $allowed_block_types, self::DISABLED_CORE_BLOCKS, self::DISABLED_THIRD_PARTY_BLOCKS ) );
+		return $args;
 	}
 
 	/**

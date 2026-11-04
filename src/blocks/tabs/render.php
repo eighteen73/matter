@@ -1,89 +1,64 @@
 <?php
 /**
- * Tabs block render template.
+ * Tabs: a tab list built from the tabs that rendered inside it, then the panels.
+ *
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Rendered tab panels.
+ * @param WP_Block $block      Block instance.
  *
  * @package Eighteen73\Matter
  */
 
-use Eighteen73\Matter\Blocks\BlockId;
-use Eighteen73\Matter\Config;
+use Eighteen73\Matter\Blocks\Instances;
 
-defined( 'ABSPATH' ) || exit;
+$matter_id   = Instances::current( 'matter/tabs' ) ?? wp_unique_id( 'tabs-' );
+$matter_tabs = Instances::items( 'matter/tabs' );
 
-$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$block_content    = isset( $content ) ? (string) $content : '';
-$block_instance   = isset( $block ) && $block instanceof \WP_Block ? $block : null;
-
-if ( ! $block_instance instanceof \WP_Block ) {
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Saved block markup.
-	echo $block_content;
+if ( ! $matter_tabs ) {
 	return;
-}
-
-$tabs_id                     = $block_instance->context['matter/tabs-id'] ?? BlockId::resolve_id( $block_attributes, $block_instance->context, 'matter-tabs-' );
-$tabs_list                   = $block_instance->context['matter/tabs-list'] ?? [];
-$active_tab_index            = $block_attributes['activeTabIndex'] ?? 0;
-$deep_linking                = $block_attributes['deepLinking'] ?? false;
-$deep_linking_update_history = $block_attributes['deepLinkingUpdateHistory'] ?? false;
-$stack_on_mobile             = $block_attributes['stackOnMobile'] ?? false;
-$stacked_breakpoint          = $block_attributes['stackedBreakpoint'] ?? 'lg';
-$is_horizontal               = $block_attributes['layout']['orientation'] === 'horizontal';
-
-$allowed_breakpoints = array_keys( Config::file( 'breakpoints' ) );
-if ( ! in_array( $stacked_breakpoint, $allowed_breakpoints, true ) ) {
-	$stacked_breakpoint = 'lg';
-}
-
-if ( empty( $tabs_id ) ) {
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Saved block markup.
-	echo $block_content;
-	return;
-}
-
-$wrapper_classes = [];
-if ( $stack_on_mobile && $is_horizontal ) {
-	$wrapper_classes[] = 'is-stacked-on-mobile';
-	$wrapper_classes[] = 'is-stacked-on-mobile-until-' . $stacked_breakpoint;
 }
 
 wp_interactivity_state(
-	'matter/tabs/private',
+	'matter/tabs',
 	[
-		$tabs_id => $tabs_list,
-		'items'  => [
-			$tabs_id => [
-				'tabsList' => $tabs_list,
-			],
-		],
+		'isActive' => function () {
+			$context = wp_interactivity_get_context();
+
+			return ( $context['active'] ?? '' ) === ( $context['tabId'] ?? null );
+		},
+		'tabIndex' => function () {
+			$context = wp_interactivity_get_context();
+
+			return ( $context['active'] ?? '' ) === ( $context['tabId'] ?? null ) ? 0 : -1;
+		},
 	]
 );
 
-$tabs_context = [
-	'tabsId'                   => $tabs_id,
-	'activeTabIndex'           => $active_tab_index,
-	'deepLinking'              => (bool) $deep_linking,
-	'deepLinkingUpdateHistory' => (bool) $deep_linking_update_history,
-];
+$matter_buttons = '';
 
-$wrapper_attributes = [
-	'id'                            => $tabs_id,
-	'data-wp-interactive'           => 'matter/tabs/private',
-	'data-wp-init'                  => 'callbacks.onTabsInit',
-	'data-wp-on--keydown'           => 'actions.handleTabKeyDown',
-	'data-wp-on-window--hashchange' => 'actions.onHashChange',
-	'class'                         => implode( ' ', $wrapper_classes ),
-];
+foreach ( $matter_tabs as $matter_index => $matter_tab ) {
+	$matter_tab_id = $matter_id . '-' . ( $matter_index + 1 );
 
-?>
-
-<div
-	<?php
-	echo wp_kses_data(
-		get_block_wrapper_attributes( $wrapper_attributes )
-		. ' '
-		. wp_interactivity_data_wp_context( $tabs_context )
+	$matter_buttons .= sprintf(
+		'<button type="button" role="tab" id="%1$s-tab" class="wp-block-matter-tabs__tab" aria-controls="%1$s" %2$s data-wp-bind--aria-selected="state.isActive" data-wp-bind--tabindex="state.tabIndex" data-wp-on--click="actions.select" data-wp-on--keydown="actions.onKeydown">%3$s</button>',
+		esc_attr( $matter_tab_id ),
+		wp_interactivity_data_wp_context( [ 'tabId' => $matter_tab_id ] ),
+		wp_kses_post( '' !== $matter_tab['label'] ? $matter_tab['label'] : sprintf( /* translators: %d: tab number */ __( 'Tab %d', 'matter' ), $matter_index + 1 ) )
 	);
-	?>
->
-	<?php echo $block_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</div>
+}
+
+$matter_label = trim( (string) ( $attributes['label'] ?? '' ) );
+
+printf(
+	'<div %1$s data-wp-interactive="matter/tabs" %2$s data-wp-init="callbacks.init"><div class="wp-block-matter-tabs__list" role="tablist"%3$s>%4$s</div><div class="wp-block-matter-tabs__panels">%5$s</div></div>',
+	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		[
+			'active'   => $matter_id . '-1',
+			'deepLink' => ! empty( $attributes['deepLink'] ),
+		]
+	),
+	'' !== $matter_label ? ' aria-label="' . esc_attr( $matter_label ) . '"' : '',
+	$matter_buttons, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+);

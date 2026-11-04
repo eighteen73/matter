@@ -1,171 +1,63 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
 import {
+	InspectorControls,
+	RichText,
 	useBlockProps,
 	useInnerBlocksProps,
-	InspectorControls,
-	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import {
-	ToggleControl,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanel as ToolsPanel,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem,
-} from '@wordpress/components';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
-import clsx from 'clsx';
+import { PanelBody, ToggleControl } from '@wordpress/components';
+import { useEntityProp } from '@wordpress/core-data';
+import { __ } from '@wordpress/i18n';
 
 const TEMPLATE = [
-	['matter/accordion-heading'],
-	[
-		'matter/accordion-panel',
-		{},
-		[
-			[
-				'core/paragraph',
-				{
-					placeholder: __('Type / to add content…', 'matter'),
-				},
-			],
-		],
-	],
+	['core/paragraph', { placeholder: __('Item content…', 'matter') }],
 ];
 
-const QUERY_TEMPLATE = [
-	['matter/accordion-heading'],
-	[
-		'matter/accordion-panel',
-		{},
-		[
-			['core/post-featured-image', { isLink: true, aspectRatio: '16/9' }],
-			['core/post-title'],
-			['core/post-excerpt'],
-		],
-	],
-];
-
-export default function Edit({
-	attributes,
-	setAttributes,
-	clientId,
-	isSelected: isSingleSelected,
-}) {
-	const { openByDefault, inQueryLoop } = attributes;
-
-	const queryLoopParents = useSelect(
-		(select) =>
-			select(blockEditorStore).getBlockParentsByBlockName(
-				clientId,
-				'core/query'
-			),
-		[clientId]
-	);
-	const { accordionClientId, isFirstItem } = useSelect(
-		(select) => {
-			const { getBlockRootClientId, getBlocks } =
-				select(blockEditorStore);
-			const parentClientId = getBlockRootClientId(clientId);
-			const siblings = parentClientId ? getBlocks(parentClientId) : [];
-			const firstAccordionItem = siblings.find(
-				(block) => block.name === 'matter/accordion-item'
-			);
-
-			return {
-				accordionClientId: parentClientId,
-				isFirstItem: firstAccordionItem?.clientId === clientId,
-			};
-		},
-		[clientId]
-	);
-	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
-		useDispatch(blockEditorStore);
-
-	useEffect(() => {
-		const isWithinQueryLoop = queryLoopParents.length > 0;
-
-		if (isWithinQueryLoop !== inQueryLoop) {
-			__unstableMarkNextChangeAsNotPersistent();
-			setAttributes({ inQueryLoop: isWithinQueryLoop });
-		}
-	}, [
-		inQueryLoop,
-		queryLoopParents,
-		setAttributes,
-		__unstableMarkNextChangeAsNotPersistent,
-	]);
-
-	const syncOpenByDefault = (value) => {
-		setAttributes({ openByDefault: value });
-
-		if (isFirstItem && accordionClientId) {
-			updateBlockAttributes(accordionClientId, {
-				openFirstItem: value,
-			});
-		}
-	};
-
-	const { isSelected } = useSelect(
-		(select) => {
-			if (isSingleSelected || openByDefault || inQueryLoop) {
-				return { isSelected: true };
-			}
-
-			return {
-				isSelected: select(blockEditorStore).hasSelectedInnerBlock(
-					clientId,
-					true
-				),
-			};
-		},
-		[clientId, isSingleSelected, openByDefault, inQueryLoop]
-	);
+export default function Edit({ attributes, setAttributes, context }) {
+	const { title, open } = attributes;
+	const { postId, postType } = context;
+	const level = Math.min(6, Math.max(2, context['matter/headingLevel'] ?? 3));
+	const [postTitle] = useEntityProp('postType', postType, 'title', postId);
 
 	const blockProps = useBlockProps({
-		className: clsx({
-			'is-open': openByDefault || isSelected,
-		}),
+		className: 'is-open',
 	});
+	const innerBlocksProps = useInnerBlocksProps(
+		{ className: 'wp-block-matter-accordion-item__content' },
+		{ template: TEMPLATE }
+	);
 
-	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		template: inQueryLoop ? QUERY_TEMPLATE : TEMPLATE,
-		templateLock: 'all',
-		directInsert: true,
-		templateInsertUpdatesSelection: true,
-	});
+	// Inside a Query Loop an empty title shows the post title.
+	const placeholder =
+		postId && postTitle ? postTitle : __('Item title', 'matter');
 
 	return (
 		<>
-			{!inQueryLoop && (
-				<InspectorControls>
-					<ToolsPanel
-						label={__('Settings', 'matter')}
-						resetAll={() => syncOpenByDefault(false)}
-					>
-						<ToolsPanelItem
-							hasValue={() => !!openByDefault}
-							label={__('Open by default', 'matter')}
-							onDeselect={() => syncOpenByDefault(false)}
-							isShownByDefault
-						>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={__('Open by default', 'matter')}
-								help={__(
-									'Accordion content will be displayed by default.',
-									'matter'
-								)}
-								checked={openByDefault}
-								onChange={syncOpenByDefault}
-							/>
-						</ToolsPanelItem>
-					</ToolsPanel>
-				</InspectorControls>
-			)}
-			<div {...innerBlocksProps} />
+			<InspectorControls>
+				<PanelBody title={__('Settings', 'matter')}>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__('Open by default', 'matter')}
+						checked={open}
+						onChange={(value) => setAttributes({ open: value })}
+					/>
+				</PanelBody>
+			</InspectorControls>
+			<div {...blockProps}>
+				<RichText
+					tagName={`h${level}`}
+					className="wp-block-matter-accordion-item__heading wp-block-matter-accordion-item__toggle"
+					value={title}
+					onChange={(value) => setAttributes({ title: value })}
+					placeholder={placeholder}
+					allowedFormats={['core/bold', 'core/italic']}
+				/>
+				<div className="wp-block-matter-accordion-item__panel">
+					<div {...innerBlocksProps} />
+				</div>
+			</div>
 		</>
 	);
 }

@@ -1,17 +1,39 @@
-@use "../../constants/breakpoints" as bp;
+// Tabs. Functional rules use plain classes; presentational defaults are in
+// :where() so themes restyle freely (including turning the list into a
+// scroller or select-like control at small sizes).
 
-.wp-block-matter-tabs {
-	box-sizing: border-box;
+.wp-block-matter-tabs__list {
+	display: flex;
+	flex-wrap: wrap;
+}
 
-	&.is-stacked-on-mobile {
-		flex-direction: column;
-	}
+.wp-block-matter-tabs__tab {
+	cursor: pointer;
+}
 
-	@each $breakpoint-name, $breakpoint-size in bp.$breakpoints {
-		&.is-stacked-on-mobile-until-#{$breakpoint-name} {
-			@media (min-width: $breakpoint-size) {
-				flex-direction: row;
-			}
-		}
-	}
+.wp-block-matter-tab[hidden] {
+	display: none;
+}
+
+// Presentational defaults.
+:where(.wp-block-matter-tabs__list) {
+	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 15%));
+	gap: 1.5em;
+	margin-block-end: 1.5em;
+}
+
+:where(.wp-block-matter-tabs__tab) {
+	appearance: none;
+	background: none;
+	border: 0;
+	border-block-end: 2px solid transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: 600;
+	margin-block-end: -1px;
+	padding: 0.75em 0;
+}
+
+:where(.wp-block-matter-tabs__tab[aria-selected="true"]) {
+	border-block-end-color: currentcolor;
 }

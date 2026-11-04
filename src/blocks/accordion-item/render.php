@@ -1,90 +1,43 @@
 <?php
 /**
- * Accordion item block render template.
+ * Accordion item: a heading button and a panel.
+ *
+ * Inside a Query Loop an empty title falls back to the post title.
+ *
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Rendered inner blocks.
+ * @param WP_Block $block      Block instance.
  *
  * @package Eighteen73\Matter
  */
 
-defined( 'ABSPATH' ) || exit;
+use Eighteen73\Matter\Blocks\Instances;
 
-$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$block_content    = isset( $content ) ? (string) $content : '';
-$block_instance   = isset( $block ) && $block instanceof WP_Block ? $block : null;
+$matter_title = trim( (string) ( $attributes['title'] ?? '' ) );
 
-if ( ! $block_instance instanceof WP_Block ) {
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Saved block markup.
-	echo $block_content;
-	return;
+if ( '' === $matter_title && ! empty( $block->context['postId'] ) ) {
+	$matter_title = get_the_title( (int) $block->context['postId'] );
 }
 
-$open_by_default = ! empty( $block_attributes['openByDefault'] );
-$item_id         = (string) ( $block_instance->context['matter/accordion-item-id'] ?? '' );
-$accordion_id    = (string) ( $block_instance->context['matter/accordion-id'] ?? '' );
-
-if ( '' === $item_id ) {
-	$item_id = wp_unique_id( 'matter-accordion-item-' );
-}
-
-wp_interactivity_state(
-	'matter/accordion/private',
+$matter_position = Instances::add(
+	'matter/accordion',
 	[
-		'isOpen' => static function () {
-			$context = wp_interactivity_get_context();
-			$id      = $context['id'] ?? '';
-			$items   = $context['accordionItems'] ?? [];
-
-			if ( ! is_array( $items ) ) {
-				return ! empty( $context['openByDefault'] );
-			}
-
-			foreach ( $items as $item ) {
-				if ( ( $item['id'] ?? '' ) === $id ) {
-					return ! empty( $item['isOpen'] );
-				}
-			}
-
-			return ! empty( $context['openByDefault'] );
-		},
+		'title' => wp_strip_all_tags( $matter_title ),
+		'text'  => trim( wp_strip_all_tags( $content ) ),
+		'open'  => ! empty( $attributes['open'] ),
 	]
 );
 
-$item_context = [
-	'id'            => $item_id,
-	'openByDefault' => (bool) $open_by_default,
-	'accordionId'   => $accordion_id,
-];
+$matter_parent = Instances::current( 'matter/accordion' ) ?? wp_unique_id( 'accordion-' );
+$matter_id     = $matter_parent . '-' . ( $matter_position ? $matter_position : wp_unique_id() );
+$matter_level  = min( 6, max( 2, (int) ( $block->context['matter/headingLevel'] ?? 3 ) ) );
 
-$wrapper_attributes = [
-	'data-wp-interactive'    => 'matter/accordion/private',
-	'data-wp-init'           => 'callbacks.initAccordionItems',
-	'data-wp-class--is-open' => 'state.isOpen',
-];
-
-if ( $open_by_default ) {
-	$wrapper_attributes['class'] = 'is-open';
-}
-
-/*
- * Deprioritize images in collapsed items so they do not contend with the critical path.
- */
-if ( ! $open_by_default && '' !== $block_content ) {
-	$processor = new WP_HTML_Tag_Processor( $block_content );
-	while ( $processor->next_tag( 'IMG' ) ) {
-		$processor->set_attribute( 'fetchpriority', 'low' );
-	}
-	$block_content = $processor->get_updated_html();
-}
-
-?>
-
-<div
-	<?php
-	echo wp_kses_data(
-		get_block_wrapper_attributes( $wrapper_attributes )
-		. ' '
-		. wp_interactivity_data_wp_context( $item_context )
-	);
-	?>
->
-	<?php echo $block_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</div>
+printf(
+	'<div %1$s %2$s data-wp-class--is-open="state.isItemOpen"><h%3$d class="wp-block-matter-accordion-item__heading"><button type="button" id="%4$s-button" class="wp-block-matter-accordion-item__toggle" aria-expanded="false" aria-controls="%4$s-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemOpen"><span class="wp-block-matter-accordion-item__title">%5$s</span></button></h%3$d><div id="%4$s-panel" class="wp-block-matter-accordion-item__panel" role="region" aria-labelledby="%4$s-button" inert data-wp-bind--inert="!state.isItemOpen"><div class="wp-block-matter-accordion-item__content">%6$s</div></div></div>',
+	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	wp_interactivity_data_wp_context( [ 'itemId' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	(int) $matter_level,
+	esc_attr( $matter_id ),
+	wp_kses_post( $matter_title ),
+	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+);

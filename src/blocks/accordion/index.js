@@ -2,20 +2,60 @@
  * WordPress dependencies
  */
 import { registerBlockType } from '@wordpress/blocks';
-import { accordion } from '@wordpress/icons';
+import { InnerBlocks } from '@wordpress/block-editor';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
 import Edit from './edit';
-import Save from './save';
 import metadata from './block.json';
-import variations from './variations';
 import './style.scss';
 
 registerBlockType(metadata.name, {
-	icon: accordion,
 	edit: Edit,
-	save: Save,
-	variations,
+	save: () => <InnerBlocks.Content />,
+	variations: [
+		{
+			name: 'items',
+			title: __('Accordion', 'matter'),
+			isDefault: true,
+			scope: ['inserter'],
+			innerBlocks: [['matter/accordion-item'], ['matter/accordion-item']],
+		},
+		{
+			name: 'posts',
+			title: __('Accordion from posts', 'matter'),
+			description: __('One item per post from a query.', 'matter'),
+			scope: ['inserter'],
+			// Items show the post title; the panel shows the excerpt.
+			innerBlocks: [
+				[
+					'core/query',
+					{
+						query: {
+							perPage: 10,
+							postType: 'post',
+							order: 'asc',
+							orderBy: 'title',
+							inherit: false,
+						},
+					},
+					[
+						[
+							'core/post-template',
+							{},
+							[
+								[
+									'matter/accordion-item',
+									{},
+									[['core/post-excerpt']],
+								],
+							],
+						],
+					],
+				],
+			],
+		},
+	],
 });

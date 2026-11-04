@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/tab",
+	"version": "1.0.0",
+	"title": "Tab",
+	"category": "widgets",
+	"icon": "excerpt-view",
+	"description": "A tab's label and content.",
+	"parent": [ "matter/tabs", "core/post-template" ],
+	"attributes": {
+		"label": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"usesContext": [ "postId", "postType" ],
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

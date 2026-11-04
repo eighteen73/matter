@@ -1,5 +1,12 @@
-.wp-block-matter-tabs {
-	.wp-block-post-template > .wp-block-post:not(:first-child) {
-		display: none;
+// Editor: tab buttons are clickable labels; the active label is editable.
+.wp-block-matter-tabs .wp-block-matter-tabs__list {
+	align-items: center;
+
+	[role="tab"] {
+		cursor: pointer;
 	}
+}
+
+.wp-block-matter-tab.is-inactive-tab {
+	display: none;
 }
