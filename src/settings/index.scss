@@ -1,0 +1,79 @@
+.matter-settings {
+	margin-block-start: 16px;
+	max-width: 760px;
+
+	.components-snackbar-list {
+		bottom: 24px;
+		position: fixed;
+	}
+}
+
+.matter-settings__sections,
+.matter-settings__fields {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.matter-settings__fields {
+	gap: 20px;
+}
+
+.matter-settings__title {
+	font-size: 15px;
+	margin: 0;
+}
+
+.matter-settings__description {
+	color: #757575;
+	margin: 4px 0 0;
+}
+
+.matter-settings__media {
+	align-items: flex-start;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.matter-settings__media-preview {
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	max-height: 120px;
+	max-width: 240px;
+	object-fit: contain;
+}
+
+.matter-settings__media-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.matter-settings__repeater {
+	align-items: flex-start;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.matter-settings__repeater-row {
+	align-items: flex-start;
+	align-self: stretch;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	display: flex;
+	gap: 12px;
+	padding: 12px;
+}
+
+.matter-settings__repeater-fields {
+	display: grid;
+	flex: 1;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.matter-settings__repeater-actions {
+	display: flex;
+	flex-direction: column;
+}

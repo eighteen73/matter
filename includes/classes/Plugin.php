@@ -14,6 +14,7 @@ use Eighteen73\Matter\Blocks\Megamenu;
 use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
+use Eighteen73\Matter\Settings\Settings;
 use Eighteen73\Matter\Supports\Scheme;
 
 defined( 'ABSPATH' ) || exit;
@@ -46,6 +47,9 @@ class Plugin {
 
 		// Block supports.
 		Scheme::instance()->setup();
+
+		// Site settings.
+		Settings::instance()->setup();
 	}
 
 	/**

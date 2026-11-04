@@ -52,6 +52,9 @@ if ( file_exists( $autoloader ) ) {
 	return;
 }
 
+// Public functions.
+require_once MATTER_INC . 'functions.php';
+
 // Initialise the plugin.
 Plugin::instance()->setup();
 

@@ -1,39 +1,37 @@
 /**
- * Extend @wordpress/scripts to build shared interactivity modules alongside blocks.
+ * Extend @wordpress/scripts with Matter's non-block entries.
  *
- * Block viewScriptModule fields reference registered module IDs (not file: paths).
- * Shared modules are added here as explicit module entries.
+ * - Script entries: admin apps (e.g. the site settings page).
+ * - Module entries: shared Interactivity API stores. Block viewScriptModule
+ *   fields reference these registered module IDs rather than file paths.
  */
 const path = require('path');
 
-const defaultConfigs = require('@wordpress/scripts/config/webpack.config');
+const [
+	scriptConfig,
+	moduleConfig,
+] = require('@wordpress/scripts/config/webpack.config');
 
-const overlayStoreEntry = path.resolve(
-	__dirname,
-	'src/interactivity/overlay-store.js'
-);
-const lightboxStoreEntry = path.resolve(
-	__dirname,
-	'src/interactivity/lightbox-store.js'
-);
+const src = (file) => path.resolve(__dirname, 'src', file);
 
-if (!Array.isArray(defaultConfigs)) {
-	module.exports = defaultConfigs;
-} else {
-	module.exports = defaultConfigs.map((config, index) => {
-		if (index !== 1 || typeof config.entry !== 'function') {
-			return config;
-		}
+const scriptEntries = {
+	'settings/index': src('settings/index.js'),
+};
 
-		const originalEntry = config.entry;
+const moduleEntries = {
+	'interactivity/overlay-store': src('interactivity/overlay-store.js'),
+	'interactivity/lightbox-store': src('interactivity/lightbox-store.js'),
+};
 
-		return {
-			...config,
-			entry: () => ({
-				...originalEntry(),
-				'interactivity/overlay-store': overlayStoreEntry,
-				'interactivity/lightbox-store': lightboxStoreEntry,
-			}),
-		};
-	});
-}
+const withEntries = (config, entries) => ({
+	...config,
+	entry: () => ({
+		...(typeof config.entry === 'function' ? config.entry() : config.entry),
+		...entries,
+	}),
+});
+
+module.exports = [
+	withEntries(scriptConfig, scriptEntries),
+	withEntries(moduleConfig, moduleEntries),
+];
