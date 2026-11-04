@@ -5,13 +5,10 @@ import {
 	BlockControls,
 	InspectorControls,
 	MediaPlaceholder,
-	MediaUpload,
-	MediaUploadCheck,
 	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { createBlock } from '@wordpress/blocks';
 import {
 	PanelBody,
 	RangeControl,
@@ -22,7 +19,7 @@ import {
 	__experimentalToggleGroupControl as ToggleGroupControl, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Stable in practice since 6.2.
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
-import { useDispatch, useSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { gallery as icon } from '@wordpress/icons';
@@ -36,16 +33,12 @@ import {
 	useLiveCarousel,
 	variantOptions,
 } from '../../carousel/editor/live-carousel';
+import {
+	GalleryMediaUpload,
+	useGalleryMedia,
+} from '../../components/gallery-media';
 
 const ALLOWED_BLOCKS = ['core/image'];
-
-const toImageBlock = (image) =>
-	createBlock('core/image', {
-		id: image.id,
-		url: image.url,
-		alt: image.alt,
-		sizeSlug: 'large',
-	});
 
 /**
  * Gallery editor. The grid dims images beyond "Images to show"; the carousel
@@ -78,7 +71,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		}),
 		[clientId]
 	);
-	const { replaceInnerBlocks, insertBlocks } = useDispatch(blockEditorStore);
+	const media = useGalleryMedia(clientId);
 	const { scrollToSlide } = carousel;
 
 	useEffect(() => {
@@ -105,9 +98,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		}
 	);
 
-	const addImages = (images) =>
-		insertBlocks(images.map(toImageBlock), imageCount, clientId, false);
-
 	if (!imageCount) {
 		return (
 			<div {...blockProps}>
@@ -123,13 +113,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					accept="image/*"
 					allowedTypes={['image']}
 					multiple
-					onSelect={(images) =>
-						replaceInnerBlocks(
-							clientId,
-							images.map(toImageBlock),
-							false
-						)
-					}
+					gallery
+					onSelect={media.update}
 				/>
 			</div>
 		);
@@ -137,21 +122,17 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<>
-			<BlockControls>
+			<BlockControls group="other">
 				<ToolbarGroup>
-					<MediaUploadCheck>
-						<MediaUpload
-							allowedTypes={['image']}
-							multiple
-							gallery={false}
-							onSelect={addImages}
-							render={({ open }) => (
-								<ToolbarButton onClick={open}>
-									{__('Add images', 'matter')}
-								</ToolbarButton>
-							)}
-						/>
-					</MediaUploadCheck>
+					<GalleryMediaUpload
+						ids={media.ids}
+						onSelect={media.update}
+						render={({ open, label: openLabel }) => (
+							<ToolbarButton onClick={open}>
+								{openLabel}
+							</ToolbarButton>
+						)}
+					/>
 				</ToolbarGroup>
 			</BlockControls>
 			<InspectorControls>

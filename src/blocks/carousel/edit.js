@@ -30,6 +30,10 @@ import {
 	useLiveCarousel,
 	variantOptions,
 } from '../../carousel/editor/live-carousel';
+import {
+	GalleryMediaUpload,
+	useGalleryMedia,
+} from '../../components/gallery-media';
 
 const TEMPLATE = [['core/image'], ['core/image'], ['core/image']];
 
@@ -74,6 +78,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const isQuery = lastSlide?.name === 'core/query';
 
+	// Image-only carousels (e.g. a slideshow) are managed like a gallery.
+	const media = useGalleryMedia(clientId);
+	const isImages = !isQuery && media.isImageOnly;
+
 	// A new, empty slide like the last one (e.g. another card).
 	const addSlide = () =>
 		insertBlock(
@@ -98,7 +106,20 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<>
-			{!isQuery && (
+			{isImages && (
+				<BlockControls group="other">
+					<GalleryMediaUpload
+						ids={media.ids}
+						onSelect={media.update}
+						render={({ open, label }) => (
+							<ToolbarButton onClick={open}>
+								{label}
+							</ToolbarButton>
+						)}
+					/>
+				</BlockControls>
+			)}
+			{!isQuery && !isImages && (
 				<BlockControls group="block">
 					<ToolbarGroup>
 						<ToolbarButton icon={plus} onClick={addSlide}>
@@ -132,14 +153,30 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				<CarouselControls carousel={carousel} options={options} />
 				{!isQuery && (
 					<div className="matter-carousel-editor__actions">
-						<Button
-							variant="secondary"
-							size="small"
-							icon={plus}
-							onClick={addSlide}
-						>
-							{__('Add slide', 'matter')}
-						</Button>
+						{isImages ? (
+							<GalleryMediaUpload
+								ids={media.ids}
+								onSelect={media.update}
+								render={({ open, label }) => (
+									<Button
+										variant="secondary"
+										size="small"
+										onClick={open}
+									>
+										{label}
+									</Button>
+								)}
+							/>
+						) : (
+							<Button
+								variant="secondary"
+								size="small"
+								icon={plus}
+								onClick={addSlide}
+							>
+								{__('Add slide', 'matter')}
+							</Button>
+						)}
 					</div>
 				)}
 			</div>
