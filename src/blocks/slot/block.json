@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/slot",
+	"version": "1.0.0",
+	"title": "Slot",
+	"category": "design",
+	"description": "A named content area inside a section. Added automatically by sections.",
+	"attributes": {
+		"name": {
+			"type": "string"
+		}
+	},
+	"supports": {
+		"html": false,
+		"inserter": false,
+		"reusable": false,
+		"className": false,
+		"customClassName": false,
+		"lock": false,
+		"renaming": false
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

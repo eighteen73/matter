@@ -41,6 +41,93 @@ class Scheme {
 	public function setup(): void {
 		// Fires on the front end and inside the editor canvas.
 		add_action( 'enqueue_block_assets', [ $this, 'enqueue_styles' ] );
+
+		// Blocks opt in with `"supports": { "matter": { "scheme": true } }`.
+		add_action( 'init', [ $this, 'register_block_support' ], 5 );
+	}
+
+	/**
+	 * Register the scheme block support.
+	 *
+	 * Adds a `scheme` attribute to opted-in blocks and the `has-scheme
+	 * has-scheme-{slug}` classes through get_block_wrapper_attributes(), so any
+	 * dynamic block picks them up without extra code.
+	 *
+	 * @return void
+	 */
+	public function register_block_support(): void {
+		\WP_Block_Supports::get_instance()->register(
+			'matter-scheme',
+			[
+				'register_attribute' => [ $this, 'register_attribute' ],
+				'apply'              => [ $this, 'apply' ],
+			]
+		);
+	}
+
+	/**
+	 * Whether a block type opts into schemes.
+	 *
+	 * @param \WP_Block_Type $block_type Block type.
+	 * @return bool
+	 */
+	public static function is_supported( \WP_Block_Type $block_type ): bool {
+		return ! empty( $block_type->supports['matter']['scheme'] );
+	}
+
+	/**
+	 * Add the `scheme` attribute to supporting blocks.
+	 *
+	 * @param \WP_Block_Type $block_type Block type.
+	 * @return void
+	 */
+	public function register_attribute( \WP_Block_Type $block_type ): void {
+		if ( ! self::is_supported( $block_type ) ) {
+			return;
+		}
+
+		$block_type->attributes ??= [];
+
+		if ( ! isset( $block_type->attributes['scheme'] ) ) {
+			$block_type->attributes['scheme'] = [ 'type' => 'string' ];
+		}
+	}
+
+	/**
+	 * Wrapper classes for a block's scheme.
+	 *
+	 * @param \WP_Block_Type $block_type Block type.
+	 * @param array          $attributes Block attributes.
+	 * @return array
+	 */
+	public function apply( \WP_Block_Type $block_type, array $attributes ): array {
+		$scheme = (string) ( $attributes['scheme'] ?? '' );
+
+		if ( ! self::is_supported( $block_type ) || '' === $scheme || ! array_key_exists( $scheme, $this->get_schemes() ) ) {
+			return [];
+		}
+
+		return [ 'class' => 'has-scheme has-scheme-' . sanitize_html_class( $scheme ) ];
+	}
+
+	/**
+	 * Data for the editor's scheme control.
+	 *
+	 * @return array<int, array{slug: string, label: string, tokens: array}>
+	 */
+	public function get_editor_data(): array {
+		$labels = $this->get_labels();
+		$data   = [];
+
+		foreach ( $this->get_schemes() as $slug => $tokens ) {
+			$data[] = [
+				'slug'   => (string) $slug,
+				'label'  => $labels[ $slug ] ?? (string) $slug,
+				'tokens' => $tokens,
+			];
+		}
+
+		return $data;
 	}
 
 	/**

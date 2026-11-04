@@ -99,3 +99,21 @@ function get_panel_toggle( string $id, array $args = [] ): string {
 function panel_toggle( string $id, array $args = [] ): void {
 	echo get_panel_toggle( $id, $args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by the renderer.
 }
+
+/**
+ * Split a section's rendered content into its named slots.
+ *
+ * Use in a section's render.php:
+ *
+ *     $slots = Eighteen73\Matter\slots( $content, $block );
+ *     echo $slots['content'];
+ *
+ * @param string         $content Section inner content (render.php's $content).
+ * @param \WP_Block|null $block   Section block, so every declared slot is present (as '').
+ * @return array<string, string> Slot name => HTML.
+ */
+function slots( string $content, ?\WP_Block $block = null ): array {
+	$names = $block ? Sections\Sections::get_slot_names( $block->block_type ) : [];
+
+	return Sections\Sections::slots( $content, $names );
+}

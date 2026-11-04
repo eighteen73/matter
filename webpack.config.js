@@ -16,6 +16,7 @@ const [
 const src = (file) => path.resolve(__dirname, 'src', file);
 
 const scriptEntries = {
+	'editor/index': src('editor/index.js'),
 	'settings/index': src('settings/index.js'),
 };
 

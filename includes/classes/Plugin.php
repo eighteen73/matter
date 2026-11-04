@@ -14,6 +14,7 @@ use Eighteen73\Matter\Blocks\Overlay;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\Tabs;
 use Eighteen73\Matter\Navigation\Megamenu;
+use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
 use Eighteen73\Matter\Supports\Scheme;
 
@@ -48,7 +49,8 @@ class Plugin {
 		Assets::instance()->setup();
 		Megamenu::instance()->setup();
 
-		// Block supports.
+		// Sections and block supports.
+		Sections::instance()->setup();
 		Scheme::instance()->setup();
 
 		// Site settings.
