@@ -1,5 +1,5 @@
 /**
- * Button icon: choose an icon from the theme's collection for core/button.
+ * Button icon: choose an icon from the icon library for core/button.
  * The front end renders it as an inline SVG; the editor previews it with a
  * CSS mask (see canvas.scss).
  */
@@ -7,108 +7,87 @@
 /**
  * WordPress dependencies
  */
-import apiFetch from '@wordpress/api-fetch';
 import { BlockControls } from '@wordpress/block-editor';
 import {
-	Button,
 	Dropdown,
-	MenuGroup,
-	Spinner,
+	MenuItem,
+	NavigableMenu,
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
 import { createHigherOrderComponent } from '@wordpress/compose';
-import { RawHTML, useEffect, useState } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 
-const { iconCollections = [] } = window.matterEditor ?? {};
-
-let iconsRequest = null;
-
 /**
- * Icons from the allowed collections (all collections when none are set).
- *
- * @return {Promise<Array>} Icons: { name, label, content }.
+ * Internal dependencies
  */
-const fetchIcons = () => {
-	iconsRequest ??= Promise.all(
-		(iconCollections.length ? iconCollections : ['']).map((collection) =>
-			apiFetch({
-				path: collection
-					? `/wp/v2/icons/${collection}`
-					: '/wp/v2/icons',
-			}).catch(() => [])
-		)
-	).then((lists) => lists.flat());
-
-	return iconsRequest;
-};
-
-const useIcons = () => {
-	const [icons, setIcons] = useState(null);
-
-	useEffect(() => {
-		fetchIcons().then(setIcons);
-	}, []);
-
-	return icons;
-};
+import { IconLibraryModal, useIcon } from '../../components/icon-picker';
 
 const svgToDataUri = (svg) =>
 	`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 
-function IconPicker({ value, onChange }) {
-	const icons = useIcons();
+/**
+ * Toolbar control: "Add icon" opens the icon library; with an icon, "Replace
+ * icon" offers the library or removing it (like core's media replace flow).
+ *
+ * @param {Object}   props
+ * @param {string}   props.value    Icon name.
+ * @param {Function} props.onChange Called with an icon name, or undefined.
+ * @return {Element} Toolbar group.
+ */
+function IconToolbar({ value, onChange }) {
+	const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
 	return (
 		<ToolbarGroup>
-			<Dropdown
-				popoverProps={{ placement: 'bottom-start' }}
-				renderToggle={({ isOpen, onToggle }) => (
-					<ToolbarButton
-						aria-expanded={isOpen}
-						onClick={onToggle}
-						isPressed={!!value}
-					>
-						{__('Icon', 'matter')}
-					</ToolbarButton>
-				)}
-				renderContent={() => (
-					<MenuGroup label={__('Icon', 'matter')}>
-						{icons === null && <Spinner />}
-						<div className="matter-icon-picker">
-							{(icons ?? []).map((icon) => (
-								<Button
-									key={icon.name}
-									className="matter-icon-picker__icon"
-									label={icon.label}
-									showTooltip
-									isPressed={value === icon.name}
-									onClick={() =>
-										onChange(
-											value === icon.name
-												? undefined
-												: icon.name
-										)
-									}
-								>
-									<RawHTML>{icon.content}</RawHTML>
-								</Button>
-							))}
-						</div>
-						{value && (
-							<Button
-								variant="link"
-								isDestructive
-								onClick={() => onChange(undefined)}
+			{value ? (
+				<Dropdown
+					popoverProps={{ variant: 'toolbar' }}
+					contentClassName="block-editor-media-replace-flow__options is-variant-toolbar"
+					renderToggle={({ isOpen, onToggle }) => (
+						<ToolbarButton
+							aria-expanded={isOpen}
+							aria-haspopup="true"
+							onClick={onToggle}
+						>
+							{__('Replace icon', 'matter')}
+						</ToolbarButton>
+					)}
+					renderContent={({ onClose }) => (
+						<NavigableMenu className="block-editor-media-replace-flow__media-upload-menu">
+							<MenuItem
+								onClick={() => {
+									setIsLibraryOpen(true);
+									onClose();
+								}}
+							>
+								{__('Open icon library', 'matter')}
+							</MenuItem>
+							<MenuItem
+								onClick={() => {
+									onChange(undefined);
+									onClose();
+								}}
 							>
 								{__('Remove icon', 'matter')}
-							</Button>
-						)}
-					</MenuGroup>
-				)}
-			/>
+							</MenuItem>
+						</NavigableMenu>
+					)}
+				/>
+			) : (
+				<ToolbarButton onClick={() => setIsLibraryOpen(true)}>
+					{__('Add icon', 'matter')}
+				</ToolbarButton>
+			)}
+			{isLibraryOpen && (
+				<IconLibraryModal
+					value={value}
+					onSelect={onChange}
+					onRequestClose={() => setIsLibraryOpen(false)}
+				/>
+			)}
 		</ToolbarGroup>
 	);
 }
@@ -126,7 +105,7 @@ addFilter(
 				<>
 					<BlockEdit {...props} />
 					<BlockControls group="other">
-						<IconPicker
+						<IconToolbar
 							value={props.attributes.icon}
 							onChange={(icon) => props.setAttributes({ icon })}
 						/>
@@ -143,13 +122,11 @@ addFilter(
 	'matter/button-icon/preview',
 	createHigherOrderComponent(
 		(BlockListBlock) => (props) => {
-			const icons = useIcons();
-			const icon =
-				props.name === 'core/button' && props.attributes.icon
-					? icons?.find(({ name }) => name === props.attributes.icon)
-					: null;
+			const icon = useIcon(
+				props.name === 'core/button' ? props.attributes.icon : undefined
+			);
 
-			if (!icon) {
+			if (!icon?.content) {
 				return <BlockListBlock {...props} />;
 			}
 

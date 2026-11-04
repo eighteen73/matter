@@ -8,7 +8,6 @@
 
 namespace Eighteen73\Matter;
 
-use Eighteen73\Matter\Extensions\ButtonIcon;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Supports\Scheme;
 
@@ -68,7 +67,7 @@ class Editor {
 				[
 					'sections'        => Sections::names(),
 					'schemes'         => Scheme::instance()->get_editor_data(),
-					'iconCollections' => ButtonIcon::collections(),
+					'iconCollections' => Icons::collections(),
 					'breakpoints'     => Breakpoints::all(),
 					'variants'        => Variants::all(),
 				]

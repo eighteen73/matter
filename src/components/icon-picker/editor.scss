@@ -1,0 +1,156 @@
+@use "@wordpress/base-styles/variables" as *;
+@use "@wordpress/base-styles/colors" as *;
+@use "@wordpress/base-styles/mixins" as *;
+
+// Inserter layout and grid match Gutenberg's Icon block.
+// @see https://github.com/WordPress/gutenberg/blob/57c278ca272f3aa9a0e5e44b80c603a34f167e5b/packages/block-library/src/icon/editor.scss
+.matter-icon-library-modal {
+	.wp-block-icon__inserter-sidebar {
+		display: flex;
+		flex-direction: column;
+		gap: $grid-unit-20;
+		justify-content: flex-start;
+		padding-bottom: $grid-unit-30;
+
+		@include break-medium() {
+			bottom: 0;
+			left: 0;
+			overflow-x: visible;
+			overflow-y: auto;
+			padding-inline: $grid-unit-30;
+			padding-top: $grid-unit-30;
+			position: absolute;
+			top: $header-height + $grid-unit-10;
+			width: $sidebar-width;
+		}
+	}
+
+	.wp-block-icon__inserter-panel {
+		@include break-medium() {
+			margin-inline-start: $sidebar-width;
+		}
+	}
+
+	.wp-block-icon__inserter-loading {
+		display: flex;
+		justify-content: center;
+		padding: $grid-unit-30;
+	}
+
+	.wp-block-icon__inserter-grid-icons-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	}
+
+	.wp-block-icon__inserter-grid-no-results {
+		display: flex;
+		justify-content: center;
+	}
+
+	.wp-block-icon__inserter-grid-icons-list-item {
+		display: flex;
+		flex-direction: column;
+		/* stylelint-disable-next-line declaration-no-important -- Matches core; Button's 40px height must yield to the labeled cell. */
+		height: auto !important;
+	}
+
+	.wp-block-icon__inserter-grid-icons-list-item-icon {
+		padding: $grid-unit-15;
+
+		svg {
+			display: block;
+			height: $icon-size;
+			width: $icon-size;
+		}
+	}
+
+	.wp-block-icon__inserter-grid-icons-list-item-title {
+		font-size: $font-size-small;
+		overflow-wrap: break-word;
+		padding: $grid-unit-05 $grid-unit-05 $grid-unit-10;
+	}
+
+	.matter-icon-library-modal__collections {
+		display: flex;
+		flex-direction: column;
+		position: relative;
+	}
+
+	.matter-icon-library-modal__collection.components-button {
+		background: transparent;
+		border: none;
+		border-radius: $radius-small;
+		box-shadow: none;
+		color: $gray-900;
+		font-size: $default-font-size;
+		font-weight: 400;
+		height: auto;
+		justify-content: space-between;
+		min-height: $grid-unit-50;
+		padding: $grid-unit-10 $grid-unit-15;
+		text-align: left;
+		width: 100%;
+
+		&:hover:not(:disabled),
+		&:focus:not(:disabled) {
+			background: transparent;
+			box-shadow: none;
+			color: $gray-900;
+		}
+
+		&.is-active {
+			background: $gray-100;
+		}
+
+		svg {
+			fill: currentcolor;
+			flex-shrink: 0;
+			height: $icon-size;
+			margin-inline-end: -$grid-unit-05;
+			opacity: 0;
+			width: $icon-size;
+		}
+
+		&:hover svg,
+		&:focus-visible svg,
+		&.is-active svg {
+			opacity: 1;
+		}
+	}
+}
+
+.matter-icon-control {
+	align-items: center;
+	display: flex;
+	gap: $grid-unit-05;
+}
+
+.matter-icon-control__preview.components-button {
+	box-shadow: inset 0 0 0 $border-width $gray-300;
+	flex: 1;
+	gap: $grid-unit-10;
+	justify-content: flex-start;
+	min-width: 0;
+	text-align: start;
+}
+
+.matter-icon-control__icon {
+	display: flex;
+	flex: none;
+	height: $icon-size;
+	width: $icon-size;
+
+	span,
+	svg {
+		display: block;
+		fill: currentcolor;
+		height: 100%;
+		width: 100%;
+	}
+}
+
+.matter-icon-control__label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
