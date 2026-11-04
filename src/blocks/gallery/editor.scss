@@ -1,5 +1,6 @@
 // Editor: the carousel layout is a live carousel (src/carousel/editor); in the
-// grid, images beyond "Images to show" are dimmed (rule written by edit.js).
+// grid, images beyond "Images to show" are hidden, as on the front end (rule
+// written by edit.js); manage them with "Edit images".
 .wp-block-matter-gallery .wp-block-matter-gallery__more {
 	cursor: default;
 }

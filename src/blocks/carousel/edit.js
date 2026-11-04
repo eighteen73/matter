@@ -52,11 +52,17 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const options = variantOptions('matter/carousel', attributes.className);
 	const carousel = useLiveCarousel(options);
 
-	const { lastSlide, slideCount, selectedSlide } = useSelect(
+	const { lastSlide, slideCount, selectedSlide, isEditing } = useSelect(
 		(select) => {
-			const blocks = select(blockEditorStore).getBlocks(clientId);
+			const { getBlocks, isBlockSelected, hasSelectedInnerBlock } =
+				select(blockEditorStore);
+			const blocks = getBlocks(clientId);
 
 			return {
+				// Editor-only buttons show while the carousel is being edited.
+				isEditing:
+					isBlockSelected(clientId) ||
+					hasSelectedInnerBlock(clientId, true),
 				lastSlide: blocks[blocks.length - 1],
 				slideCount: blocks.length,
 				selectedSlide: selectedSlideIndex(
@@ -151,7 +157,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					<div {...innerBlocksProps} />
 				</div>
 				<CarouselControls carousel={carousel} options={options} />
-				{!isQuery && (
+				{!isQuery && isEditing && (
 					<div className="matter-carousel-editor__actions">
 						{isImages ? (
 							<GalleryMediaUpload

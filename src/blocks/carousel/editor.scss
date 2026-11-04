@@ -1,7 +1,14 @@
-// Editor: a live carousel (see src/carousel/editor). Editor-only actions sit
-// below the controls.
+// Editor: a live carousel (see src/carousel/editor). Editor-only actions show
+// while the carousel is being edited, laid over the controls row's end so the
+// layout matches the front end.
+.wp-block-matter-carousel {
+	position: relative;
+}
+
 .matter-carousel-editor__actions {
+	bottom: 0;
 	display: flex;
-	justify-content: center;
-	margin-block-start: 0.75em;
+	inset-inline-end: 0;
+	position: absolute;
+	z-index: 1;
 }

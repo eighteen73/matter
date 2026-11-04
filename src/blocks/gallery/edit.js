@@ -220,7 +220,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							<style>
 								{`#block-${clientId} .wp-block-matter-gallery__items > [data-block]:nth-child(n + ${
 									limit + 1
-								}) { opacity: 0.35; }`}
+								}):not(.is-selected, .has-child-selected) { display: none; }`}
 							</style>
 						)}
 						<div {...innerBlocksProps} />
