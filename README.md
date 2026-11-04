@@ -26,9 +26,9 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 | Block | Purpose | Editor options |
 | --- | --- | --- |
 | `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
-| `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown below a breakpoint (a native select; CSS generated per breakpoint, front end only). |
-| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. | Name. Behaviour comes from the chosen variant. |
-| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. The theme's variants set the image size (`imageSize`) and, in CSS, the crop ratio, so images always match. | Layout (grid/carousel), images to show (the rest open from "View all N images"), lightbox on/off, name. |
+| `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown on smaller screens (a native select; the theme sets where, see Variants). Tab: icon (icon library). |
+| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. | Name. Behaviour comes from the chosen variant. |
+| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. The theme's variants set the image size (`imageSize`) and, in CSS, the crop ratio, so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`. | Layout (grid/carousel), images to show (the rest open from "View all N images"), lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
 | `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
 | `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
@@ -145,7 +145,9 @@ add_filter( 'matter_variants', fn( $variants ) => array_replace_recursive( $vari
 
 Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds, 0 = off), `arrows`, `dots`. Slide widths and gaps belong in theme CSS.
 
-The gallery's carousel style reads `matter/gallery` › `default` options.
+The gallery's carousel layout reads its `matter/gallery` variant's options (falling back to the carousel defaults).
+
+Tabs options: `dropdownBelow`, the breakpoint below which tabs set to "Show as a dropdown on smaller screens" switch to the dropdown (default `md`). Set it to `false` to do the switch in theme CSS instead, by showing `.wp-block-matter-tabs__select` and hiding `.wp-block-matter-tabs__list` inside `.wp-block-matter-tabs.has-dropdown`.
 
 ## Menus
 
@@ -225,7 +227,7 @@ Hooks: `matter_settings_page_title`, `matter_settings_saved`.
 
 ## Core block extensions
 
-- **Button icon.** An icon from the icon registry on `core/button`, rendered as `.wp-block-button__icon` inside a `.has-icon` link. Limit the choice with `matter_button_icon_collections`.
+- **Button icon.** An icon from the icon registry on `core/button`, rendered as `.wp-block-button__icon` inside a `.has-icon` link. Chosen from a library modal like core's Icon block. Limit the collections offered (for button and tab icons) with `matter_icon_collections`.
 - **Focal point.** On `core/image` (block attribute) and featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images.
 
 Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs) and `gravityforms/form`.
