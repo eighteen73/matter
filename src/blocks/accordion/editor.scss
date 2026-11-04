@@ -1,0 +1,15 @@
+// Editor: items are always open, so the panel's clipping (used for the
+// open/close animation) would cut off block toolbars and inserters.
+.wp-block-matter-accordion-item__panel {
+	transition: none;
+
+	> .wp-block-matter-accordion-item__content {
+		overflow: visible;
+	}
+}
+
+// The title (inside the toggle, as on the front end) is a text field.
+.wp-block-matter-accordion-item__title {
+	cursor: text;
+	flex: 1;
+}

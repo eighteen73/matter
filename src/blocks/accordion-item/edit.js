@@ -19,6 +19,7 @@ export default function Edit({ attributes, setAttributes, context }) {
 	const { title, open } = attributes;
 	const { postId, postType } = context;
 	const level = Math.min(6, Math.max(2, context['matter/headingLevel'] ?? 3));
+	const HeadingTag = `h${level}`;
 	const [postTitle] = useEntityProp('postType', postType, 'title', postId);
 
 	const blockProps = useBlockProps({
@@ -46,14 +47,20 @@ export default function Edit({ attributes, setAttributes, context }) {
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>
-				<RichText
-					tagName={`h${level}`}
-					className="wp-block-matter-accordion-item__heading wp-block-matter-accordion-item__toggle"
-					value={title}
-					onChange={(value) => setAttributes({ title: value })}
-					placeholder={placeholder}
-					allowedFormats={['core/bold', 'core/italic']}
-				/>
+				<HeadingTag className="wp-block-matter-accordion-item__heading">
+					<div className="wp-block-matter-accordion-item__toggle">
+						<RichText
+							tagName="span"
+							className="wp-block-matter-accordion-item__title"
+							value={title}
+							onChange={(value) =>
+								setAttributes({ title: value })
+							}
+							placeholder={placeholder}
+							allowedFormats={['core/bold', 'core/italic']}
+						/>
+					</div>
+				</HeadingTag>
 				<div className="wp-block-matter-accordion-item__panel">
 					<div {...innerBlocksProps} />
 				</div>
