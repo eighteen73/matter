@@ -1,6 +1,6 @@
 {
 	"name": "matter",
-	"version": "0.5.1",
+	"version": "1.0.0",
 	"description": "A collections of expertly crafted blocks for WordPress.",
 	"author": "eighteen73",
 	"license": "GPL-2.0-or-later",
@@ -18,15 +18,13 @@
 		"url": "https://github.com/eighteen73/matter/issues"
 	},
 	"devDependencies": {
-		"@10up/block-components": "^1.22.2",
-		"@eighteen73/eslint-config-wordpress": "latest",
-		"@eighteen73/stylelint-config-wordpress": "latest",
-		"@humanmade/block-editor-components": "^0.11.0",
+		"@eighteen73/eslint-config-wordpress": "^2.0.0",
+		"@eighteen73/stylelint-config-wordpress": "^1.2.3",
 		"@wordpress/browserslist-config": "^6.49.0",
 		"@wordpress/prettier-config": "^4.49.0",
-		"@wordpress/scripts": "latest",
-		"lefthook": "latest",
-		"postcss-preset-env": "latest"
+		"@wordpress/scripts": "^32.5.0",
+		"lefthook": "^2.1.9",
+		"postcss-preset-env": "^11.3.1"
 	},
 	"scripts": {
 		"postinstall": "composer install -o",
@@ -50,13 +48,8 @@
 	},
 	"dependencies": {
 		"@wordpress/icons": "^15.0.0",
-		"clsx": "^2.1.1",
 		"embla-carousel": "^8.6.0",
-		"embla-carousel-auto-scroll": "^8.6.0",
 		"embla-carousel-autoplay": "^8.6.0",
-		"embla-carousel-class-names": "^8.6.0",
-		"embla-carousel-fade": "^8.6.0",
-		"embla-carousel-react": "^8.6.0",
 		"focus-trap": "^7.6.4"
 	}
 }

@@ -1,318 +1,245 @@
 # Matter
 
-<p>
-  <strong>Custom blocks and block editor enhancements from eighteen73.</strong>
-</p>
-
-Matter is our consolidated WordPress plugin for custom blocks and editor tooling. The focus is on practical, composable blocks built for real client work, with room to grow into a single home for all of our block editor enhancements over time.
-
-## Block list
-
-### [Carousel](/src/blocks/carousel/)
-
-An [Embla](https://www.embla-carousel.com/) powered carousel with flexible inner blocks. Compose the carousel from a viewport, navigation controls, and optional thumbnails, then drop any blocks you like inside the slides.
-
-#### Attributes
-
-- emblaConfig
-- advancedEmblaConfig
-- advancedEmblaConfigMerge
-
-#### Child blocks
-
-##### [Viewport](/src/blocks/carousel-viewport/)
-
-The slide area. Add your slide content here, typically groups or other layout blocks.
-
-##### [Thumbnails](/src/blocks/carousel-thumbnails/)
-
-Optional thumbnail navigation synced with the main carousel.
-
-- syncWithCarousel
-- activeThumbnailColor
-
-##### [Dots](/src/blocks/carousel-dots/)
-
-Pagination dots for jumping between slides.
-
-- dotColor
-- dotActiveColor
-
-##### [Progress](/src/blocks/carousel-progress/)
-
-A progress bar showing carousel position.
-
-- indicateCurrentPosition
-- barColor
-
-##### [Previous Button](/src/blocks/carousel-previous-button/) / [Next Button](/src/blocks/carousel-next-button/)
-
-Previous and next slide controls.
-
-- iconColor
-
----
-
-### [Gallery](/src/blocks/gallery/)
-
-An image gallery with **grid** or **carousel** display, optional image limit with a “View gallery” control, and a shared Matter lightbox (with thumbnail strip). Images are edited as `core/image` inner blocks (same multi-select media UX as core Gallery).
-
-Carousel mode uses the shared carousel runtime (Embla under the hood) via `carouselConfig`. Lightbox behaviour lives in the block-agnostic `matter/lightbox-store` module.
-
-#### Attributes
-
-- generatedId (auto-managed; prefer a custom anchor)
-- type (`grid` | `carousel`)
-- aspectRatio
-- sizeSlug
-- thumbnailSizeSlug
-- lightbox
-- lightboxSizeSlug
-- imageLimit (grid only; forces lightbox when set)
-- includeThumbnails (carousel only; “Enable thumbnails” in the editor)
-- thumbnailAspectRatio (carousel only)
-- imageCrop (grid; hidden when aspect ratio is set)
-- carouselConfig
-- advancedCarouselConfig
-- advancedCarouselConfigMerge
-
-Opt out of registration with `add_filter( 'matter_register_gallery', '__return_false' );`.
-
----
-
-### [Tabs](/src/blocks/tabs/)
-
-An accessible tabbed interface for organising detailed content. Supports deep linking, responsive collapse into an accordion-style layout, and query-driven tab panels.
-
-#### Attributes
-
-- activeTabIndex
-- deepLinking
-- deepLinkingUpdateHistory
-- collapses
-- collapsesOn
-- isQueryMode
-- stackOnMobile
-- stackedBreakpoint
-
-#### Child blocks
-
-##### [Tab List](/src/blocks/tab-list/)
-
-The row of tab buttons.
-
-- tabBackgroundColor
-- tabActiveColor
-
-###### [Tab Button](/src/blocks/tab-button/)
-
-An individual tab label. Supports optional media for richer tab designs.
-
-- label
-- mediaId
-- mediaType
-- posterId
-- focalPoint
-
-##### [Tab Panels](/src/blocks/tab-panels/)
-
-The container for tab content. Can hold standard panels or a Query Loop for dynamic tabs.
-
-- tabPanelActiveColor
-
-###### [Tab Panel](/src/blocks/tab-panel/)
-
-The content shown when a tab is active.
-
-- label
-- inQueryLoop
-
----
-
-### [Accordion](/src/blocks/accordion/)
-
-A foldable layout that groups content in collapsible sections, matching core accordion structure (heading + panel per item). Supports Interactivity API toggle behaviour, auto-close, heading level / icon controls, and a Query Loop variation (one item per post).
-
-Frontend JS uses private (`matter/accordion/private`) and public (`matter/accordion`) Interactivity stores.
-
-#### Attributes
-
-- generatedId (auto-managed; prefer a custom anchor)
-- autoclose
-- showIcon
-- iconPosition
-- headingLevel
-- isQueryMode
-
-#### Child blocks
-
-##### [Accordion Item](/src/blocks/accordion-item/)
-
-One accordion section (heading + panel). Can live under the accordion or inside a Query Loop post template.
-
-- openByDefault
-- inQueryLoop
-
-###### [Accordion Heading](/src/blocks/accordion-heading/)
-
-The toggle control (`hN` + button). In query mode the title comes from the post.
-
-- title
-
-###### [Accordion Panel](/src/blocks/accordion-panel/)
-
-The revealed content region.
-
-Opt out of registration with `add_filter( 'matter_register_accordion', '__return_false' );` (and matching filters for child block slugs).
-
----
-
-### [Collapsible](/src/blocks/collapsible/)
-
-An interactive section that reveals content when triggered. Useful for toggles and inline expandable panels. Accepts a Trigger or Hamburger Trigger, plus Collapsible Content.
-
-#### Attributes
-
-- type (popover or inline)
-- generatedId (auto-managed; prefer a custom anchor)
-
-#### Child blocks
-
-##### [Collapsible Content](/src/blocks/collapsible-content/)
-
-The panel revealed by the trigger.
-
----
-
-### [Modal](/src/blocks/modal/)
-
-A modal dialog for displaying content without leaving the page. Supports automatic opening on load, after a delay, on scroll, or when URL parameters match. Accepts a Trigger or Hamburger Trigger, plus Modal Content.
-
-#### Attributes
-
-- generatedId (auto-managed; prefer a custom anchor)
-- triggerOnLoad
-- triggerDelay
-- triggerOnScroll
-- scrollSelector
-- scrollThreshold
-- urlTriggers
-- dismissedDuration
-
-#### Child blocks
-
-##### [Modal Content](/src/blocks/modal-content/)
-
-The dialog panel itself.
-
-- backdropColor
-- backdropOpacity
-- backdropBlur
-- width
-- height
-
----
-
-### [Drawer](/src/blocks/drawer/)
-
-A slide-in panel for off-canvas content, ideal for sidebars, filters, and mobile navigation. Accepts a Trigger or Hamburger Trigger, plus Drawer Content.
-
-#### Attributes
-
-- generatedId (auto-managed; prefer a custom anchor)
-
-#### Child blocks
-
-##### [Drawer Content](/src/blocks/drawer-content/)
-
-The sliding panel.
-
-- backdropColor
-- backdropOpacity
-- backdropBlur
-- position (left, right, top, bottom)
-- width
-- height
-- layout
-
----
-
-### [Trigger](/src/blocks/trigger/)
-
-A button-based trigger for opening a Modal, Drawer, or Collapsible block. Wraps core Buttons so you can style the control however you like.
-
-- targetId
-
-Used inside Modal, Drawer, and Collapsible blocks, but can also be used standalone.
-
----
-
-### [Hamburger Trigger](/src/blocks/trigger-hamburger/)
-
-An animated hamburger icon trigger for opening a Modal, Drawer, or Collapsible block. Useful for mobile menus and overlay panels.
-
-- label
-- showLabel
-
-Used inside Modal, Drawer, and Collapsible blocks.
-
----
-
-### [Close](/src/blocks/close/)
-
-A dismiss button for Modal Content and Drawer Content.
-
-- label
-- showLabel
-- position
-- positionOffset
-
-Used inside Modal Content and Drawer Content blocks.
-
----
-
-### [Navigation](/src/blocks/navigation/)
-
-Select and render an existing WordPress Navigation menu as a simplified, read-only block. Choose from simple, accordion, or drill-down layouts for submenus.
-
-#### Attributes
-
-- ref
-- type (simple, accordion, drill-down)
-- submenuOpensOnClick
-- showSubmenuLabel
-- showSubmenuViewAll
-- layout
-- iconColor
-- accentColor
-- submenuTextColor
-- submenuBackgroundColor
-- submenuIconColor
-- backTextColor
-- backBackgroundColor
-- backIconColor
-- submenuDividerColor
-
-## Filters
-
-### Block registration
-
-Individual blocks can be opted out of registration:
-
-```php
-add_filter( 'matter_register_carousel', '__return_false' );
+Blocks, sections, menus and site settings for eighteen73 WordPress builds.
+
+Matter 1.0 is the shared foundation for Pulsar 6 sites. Clients edit **content**; layout, components and styling are developer-owned and version controlled:
+
+- **Sections**: developer-built layout blocks with named slots for core content blocks.
+- **UI blocks**: accordion, tabs, carousel, gallery, modal, drawer, collapsible and Gravity Forms, each configured by theme-defined variants rather than per-instance design controls.
+- **Colour schemes**: one visual control instead of colour pickers.
+- **Menus and panels**: Appearance › Menus rendered with interactive dropdown, accordion and drill-down menus, and a responsive off-canvas panel.
+- **Site settings**: a config-driven settings page for site-wide content.
+
+Matter ships behaviour and functional CSS. Presentational defaults are wrapped in `:where()`, so the theme styles everything with plain class selectors.
+
+## Requirements
+
+- WordPress 7.1+
+- PHP 8.3+
+
+### Upgrading from 0.x
+
+1.0 is not compatible with 0.x content: blocks were merged, renamed or removed. Keep existing sites on 0.x (`"eighteen73/matter": "^0.7"` does not resolve to 1.0).
+
+## Blocks
+
+| Block | Purpose | Editor options |
+| --- | --- | --- |
+| `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
+| `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash). |
+| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. | Name. Behaviour comes from the chosen variant. |
+| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. | Grid/Carousel style, lightbox on/off, name. |
+| `matter/modal` | Content in a dialog. | ID, name, open automatically (load, scroll, URL parameter), stay closed for N days. |
+| `matter/drawer` | Content that slides in from the left or right. | As modal, plus side. |
+| `matter/collapsible` | Content hidden in place until revealed. | ID. |
+| `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
+| `matter/slot` | A named content area inside a section (added automatically). | None. |
+
+**Opening overlays.** Any link to `#id` or element with `aria-controls="id"` opens the modal, drawer or collapsible with that ID. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup`.
+
+Store API (`matter/overlay`): `actions.open( id )`, `actions.close( id )`, `actions.toggle( id )`, `actions.closeAll()`. Events: `matter-overlay-open` and `matter-overlay-close` (bubbling, `detail.id`).
+
+Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
+
+## Sections
+
+A section is a dynamic block whose `block.json` declares slots. Matter registers it in the editor, so it needs no `edit.js`:
+
+```json
+{
+	"name": "pulsar/hero",
+	"title": "Hero",
+	"category": "sections",
+	"supports": {
+		"matter": {
+			"scheme": true,
+			"align": "full",
+			"tagName": "section",
+			"slots": {
+				"content": {
+					"allowedBlocks": [ "core/heading", "core/paragraph", "core/buttons" ],
+					"template": [ [ "core/heading", { "level": 1 } ], [ "core/paragraph" ] ]
+				},
+				"media": {
+					"allowedBlocks": [ "core/image" ],
+					"template": [ [ "core/image" ] ],
+					"templateLock": "contentOnly"
+				}
+			}
+		}
+	}
+}
 ```
 
-Replace `carousel` with any block folder slug from `src/blocks/`. The filter receives `$should_register` and `$block_folder` as arguments.
+**Markup.** The editor and the default renderer produce the same markup, so one stylesheet serves both:
+
+```html
+<section class="wp-block-pulsar-hero is-section alignfull has-scheme has-scheme-…">
+	<div class="wp-block-pulsar-hero__inner">
+		<div class="wp-block-matter-slot wp-block-pulsar-hero__content">…</div>
+		<div class="wp-block-matter-slot wp-block-pulsar-hero__media">…</div>
+	</div>
+</section>
+```
+
+**Custom `render.php`.** Use one only when the markup needs to differ (e.g. conditional slots), and keep the same classes:
 
 ```php
-add_filter(
-	'matter_register_navigation',
-	function ( $should_register, $block_folder ) {
-		// Conditionally disable on certain sites or post types.
-		return $should_register;
-	},
-	10,
-	2
-);
+$slots = Eighteen73\Matter\slots( $content, $block );
+?>
+<section <?php echo get_block_wrapper_attributes(); ?>>
+	<div class="wp-block-pulsar-hero__inner">
+		<div class="wp-block-matter-slot wp-block-pulsar-hero__content"><?php echo $slots['content']; ?></div>
+	</div>
+</section>
 ```
+
+**Supports options:**
+- `scheme`: adds the colour scheme control.
+- `align: "full"`: full-width band (`alignfull`).
+- `tagName`: element for the default renderer.
+- `slots`: per slot, `allowedBlocks`, `template` and `templateLock`.
+
+**Updating sections.** Markup and CSS changes reach every instance immediately. Slot structure is locked, so a slot added to `block.json` appears in existing instances the next time they're edited. Matching is by position, so **append new slots**, and make `render.php` cope with an empty slot.
+
+## Colour schemes
+
+Define schemes in the theme's `theme.json`:
+
+```json
+"custom": {
+	"scheme": {
+		"default": { "background": "var:preset|color|base", "text": "var:preset|color|contrast", "button-background": "…" },
+		"brand":   { "background": "var:preset|color|brand-primary", "text": "var:preset|color|base" }
+	}
+}
+```
+
+Matter outputs:
+- `:root` with the default scheme;
+- `.has-scheme-{slug}` rules mapping each token to `--scheme--{token}`.
+
+Blocks declaring `supports.matter.scheme` get a swatch control in the Styles tab. Selecting the active scheme again inherits the surrounding scheme.
+
+Filters: `matter_schemes`, `matter_default_scheme`, `matter_scheme_labels`.
+
+## Variants
+
+Variants are named presets that the theme defines. Editors pick one as a block style; it sets behaviour options, and the theme styles it via `.is-style-{slug}`.
+
+```php
+add_filter( 'matter_variants', fn( $variants ) => array_replace_recursive( $variants, [
+	'matter/carousel' => [
+		'cards'  => [ 'label' => 'Cards', 'slidesToScroll' => 'auto' ],
+		'slides' => [ 'label' => 'Slideshow', 'loop' => true, 'autoplay' => 6, 'arrows' => false ],
+	],
+] ) );
+```
+
+Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds, 0 = off), `arrows`, `dots`. Slide widths and gaps belong in theme CSS.
+
+The gallery's carousel style reads `matter/gallery` › `default` options.
+
+## Menus
+
+Menus come from Appearance › Menus:
+
+```php
+Eighteen73\Matter\menu( [
+	'location' => 'primary',
+	'type'     => [ 'drill-down', 'lg' => 'dropdown' ],
+] );
+```
+
+**Arguments:**
+- `location` or `menu`
+- `type`: `dropdown`, `accordion` or `drill-down`, or a mobile-first breakpoint map. Each range gets that type's CSS through generated media queries, so the right layout shows before JavaScript loads.
+- `opens_on`: `hover` or `click`
+- `orientation`: `horizontal` or `vertical`
+- `depth`
+- `label`
+- `class`
+- `id`
+- `view_all`: show the drill-down "View all" link
+
+Also available: `get_menu()` returns the HTML rather than echoing it.
+
+**Megamenus.** On a top-level menu item, tick "Display submenu as a megamenu". Second-level items become column headings and third-level items their links. Optionally attach a panel from the theme's `template-parts/megamenu/*.php` (files need a `Title:` header).
+
+**Accessibility:**
+- Arrow, Home and End keys move between items; Escape closes the innermost submenu.
+- Drill-down panels trap focus.
+- `aria-expanded` and `inert` are rendered on the server.
+
+Filters: `matter_menu_args`, `matter_menu_back_text`, `matter_menu_view_all_text`, `matter_megamenu_panels`.
+
+## Panels
+
+A panel is off-canvas below a breakpoint and inline above it. It's usually the header navigation:
+
+```php
+Eighteen73\Matter\panel_toggle( 'site-nav', [ 'collapse_below' => 'lg' ] );
+Eighteen73\Matter\panel( 'site-nav', function () {
+	Eighteen73\Matter\menu( [ 'location' => 'primary', 'type' => [ 'drill-down', 'lg' => 'dropdown' ] ] );
+}, [ 'collapse_below' => 'lg' ] );
+```
+
+- **Off-canvas:** a dialog with a focus trap, Escape to close, backdrop, scroll lock and a close button. It sits below the admin bar.
+- **Inside a panel:** `.is-panel-only` and `.is-inline-only` show content in one mode only.
+- **Events:** `matter-panel-open` and `matter-panel-close`.
+
+## Site settings
+
+The theme declares fields, and Matter adds a **Site Settings** page. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
+
+```php
+add_filter( 'matter_settings_fields', fn() => [
+	'contact' => [
+		'title'  => 'Contact details',
+		'fields' => [
+			'phone' => [ 'type' => 'tel', 'label' => 'Phone' ],
+		],
+	],
+] );
+```
+
+**Field types:**
+- `text`, `textarea`, `email`, `url`, `tel`
+- `number`, `toggle`
+- `select` (with `options`)
+- `media` (attachment ID)
+- `repeater` (with `fields`)
+
+**Reading values:**
+- In PHP: `Eighteen73\Matter\setting( 'contact.phone' )`.
+- In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links.
+
+Hooks: `matter_settings_page_title`, `matter_settings_saved`.
+
+## Core block extensions
+
+- **Button icon.** An icon from the icon registry on `core/button`, rendered as `.wp-block-button__icon` inside a `.has-icon` link. Limit the choice with `matter_button_icon_collections`.
+- **Focal point.** On `core/image` (block attribute) and featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images.
+
+Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs) and `gravityforms/form`.
+
+## Breakpoints
+
+Breakpoints are owned by the theme:
+
+```php
+add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'lg' => '1024px' ] );
+```
+
+`config/breakpoints.json` is the fallback.
+
+## Development
+
+```bash
+npm install
+npm run start   # watch
+npm run build   # production build
+npm run lint:js && npm run lint:css && composer run lint
+```
+
+Lefthook runs the linters on commit. Pushing to `main` builds and tags a release (see `.github/workflows/release.yml`). See [CHANGELOG.md](CHANGELOG.md).
