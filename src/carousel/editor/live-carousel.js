@@ -88,11 +88,12 @@ export function useLiveCarousel(options) {
 				align,
 				slidesToScroll,
 				container,
-				// Block wrappers only (not appenders or other editor UI).
+				// Block wrappers only (not appenders or other editor UI); in a
+				// query, not the hidden preview of the post being edited.
 				slides:
 					container === track
 						? ':scope > [data-block]'
-						: ':scope > *',
+						: ':scope > :not([style*="display: none"])',
 				watchDrag: false,
 				// The editor changes the track's children (e.g. on selection):
 				// re-measure without jumping back to the first slide.
@@ -121,15 +122,37 @@ export function useLiveCarousel(options) {
 
 		viewport.addEventListener('scroll', resetScroll);
 
-		// A Query Loop's list appears (or is replaced) after its posts load.
+		// A Query Loop's list appears (or is replaced) after its posts load,
+		// and the editor hides the preview of whichever post is being edited.
 		const observer =
-			new viewport.ownerDocument.defaultView.MutationObserver(() => {
-				if ((track.querySelector(QUERY_LISTS) || track) !== container) {
-					create();
+			new viewport.ownerDocument.defaultView.MutationObserver(
+				(mutations) => {
+					if (
+						(track.querySelector(QUERY_LISTS) || track) !==
+						container
+					) {
+						create();
+					} else if (
+						container !== track &&
+						mutations.some(
+							(mutation) =>
+								mutation.type === 'attributes' &&
+								mutation.target.parentElement === container
+						)
+					) {
+						embla.reInit({
+							startIndex: embla.selectedScrollSnap(),
+						});
+					}
 				}
-			});
+			);
 
-		observer.observe(track, { childList: true, subtree: true });
+		observer.observe(track, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ['style'],
+		});
 
 		return () => {
 			viewport.removeEventListener('scroll', resetScroll);
