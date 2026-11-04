@@ -1,5 +1,6 @@
-.wp-block-matter-collapsible {
-	&.is-type-popover {
-		position: relative;
-	}
+// Collapsible: hidden in place (the `hidden` attribute) until revealed.
+// No presentational defaults; themes style .wp-block-matter-collapsible.
+
+.wp-block-matter-collapsible[hidden] {
+	display: none;
 }

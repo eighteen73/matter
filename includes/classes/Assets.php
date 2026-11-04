@@ -34,8 +34,9 @@ class Assets {
 	 * Component script modules: module ID => build path (relative to build/).
 	 */
 	public const MODULES = [
-		'matter/menu'  => 'menu/view.js',
-		'matter/panel' => 'panel/view.js',
+		'matter/menu'    => 'menu/view.js',
+		'matter/panel'   => 'panel/view.js',
+		'matter/overlay' => 'overlay/view.js',
 	];
 
 	/**

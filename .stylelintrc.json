@@ -1,3 +1,11 @@
 {
-	"extends": "@eighteen73/stylelint-config-wordpress"
+	"extends": "@eighteen73/stylelint-config-wordpress",
+	"rules": {
+		"scss/at-rule-no-unknown": [
+			true,
+			{
+				"ignoreAtRules": [ "starting-style", "custom-media" ]
+			}
+		]
+	}
 }

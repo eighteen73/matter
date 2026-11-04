@@ -2,46 +2,35 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/collapsible",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"title": "Collapsible",
-	"keywords": [ "accordion", "collapsible", "toggle" ],
 	"category": "widgets",
-	"description": "An interactive section which reveals content when triggered.",
-	"allowedBlocks": [ "matter/trigger", "matter/trigger-hamburger", "matter/collapsible-content" ],
+	"icon": "arrow-down-alt2",
+	"description": "Content that is hidden until a link or button pointing to its #ID reveals it.",
+	"keywords": [
+		"toggle",
+		"disclosure",
+		"reveal",
+		"show more"
+	],
 	"attributes": {
-		"generatedId": {
+		"overlayId": {
 			"type": "string",
 			"default": ""
-		},
-		"type": {
-			"type": "string",
-			"enum": [ "popover", "inline" ],
-			"default": "popover"
-		},
-		"editorIsOpen": {
-			"type": "boolean",
-			"default": false,
-			"role": "local"
 		}
 	},
-	"providesContext": {
-		"matter/collapsible-is-open": "editorIsOpen"
-	},
-	"usesContext": [
-		"postId",
-		"postType",
-		"queryId"
-	],
 	"supports": {
-		"anchor": true,
 		"html": false,
+		"reusable": false,
 		"interactivity": true,
-		"contentRole": true,
-		"listView": true
+		"matter": {
+			"scheme": true
+		}
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
-	"render": "file:./render.php",
-	"viewScriptModule": "matter/overlay-store"
+	"viewScriptModule": "matter/overlay",
+	"render": "file:./render.php"
 }

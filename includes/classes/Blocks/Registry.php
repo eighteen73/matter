@@ -57,7 +57,6 @@ class Registry {
 	 * @return void
 	 */
 	public function setup(): void {
-		add_action( 'init', [ $this, 'register_overlay_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register_lightbox_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register' ] );
 		add_filter( 'allowed_block_types_all', [ $this, 'disable_mirrored_core_blocks' ], 10, 2 );
@@ -80,33 +79,6 @@ class Registry {
 		}
 
 		return array_values( array_diff( $allowed_block_types, self::DISABLED_CORE_BLOCKS, self::DISABLED_THIRD_PARTY_BLOCKS ) );
-	}
-
-	/**
-	 * Register the shared overlay store script module.
-	 *
-	 * Overlay blocks reference this module ID in block.json. The module is built
-	 * via webpack.config.js and its dependencies/version come from the generated
-	 * asset file (DependencyExtractionWebpackPlugin).
-	 *
-	 * @return void
-	 */
-	public function register_overlay_store_module(): void {
-		$script_path = MATTER_PATH . 'build/interactivity/overlay-store.js';
-		$asset_path  = MATTER_PATH . 'build/interactivity/overlay-store.asset.php';
-
-		if ( ! file_exists( $script_path ) ) {
-			return;
-		}
-
-		$asset = file_exists( $asset_path ) ? require $asset_path : [];
-
-		wp_register_script_module(
-			'matter/overlay-store',
-			MATTER_URL . 'build/interactivity/overlay-store.js',
-			$asset['dependencies'] ?? [],
-			$asset['version'] ?? false,
-		);
 	}
 
 	/**

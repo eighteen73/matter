@@ -1,43 +1,16 @@
 <?php
 /**
- * The following variables are exposed to the file:
- *     $attributes (array): The block attributes.
- *     $content (string): The block default content.
- *     $block (WP_Block): The block instance.
+ * Drawer: a native <dialog> pinned to the left or right edge.
  *
- * @package Matter\\Drawer
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Rendered inner blocks.
+ * @param WP_Block $block      Block instance.
+ *
+ * @package Eighteen73\Matter
  */
 
-use Eighteen73\Matter\Blocks\Drawer;
-use Eighteen73\Matter\Blocks\Overlay;
+use Eighteen73\Matter\Overlays\Overlay;
 
-defined( 'ABSPATH' ) || exit;
+$matter_position = 'left' === ( $attributes['position'] ?? '' ) ? 'left' : 'right';
 
-$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
-$drawer_id        = Drawer::resolve_id( $block_attributes, $block_context );
-
-Drawer::register_state( $drawer_id );
-?>
-
-<div
-	<?php
-	echo wp_kses_data(
-		Overlay::get_host_wrapper_attributes(
-			[
-				'data-wp-interactive' => 'matter/overlay',
-				'data-wp-init'        => 'callbacks.onInit',
-			]
-		)
-		. ' '
-		. wp_interactivity_data_wp_context(
-			[
-				'id'   => $drawer_id,
-				'type' => 'drawer',
-			]
-		)
-	);
-	?>
->
-	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</div>
+echo Overlay::render_dialog( 'drawer', $attributes, $content, [ 'class' => 'is-position-' . $matter_position ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in render_dialog().

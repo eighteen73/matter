@@ -1,7 +1,111 @@
+// Drawer: a native <dialog> pinned to the left or right edge.
+
 .wp-block-matter-drawer {
-	$block: &;
+	border: 0;
+	height: 100dvh;
+	inset-block: 0;
+	inset-inline: auto 0;
+	max-height: none;
+	max-width: 100vw;
+	padding: 0;
+	transform: translateX(100%);
+	transition:
+		transform 300ms,
+		overlay 300ms allow-discrete,
+		display 300ms allow-discrete;
+
+	&.is-position-left {
+		inset-inline: 0 auto;
+		transform: translateX(-100%);
+	}
+
+	&[open] {
+		display: flex;
+		flex-direction: column;
+		transform: none;
+
+		@starting-style {
+			transform: translateX(100%);
+		}
+	}
+
+	&.is-position-left[open] {
+		@starting-style {
+			transform: translateX(-100%);
+		}
+	}
+
+	&::backdrop {
+		opacity: 0;
+		transition:
+			opacity 300ms,
+			overlay 300ms allow-discrete,
+			display 300ms allow-discrete;
+	}
+
+	&[open]::backdrop {
+		opacity: 1;
+
+		@starting-style {
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&::backdrop {
+			transition: none;
+		}
+	}
 }
 
-.has-drawer-open {
-	overflow: hidden;
+.wp-block-matter-drawer__content {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+.wp-block-matter-drawer__close {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	inset-block-start: 0.75rem;
+	inset-inline-end: 0.75rem;
+	padding: 0.25rem;
+	position: absolute;
+	z-index: 1;
+
+	&::before {
+		background-color: currentcolor;
+		content: "";
+		height: 1.25rem;
+		mask: url("../../../assets/svg/x.svg") center / contain no-repeat;
+		width: 1.25rem;
+	}
+}
+
+// Core layout rules (`:root :where(.is-layout-*) > *`) set block margins on
+// post content children; the element selector outranks them.
+dialog.wp-block-matter-drawer {
+	margin: 0;
+}
+
+// Presentational defaults.
+:where(.wp-block-matter-drawer) {
+	background: var(--scheme--background, #fff);
+	color: var(--scheme--text, inherit);
+	width: min(100vw, 26rem);
+}
+
+:where(.wp-block-matter-drawer)::backdrop {
+	background: rgb(0 0 0 / 50%);
+}
+
+:where(.wp-block-matter-drawer__content) {
+	padding: 3rem 1.5rem 1.5rem;
 }

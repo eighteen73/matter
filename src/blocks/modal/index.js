@@ -1,14 +1,18 @@
+/**
+ * WordPress dependencies
+ */
 import { registerBlockType } from '@wordpress/blocks';
+import { InnerBlocks } from '@wordpress/block-editor';
 
-import './style.scss';
-
+/**
+ * Internal dependencies
+ */
 import Edit from './edit';
-import Save from './save';
 import metadata from './block.json';
-import icon from './icon';
+import '../../overlay/editor/editor.scss';
+import './style.scss';
 
 registerBlockType(metadata.name, {
 	edit: Edit,
-	save: Save,
-	icon,
+	save: () => <InnerBlocks.Content />,
 });
