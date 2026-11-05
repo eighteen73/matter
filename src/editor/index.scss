@@ -39,3 +39,10 @@
 			0 0 0 4px var(--wp-admin-theme-color, #3858e9);
 	}
 }
+
+// A gallery's or carousel's button on a child block's toolbar: divided from
+// the child's own buttons, as its own toolbar group would be.
+.block-editor-block-toolbar .matter-parent-toolbar.components-toolbar-group {
+	border-inline-start: 1px solid #1e1e1e;
+	margin-inline-start: 6px;
+}

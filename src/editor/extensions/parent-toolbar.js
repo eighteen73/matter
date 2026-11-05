@@ -48,7 +48,7 @@ function ParentToolbar({ parentId, parentName }) {
 
 	return (
 		<BlockControls group="other">
-			<ToolbarGroup>
+			<ToolbarGroup className="matter-parent-toolbar">
 				{isImages ? (
 					<GalleryMediaUpload
 						ids={media.ids}
