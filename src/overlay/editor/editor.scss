@@ -1,22 +1,17 @@
 // Overlay blocks in the editor show what the front end shows.
-// Closed: only the trigger area, as on the front end. Without a trigger, a
-// closed overlay takes no space (it's reached from the Overlays sidebar or
-// List View).
-// Open: a modal or drawer is the dialog itself (the block has the front end's
-// class and `open` attribute, so theme styles apply, and is a popover with a
-// ::backdrop); a collapsible shows its content in place.
+// Modal and drawer: as on the front end, the block is the `-host` of the
+// trigger area (in the page) and the dialog. The dialog wraps the content
+// slot and is a popover (see dialog-preview.js): hidden while closed, and in
+// the top layer with the theme's ::backdrop while open.
+// Collapsible: the content shows in place while open.
+// Without a trigger, a closed overlay takes no space (it's reached from the
+// Overlays sidebar, List View or a button linking to it).
 
-$content: "> :is(.wp-block-matter-modal__content, .wp-block-matter-drawer__content, .wp-block-matter-collapsible__content)";
 $trigger: "> :is(.wp-block-matter-modal__trigger, .wp-block-matter-drawer__trigger, .wp-block-matter-collapsible__trigger)";
 
-.matter-overlay-editor:not(.is-editor-open) {
-	&:not(.has-trigger) {
-		display: none;
-	}
-
-	#{$content} {
-		display: none;
-	}
+// Kept while its dialog animates closed.
+.matter-overlay-editor:not(.has-trigger, .is-editor-open, :has(> .matter-overlay-editor__dialog.is-shown)) {
+	display: none;
 }
 
 // Empty trigger area (removed with "Trigger on the page").
@@ -24,23 +19,20 @@ $trigger: "> :is(.wp-block-matter-modal__trigger, .wp-block-matter-drawer__trigg
 	display: none;
 }
 
-.matter-overlay-editor.is-editor-open:is(.is-overlay-modal, .is-overlay-drawer) {
-	// As a modal <dialog> (editor block rules would otherwise win).
+.matter-overlay-editor.is-overlay-collapsible:not(.is-editor-open) > .wp-block-matter-collapsible__content {
+	display: none;
+}
+
+// As a modal <dialog>: editor block and layout rules would otherwise win
+// (the front end has `dialog.wp-block-matter-*` rules for the same reason).
+.matter-overlay-editor__dialog {
 	position: fixed;
 
-	// The trigger stays on the page on the front end; here the block is the
-	// dialog (a popover in the top layer, with the theme's ::backdrop).
-	#{$trigger} {
-		display: none;
+	&.wp-block-matter-modal {
+		margin: auto;
 	}
-}
 
-// As the front end's `dialog.wp-block-matter-*` rules: margins that editor
-// layout rules would otherwise override.
-.matter-overlay-editor.is-editor-open.is-overlay-modal {
-	margin: auto;
-}
-
-.matter-overlay-editor.is-editor-open.is-overlay-drawer {
-	margin: 0;
+	&.wp-block-matter-drawer {
+		margin: 0;
+	}
 }

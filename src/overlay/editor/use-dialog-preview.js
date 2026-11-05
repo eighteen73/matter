@@ -1,12 +1,12 @@
 /**
- * Shows a modal or drawer block as its open dialog, as on the front end.
+ * Opens and closes a modal's or drawer's editor dialog as on the front end.
  *
- * The block element becomes a manual popover while open: that puts it in the
- * top layer with a real `::backdrop`, so the theme's dialog and backdrop
- * styles apply, without making the rest of the editor inert or moving focus
- * (as `showModal()` would). It opens and closes with the theme's transitions:
- * shown in its closed state, then given `open`; closing removes `open` and
- * waits for the transitions before leaving the top layer.
+ * The dialog element is a manual popover (hidden while closed): showing it
+ * puts it in the top layer with a real `::backdrop`, so the theme's dialog
+ * and backdrop styles apply, without making the rest of the editor inert or
+ * moving focus (as `showModal()` would). It opens and closes with the
+ * theme's transitions: shown in its closed state, then given `open`; closing
+ * removes `open` and waits for the transitions before hiding.
  */
 
 /**
@@ -45,13 +45,12 @@ const isShowing = (element) => {
 };
 
 /**
- * @param {Object}   ref     Block element ref.
+ * @param {Object}   ref     Dialog element ref (a `popover="manual"` element).
  * @param {boolean}  isOpen  Whether the dialog should be open.
- * @param {boolean}  enabled Modal or drawer (not a collapsible).
  * @param {Function} onClose Called when the backdrop is clicked.
  * @return {boolean} Whether it's shown (open, or animating closed).
  */
-export default function useDialogPreview(ref, isOpen, enabled, onClose) {
+export default function useDialogPreview(ref, isOpen, onClose) {
 	const [isClosing, setIsClosing] = useState(false);
 	const [wasOpen, setWasOpen] = useState(isOpen);
 
@@ -59,15 +58,15 @@ export default function useDialogPreview(ref, isOpen, enabled, onClose) {
 	// shown while its transitions run.
 	if (wasOpen !== isOpen) {
 		setWasOpen(isOpen);
-		setIsClosing(enabled && !isOpen);
+		setIsClosing(!isOpen);
 	}
 
-	const isShown = enabled && (isOpen || isClosing);
+	const isShown = isOpen || isClosing;
 
 	useLayoutEffect(() => {
 		const element = ref.current;
 
-		if (!enabled || !element) {
+		if (!element) {
 			return;
 		}
 
@@ -78,20 +77,16 @@ export default function useDialogPreview(ref, isOpen, enabled, onClose) {
 		}
 
 		if (!isShowing(element)) {
-			// A style pass hidden (a closed popover isn't displayed), so it
-			// doesn't transition from the trigger area's styles; one shown in
-			// the dialog's closed state; then `open`, so the theme's
-			// transitions run as on the front end.
-			element.setAttribute('popover', 'manual');
-			void element.offsetWidth;
+			// Shown in the dialog's closed state for a style pass, then
+			// opened, so the theme's transitions run.
 			element.showPopover?.();
 			void element.offsetWidth;
 		}
 
 		element.setAttribute('open', '');
-	}, [ref, isOpen, enabled]);
+	}, [ref, isOpen]);
 
-	// Closing: once the transitions finish, leave the top layer.
+	// Closing: once the transitions finish, hide it.
 	useEffect(() => {
 		const element = ref.current;
 
@@ -99,27 +94,22 @@ export default function useDialogPreview(ref, isOpen, enabled, onClose) {
 			return;
 		}
 
-		const timer = element.ownerDocument.defaultView.setTimeout(
+		const view = element.ownerDocument.defaultView;
+		const timer = view.setTimeout(
 			() => setIsClosing(false),
 			transitionTime(element)
 		);
 
-		return () => element.ownerDocument.defaultView.clearTimeout(timer);
+		return () => view.clearTimeout(timer);
 	}, [ref, isClosing]);
 
 	useLayoutEffect(() => {
 		const element = ref.current;
 
-		if (!element || isShown) {
-			return;
-		}
-
-		if (isShowing(element)) {
+		if (element && !isShown && isShowing(element)) {
+			element.removeAttribute('open');
 			element.hidePopover?.();
 		}
-
-		element.removeAttribute('popover');
-		element.removeAttribute('open');
 	}, [ref, isShown]);
 
 	// Clicks on the backdrop reach the dialog element, outside its box.

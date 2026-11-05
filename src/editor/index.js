@@ -27,6 +27,7 @@ import './extensions/parent-toolbar';
 import './overlays/link-suggestions';
 import './overlays/sidebar';
 import './overlays/toolbar';
+import '../overlay/editor/dialog-preview';
 import '../components/icon-picker/editor.scss';
 import './index.scss';
 

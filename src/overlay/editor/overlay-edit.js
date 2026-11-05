@@ -29,15 +29,13 @@ import {
 } from '@wordpress/components';
 import { useCopyToClipboard } from '@wordpress/compose';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import GroupNav from './group-nav';
 import UrlTriggersControl from './url-triggers-control';
-import useDialogPreview from './use-dialog-preview';
 
 // Trigger and content areas: slots configured in each block's block.json.
 const TEMPLATE = [
@@ -104,12 +102,10 @@ export default function OverlayEdit({
 		scrollThreshold,
 		urlTriggers,
 		dismissDays,
-		scheme,
 	} = attributes;
 	const isDialog = type !== 'collapsible';
 	const [copied, setCopied] = useState(false);
-	const { clearSelectedBlock, replaceInnerBlocks } =
-		useDispatch(blockEditorStore);
+	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
 
 	const { isOpen, triggerId, hasTrigger } = useSelect(
 		(select) => {
@@ -172,24 +168,16 @@ export default function OverlayEdit({
 		);
 	};
 
-	// Closed, a modal or drawer is just its trigger area, as on the front
-	// end (which wraps the trigger and the <dialog> in a `-host` element; the
-	// editor's default class is `-host` too, see src/editor/index.js).
-	// Open, the block becomes the dialog (see use-dialog-preview.js): the
-	// front end's classes and `open` attribute let theme styles apply.
-	const ref = useRef();
-	const close = useCallback(() => clearSelectedBlock(), [clearSelectedBlock]);
-	const isShown = useDialogPreview(ref, isOpen, isDialog, close);
-	const blockClass = `wp-block-matter-${type}`;
+	// As on the front end, a modal or drawer block is the `-host` of its
+	// trigger area (which stays in the page) and its dialog. The editor's
+	// default class is `-host` too (see src/editor/index.js), and the
+	// content slot sits in the dialog (see dialog-preview.js).
 	const blockProps = useBlockProps({
-		ref,
 		className: [
 			'matter-overlay-editor',
 			`is-overlay-${type}`,
-			(isOpen || isShown) && 'is-editor-open',
+			isOpen && 'is-editor-open',
 			hasTrigger && 'has-trigger',
-			isShown && blockClass,
-			isShown && scheme && `has-scheme has-scheme-${scheme}`,
 			className,
 		]
 			.filter(Boolean)
@@ -387,23 +375,7 @@ export default function OverlayEdit({
 					</PanelBody>
 				)}
 			</InspectorControls>
-			<div {...innerBlocksProps}>
-				{isShown && dismissible && (
-					<button
-						type="button"
-						className={`${blockClass}__close`}
-						onClick={close}
-					>
-						<span className="screen-reader-text">
-							{__('Close', 'matter')}
-						</span>
-					</button>
-				)}
-				{areas}
-				{isShown && type === 'modal' && group && (
-					<GroupNav clientId={clientId} group={group} />
-				)}
-			</div>
+			<div {...innerBlocksProps}>{areas}</div>
 		</>
 	);
 }
