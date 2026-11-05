@@ -189,12 +189,13 @@ $matter_wrapper = [
 ];
 
 printf(
-	'<div %1$s data-wp-interactive="matter/gallery" %2$s>%3$s%4$s</div>',
+	'<div %1$s data-wp-interactive="matter/gallery" %2$s data-wp-init="callbacks.fitRows">%3$s%4$s</div>',
 	get_block_wrapper_attributes( array_filter( $matter_wrapper ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
 			'images'  => $matter_images,
 			'index'   => 0,
+			'limit'   => $matter_limit,
 			'counter' => __( '%1$d / %2$d', 'matter' ), // phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
 		]
 	),

@@ -20,7 +20,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { gallery as icon } from '@wordpress/icons';
 
@@ -46,9 +46,48 @@ import {
 const ALLOWED_BLOCKS = ['core/image'];
 
 /**
+ * How many images a limited grid shows: whole rows at the number of columns
+ * that fit (as the front end's view.js), or the limit if under one row.
+ *
+ * @param {Object} ref   Ref to the grid.
+ * @param {number} limit "Images to show" (0 = all).
+ * @param {string} key   Changes when the layout may have.
+ * @return {number} Images to show.
+ */
+function useVisibleCount(ref, limit, key) {
+	const [columns, setColumns] = useState(1);
+
+	useEffect(() => {
+		const grid = ref.current;
+
+		if (!limit || !grid) {
+			return;
+		}
+
+		const view = grid.ownerDocument.defaultView;
+		const update = () =>
+			setColumns(
+				view
+					.getComputedStyle(grid)
+					.gridTemplateColumns.split(' ')
+					.filter(Boolean).length || 1
+			);
+		const observer = new view.ResizeObserver(update);
+
+		update();
+		observer.observe(grid);
+
+		return () => observer.disconnect();
+	}, [ref, limit, key]);
+
+	return Math.floor(limit / columns) * columns || limit;
+}
+
+/**
  * Gallery editor, as on the front end: the grid hides images beyond "Images
- * to show"; the carousel layout is a live carousel. Columns and the images'
- * aspect ratio are chosen from the theme's options.
+ * to show" (in full rows at the current number of columns); the carousel
+ * layout is a live carousel. Columns and the images' aspect ratio are chosen
+ * from the theme's options.
  *
  * @param {Object}   props
  * @param {Object}   props.attributes    Block attributes.
@@ -94,12 +133,22 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		}
 	}, [isCarousel, selectedSlide, imageCount, scrollToSlide]);
 
-	const isLimited = !isCarousel && limit > 0 && imageCount > limit;
-
 	// The theme's column choices and default crop (variant options).
 	const columnChoices = (options.columns ?? []).map(Number);
 	const currentColumns = columns || Number(options.defaultColumns) || 0;
 	const hasColumns = !isCarousel && columnChoices.includes(currentColumns);
+	// "Images to show" counts in whole rows.
+	const rowSize = hasColumns ? currentColumns : 1;
+
+	// As on the front end, show full rows at the number of columns that fit.
+	const itemsRef = useRef();
+	const visible = useVisibleCount(
+		itemsRef,
+		isCarousel ? 0 : limit,
+		`${currentColumns}-${imageCount}`
+	);
+	const isLimited = !isCarousel && limit > 0 && imageCount > visible;
+
 	const aspectRatios = useAspectRatios();
 	const currentRatio = aspectRatio || options.aspectRatio || 'auto';
 
@@ -114,6 +163,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{
+			ref: itemsRef,
 			className: isCarousel
 				? 'wp-block-matter-carousel__track'
 				: 'wp-block-matter-gallery__items',
@@ -192,9 +242,21 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								'matter'
 							)}
 							value={currentColumns}
-							onChange={(value) =>
-								setAttributes({ columns: Number(value) })
-							}
+							onChange={(value) => {
+								const count = Number(value);
+
+								// Keep "Images to show" to whole rows.
+								setAttributes({
+									columns: count,
+									limit: limit
+										? Math.max(
+												count,
+												Math.round(limit / count) *
+													count
+											)
+										: 0,
+								});
+							}}
 						>
 							{columnChoices.map((count) => (
 								<ToggleGroupControlOption
@@ -205,13 +267,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							))}
 						</ToggleGroupControl>
 					)}
-					<AspectRatioControl
-						value={currentRatio}
-						presets={aspectRatios}
-						onChange={(value) =>
-							setAttributes({ aspectRatio: value })
-						}
-					/>
 					{!isCarousel && (
 						<RangeControl
 							__nextHasNoMarginBottom
@@ -220,14 +275,15 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							help={
 								limit > 0
 									? __(
-											'The rest open from a "View all" button.',
+											'Shown in full rows; the rest open from a "View all" button.',
 											'matter'
 										)
 									: __('All images are shown.', 'matter')
 							}
 							value={limit || undefined}
-							min={1}
-							max={Math.max(imageCount, 1)}
+							min={rowSize}
+							step={rowSize}
+							max={Math.max(imageCount, rowSize)}
 							allowReset
 							resetFallbackValue={0}
 							onChange={(value) =>
@@ -235,6 +291,13 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							}
 						/>
 					)}
+					<AspectRatioControl
+						value={currentRatio}
+						presets={aspectRatios}
+						onChange={(value) =>
+							setAttributes({ aspectRatio: value })
+						}
+					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={__('Open images in a lightbox', 'matter')}
@@ -276,9 +339,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					<>
 						{isLimited && (
 							<style>
+								{/* Counting blocks only: a selected image adds a measuring element. */}
 								{`#block-${clientId} .wp-block-matter-gallery__items > [data-block]:nth-child(n + ${
-									limit + 1
-								}):not(.is-selected, .has-child-selected) { display: none; }`}
+									visible + 1
+								} of [data-block]):not(.is-selected, .has-child-selected) { display: none; }`}
 							</style>
 						)}
 						<div {...innerBlocksProps} />

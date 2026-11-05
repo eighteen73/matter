@@ -4,6 +4,9 @@
  * A native <dialog> per gallery: arrow keys and buttons move between images,
  * Escape / backdrop / close button close it, and focus returns to the image's
  * enlarge button.
+ *
+ * A grid limited to "Images to show" shows whole rows at the number of columns
+ * that fit (the server hides images beyond the limit until this runs).
  */
 
 /**
@@ -22,6 +25,53 @@ const getDialog = (element) =>
 		?.querySelector('.wp-block-matter-gallery__lightbox');
 
 const { actions } = store('matter/gallery', {
+	callbacks: {
+		fitRows() {
+			const { limit } = getContext();
+			const { ref } = getElement();
+			const grid = ref.querySelector(
+				':scope > .wp-block-matter-gallery__items'
+			);
+			const more = ref.querySelector(
+				':scope > .wp-block-matter-gallery__more'
+			);
+
+			if (
+				!limit ||
+				!grid ||
+				!more ||
+				ref.classList.contains('is-carousel')
+			) {
+				return;
+			}
+
+			const figures = [...grid.children].filter((child) =>
+				child.matches('.wp-block-image')
+			);
+			const update = () => {
+				// Everything is showing ("View all" without a lightbox).
+				if (more.hidden) {
+					return;
+				}
+
+				const columns =
+					window
+						.getComputedStyle(grid)
+						.gridTemplateColumns.split(' ')
+						.filter(Boolean).length || 1;
+				const visible = Math.floor(limit / columns) * columns || limit;
+
+				figures.forEach((figure, index) => {
+					figure.hidden = index >= visible;
+				});
+			};
+			const observer = new window.ResizeObserver(update);
+
+			observer.observe(grid);
+
+			return () => observer.disconnect();
+		},
+	},
 	state: {
 		get image() {
 			const { images, index } = getContext();
