@@ -22,7 +22,8 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import {
-	CarouselControls,
+	CarouselFrame,
+	carouselClasses,
 	selectedSlideIndex,
 	useLiveCarousel,
 	variantOptions,
@@ -98,7 +99,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const blockProps = useBlockProps({
 		className: [
-			'is-initialised',
+			carouselClasses(carousel),
 			carousel.isQuery && 'is-query',
 			ratioStyle && 'has-image-aspect-ratio',
 		]
@@ -178,13 +179,18 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>
-				<div
-					className="wp-block-matter-carousel__viewport"
-					ref={carousel.ref}
+				<CarouselFrame
+					carousel={carousel}
+					options={options}
+					thumbnails={isImages ? media.urls : []}
 				>
-					<div {...innerBlocksProps} />
-				</div>
-				<CarouselControls carousel={carousel} options={options} />
+					<div
+						className="wp-block-matter-carousel__viewport"
+						ref={carousel.ref}
+					>
+						<div {...innerBlocksProps} />
+					</div>
+				</CarouselFrame>
 			</div>
 		</>
 	);

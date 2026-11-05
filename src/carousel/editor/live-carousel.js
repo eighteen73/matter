@@ -4,7 +4,8 @@
  * the variant's alignment and paging, working arrows and dots.
  *
  * Differences from the front end: no dragging (so slides stay editable), no
- * loop and no autoplay. Selecting a block inside a slide scrolls to it.
+ * loop and no autoplay or auto-scroll (their controls show, disabled).
+ * Selecting a block inside a slide scrolls to it.
  */
 
 /**
@@ -50,6 +51,7 @@ export function useLiveCarousel(options) {
 		canNext: false,
 		snaps: 0,
 		selected: 0,
+		selectedSlides: [],
 		isQuery: false,
 	});
 	const emblaRef = useRef(null);
@@ -78,6 +80,10 @@ export function useLiveCarousel(options) {
 				canNext: embla.canScrollNext(),
 				snaps: embla.scrollSnapList().length,
 				selected: embla.selectedScrollSnap(),
+				selectedSlides:
+					embla.internalEngine().slideRegistry[
+						embla.selectedScrollSnap()
+					] ?? [],
 				isQuery: container !== track,
 			});
 
@@ -185,42 +191,106 @@ export function useLiveCarousel(options) {
 	};
 }
 
-/**
- * Arrows, dots and the play button, with the front end's markup.
- *
- * @param {Object} props
- * @param {Object} props.carousel From useLiveCarousel().
- * @param {Object} props.options  Variant options (arrows, dots, autoplay).
- * @return {Element|null} Controls.
- */
-export function CarouselControls({ carousel, options }) {
-	const hasAutoplay = Number(options.autoplay) > 0;
+const PARTS = [
+	'prev',
+	'next',
+	'dots',
+	'progress',
+	'timer',
+	'counter',
+	'play',
+	'thumbnails',
+	'expand',
+];
+const POSITIONS = ['before', 'stage', 'after'];
 
-	if (!options.arrows && !options.dots && !hasAutoplay) {
-		return null;
+/**
+ * The variant's control groups, as Carousel::controls() cleans them: known
+ * positions and parts; a play button for moving carousels.
+ *
+ * @param {Object}  options       Variant options.
+ * @param {boolean} hasThumbnails Thumbnails are available.
+ * @param {boolean} canExpand     The expand part is available.
+ * @return {Object} Parts by position.
+ */
+export function controlGroups(options, hasThumbnails, canExpand) {
+	const groups = {};
+
+	POSITIONS.forEach((position) => {
+		const parts = [
+			...new Set([].concat(options.controls?.[position] ?? [])),
+		].filter(
+			(part) =>
+				PARTS.includes(part) &&
+				(part !== 'thumbnails' || hasThumbnails) &&
+				(part !== 'expand' || canExpand)
+		);
+
+		if (parts.length) {
+			groups[position] = parts;
+		}
+	});
+
+	const moves =
+		Number(options.autoplay) > 0 || Number(options.autoScroll) > 0;
+
+	if (moves && !Object.values(groups).flat().includes('play')) {
+		groups.after = [...(groups.after ?? []), 'play'];
 	}
 
-	return (
-		<div className="wp-block-matter-carousel__controls">
-			{hasAutoplay && (
+	return groups;
+}
+
+/**
+ * State classes for the carousel element, as view.js sets them.
+ *
+ * @param {Object} carousel From useLiveCarousel().
+ * @return {string} Classes.
+ */
+export const carouselClasses = (carousel) =>
+	[
+		'is-initialised',
+		carousel.snaps > 1 && 'is-scrollable',
+		!carousel.canPrev && 'is-start',
+		!carousel.canNext && 'is-end',
+	]
+		.filter(Boolean)
+		.join(' ');
+
+function Part({ part, carousel, thumbnails }) {
+	const progress =
+		carousel.snaps > 1 ? carousel.selected / (carousel.snaps - 1) : 0;
+
+	switch (part) {
+		case 'prev':
+		case 'next':
+			return (
 				<button
 					type="button"
-					className="wp-block-matter-carousel__play"
-					aria-label={__('Autoplay (front end only)', 'matter')}
-					aria-pressed="false"
+					className={`wp-block-matter-carousel__${part}`}
+					aria-label={
+						part === 'prev'
+							? __('Previous slide', 'matter')
+							: __('Next slide', 'matter')
+					}
+					disabled={
+						part === 'prev' ? !carousel.canPrev : !carousel.canNext
+					}
+					onClick={part === 'prev' ? carousel.prev : carousel.next}
+				/>
+			);
+		case 'play':
+		case 'expand':
+			return (
+				<button
+					type="button"
+					className={`wp-block-matter-carousel__${part}`}
+					aria-label={__('Front end only', 'matter')}
 					disabled
 				/>
-			)}
-			{options.arrows && (
-				<button
-					type="button"
-					className="wp-block-matter-carousel__prev"
-					aria-label={__('Previous slide', 'matter')}
-					disabled={!carousel.canPrev}
-					onClick={carousel.prev}
-				/>
-			)}
-			{options.dots && (
+			);
+		case 'dots':
+			return (
 				<div className="wp-block-matter-carousel__dots">
 					{Array.from({ length: carousel.snaps }, (_, index) => (
 						<button
@@ -235,21 +305,111 @@ export function CarouselControls({ carousel, options }) {
 							aria-current={
 								index === carousel.selected ? 'true' : undefined
 							}
+							data-distance={Math.abs(index - carousel.selected)}
 							onClick={() => carousel.scrollTo(index)}
 						/>
 					))}
 				</div>
-			)}
-			{options.arrows && (
-				<button
-					type="button"
-					className="wp-block-matter-carousel__next"
-					aria-label={__('Next slide', 'matter')}
-					disabled={!carousel.canNext}
-					onClick={carousel.next}
-				/>
-			)}
-		</div>
+			);
+		case 'progress':
+		case 'timer':
+			return (
+				<div
+					className={`wp-block-matter-carousel__${part}`}
+					style={
+						part === 'progress'
+							? { '--carousel-progress': progress }
+							: undefined
+					}
+				>
+					<span className={`wp-block-matter-carousel__${part}-bar`} />
+				</div>
+			);
+		case 'counter':
+			return (
+				<div className="wp-block-matter-carousel__counter">
+					<span className="wp-block-matter-carousel__counter-current">
+						{carousel.selected + 1}
+					</span>
+					<span className="wp-block-matter-carousel__counter-separator">
+						{' / '}
+					</span>
+					<span className="wp-block-matter-carousel__counter-total">
+						{carousel.snaps}
+					</span>
+				</div>
+			);
+		case 'thumbnails':
+			return (
+				<div className="wp-block-matter-carousel__thumbnails">
+					{thumbnails.map((url, index) => (
+						<button
+							key={index}
+							type="button"
+							className="wp-block-matter-carousel__thumbnail"
+							aria-current={
+								carousel.selectedSlides.includes(index)
+									? 'true'
+									: undefined
+							}
+							onClick={() => carousel.scrollToSlide(index)}
+						>
+							{url && <img src={url} alt="" />}
+						</button>
+					))}
+				</div>
+			);
+	}
+
+	return null;
+}
+
+/**
+ * The carousel's layout around its viewport, with the front end's markup:
+ * control groups before and after, and the stage (the viewport plus controls
+ * laid over it).
+ *
+ * @param {Object}  props
+ * @param {Object}  props.carousel   From useLiveCarousel().
+ * @param {Object}  props.options    Variant options.
+ * @param {Array}   props.thumbnails Image URLs, one per slide (image slides only).
+ * @param {boolean} props.canExpand  Offer the expand part (gallery lightbox).
+ * @param {Element} props.children   The viewport.
+ * @return {Element} Layout.
+ */
+export function CarouselFrame({
+	carousel,
+	options,
+	thumbnails = [],
+	canExpand = false,
+	children,
+}) {
+	const groups = controlGroups(options, thumbnails.length > 0, canExpand);
+	const group = (position) =>
+		groups[position] && (
+			<div
+				className={`wp-block-matter-carousel__controls is-${position}`}
+			>
+				{groups[position].map((part) => (
+					<Part
+						key={part}
+						part={part}
+						carousel={carousel}
+						thumbnails={thumbnails}
+					/>
+				))}
+			</div>
+		);
+
+	return (
+		<>
+			{group('before')}
+			<div className="wp-block-matter-carousel__stage">
+				{children}
+				{group('stage')}
+			</div>
+			{group('after')}
+		</>
 	);
 }
 

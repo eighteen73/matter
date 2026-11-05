@@ -40,7 +40,7 @@ wp_interactivity_state(
 );
 
 printf(
-	'<div %1$s data-wp-interactive="matter/accordion" %2$s data-wp-init="callbacks.init" data-wp-on--keydown="actions.onKeydown">%3$s</div>',
+	'<div %1$s data-wp-interactive="matter/accordion" %2$s data-wp-init="callbacks.init" data-wp-watch="callbacks.announce" data-wp-on--keydown="actions.onKeydown">%3$s</div>',
 	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[

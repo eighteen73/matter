@@ -35,7 +35,8 @@ export const toImageBlock = (image) =>
 /**
  * @param {string} clientId Parent block client ID.
  * @return {Object} `isImageOnly` (no children, or only images), `ids` (chosen
- *                  images in order) and `update(images)` to apply a selection.
+ *                  images in order), `urls` (each child's image URL) and
+ *                  `update(images)` to apply a selection.
  */
 export function useGalleryMedia(clientId) {
 	const blocks = useSelect(
@@ -64,7 +65,10 @@ export function useGalleryMedia(clientId) {
 		);
 	};
 
-	return { isImageOnly, ids, update };
+	// For thumbnails: each image's URL, in order.
+	const urls = blocks.map((block) => block.attributes.url ?? '');
+
+	return { isImageOnly, ids, urls, update };
 }
 
 /**

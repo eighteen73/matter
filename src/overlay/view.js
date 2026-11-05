@@ -19,7 +19,10 @@
  *     const { actions } = store( 'matter/overlay' );
  *     actions.open( 'newsletter' );
  *
- * Events `matter-overlay-open` / `matter-overlay-close` bubble from the overlay.
+ * or `matter.overlay( 'newsletter' )?.open()` (see README).
+ *
+ * Events `matter-overlay-ready`, `matter-overlay-open` and
+ * `matter-overlay-close` bubble from the overlay.
  */
 
 /**
@@ -31,6 +34,16 @@ import {
 	store,
 	withSyncEvent,
 } from '@wordpress/interactivity';
+
+/**
+ * Internal dependencies
+ */
+import { registerInstance, registerType } from '../interactivity/api';
+
+const SELECTOR =
+	'[data-wp-interactive="matter/overlay"][data-wp-watch="callbacks.sync"]';
+
+registerType('overlay', SELECTOR);
 
 const STORAGE_PREFIX = 'matter_overlay_dismissed_';
 const DAY = 24 * 60 * 60 * 1000;
@@ -242,6 +255,18 @@ const { state, actions } = store('matter/overlay', {
 			}
 
 			elements.set(id, getElement().ref);
+			registerInstance('overlay', getElement().ref, {
+				element: getElement().ref,
+				id,
+				get isOpen() {
+					return !!state.items[id]?.isOpen;
+				},
+				open: () => actions.open(id),
+				close: () => actions.close(id),
+				toggle: () => actions.toggle(id),
+				next: () => actions.next(id),
+				previous: () => actions.previous(id),
+			});
 
 			// Wire up triggers: links to #id and elements controlling the ID.
 			const found = findTriggers(id);

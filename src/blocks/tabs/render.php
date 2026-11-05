@@ -129,7 +129,7 @@ if ( $matter_toggle ) {
 }
 
 printf(
-	'<div %1$s data-wp-interactive="matter/tabs" %2$s data-wp-init="callbacks.init" data-wp-class--is-menu-open="context.isMenuOpen">%3$s<div class="wp-block-matter-tabs__panels">%4$s</div></div>',
+	'<div %1$s data-wp-interactive="matter/tabs" %2$s data-wp-init="callbacks.init" data-wp-watch="callbacks.announce" data-wp-class--is-menu-open="context.isMenuOpen">%3$s<div class="wp-block-matter-tabs__panels">%4$s</div></div>',
 	get_block_wrapper_attributes( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
 			'id'    => $matter_id,

@@ -1,8 +1,16 @@
-// Carousel. Functional rules only: themes set slide widths and gaps, e.g.
+// Carousel. Functional rules use plain classes; presentational defaults are in
+// :where() so themes restyle freely. Themes set slide widths and gaps, e.g.
 //     .wp-block-matter-carousel.is-style-cards .wp-block-matter-carousel__track > * {
 //         flex-basis: calc((100% - 2 * var(--gap)) / 3);
 //     }
 // Slides are the track's children, or a Query Loop's / Product Collection's items.
+// Controls are groups by position (.wp-block-matter-carousel__controls.is-before,
+// .is-stage over the slides, .is-after) of parts placed by the theme's CSS.
+
+// The slides and anything laid over them.
+.wp-block-matter-carousel__stage {
+	position: relative;
+}
 
 .wp-block-matter-carousel__viewport {
 	overflow: hidden;
@@ -49,21 +57,94 @@
 	display: flex;
 }
 
+// Over the slides: the group covers them, its parts stay clickable.
+.wp-block-matter-carousel__controls.is-stage {
+	inset: 0;
+	pointer-events: none;
+	position: absolute;
+	z-index: 1;
+
+	> * {
+		pointer-events: auto;
+	}
+}
+
+// Nothing to scroll to: no controls.
+.wp-block-matter-carousel.is-initialised:not(.is-scrollable) .wp-block-matter-carousel__controls {
+	display: none;
+}
+
 .wp-block-matter-carousel__dots {
 	display: flex;
 	flex-wrap: wrap;
 }
 
+// Progress (how far through) and timer (the current slide's autoplay
+// countdown): a track and a bar scaled from the inline start.
+.wp-block-matter-carousel__progress,
+.wp-block-matter-carousel__timer {
+	overflow: hidden;
+}
+
+.wp-block-matter-carousel__progress-bar,
+.wp-block-matter-carousel__timer-bar {
+	display: block;
+	height: 100%;
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+
+	[dir="rtl"] & {
+		transform-origin: 100% 50%;
+	}
+}
+
+.wp-block-matter-carousel__progress-bar {
+	transform: scaleX(var(--carousel-progress, 0));
+}
+
+.wp-block-matter-carousel.is-timing.is-playing .wp-block-matter-carousel__timer-bar {
+	animation-duration: var(--carousel-autoplay, 5000ms);
+	animation-fill-mode: forwards;
+	animation-name: matter-carousel-timer;
+	animation-timing-function: linear;
+}
+
+@keyframes matter-carousel-timer {
+	to {
+		transform: scaleX(1);
+	}
+}
+
+.wp-block-matter-carousel__thumbnails {
+	display: flex;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.wp-block-matter-carousel__thumbnail {
+	cursor: pointer;
+	flex: none;
+
+	img {
+		display: block;
+		height: 100%;
+		object-fit: cover;
+		width: 100%;
+	}
+}
+
 .wp-block-matter-carousel__prev,
 .wp-block-matter-carousel__next,
 .wp-block-matter-carousel__play,
+.wp-block-matter-carousel__expand,
 .wp-block-matter-carousel__dot {
 	cursor: pointer;
 }
 
 .wp-block-matter-carousel__prev,
 .wp-block-matter-carousel__next,
-.wp-block-matter-carousel__play {
+.wp-block-matter-carousel__play,
+.wp-block-matter-carousel__expand {
 	align-items: center;
 	display: inline-flex;
 	justify-content: center;
@@ -86,6 +167,10 @@
 	mask-image: url("../../../assets/svg/arrow-right.svg");
 }
 
+.wp-block-matter-carousel__expand::before {
+	mask-image: url("../../../assets/svg/corners-out.svg");
+}
+
 // Pause icon (two bars); a play triangle while paused.
 .wp-block-matter-carousel__play::before {
 	background:
@@ -104,14 +189,65 @@
 :where(.wp-block-matter-carousel__controls) {
 	gap: 0.75em;
 	justify-content: center;
+}
+
+:where(.wp-block-matter-carousel__controls.is-before) {
+	margin-block-end: 1em;
+}
+
+:where(.wp-block-matter-carousel__controls.is-after) {
 	margin-block-start: 1em;
+}
+
+// Over the slides: arrows at the sides, other parts at the bottom.
+:where(.wp-block-matter-carousel__controls.is-stage) {
+	justify-content: space-between;
+	padding: 1em;
+}
+
+:where(.wp-block-matter-carousel__controls.is-stage > :not(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next)) {
+	align-self: flex-end;
+}
+
+:where(.wp-block-matter-carousel__progress, .wp-block-matter-carousel__timer) {
+	background: rgb(0 0 0 / 15%);
+	flex: 1;
+	height: 2px;
+	min-width: 4em;
+}
+
+:where(.wp-block-matter-carousel__progress-bar, .wp-block-matter-carousel__timer-bar) {
+	background: currentcolor;
+}
+
+:where(.wp-block-matter-carousel__counter) {
+	font-variant-numeric: tabular-nums;
+}
+
+:where(.wp-block-matter-carousel__thumbnails) {
+	gap: 0.5em;
+}
+
+:where(.wp-block-matter-carousel__thumbnail) {
+	appearance: none;
+	background: none;
+	border: 2px solid transparent;
+	height: 4em;
+	opacity: 0.6;
+	padding: 0;
+	width: 6em;
+}
+
+:where(.wp-block-matter-carousel__thumbnail[aria-current]) {
+	border-color: currentcolor;
+	opacity: 1;
 }
 
 :where(.wp-block-matter-carousel__dots) {
 	gap: 0.5em;
 }
 
-:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play) {
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand) {
 	background: none;
 	border: 1px solid currentcolor;
 	border-radius: 50%;

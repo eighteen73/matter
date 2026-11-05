@@ -29,6 +29,7 @@ $matter_limit    = $matter_carousel ? 0 : max( 0, (int) ( $attributes['limit'] ?
 $matter_size     = (string) ( $matter_options['imageSize'] ?? '' );
 $matter_size     = in_array( $matter_size, get_intermediate_image_sizes(), true ) || 'full' === $matter_size ? $matter_size : '';
 $matter_images   = [];
+$matter_ids      = [];
 
 // Lightbox data from the images' attachments (captions, larger sizes).
 foreach ( $block->inner_blocks as $matter_inner ) {
@@ -37,6 +38,7 @@ foreach ( $block->inner_blocks as $matter_inner ) {
 	}
 
 	$matter_attachment = (int) ( $matter_inner->attributes['id'] ?? 0 );
+	$matter_ids[]      = $matter_attachment;
 	$matter_full       = $matter_attachment ? wp_get_attachment_image_src( $matter_attachment, 'full' ) : false;
 
 	$matter_images[] = [
@@ -148,7 +150,11 @@ if ( $matter_carousel ) {
 		$content,
 		array_merge( Variants::get( 'matter/carousel', [] ), $matter_options ),
 		'class="wp-block-matter-gallery__items wp-block-matter-carousel"',
-		$matter_label
+		$matter_label,
+		[
+			'thumbnails' => $matter_ids,
+			'expand'     => $matter_lightbox && $matter_images,
+		]
 	);
 } else {
 	$matter_items = sprintf( '<div class="wp-block-matter-gallery__items">%s</div>', $content );
@@ -189,7 +195,7 @@ $matter_wrapper = [
 ];
 
 printf(
-	'<div %1$s data-wp-interactive="matter/gallery" %2$s data-wp-init="callbacks.fitRows">%3$s%4$s</div>',
+	'<div %1$s data-wp-interactive="matter/gallery" %2$s data-wp-init--api="callbacks.init" data-wp-init--rows="callbacks.fitRows" data-wp-watch="callbacks.announce">%3$s%4$s</div>',
 	get_block_wrapper_attributes( array_filter( $matter_wrapper ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[

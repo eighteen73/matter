@@ -44,7 +44,7 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 
 **In the editor**, the trigger area stays in the page. The content opens over the canvas (modal, drawer) or in place (collapsible) with the **Edit / Close** button, and opens automatically while anything in it is selected.
 
-Store API (`matter/overlay`): `actions.open( id )`, `actions.close( id )`, `actions.toggle( id )`, `actions.next( id )`, `actions.previous( id )`, `actions.closeAll()`. Events: `matter-overlay-open` and `matter-overlay-close` (bubbling, `detail.id`).
+Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
 
 Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
 
@@ -143,7 +143,32 @@ add_filter( 'matter_variants', fn( $variants ) => array_replace_recursive( $vari
 ] ) );
 ```
 
-Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds, 0 = off), `arrows`, `dots`. Slide widths and gaps belong in theme CSS.
+Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds per slide, 0 = off), `autoScroll` (a continuous scroll speed, e.g. `1` for a ticker of logos; 0 = off), `controls` and `thumbnailSize` (the thumbnails' image size, default `thumbnail`). Slide widths and gaps belong in theme CSS.
+
+**Controls** are groups of parts by position: `before` the slides, over them on the `stage`, or `after` them. Matter renders each group as `.wp-block-matter-carousel__controls.is-{position}` with its parts in order, and wires up their behaviour and accessibility; the theme's CSS places the group and each part (`.wp-block-matter-carousel__{part}`).
+
+```php
+'controls' => [ 'after' => [ 'prev', 'dots', 'next' ] ],                     // Matter's default
+'controls' => [ 'stage' => [ 'prev', 'next' ] ],                              // arrows over the slides
+'controls' => [ 'after' => [ 'prev', 'next', 'progress', 'play' ] ],          // a progress bar between buttons
+'controls' => [ 'stage' => [ 'prev', 'next', 'expand' ], 'after' => [ 'thumbnails' ] ], // gallery with thumbnails
+'controls' => [],                                                             // none (e.g. a ticker)
+```
+
+| Part | What it is |
+|---|---|
+| `prev`, `next` | Arrow buttons; disabled at the ends unless the carousel loops. |
+| `dots` | One button per scroll position. The current dot has `aria-current`; each dot has `data-distance` (from the current dot), for shrinking far dots. |
+| `progress` | A track (`__progress`) and bar (`__progress-bar`) scaled by `--carousel-progress`: how far through the carousel. |
+| `timer` | The same, filling over each slide's autoplay time: runs while the carousel has `.is-timing` and `.is-playing`, over `--carousel-autoplay`. |
+| `counter` | "2 / 6": `__counter-current`, `__counter-separator`, `__counter-total`. |
+| `play` | Pause/play. Carousels that move by themselves (autoplay, autoScroll) always have one; it's added after the other controls if not placed. |
+| `thumbnails` | A strip of the slides' images (image slides and galleries only) that go to their slide; the current one has `aria-current`. Scrolls when it overflows. |
+| `expand` | Gallery only: opens the lightbox at the current image. |
+
+The stage group covers the slides (`position: absolute; inset: 0`) with clickable parts; by default arrows sit at the sides and other parts at the bottom. Controls hide when everything fits (no `.is-scrollable`).
+
+State for theme CSS, on the carousel: `--carousel-progress` (0–1), `--carousel-autoplay`, and the classes `is-playing`, `is-start`, `is-end`, `is-scrollable` and `is-timing`. Slides get `is-selected` (at the current position) and `is-in-view`.
 
 Carousel slide types: a new carousel offers images, posts and products (with WooCommerce). `matter_carousel_slides` adds the theme's own slide blocks, and sets the variant each type starts as. With slide types set, a carousel's slides are limited to them, images and queries. A slide block needs `matter/carousel` in its block.json `parent` if it has one.
 
@@ -160,6 +185,34 @@ Carousels of only images also take `aspectRatio`: the default crop, a slug from 
 Gallery options: `imageSize` (a registered image size), `columns` (column counts editors can choose, default `[ 2, 3, 4 ]`; `[]` hides the control so theme CSS sets the columns), `defaultColumns` (default `3`) and `aspectRatio` (as above, default `square`). The grid shows the chosen columns where there's room and fewer where images would be narrower than `--gallery-min-width` (default `10rem`); `--gallery-gap` sets the gap. Images are cropped with `--image-aspect-ratio`. The gallery's carousel layout reads its `matter/gallery` variant's options (falling back to the carousel defaults).
 
 Tabs options: `dropdownBelow`, the breakpoint below which tabs set to "Show as a dropdown on smaller screens" switch to the dropdown (default `md`). Set it to `false` to do the switch in theme CSS instead: below your breakpoint, `.wp-block-matter-tabs.has-dropdown` shows its `__toggle` button and turns `__nav > __list` into a menu, open when the block has `.is-menu-open`. `Eighteen73\Matter\Blocks\Tabs::dropdown_css( $scope, $media )` returns the rules Matter uses, to output for your own scope and media query.
+
+## JavaScript API
+
+Every interactive block can be driven from theme scripts. `matter.{block}( target )` returns a block's instance, where `target` is an element ID (usually the block's HTML anchor, set under Advanced) or an element; it resolves to that block, or the first one of its type inside it. Instances exist once a block has started, so wait with `matter.ready()`:
+
+```js
+matter.ready( 'faq' ).then( ( faq ) => faq.open( 0 ) );
+
+const hero = matter.carousel( 'hero' );
+hero?.goTo( 2 );
+
+document.addEventListener( 'matter-tabs-change', ( event ) => {
+	console.log( event.detail.id, event.detail.index );
+} );
+```
+
+| Block | `matter.…( target )` | Methods | Read-only state | Events (`matter-…`) |
+|---|---|---|---|---|
+| Carousel | `carousel` | `goTo( index, instant )`, `goToSlide( slide, instant )`, `next( instant )`, `prev( instant )`, `play()`, `pause()`, `reInit( options )` | `index`, `count` (scroll positions), `slides`, `selectedSlides`, `progress`, `isPlaying`, `canPrev`, `canNext`, `embla` (the Embla instance) | `carousel-select` (`index`, `count`, `slides`), `carousel-settle`, `carousel-play`, `carousel-pause` |
+| Tabs | `tabs` | `select( tab )` (index or panel ID), `next()`, `prev()` | `tabs` and `active` (`{ index, id, label }`) | `tabs-change` (`index`, `tabId`, `previous`) |
+| Accordion | `accordion` | `open( item )`, `close( item )`, `toggle( item )` (index or item ID), `openAll()`, `closeAll()`, `isOpen( item )` | `items` (`{ index, id, title, isOpen }`) | `accordion-open`, `accordion-close` (`itemId`, `index`) |
+| Gallery | `gallery` | `open( index )`, `close()`, `next()`, `prev()` (the lightbox) | `isOpen`, `index`, `count` | `gallery-open`, `gallery-change`, `gallery-close` (`index`) |
+| Modal, drawer, collapsible | `overlay` | `open()`, `close()`, `toggle()`, `next()`, `previous()` | `id`, `isOpen` | `overlay-open`, `overlay-close` |
+| Panel | `panel` | `open()`, `close()`, `toggle()` | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
+
+Every instance also has `element` and `id`, and every block dispatches `matter-{block}-ready` (with `detail.instance`) when it starts. Events bubble from the block, with `detail.id` (the block's ID, or `null`).
+
+Scripts built with the Interactivity API can use the stores instead: `store( 'matter/carousel' ).actions.goTo( 'hero', 2 )`, and likewise `matter/tabs` (`select`, `next`, `prev`), `matter/accordion` (`open`, `close`, `toggle`, `openAll`, `closeAll`), `matter/gallery` (`open`, `close`, `next`, `prev`) and `matter/overlay` (`open`, `close`, `toggle`, `next`, `previous`, `closeAll`), each taking the target first.
 
 ## Menus
 

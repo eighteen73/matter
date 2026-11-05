@@ -36,13 +36,20 @@ class Variants {
 	private const DEFAULTS = [
 		'matter/carousel' => [
 			'label'          => 'Default',
-			// Behaviour (Embla options and controls).
+			// Behaviour (Embla options).
 			'loop'           => false,
 			'align'          => 'start',
 			'slidesToScroll' => 1,
+			// Seconds per slide (0 = off), or a continuous scroll speed
+			// (e.g. 1, for a ticker of logos; 0 = off).
 			'autoplay'       => 0,
-			'arrows'         => true,
-			'dots'           => true,
+			'autoScroll'     => 0,
+			// Controls: groups of parts by position (before, stage = over the
+			// slides, after). Parts: prev, next, dots, progress, timer,
+			// counter, play, thumbnails (image slides), expand (gallery).
+			'controls'       => [ 'after' => [ 'prev', 'dots', 'next' ] ],
+			// Image size for the thumbnails part.
+			'thumbnailSize'  => 'thumbnail',
 			// Image-only carousels: default crop, an aspect ratio preset slug
 			// (theme.json) or 'auto' for the images' own shape.
 			'aspectRatio'    => 'auto',

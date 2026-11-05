@@ -28,7 +28,8 @@ import { gallery as icon } from '@wordpress/icons';
  * Internal dependencies
  */
 import {
-	CarouselControls,
+	CarouselFrame,
+	carouselClasses,
 	selectedSlideIndex,
 	useLiveCarousel,
 	variantOptions,
@@ -323,17 +324,24 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			</InspectorControls>
 			<div {...blockProps}>
 				{isCarousel ? (
-					<div className="wp-block-matter-gallery__items wp-block-matter-carousel is-initialised">
-						<div
-							className="wp-block-matter-carousel__viewport"
-							ref={carousel.ref}
-						>
-							<div {...innerBlocksProps} />
-						</div>
-						<CarouselControls
+					<div
+						className={`wp-block-matter-gallery__items wp-block-matter-carousel ${carouselClasses(
+							carousel
+						)}`}
+					>
+						<CarouselFrame
 							carousel={carousel}
 							options={options}
-						/>
+							thumbnails={media.urls}
+							canExpand={lightbox}
+						>
+							<div
+								className="wp-block-matter-carousel__viewport"
+								ref={carousel.ref}
+							>
+								<div {...innerBlocksProps} />
+							</div>
+						</CarouselFrame>
 					</div>
 				) : (
 					<>

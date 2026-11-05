@@ -49,6 +49,7 @@
 	"dependencies": {
 		"@wordpress/icons": "^15.0.0",
 		"embla-carousel": "^8.6.0",
+		"embla-carousel-auto-scroll": "^8.6.0",
 		"embla-carousel-autoplay": "^8.6.0",
 		"focus-trap": "^7.6.4"
 	}

@@ -9,6 +9,9 @@
  * Dropdown (below the theme's breakpoint): a button showing the current tab
  * opens the tab list. In the open list, arrow keys move focus and Enter/Space
  * choose; choosing, Escape or clicking elsewhere closes it.
+ *
+ * API: `matter.tabs( target )` → instance (see README); events
+ * `matter-tabs-ready` and `matter-tabs-change`.
  */
 
 /**
@@ -18,21 +21,58 @@ import {
 	getContext,
 	getElement,
 	store,
+	withScope,
 	withSyncEvent,
 } from '@wordpress/interactivity';
 
+/**
+ * Internal dependencies
+ */
+import {
+	emit,
+	fromDirective,
+	registerInstance,
+	registerType,
+	resolve,
+} from '../../interactivity/api';
+
+const SELECTOR = '.wp-block-matter-tabs';
 const PANEL = '.wp-block-matter-tab';
 const NAV = '.wp-block-matter-tabs__nav';
 
-const activate = (tabId) => {
-	const context = getContext();
+registerType('tabs', SELECTOR);
 
+// Tabs element => instance; last announced tab.
+const instances = new WeakMap();
+const announced = new WeakMap();
+
+const activate = (tabId, context = getContext()) => {
 	context.active = tabId;
 
 	if (context.deepLink) {
 		window.history.replaceState(null, '', `#${tabId}`);
 	}
 };
+
+/**
+ * A tabs block's tabs (not a nested block's): index, panel ID and label.
+ *
+ * @param {Element} root Tabs element.
+ * @return {Array} Tabs.
+ */
+const tabsOf = (root) =>
+	[...root.querySelectorAll('[role="tab"]')]
+		.filter((button) => button.closest(SELECTOR) === root)
+		.map((button, index) => ({
+			index,
+			id: button.getAttribute('aria-controls'),
+			label:
+				button
+					.querySelector('.wp-block-matter-tabs__label')
+					?.textContent.trim() ?? '',
+		}));
+
+const instanceFor = (target) => instances.get(resolve(target, SELECTOR));
 
 // After the open/closed state has rendered.
 const afterRender = (callback) => window.requestAnimationFrame(callback);
@@ -63,7 +103,20 @@ const { state, actions } = store('matter/tabs', {
 		},
 	},
 	actions: {
-		select() {
+		/**
+		 * From a tab button; or, from the API, `select( target, tab )` with a
+		 * tab index or panel ID.
+		 *
+		 * @param {*}             target Directive event, or tabs ID/element.
+		 * @param {number|string} tab    Tab index or panel ID (API).
+		 */
+		select(target, tab) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.select(tab);
+
+				return;
+			}
+
 			const context = getContext();
 
 			activate(context.tabId);
@@ -71,6 +124,12 @@ const { state, actions } = store('matter/tabs', {
 			if (context.isMenuOpen) {
 				actions.closeMenu();
 			}
+		},
+		next(target) {
+			instanceFor(target)?.next();
+		},
+		prev(target) {
+			instanceFor(target)?.prev();
 		},
 		toggleMenu() {
 			const context = getContext();
@@ -171,6 +230,69 @@ const { state, actions } = store('matter/tabs', {
 			if (panel && panel.closest('.wp-block-matter-tabs') === ref) {
 				context.active = panel.id;
 			}
+
+			const choose = withScope((tab) => {
+				const tabs = tabsOf(ref);
+				const target =
+					typeof tab === 'number'
+						? tabs[tab]
+						: tabs.find(({ id }) => id === tab);
+
+				if (target) {
+					activate(target.id, context);
+				}
+			});
+			const step = (offset) => {
+				const tabs = tabsOf(ref);
+				const index = tabs.findIndex(({ id }) => id === context.active);
+
+				choose((index + offset + tabs.length) % tabs.length);
+			};
+
+			const instance = {
+				element: ref,
+				get id() {
+					return ref.id || null;
+				},
+				/** Each tab: { index, id (its panel's ID), label }. */
+				get tabs() {
+					return tabsOf(ref);
+				},
+				/** The current tab, as in `tabs`. */
+				get active() {
+					return (
+						tabsOf(ref).find(({ id }) => id === context.active) ??
+						null
+					);
+				},
+				select: choose,
+				next: () => step(1),
+				prev: () => step(-1),
+			};
+
+			instances.set(ref, instance);
+			announced.set(ref, context.active);
+			registerInstance('tabs', ref, instance);
+		},
+		// Announce tab changes (from a click, the keyboard or the API).
+		announce() {
+			const { active } = getContext();
+			const { ref } = getElement();
+			const previous = announced.get(ref);
+
+			if (!instances.has(ref) || previous === active) {
+				return;
+			}
+
+			announced.set(ref, active);
+
+			const tabs = tabsOf(ref);
+
+			emit(ref, 'tabs', 'change', {
+				index: tabs.findIndex(({ id }) => id === active),
+				tabId: active,
+				previous,
+			});
 		},
 	},
 });

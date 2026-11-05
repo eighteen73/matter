@@ -7,6 +7,10 @@
  *
  * A grid limited to "Images to show" shows whole rows at the number of columns
  * that fit (the server hides images beyond the limit until this runs).
+ *
+ * API: `matter.gallery( target )` → instance (see README); events
+ * `matter-gallery-ready`, `-open`, `-change` and `-close`. A gallery in the
+ * carousel layout also has a `matter.carousel()` instance.
  */
 
 /**
@@ -16,16 +20,115 @@ import {
 	getContext,
 	getElement,
 	store,
+	withScope,
 	withSyncEvent,
 } from '@wordpress/interactivity';
 
+/**
+ * Internal dependencies
+ */
+import {
+	emit,
+	fromDirective,
+	registerInstance,
+	registerType,
+	resolve,
+} from '../../interactivity/api';
+
+const SELECTOR = '.wp-block-matter-gallery';
+
+registerType('gallery', SELECTOR);
+
+// Gallery element => instance; last announced image.
+const instances = new WeakMap();
+const announced = new WeakMap();
+
 const getDialog = (element) =>
 	element
-		.closest('.wp-block-matter-gallery')
+		.closest(SELECTOR)
 		?.querySelector('.wp-block-matter-gallery__lightbox');
+
+/**
+ * Open the lightbox at an image.
+ *
+ * @param {Element} element Gallery, or an element in it.
+ * @param {Object}  context Gallery context.
+ * @param {number}  index   Image index.
+ */
+const show = (element, context, index) => {
+	const dialog = getDialog(element);
+
+	if (!dialog || !context.images.length) {
+		return;
+	}
+
+	context.index = Math.min(Math.max(0, index), context.images.length - 1);
+	announced.set(element.closest(SELECTOR), context.index);
+
+	if (!dialog.open) {
+		dialog.showModal();
+		emit(element.closest(SELECTOR), 'gallery', 'open', {
+			index: context.index,
+		});
+	}
+};
+
+const instanceFor = (target) => instances.get(resolve(target, SELECTOR));
 
 const { actions } = store('matter/gallery', {
 	callbacks: {
+		init() {
+			const context = getContext();
+			const { ref } = getElement();
+			const step = withScope((offset) => {
+				const count = context.images.length;
+
+				if (count) {
+					context.index = (context.index + offset + count) % count;
+				}
+			});
+
+			const instance = {
+				element: ref,
+				get id() {
+					return ref.id || null;
+				},
+				get isOpen() {
+					return !!getDialog(ref)?.open;
+				},
+				/** The image shown in the lightbox. */
+				get index() {
+					return context.index;
+				},
+				get count() {
+					return context.images.length;
+				},
+				open: withScope((index = 0) => show(ref, context, index)),
+				close: () => getDialog(ref)?.close(),
+				next: () => step(1),
+				prev: () => step(-1),
+			};
+
+			instances.set(ref, instance);
+			announced.set(ref, context.index);
+			registerInstance('gallery', ref, instance);
+		},
+		// Announce moving between images while the lightbox is open.
+		announce() {
+			const { index } = getContext();
+			const { ref } = getElement();
+
+			if (
+				!instances.has(ref) ||
+				announced.get(ref) === index ||
+				!getDialog(ref)?.open
+			) {
+				return;
+			}
+
+			announced.set(ref, index);
+			emit(ref, 'gallery', 'change', { index });
+		},
 		fitRows() {
 			const { limit } = getContext();
 			const { ref } = getElement();
@@ -87,12 +190,45 @@ const { actions } = store('matter/gallery', {
 		},
 	},
 	actions: {
-		open() {
-			const context = getContext();
-			const { ref } = getElement();
+		/**
+		 * From an image's enlarge button; or, from the API,
+		 * `open( target, index )`.
+		 *
+		 * @param {*}      target Directive event, or gallery ID/element.
+		 * @param {number} index  Image index (API).
+		 */
+		open(target, index = 0) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.open(index);
 
-			context.index = context.imageIndex;
-			getDialog(ref)?.showModal();
+				return;
+			}
+
+			const context = getContext();
+
+			show(getElement().ref, context, context.imageIndex);
+		},
+		// The carousel layout's "expand" control: the current slide's image.
+		openCurrent() {
+			const { ref } = getElement();
+			const figures = [
+				...(ref
+					.closest(SELECTOR)
+					?.querySelectorAll(
+						'.wp-block-matter-carousel__track > .wp-block-image'
+					) ?? []),
+			];
+
+			show(
+				ref,
+				getContext(),
+				Math.max(
+					0,
+					figures.findIndex((figure) =>
+						figure.classList.contains('is-selected')
+					)
+				)
+			);
 		},
 		// "View all" (grid with a limit): open the lightbox at the first image,
 		// or reveal the hidden images when there's no lightbox.
@@ -102,8 +238,7 @@ const { actions } = store('matter/gallery', {
 			const dialog = getDialog(ref);
 
 			if (dialog) {
-				context.index = 0;
-				dialog.showModal();
+				show(ref, context, 0);
 				return;
 			}
 
@@ -112,17 +247,35 @@ const { actions } = store('matter/gallery', {
 				.forEach((figure) => figure.removeAttribute('hidden'));
 			ref.hidden = true;
 		},
-		close() {
+		close(target) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.close();
+
+				return;
+			}
+
 			getDialog(getElement().ref)?.close();
 		},
-		prev() {
+		prev(target) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.prev();
+
+				return;
+			}
+
 			const context = getContext();
 
 			context.index =
 				(context.index - 1 + context.images.length) %
 				context.images.length;
 		},
-		next() {
+		next(target) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.next();
+
+				return;
+			}
+
 			const context = getContext();
 
 			context.index = (context.index + 1) % context.images.length;
@@ -144,6 +297,8 @@ const { actions } = store('matter/gallery', {
 		onClose() {
 			const { ref } = getElement();
 			const { index } = getContext();
+
+			emit(ref.closest(SELECTOR), 'gallery', 'close', { index });
 
 			// Return focus to the enlarge button for the image being viewed, or
 			// to "View all" when that image is hidden.

@@ -20,9 +20,11 @@ $matter_options = Variants::get( 'matter/carousel', $attributes );
 $matter_style   = '';
 
 $matter_is_images = count( $block->inner_blocks ) > 0;
+$matter_images    = [];
 
 foreach ( $block->inner_blocks as $matter_inner ) {
 	$matter_is_images = $matter_is_images && 'core/image' === $matter_inner->name;
+	$matter_images[]  = (int) ( $matter_inner->attributes['id'] ?? 0 );
 }
 
 if ( $matter_is_images ) {
@@ -38,7 +40,9 @@ $matter_html = Carousel::render(
 			'style' => $matter_style,
 		] : []
 	),
-	trim( (string) ( $attributes['label'] ?? '' ) )
+	trim( (string) ( $attributes['label'] ?? '' ) ),
+	// Image slides can have thumbnails.
+	[ 'thumbnails' => $matter_is_images ? $matter_images : [] ]
 );
 
 echo $matter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Carousel::render().

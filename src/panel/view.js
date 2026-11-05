@@ -24,6 +24,13 @@ import {
  */
 import { createFocusTrap } from 'focus-trap';
 
+/**
+ * Internal dependencies
+ */
+import { registerInstance, registerType } from '../interactivity/api';
+
+registerType('panel', '.matter-panel');
+
 const OPEN_CLASS = 'has-panel-open';
 const FOCUSABLE =
 	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -176,6 +183,27 @@ const { state, actions } = store(
 				}
 
 				applyMode(ref, id, label);
+
+				const setOpen = (isOpen) => {
+					if (state.panels[id]) {
+						state.panels[id].isOpen = isOpen;
+					}
+				};
+
+				registerInstance('panel', ref, {
+					element: ref,
+					id,
+					get isOpen() {
+						return !!state.panels[id]?.isOpen;
+					},
+					/** Off-canvas (below its breakpoint), rather than inline. */
+					get isCollapsed() {
+						return isCollapsed(id);
+					},
+					open: () => setOpen(true),
+					close: () => setOpen(false),
+					toggle: () => setOpen(!state.panels[id]?.isOpen),
+				});
 			},
 			sync() {
 				const { id } = getContext();
