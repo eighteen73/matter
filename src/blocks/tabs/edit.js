@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import {
+	BlockControls,
 	InspectorControls,
 	RichText,
 	store as blockEditorStore,
@@ -21,12 +22,12 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { useMemo, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { safeHTML } from '@wordpress/dom';
-import { plus, plusCircle } from '@wordpress/icons';
+import { plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
  */
-import { IconLibraryModal, useIcon } from '../../components/icon-picker';
+import { IconToolbar, useIcon } from '../../components/icon-picker';
 import { ActiveTabContext } from './context';
 
 function TabIcon({ name }) {
@@ -39,53 +40,6 @@ function TabIcon({ name }) {
 			dangerouslySetInnerHTML={{ __html: safeHTML(icon.content) }}
 		/>
 	) : null;
-}
-
-/**
- * The editable tab's icon: click it (or "Add icon" while editing) to choose
- * one from the icon library.
- *
- * @param {Object}   props
- * @param {string}   props.name      Icon name.
- * @param {boolean}  props.isEditing Whether the tabs block is being edited.
- * @param {Function} props.onChange  Called with an icon name ('' to remove).
- * @return {Element|null} Icon button.
- */
-function TabIconPicker({ name, isEditing, onChange }) {
-	const [isOpen, setIsOpen] = useState(false);
-
-	if (!isEditing) {
-		return <TabIcon name={name} />;
-	}
-
-	return (
-		<>
-			<Button
-				className="matter-tabs-editor__icon-button"
-				label={
-					name
-						? __('Change icon', 'matter')
-						: __('Add icon', 'matter')
-				}
-				icon={name ? undefined : plusCircle}
-				size="small"
-				onClick={(event) => {
-					event.stopPropagation();
-					setIsOpen(true);
-				}}
-			>
-				{name && <TabIcon name={name} />}
-			</Button>
-			{isOpen && (
-				<IconLibraryModal
-					value={name}
-					onSelect={(value) => onChange(value)}
-					onRemove={name ? () => onChange('') : undefined}
-					onRequestClose={() => setIsOpen(false)}
-				/>
-			)}
-		</>
-	);
 }
 
 const ALLOWED_BLOCKS = ['matter/tab', 'core/query'];
@@ -142,8 +96,23 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		setActiveId(block.clientId);
 	};
 
+	const currentTab = tabs.find((tab) => tab.clientId === currentId);
+
 	return (
 		<>
+			{/* The current tab's icon, alongside editing its label. */}
+			{!isQuery && currentTab && (
+				<BlockControls group="other">
+					<IconToolbar
+						value={currentTab.attributes.icon}
+						onChange={(icon) =>
+							updateBlockAttributes(currentTab.clientId, {
+								icon: icon ?? '',
+							})
+						}
+					/>
+				</BlockControls>
+			)}
 			<InspectorControls>
 				<PanelBody title={__('Settings', 'matter')}>
 					<TextControl
@@ -157,6 +126,25 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						value={label}
 						onChange={(value) => setAttributes({ label: value })}
 					/>
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+						isBlock
+						label={__('Orientation', 'matter')}
+						value={orientation}
+						onChange={(value) =>
+							setAttributes({ orientation: value })
+						}
+					>
+						<ToggleGroupControlOption
+							value="horizontal"
+							label={__('Horizontal', 'matter')}
+						/>
+						<ToggleGroupControlOption
+							value="vertical"
+							label={__('Vertical', 'matter')}
+						/>
+					</ToggleGroupControl>
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={__('Link to tabs', 'matter')}
@@ -180,25 +168,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						checked={dropdown}
 						onChange={(value) => setAttributes({ dropdown: value })}
 					/>
-					<ToggleGroupControl
-						__nextHasNoMarginBottom
-						__next40pxDefaultSize
-						isBlock
-						label={__('Orientation', 'matter')}
-						value={orientation}
-						onChange={(value) =>
-							setAttributes({ orientation: value })
-						}
-					>
-						<ToggleGroupControlOption
-							value="horizontal"
-							label={__('Horizontal', 'matter')}
-						/>
-						<ToggleGroupControlOption
-							value="vertical"
-							label={__('Vertical', 'matter')}
-						/>
-					</ToggleGroupControl>
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>
@@ -225,20 +194,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 										}
 									}}
 								>
-									{isActive ? (
-										<TabIconPicker
-											name={tab.attributes.icon}
-											isEditing={isEditing}
-											onChange={(icon) =>
-												updateBlockAttributes(
-													tab.clientId,
-													{ icon }
-												)
-											}
-										/>
-									) : (
-										<TabIcon name={tab.attributes.icon} />
-									)}
+									<TabIcon name={tab.attributes.icon} />
 									{isActive ? (
 										<RichText
 											tagName="span"

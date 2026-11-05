@@ -118,39 +118,3 @@
 		}
 	}
 }
-
-.matter-icon-control {
-	align-items: center;
-	display: flex;
-	gap: $grid-unit-05;
-}
-
-.matter-icon-control__preview.components-button {
-	box-shadow: inset 0 0 0 $border-width $gray-300;
-	flex: 1;
-	gap: $grid-unit-10;
-	justify-content: flex-start;
-	min-width: 0;
-	text-align: start;
-}
-
-.matter-icon-control__icon {
-	display: flex;
-	flex: none;
-	height: $icon-size;
-	width: $icon-size;
-
-	span,
-	svg {
-		display: block;
-		fill: currentcolor;
-		height: 100%;
-		width: 100%;
-	}
-}
-
-.matter-icon-control__label {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}

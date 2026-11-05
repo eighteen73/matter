@@ -34,17 +34,10 @@ import { allowedCollections, useIcons } from './use-icons';
  * @param {string}   props.value          Selected icon name.
  * @param {string}   [props.title]        Modal title.
  * @param {Function} props.onSelect       Called with the chosen icon name.
- * @param {Function} [props.onRemove]     Remove the current icon (shows a button).
  * @param {Function} props.onRequestClose Close the modal.
  * @return {Element} Modal.
  */
-export function IconLibraryModal({
-	value,
-	title,
-	onSelect,
-	onRemove,
-	onRequestClose,
-}) {
+export function IconLibraryModal({ value, title, onSelect, onRequestClose }) {
 	const [inputValue, setInputValue] = useState('');
 	const [search, setSearch] = useState('');
 	const debouncedSetSearch = useDebounce(setSearch, 300);
@@ -121,19 +114,6 @@ export function IconLibraryModal({
 								);
 							})}
 						</div>
-					)}
-					{onRemove && (
-						<Button
-							variant="secondary"
-							isDestructive
-							__next40pxDefaultSize
-							onClick={() => {
-								onRemove();
-								onRequestClose();
-							}}
-						>
-							{__('Remove icon', 'matter')}
-						</Button>
 					)}
 				</div>
 				<div className="wp-block-icon__inserter-panel">
