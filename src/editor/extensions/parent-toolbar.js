@@ -16,7 +16,6 @@ import { createHigherOrderComponent } from '@wordpress/compose';
 import { useSelect } from '@wordpress/data';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
-import { plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -60,7 +59,7 @@ function ParentToolbar({ parentId, parentName }) {
 						)}
 					/>
 				) : (
-					<ToolbarButton icon={plus} onClick={addSlide}>
+					<ToolbarButton onClick={addSlide}>
 						{__('Add slide', 'matter')}
 					</ToolbarButton>
 				)}

@@ -17,7 +17,6 @@ import {
 import { useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -148,7 +147,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			{!isQuery && !isImages && (
 				<BlockControls group="block">
 					<ToolbarGroup>
-						<ToolbarButton icon={plus} onClick={addSlide}>
+						<ToolbarButton onClick={addSlide}>
 							{__('Add slide', 'matter')}
 						</ToolbarButton>
 					</ToolbarGroup>

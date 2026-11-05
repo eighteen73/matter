@@ -35,7 +35,7 @@ class Tabs {
 			. '{list}{display:none;flex-direction:column;flex-wrap:nowrap;inset-inline:0;position:absolute;top:100%;z-index:10}'
 			. '{s}.is-menu-open{list}{display:flex}'
 			. ':where({nav}){margin-block-end:1.5em}'
-			. ':where({list}){background:var(--scheme--background,#fff);border:1px solid var(--scheme--border,rgb(0 0 0 / 15%));box-shadow:0 0.5em 1.5em rgb(0 0 0 / 10%);gap:0;margin:0;padding:0.25em 0}'
+			. ':where({list}){background:var(--scheme--background,#fff);border:1px solid var(--scheme--border,rgb(0 0 0 / 15%));box-shadow:0 0.5em 1.5em rgb(0 0 0 / 10%);gap:0;margin:0;padding:0}'
 			. ':where({list}>.wp-block-matter-tabs__tab){border:0;justify-content:flex-start;margin:0;padding:0.75em 1em;text-align:start;width:100%}'
 			. ':where({list}>.wp-block-matter-tabs__tab[aria-selected="true"]){background:rgb(0 0 0 / 5%)}',
 			[
