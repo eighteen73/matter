@@ -1,11 +1,7 @@
 /**
  * WordPress dependencies
  */
-import {
-	getBlockDefaultClassName,
-	getBlockType,
-	store as blocksStore,
-} from '@wordpress/blocks';
+import { getBlockType, store as blocksStore } from '@wordpress/blocks';
 import {
 	InnerBlocks,
 	store as blockEditorStore,
@@ -44,7 +40,11 @@ export default function Edit({ attributes: { name }, clientId }) {
 
 	const config =
 		getBlockType(sectionName)?.supports?.matter?.slots?.[name] ?? {};
-	const baseClass = sectionName ? getBlockDefaultClassName(sectionName) : '';
+	// The unfiltered default class (`blocks.getBlockDefaultClassName` may
+	// change the section's own, e.g. for overlays), as on the front end.
+	const baseClass = sectionName
+		? `wp-block-${sectionName.replace(/^core\//, '').replace('/', '-')}`
+		: '';
 
 	const blockProps = useBlockProps({
 		className: baseClass ? `${baseClass}__${name}` : undefined,

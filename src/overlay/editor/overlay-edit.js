@@ -1,23 +1,23 @@
 /**
  * Shared editor for overlay blocks (modal, drawer, collapsible).
  *
- * Two slots: an optional trigger area that stays on the page, and the content.
- * The content opens over the canvas (modal, drawer) or in place (collapsible)
- * with the Edit/Close button, and opens automatically while anything inside
- * it is selected. Links to `#id` also open the overlay, so the ID is shown
- * (and copyable) in the inspector.
+ * The canvas shows what the front end shows. A closed modal or drawer shows
+ * only its trigger area (if it has one); it opens, as it looks on the front
+ * end, while it or anything in its content is selected, and closes when the
+ * selection moves on. A collapsible opens in place the same way. Overlays are
+ * also listed, with their settings, in the Overlays sidebar.
  */
 
 /**
  * WordPress dependencies
  */
 import {
-	BlockControls,
 	InspectorControls,
 	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
+import { createBlock } from '@wordpress/blocks';
 import {
 	Button,
 	Flex,
@@ -26,11 +26,9 @@ import {
 	RangeControl,
 	TextControl,
 	ToggleControl,
-	ToolbarButton,
-	ToolbarGroup,
 } from '@wordpress/components';
 import { useCopyToClipboard } from '@wordpress/compose';
-import { useSelect } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
@@ -44,12 +42,6 @@ const TEMPLATE = [
 	['matter/slot', { name: 'trigger' }],
 	['matter/slot', { name: 'content' }],
 ];
-
-const LABELS = {
-	modal: __('Modal', 'matter'),
-	drawer: __('Drawer', 'matter'),
-	collapsible: __('Collapsible', 'matter'),
-};
 
 const randomSuffix = () => Math.random().toString(36).slice(2, 7);
 
@@ -71,14 +63,14 @@ const useUniqueOverlayId = (clientId, overlayId, type, setAttributes) => {
 
 			const { getClientIdsWithDescendants, getBlockAttributes } =
 				select(blockEditorStore);
+			const ids = getClientIdsWithDescendants();
 
-			return getClientIdsWithDescendants().some(
+			return ids.some(
 				(id) =>
 					id !== clientId &&
 					getBlockAttributes(id)?.overlayId === overlayId &&
 					// The first block keeps the ID; later copies change.
-					getClientIdsWithDescendants().indexOf(id) <
-						getClientIdsWithDescendants().indexOf(clientId)
+					ids.indexOf(id) < ids.indexOf(clientId)
 			);
 		},
 		[clientId, overlayId]
@@ -110,42 +102,47 @@ export default function OverlayEdit({
 		scrollThreshold,
 		urlTriggers,
 		dismissDays,
+		scheme,
 	} = attributes;
 	const isDialog = type !== 'collapsible';
-	const [isOpen, setIsOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
+	const { clearSelectedBlock, replaceInnerBlocks } =
+		useDispatch(blockEditorStore);
 
-	// Open while anything in the content area is selected.
-	const isEditingContent = useSelect(
+	const { isOpen, triggerId, hasTrigger } = useSelect(
 		(select) => {
-			const { getBlocks, isBlockSelected, hasSelectedInnerBlock } =
-				select(blockEditorStore);
-			const content = getBlocks(clientId).find(
+			const {
+				getBlocks,
+				isBlockSelected,
+				hasSelectedInnerBlock,
+				getBlockCount,
+			} = select(blockEditorStore);
+			const slots = getBlocks(clientId);
+			const trigger = slots.find(
+				(block) => block.attributes.name === 'trigger'
+			);
+			const content = slots.find(
 				(block) => block.attributes.name === 'content'
 			);
+			const isSelected =
+				isBlockSelected(clientId) ||
+				// A collapsible opens in place, so editing its trigger can
+				// show the content too; a dialog would cover the trigger.
+				(isDialog
+					? !!content &&
+						(isBlockSelected(content.clientId) ||
+							hasSelectedInnerBlock(content.clientId, true))
+					: hasSelectedInnerBlock(clientId, true));
 
-			return (
-				!!content &&
-				(isBlockSelected(content.clientId) ||
-					hasSelectedInnerBlock(content.clientId, true))
-			);
+			return {
+				isOpen: isSelected,
+				triggerId: trigger?.clientId,
+				hasTrigger: !!trigger && getBlockCount(trigger.clientId) > 0,
+			};
 		},
-		[clientId]
+		[clientId, isDialog]
 	);
 
-	useEffect(() => {
-		if (isEditingContent) {
-			setIsOpen(true);
-		}
-	}, [isEditingContent]);
-
-	const toggleLabel = isOpen
-		? __('Close', 'matter')
-		: sprintf(
-				/* translators: %s: overlay type, e.g. modal */
-				__('Edit %s', 'matter'),
-				LABELS[type].toLowerCase()
-			);
 	const copyRef = useCopyToClipboard(`#${overlayId}`, () => {
 		setCopied(true);
 		window.setTimeout(() => setCopied(false), 2000);
@@ -153,18 +150,48 @@ export default function OverlayEdit({
 
 	useUniqueOverlayId(clientId, overlayId, type, setAttributes);
 
+	const setHasTrigger = (value) => {
+		if (!triggerId) {
+			return;
+		}
+
+		replaceInnerBlocks(
+			triggerId,
+			value
+				? [
+						createBlock('core/buttons', {}, [
+							createBlock('core/button', {
+								text: __('Open', 'matter'),
+							}),
+						]),
+					]
+				: [],
+			false
+		);
+	};
+
+	// Closed, a modal or drawer is just its trigger area, as on the front
+	// end (which wraps the trigger and the <dialog> in a `-host` element; the
+	// editor's default class is `-host` too, see src/editor/index.js).
+	// Open, the block becomes the dialog: the front end's classes and the
+	// `open` attribute let theme styles apply.
+	const blockClass = `wp-block-matter-${type}`;
 	const blockProps = useBlockProps({
 		className: [
 			'matter-overlay-editor',
 			`is-overlay-${type}`,
 			isOpen && 'is-editor-open',
+			hasTrigger && 'has-trigger',
+			isDialog && isOpen && blockClass,
+			isDialog && isOpen && scheme && `has-scheme has-scheme-${scheme}`,
 			className,
 		]
 			.filter(Boolean)
 			.join(' '),
+		open: isDialog && isOpen ? true : undefined,
 	});
-	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'matter-overlay-editor__areas' },
+	const { children: areas, ...innerBlocksProps } = useInnerBlocksProps(
+		blockProps,
 		{
 			allowedBlocks: ['matter/slot'],
 			template: TEMPLATE,
@@ -219,7 +246,7 @@ export default function OverlayEdit({
 							__next40pxDefaultSize
 							label={__('Name', 'matter')}
 							help={__(
-								'Announced by screen readers when it opens.',
+								'Shown in the Overlays list, and announced by screen readers when it opens.',
 								'matter'
 							)}
 							value={label}
@@ -228,6 +255,16 @@ export default function OverlayEdit({
 							}
 						/>
 					)}
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__('Trigger on the page', 'matter')}
+						help={__(
+							'Content in place on the page (e.g. a button) that opens it. Its first link or button is the trigger.',
+							'matter'
+						)}
+						checked={hasTrigger}
+						onChange={setHasTrigger}
+					/>
 					{isDialog && (
 						<ToggleControl
 							__nextHasNoMarginBottom
@@ -345,34 +382,18 @@ export default function OverlayEdit({
 					</PanelBody>
 				)}
 			</InspectorControls>
-			<BlockControls group="block">
-				<ToolbarGroup>
-					<ToolbarButton onClick={() => setIsOpen(!isOpen)}>
-						{toggleLabel}
-					</ToolbarButton>
-				</ToolbarGroup>
-			</BlockControls>
-			<div {...blockProps}>
-				<div className="matter-overlay-editor__bar">
-					<span className="matter-overlay-editor__label">
-						{LABELS[type]} · #{overlayId}
-					</span>
-					<Button
-						variant="secondary"
-						size="small"
-						onClick={() => setIsOpen(!isOpen)}
-					>
-						{toggleLabel}
-					</Button>
-				</div>
-				<div {...innerBlocksProps} />
-				{isOpen && isDialog && (
+			<div {...innerBlocksProps}>
+				{areas}
+				{isDialog && isOpen && dismissible && (
 					<button
 						type="button"
-						className="matter-overlay-editor__backdrop"
-						aria-label={__('Close', 'matter')}
-						onClick={() => setIsOpen(false)}
-					/>
+						className={`${blockClass}__close`}
+						onClick={() => clearSelectedBlock()}
+					>
+						<span className="screen-reader-text">
+							{__('Close', 'matter')}
+						</span>
+					</button>
 				)}
 			</div>
 		</>

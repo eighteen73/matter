@@ -42,7 +42,11 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 - **Groups:** modals with the same group get previous/next buttons and an "n / N" position, cycling in page order.
 - **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate). A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
 
-**In the editor**, the trigger area stays in the page. The content opens over the canvas (modal, drawer) or in place (collapsible) with the **Edit / Close** button, and opens automatically while anything in it is selected.
+**In the editor**, the canvas shows what the front end shows.
+- **Closed:** only the trigger area shows (when "Trigger on the page" is on). An overlay without a trigger takes no space.
+- **Open:** an overlay opens while it, or anything in its content, is selected, and closes when the selection moves on. A modal or drawer opens as it looks on the front end: it takes the dialog's class and `open` attribute, so the theme's styles apply, over a backdrop. A collapsible opens in place, including while its trigger is selected.
+- **Overlays sidebar** (top bar): lists the modals, drawers and collapsibles being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end, where it sits doesn't matter).
+- **Linking:** link search suggests the page's overlays by name, and a button or link to one, or a block in its trigger area, gets **Edit modal** / **Edit drawer** on its toolbar.
 
 Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
 

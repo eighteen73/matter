@@ -63,11 +63,8 @@
 			"scheme": true,
 			"section": false,
 			"slots": {
-				"trigger": {
-					"label": "Trigger (optional): opens the modal"
-				},
+				"trigger": {},
 				"content": {
-					"label": "Content",
 					"template": [
 						[
 							"core/heading",
@@ -79,7 +76,7 @@
 						[
 							"core/paragraph",
 							{
-								"placeholder": "Content\u2026"
+								"placeholder": "Content…"
 							}
 						]
 					]

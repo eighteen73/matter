@@ -24,10 +24,25 @@ import SectionEdit from './components/section-edit';
 import './extensions/button-icon';
 import './extensions/focal-point';
 import './extensions/parent-toolbar';
+import './overlays/link-suggestions';
+import './overlays/sidebar';
+import './overlays/toolbar';
 import '../components/icon-picker/editor.scss';
 import './index.scss';
 
 const { sections = [] } = window.matterEditor ?? {};
+
+const DIALOGS = ['matter/modal', 'matter/drawer'];
+
+// In the editor a closed modal or drawer is only its trigger area, as on the
+// front end, where the trigger and <dialog> share a `-host` wrapper. The
+// block takes the dialog's class while open (see overlay-edit.js).
+addFilter(
+	'blocks.getBlockDefaultClassName',
+	'matter/overlays/host-class',
+	(className, name) =>
+		DIALOGS.includes(name) ? `${className}-host` : className
+);
 
 const hasSchemeSupport = (name) =>
 	!!getBlockType(name)?.supports?.matter?.scheme;
@@ -81,7 +96,12 @@ addFilter(
 		(BlockListBlock) => (props) => {
 			const scheme = props.attributes?.scheme;
 
-			if (!scheme || !hasSchemeSupport(props.name)) {
+			// Modals and drawers add theirs to the open dialog only.
+			if (
+				!scheme ||
+				!hasSchemeSupport(props.name) ||
+				DIALOGS.includes(props.name)
+			) {
 				return <BlockListBlock {...props} />;
 			}
 
