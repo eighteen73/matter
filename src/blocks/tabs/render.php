@@ -3,9 +3,10 @@
  * Tabs: a tab list built from the tabs that rendered inside it, then the panels.
  *
  * Tabs can be vertical (list beside the panels), and can show as a dropdown
- * (a native select) on smaller screens. The theme decides where "smaller"
- * starts: the variant option `dropdownBelow` (a breakpoint, default md), or
- * false to style `.wp-block-matter-tabs.has-dropdown` in its own CSS.
+ * on smaller screens: a button showing the current tab (icon and label) that
+ * opens the tab list. The theme decides where "smaller" starts: the variant
+ * option `dropdownBelow` (a breakpoint, default md), or false to style
+ * `.wp-block-matter-tabs.has-dropdown` in its own CSS (see README).
  *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered tab panels.
@@ -15,6 +16,7 @@
  */
 
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Blocks\Tabs;
 use Eighteen73\Matter\Breakpoints;
 use Eighteen73\Matter\Icons;
 use Eighteen73\Matter\Variants;
@@ -43,24 +45,27 @@ wp_interactivity_state(
 );
 
 $matter_buttons = '';
-$matter_options = '';
+$matter_current = '';
 
 foreach ( $matter_tabs as $matter_index => $matter_tab ) {
 	$matter_tab_id    = $matter_id . '-' . ( $matter_index + 1 );
 	$matter_tab_label = '' !== $matter_tab['label'] ? $matter_tab['label'] : sprintf( /* translators: %d: tab number */ __( 'Tab %d', 'matter' ), $matter_index + 1 );
 
-	$matter_options .= sprintf(
-		'<option value="%1$s" %2$s data-wp-bind--selected="state.isActive">%3$s</option>',
-		esc_attr( $matter_tab_id ),
+	$matter_icon = Icons::render( (string) ( $matter_tab['icon'] ?? '' ), 'wp-block-matter-tabs__icon' );
+
+	// The dropdown's button shows the current tab.
+	$matter_current .= sprintf(
+		'<span class="wp-block-matter-tabs__current" %1$s data-wp-bind--hidden="!state.isActive">%2$s<span class="wp-block-matter-tabs__label">%3$s</span></span>',
 		wp_interactivity_data_wp_context( [ 'tabId' => $matter_tab_id ] ),
-		esc_html( wp_strip_all_tags( $matter_tab_label ) )
+		$matter_icon,
+		wp_kses_post( $matter_tab_label )
 	);
 
 	$matter_buttons .= sprintf(
 		'<button type="button" role="tab" id="%1$s-tab" class="wp-block-matter-tabs__tab" aria-controls="%1$s" %2$s data-wp-bind--aria-selected="state.isActive" data-wp-bind--tabindex="state.tabIndex" data-wp-on--click="actions.select" data-wp-on--keydown="actions.onKeydown">%3$s<span class="wp-block-matter-tabs__label">%4$s</span></button>',
 		esc_attr( $matter_tab_id ),
 		wp_interactivity_data_wp_context( [ 'tabId' => $matter_tab_id ] ),
-		Icons::render( (string) ( $matter_tab['icon'] ?? '' ), 'wp-block-matter-tabs__icon' ),
+		$matter_icon,
 		wp_kses_post( $matter_tab_label )
 	);
 }
@@ -74,7 +79,7 @@ if ( $matter_vertical ) {
 	$matter_classes[] = 'is-vertical';
 }
 
-$matter_select = '';
+$matter_toggle = '';
 
 if ( $matter_dropdown ) {
 	$matter_classes[] = 'has-dropdown';
@@ -89,29 +94,42 @@ if ( $matter_dropdown ) {
 		if ( ! isset( $matter_dropdown_styles[ $matter_below ] ) ) {
 			$matter_dropdown_styles[ $matter_below ] = true;
 
-			$matter_scope = '.wp-block-matter-tabs.has-dropdown-below-' . $matter_below;
-
 			wp_add_inline_style(
 				'matter-tabs-style',
-				sprintf(
-					'@media %1$s{%2$s{display:block}%2$s>.wp-block-matter-tabs__list{display:none}%2$s>.wp-block-matter-tabs__select{display:block}}',
-					Breakpoints::range( null, $matter_below ),
-					$matter_scope
-				)
+				Tabs::dropdown_css( '.wp-block-matter-tabs.has-dropdown-below-' . $matter_below, Breakpoints::range( null, $matter_below ) )
 			);
 		}
 	}
 
-	$matter_select = sprintf(
-		'<select class="wp-block-matter-tabs__select" aria-label="%1$s" aria-controls="%2$s" data-wp-on--change="actions.selectFromMenu">%3$s</select>',
-		esc_attr( '' !== $matter_label ? $matter_label : __( 'Choose a tab', 'matter' ) ),
-		esc_attr( implode( ' ', array_map( fn( $index ) => $matter_id . '-' . ( $index + 1 ), array_keys( $matter_tabs ) ) ) ),
-		$matter_options
+	$matter_toggle = sprintf(
+		'<button type="button" class="wp-block-matter-tabs__toggle" aria-expanded="false" aria-controls="%1$s-list" data-wp-bind--aria-expanded="context.isMenuOpen" data-wp-on--click="actions.toggleMenu" data-wp-on--keydown="actions.onToggleKeydown"><span class="screen-reader-text">%2$s</span>%3$s</button>',
+		esc_attr( $matter_id ),
+		/* translators: %s: tabs name, or "Choose a tab" */
+		esc_html( sprintf( __( '%s:', 'matter' ), '' !== $matter_label ? $matter_label : __( 'Choose a tab', 'matter' ) ) ) . ' ',
+		$matter_current
+	);
+}
+
+$matter_list = sprintf(
+	'<div class="wp-block-matter-tabs__list" id="%1$s-list" role="tablist"%2$s%3$s>%4$s</div>',
+	esc_attr( $matter_id ),
+	'' !== $matter_label ? ' aria-label="' . esc_attr( $matter_label ) . '"' : '',
+	$matter_vertical ? ' aria-orientation="vertical"' : '',
+	$matter_buttons
+);
+
+// With a dropdown, the button and list share a wrapper (display: contents
+// where the dropdown isn't in use, so layouts treat the list as usual).
+if ( $matter_toggle ) {
+	$matter_list = sprintf(
+		'<div class="wp-block-matter-tabs__nav" data-wp-on-document--click="actions.onDocumentClick">%1$s%2$s</div>',
+		$matter_toggle,
+		$matter_list
 	);
 }
 
 printf(
-	'<div %1$s data-wp-interactive="matter/tabs" %2$s data-wp-init="callbacks.init">%3$s<div class="wp-block-matter-tabs__list" role="tablist"%4$s%5$s>%6$s</div><div class="wp-block-matter-tabs__panels">%7$s</div></div>',
+	'<div %1$s data-wp-interactive="matter/tabs" %2$s data-wp-init="callbacks.init" data-wp-class--is-menu-open="context.isMenuOpen">%3$s<div class="wp-block-matter-tabs__panels">%4$s</div></div>',
 	get_block_wrapper_attributes( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
 			'id'    => $matter_id,
@@ -120,13 +138,11 @@ printf(
 	),
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
-			'active'   => $matter_id . '-1',
-			'deepLink' => ! empty( $attributes['deepLink'] ),
+			'active'     => $matter_id . '-1',
+			'deepLink'   => ! empty( $attributes['deepLink'] ),
+			'isMenuOpen' => false,
 		]
 	),
-	$matter_select, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	'' !== $matter_label ? ' aria-label="' . esc_attr( $matter_label ) . '"' : '',
-	$matter_vertical ? ' aria-orientation="vertical"' : '',
-	$matter_buttons, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	$matter_list, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 );

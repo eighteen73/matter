@@ -1,6 +1,6 @@
 // Tabs. Functional rules use plain classes; presentational defaults are in
-// :where() so themes restyle freely (including turning the list into a
-// scroller or select-like control at small sizes).
+// :where() so themes restyle freely. The dropdown's breakpoint rules (the
+// list as a menu below the button) are generated: see Blocks\Tabs.
 
 .wp-block-matter-tabs__list {
 	display: flex;
@@ -32,15 +32,47 @@
 	display: grid;
 	grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
 
-	> .wp-block-matter-tabs__list {
+	> .wp-block-matter-tabs__list,
+	> .wp-block-matter-tabs__nav > .wp-block-matter-tabs__list {
 		flex-direction: column;
 	}
 }
 
-// Shown on smaller screens (has-dropdown): below the variant's breakpoint
-// (rules generated per breakpoint), or by the theme's own CSS.
-.wp-block-matter-tabs__select {
+// Tabs with a dropdown: the button and list share a wrapper, which layouts
+// ignore until the dropdown is in use.
+.wp-block-matter-tabs__nav {
+	display: contents;
+}
+
+// The dropdown's button (shown on smaller screens): the current tab and a caret.
+.wp-block-matter-tabs__toggle {
+	align-items: center;
+	cursor: pointer;
 	display: none;
+	width: 100%;
+
+	&::after {
+		background-color: currentcolor;
+		content: "";
+		flex: none;
+		height: 1em;
+		margin-inline-start: auto;
+		mask: url("../../../assets/svg/caret-down.svg") center / contain no-repeat;
+		width: 1em;
+	}
+
+	&[aria-expanded="true"]::after {
+		transform: rotate(180deg);
+	}
+}
+
+.wp-block-matter-tabs__current {
+	align-items: center;
+	display: inline-flex;
+
+	&[hidden] {
+		display: none;
+	}
 }
 
 // Presentational defaults.
@@ -76,7 +108,7 @@
 	column-gap: 2em;
 }
 
-:where(.wp-block-matter-tabs.is-vertical > .wp-block-matter-tabs__list) {
+:where(.wp-block-matter-tabs.is-vertical > .wp-block-matter-tabs__list, .wp-block-matter-tabs.is-vertical > .wp-block-matter-tabs__nav > .wp-block-matter-tabs__list) {
 	border-block-end: 0;
 	border-inline-end: 1px solid var(--scheme--border, rgb(0 0 0 / 15%));
 	gap: 0;
@@ -96,9 +128,18 @@
 	border-inline-end-color: currentcolor;
 }
 
-:where(.wp-block-matter-tabs__select) {
+:where(.wp-block-matter-tabs__current) {
+	gap: 0.5em;
+}
+
+:where(.wp-block-matter-tabs__toggle) {
+	appearance: none;
+	background: none;
+	border: 1px solid var(--scheme--border, rgb(0 0 0 / 15%));
+	color: inherit;
 	font: inherit;
-	margin-block-end: 1.5em;
-	padding: 0.75em;
-	width: 100%;
+	font-weight: 600;
+	gap: 0.5em;
+	padding: 0.75em 1em;
+	text-align: start;
 }
