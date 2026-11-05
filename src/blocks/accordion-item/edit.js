@@ -11,7 +11,7 @@ import {
 import { PanelBody, ToggleControl } from '@wordpress/components';
 import { useEntityProp } from '@wordpress/core-data';
 import { useSelect } from '@wordpress/data';
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 const TEMPLATE = [
@@ -45,6 +45,7 @@ function selectedItem(select) {
  * An accordion item, as on the front end: closed until opened. Selecting the
  * item (e.g. clicking its title to edit it) opens it; the caret toggles it.
  * With "Only one item open at a time", selecting another item closes it.
+ * Selecting something outside the accordion returns items to their defaults.
  *
  * @param {Object}   props
  * @param {Object}   props.attributes    Block attributes.
@@ -60,18 +61,36 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 	const HeadingTag = `h${level}`;
 	const [postTitle] = useEntityProp('postType', postType, 'title', postId);
 
-	const { activeItem, isFirst } = useSelect(
-		(select) => ({
-			activeItem: selectedItem(select),
-			isFirst: select(blockEditorStore).getBlockIndex(clientId) === 0,
-		}),
+	const { activeItem, isFirst, isEditing } = useSelect(
+		(select) => {
+			const {
+				getBlockIndex,
+				getBlockParentsByBlockName,
+				isBlockSelected,
+				hasSelectedInnerBlock,
+			} = select(blockEditorStore);
+			const [accordion] = getBlockParentsByBlockName(
+				clientId,
+				'matter/accordion',
+				true
+			);
+
+			return {
+				activeItem: selectedItem(select),
+				isFirst: getBlockIndex(clientId) === 0,
+				// The accordion (or anything in it) is selected.
+				isEditing:
+					!!accordion &&
+					(isBlockSelected(accordion) ||
+						hasSelectedInnerBlock(accordion, true)),
+			};
+		},
 		[clientId]
 	);
 
 	const autoclose = !!context['matter/autoclose'];
-	const [isOpen, setIsOpen] = useState(
-		open || (isFirst && !!context['matter/openFirst'])
-	);
+	const isOpenByDefault = open || (isFirst && !!context['matter/openFirst']);
+	const [isOpen, setIsOpen] = useState(isOpenByDefault);
 	const [isSettled, setIsSettled] = useState(isOpen);
 
 	// Follow the selection: open when it moves into this item; close when it
@@ -83,6 +102,17 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 			setIsOpen(false);
 		}
 	}, [activeItem, clientId, autoclose]);
+
+	// Back to how the page loads once editing moves outside the accordion.
+	const wasEditing = useRef(isEditing);
+
+	useEffect(() => {
+		if (wasEditing.current && !isEditing) {
+			setIsOpen(isOpenByDefault);
+		}
+
+		wasEditing.current = isEditing;
+	}, [isEditing, isOpenByDefault]);
 
 	// Content may overflow (block toolbars, inserters) once fully open.
 	useEffect(() => {
