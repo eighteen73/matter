@@ -3,6 +3,7 @@
  */
 import {
 	BlockControls,
+	BlockSettingsMenuControls,
 	InspectorControls,
 	RichText,
 	store as blockEditorStore,
@@ -12,6 +13,7 @@ import {
 import { createBlock } from '@wordpress/blocks';
 import {
 	Button,
+	MenuItem,
 	PanelBody,
 	TextControl,
 	ToggleControl,
@@ -19,9 +21,9 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useMemo, useState } from '@wordpress/element';
+import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { safeHTML } from '@wordpress/dom';
+import { placeCaretAtHorizontalEdge, safeHTML } from '@wordpress/dom';
 import { plus } from '@wordpress/icons';
 
 /**
@@ -44,7 +46,12 @@ function TabIcon({ name }) {
 
 const ALLOWED_BLOCKS = ['matter/tab', 'core/query'];
 
-export default function Edit({ attributes, setAttributes, clientId }) {
+export default function Edit({
+	attributes,
+	setAttributes,
+	clientId,
+	isSelected,
+}) {
 	const { label, deepLink, orientation, dropdown } = attributes;
 	const [activeId, setActiveId] = useState(null);
 
@@ -65,8 +72,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		},
 		[clientId]
 	);
-	const { insertBlock, updateBlockAttributes } =
+	const { insertBlock, removeBlock, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
+	const listRef = useRef();
+	const [focusLabel, setFocusLabel] = useState(false);
 
 	const currentId = tabs.some((tab) => tab.clientId === activeId)
 		? activeId
@@ -88,6 +97,35 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			renderAppender: false,
 		}
 	);
+
+	// After removing a tab, continue editing the end of its neighbour's label.
+	useEffect(() => {
+		const labelElement = focusLabel
+			? listRef.current?.querySelector(
+					'[aria-selected="true"] .wp-block-matter-tabs__label'
+				)
+			: null;
+
+		if (labelElement) {
+			labelElement.focus();
+			placeCaretAtHorizontalEdge(labelElement, true);
+			setFocusLabel(false);
+		}
+	}, [focusLabel, currentId]);
+
+	// Remove a tab (and its content), showing the one before it. The last
+	// tab stays: delete the block instead.
+	const removeTab = (index) => {
+		const neighbour = tabs[index - 1] ?? tabs[index + 1];
+
+		if (!neighbour) {
+			return;
+		}
+
+		setActiveId(neighbour.clientId);
+		setFocusLabel(true);
+		removeBlock(tabs[index].clientId, false);
+	};
 
 	const addTab = () => {
 		const block = createBlock('matter/tab');
@@ -112,6 +150,24 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						}
 					/>
 				</BlockControls>
+			)}
+			{isSelected && !isQuery && tabs.length > 1 && (
+				<BlockSettingsMenuControls>
+					{({ onClose }) => (
+						<MenuItem
+							onClick={() => {
+								removeTab(
+									tabs.findIndex(
+										(tab) => tab.clientId === currentId
+									)
+								);
+								onClose();
+							}}
+						>
+							{__('Delete tab', 'matter')}
+						</MenuItem>
+					)}
+				</BlockSettingsMenuControls>
 			)}
 			<InspectorControls>
 				<PanelBody title={__('Settings', 'matter')}>
@@ -173,6 +229,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			<div {...blockProps}>
 				{!isQuery && (
 					<div
+						ref={listRef}
 						className="wp-block-matter-tabs__list"
 						role="tablist"
 						aria-orientation={orientation}
@@ -212,6 +269,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 												index + 1
 											)}
 											allowedFormats={[]}
+											// Backspace in an empty name removes the tab.
+											onRemove={() => removeTab(index)}
 										/>
 									) : (
 										<span className="wp-block-matter-tabs__label">
