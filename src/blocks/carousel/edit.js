@@ -30,6 +30,11 @@ import {
 } from '../../carousel/editor/live-carousel';
 import { useAddSlide } from '../../carousel/editor/use-add-slide';
 import {
+	AspectRatioControl,
+	aspectRatioStyle,
+	useAspectRatios,
+} from '../../components/aspect-ratio';
+import {
 	GalleryMediaUpload,
 	useGalleryMedia,
 } from '../../components/gallery-media';
@@ -69,10 +74,23 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const media = useGalleryMedia(clientId);
 	const isImages = !isQuery && media.isImageOnly;
 
+	// Image slides share an aspect ratio (the variant's by default).
+	const aspectRatios = useAspectRatios();
+	const currentRatio =
+		attributes.aspectRatio || options.aspectRatio || 'auto';
+	const ratioStyle = isImages
+		? aspectRatioStyle(currentRatio, aspectRatios)
+		: undefined;
+
 	const blockProps = useBlockProps({
-		className: ['is-initialised', carousel.isQuery && 'is-query']
+		className: [
+			'is-initialised',
+			carousel.isQuery && 'is-query',
+			ratioStyle && 'has-image-aspect-ratio',
+		]
 			.filter(Boolean)
 			.join(' '),
+		style: ratioStyle,
 	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-carousel__track' },
@@ -120,6 +138,15 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						value={attributes.label}
 						onChange={(label) => setAttributes({ label })}
 					/>
+					{isImages && (
+						<AspectRatioControl
+							value={currentRatio}
+							presets={aspectRatios}
+							onChange={(value) =>
+								setAttributes({ aspectRatio: value })
+							}
+						/>
+					)}
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>

@@ -13,7 +13,18 @@
 			"type": "string",
 			"default": "",
 			"role": "content"
+		},
+		"aspectRatio": {
+			"type": "string",
+			"default": ""
+		},
+		"allowResize": {
+			"type": "boolean",
+			"default": false
 		}
+	},
+	"providesContext": {
+		"allowResize": "allowResize"
 	},
 	"supports": {
 		"html": false,

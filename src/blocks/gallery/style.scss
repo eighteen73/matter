@@ -1,10 +1,31 @@
-// Gallery. Grid layout and image cropping are presentational defaults (themes
-// set the crop per variant, e.g. `.is-style-landscape img { aspect-ratio: 4/3 }`);
-// the carousel layout takes its layout from the carousel block's CSS.
+// Gallery. Every image is cropped to the chosen aspect ratio
+// (`--image-aspect-ratio`). The grid has the chosen columns (`.has-columns-N`)
+// where there's room and fewer on smaller screens, as images are never
+// narrower than `--gallery-min-width`; themes set that and `--gallery-gap`.
+// The carousel layout takes its layout from the carousel block's CSS.
 
 .wp-block-matter-gallery__items .wp-block-image {
 	margin: 0;
 	position: relative;
+}
+
+.wp-block-matter-gallery .wp-block-image img {
+	aspect-ratio: var(--image-aspect-ratio, auto);
+	height: auto;
+	object-fit: cover;
+	width: 100%;
+}
+
+@for $i from 1 through 6 {
+	.wp-block-matter-gallery.has-columns-#{$i} {
+		--gallery-columns: #{$i};
+	}
+}
+
+.wp-block-matter-gallery.has-columns .wp-block-matter-gallery__items {
+	display: grid;
+	gap: var(--gallery-gap, 1rem);
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--gallery-min-width, 10rem), (100% - (var(--gallery-columns) - 1) * var(--gallery-gap, 1rem)) / var(--gallery-columns))), 1fr));
 }
 
 // Images beyond the grid's limit (shown in the lightbox, or by "View all").
@@ -104,15 +125,8 @@ dialog.wp-block-matter-gallery__lightbox {
 // Presentational defaults.
 :where(.wp-block-matter-gallery:not(.is-carousel) .wp-block-matter-gallery__items) {
 	display: grid;
-	gap: 1rem;
-	grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
-}
-
-:where(.wp-block-matter-gallery .wp-block-image img) {
-	aspect-ratio: 1;
-	height: auto;
-	object-fit: cover;
-	width: 100%;
+	gap: var(--gallery-gap, 1rem);
+	grid-template-columns: repeat(auto-fill, minmax(min(var(--gallery-min-width, 10rem), 100%), 1fr));
 }
 
 :where(.wp-block-matter-gallery__open) {

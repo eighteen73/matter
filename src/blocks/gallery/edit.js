@@ -34,6 +34,11 @@ import {
 	variantOptions,
 } from '../../carousel/editor/live-carousel';
 import {
+	AspectRatioControl,
+	aspectRatioStyle,
+	useAspectRatios,
+} from '../../components/aspect-ratio';
+import {
 	GalleryMediaUpload,
 	useGalleryMedia,
 } from '../../components/gallery-media';
@@ -41,8 +46,9 @@ import {
 const ALLOWED_BLOCKS = ['core/image'];
 
 /**
- * Gallery editor. The grid dims images beyond "Images to show"; the carousel
- * layout is a live carousel, as on the front end.
+ * Gallery editor, as on the front end: the grid hides images beyond "Images
+ * to show"; the carousel layout is a live carousel. Columns and the images'
+ * aspect ratio are chosen from the theme's options.
  *
  * @param {Object}   props
  * @param {Object}   props.attributes    Block attributes.
@@ -51,7 +57,15 @@ const ALLOWED_BLOCKS = ['core/image'];
  * @return {Element} Gallery editor.
  */
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { lightbox, label, layout, limit, className = '' } = attributes;
+	const {
+		lightbox,
+		label,
+		layout,
+		limit,
+		columns,
+		aspectRatio,
+		className = '',
+	} = attributes;
 	const isCarousel = layout === 'carousel';
 	const options = variantOptions(
 		'matter/gallery',
@@ -82,8 +96,21 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const isLimited = !isCarousel && limit > 0 && imageCount > limit;
 
+	// The theme's column choices and default crop (variant options).
+	const columnChoices = (options.columns ?? []).map(Number);
+	const currentColumns = columns || Number(options.defaultColumns) || 0;
+	const hasColumns = !isCarousel && columnChoices.includes(currentColumns);
+	const aspectRatios = useAspectRatios();
+	const currentRatio = aspectRatio || options.aspectRatio || 'auto';
+
 	const blockProps = useBlockProps({
-		className: isCarousel ? 'is-carousel' : 'is-grid',
+		className: [
+			isCarousel ? 'is-carousel' : 'is-grid',
+			hasColumns && `has-columns has-columns-${currentColumns}`,
+		]
+			.filter(Boolean)
+			.join(' '),
+		style: aspectRatioStyle(currentRatio, aspectRatios),
 	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{
@@ -154,6 +181,37 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							label={__('Carousel', 'matter')}
 						/>
 					</ToggleGroupControl>
+					{!isCarousel && columnChoices.length > 1 && (
+						<ToggleGroupControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							isBlock
+							label={__('Columns', 'matter')}
+							help={__(
+								'Fewer columns show where there is less room.',
+								'matter'
+							)}
+							value={currentColumns}
+							onChange={(value) =>
+								setAttributes({ columns: Number(value) })
+							}
+						>
+							{columnChoices.map((count) => (
+								<ToggleGroupControlOption
+									key={count}
+									value={count}
+									label={String(count)}
+								/>
+							))}
+						</ToggleGroupControl>
+					)}
+					<AspectRatioControl
+						value={currentRatio}
+						presets={aspectRatios}
+						onChange={(value) =>
+							setAttributes({ aspectRatio: value })
+						}
+					/>
 					{!isCarousel && (
 						<RangeControl
 							__nextHasNoMarginBottom

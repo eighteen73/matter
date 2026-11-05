@@ -43,6 +43,9 @@ class Variants {
 			'autoplay'       => 0,
 			'arrows'         => true,
 			'dots'           => true,
+			// Image-only carousels: default crop, an aspect ratio preset slug
+			// (theme.json) or 'auto' for the images' own shape.
+			'aspectRatio'    => 'auto',
 		],
 		'matter/tabs'     => [
 			'label'         => 'Default',
@@ -52,11 +55,18 @@ class Variants {
 			'dropdownBelow' => 'md',
 		],
 		'matter/gallery'  => [
-			'label'     => 'Default',
-			// Registered image size used for every image in the gallery (the
-			// crop ratio is the theme's CSS, per variant). Carousel options
-			// above also apply to the gallery's carousel layout.
-			'imageSize' => 'large',
+			'label'          => 'Default',
+			// Registered image size used for every image in the gallery.
+			// Carousel options above also apply to the gallery's carousel
+			// layout.
+			'imageSize'      => 'large',
+			// Column counts editors can choose for the grid (empty: no
+			// control; the theme's CSS sets the columns), and the default.
+			'columns'        => [ 2, 3, 4 ],
+			'defaultColumns' => 3,
+			// Default crop: an aspect ratio preset slug (theme.json) or
+			// 'auto' for the images' own shape.
+			'aspectRatio'    => 'square',
 		],
 	];
 

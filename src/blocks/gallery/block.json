@@ -6,7 +6,7 @@
 	"title": "Gallery",
 	"category": "media",
 	"icon": "format-gallery",
-	"description": "Images in a grid or carousel that open in a lightbox. The theme's variants set the crop and image size.",
+	"description": "Images in a grid or carousel that open in a lightbox, cropped to one aspect ratio.",
 	"keywords": [
 		"images",
 		"photos",
@@ -33,7 +33,22 @@
 			"type": "string",
 			"default": "",
 			"role": "content"
+		},
+		"columns": {
+			"type": "number",
+			"default": 0
+		},
+		"aspectRatio": {
+			"type": "string",
+			"default": ""
+		},
+		"allowResize": {
+			"type": "boolean",
+			"default": false
 		}
+	},
+	"providesContext": {
+		"allowResize": "allowResize"
 	},
 	"supports": {
 		"html": false,

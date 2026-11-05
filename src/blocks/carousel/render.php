@@ -2,7 +2,8 @@
 /**
  * Carousel: each inner block is a slide, or the items of a Query Loop /
  * Product Collection. Behaviour comes from the chosen variant (block style);
- * slide widths and spacing come from theme CSS.
+ * slide widths and spacing come from theme CSS. When every slide is an image,
+ * the images share one aspect ratio (a theme preset; the variant's by default).
  *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered slides.
@@ -11,13 +12,32 @@
  * @package Eighteen73\Matter
  */
 
+use Eighteen73\Matter\AspectRatio;
 use Eighteen73\Matter\Blocks\Carousel;
 use Eighteen73\Matter\Variants;
 
+$matter_options = Variants::get( 'matter/carousel', $attributes );
+$matter_style   = '';
+
+$matter_is_images = count( $block->inner_blocks ) > 0;
+
+foreach ( $block->inner_blocks as $matter_inner ) {
+	$matter_is_images = $matter_is_images && 'core/image' === $matter_inner->name;
+}
+
+if ( $matter_is_images ) {
+	$matter_style = AspectRatio::style( (string) ( ( $attributes['aspectRatio'] ?? '' ) ?: ( $matter_options['aspectRatio'] ?? '' ) ) );
+}
+
 $matter_html = Carousel::render(
 	$content,
-	Variants::get( 'matter/carousel', $attributes ),
-	get_block_wrapper_attributes(),
+	$matter_options,
+	get_block_wrapper_attributes(
+		$matter_style ? [
+			'class' => 'has-image-aspect-ratio',
+			'style' => $matter_style,
+		] : []
+	),
 	trim( (string) ( $attributes['label'] ?? '' ) )
 );
 

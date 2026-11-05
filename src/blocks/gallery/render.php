@@ -2,9 +2,11 @@
 /**
  * Gallery: core/image blocks in a grid or carousel, with an optional lightbox.
  *
- * The theme's variant (block style) decides the image size (`imageSize`) and,
- * in its CSS, the crop ratio, so every image matches. The grid can show only
- * the first few images, with a "View all" button opening the lightbox.
+ * Every image is cropped to the chosen aspect ratio (a theme preset; the
+ * variant's `aspectRatio` by default) and uses the variant's image size
+ * (`imageSize`). The grid has the chosen number of columns (from the variant's
+ * `columns` choices) and can show only the first few images, with a "View all"
+ * button opening the lightbox.
  *
  * The carousel layout reuses the carousel block's markup and behaviour, with
  * the carousel's default options overridden by the gallery variant's.
@@ -16,6 +18,7 @@
  * @package Eighteen73\Matter
  */
 
+use Eighteen73\Matter\AspectRatio;
 use Eighteen73\Matter\Blocks\Carousel;
 use Eighteen73\Matter\Variants;
 
@@ -172,9 +175,22 @@ if ( $matter_limit && $matter_figure > $matter_limit ) {
 	);
 }
 
+// Grid columns: one of the theme's choices; fewer show where there's less room.
+$matter_columns = (int) ( $attributes['columns'] ?? 0 ) ?: (int) ( $matter_options['defaultColumns'] ?? 0 );
+$matter_classes = [ $matter_carousel ? 'is-carousel' : 'is-grid' ];
+
+if ( ! $matter_carousel && in_array( $matter_columns, array_map( 'intval', (array) ( $matter_options['columns'] ?? [] ) ), true ) ) {
+	$matter_classes[] = 'has-columns has-columns-' . $matter_columns;
+}
+
+$matter_wrapper = [
+	'class' => implode( ' ', $matter_classes ),
+	'style' => AspectRatio::style( (string) ( ( $attributes['aspectRatio'] ?? '' ) ?: ( $matter_options['aspectRatio'] ?? '' ) ) ),
+];
+
 printf(
 	'<div %1$s data-wp-interactive="matter/gallery" %2$s>%3$s%4$s</div>',
-	get_block_wrapper_attributes( [ 'class' => $matter_carousel ? 'is-carousel' : 'is-grid' ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	get_block_wrapper_attributes( array_filter( $matter_wrapper ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
 			'images'  => $matter_images,
