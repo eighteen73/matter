@@ -109,6 +109,7 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 - `scheme`: adds the colour scheme control.
 - `align: "full"`: full-width band (`alignfull`).
 - `tagName`: element for the default renderer.
+- `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable. Without a heading, a visually hidden "Read more" link is added (`matter_link_label` filter). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
 - `slots`: per slot, `allowedBlocks`, `template` and `templateLock`.
 
 **Updating sections.** Markup and CSS changes reach every instance immediately. Slot structure is locked, so a slot added to `block.json` appears in existing instances the next time they're edited. Matching is by position, so **append new slots**, and make `render.php` cope with an empty slot.

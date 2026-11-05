@@ -6,7 +6,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 
 ### Added
 
-- **Sections:** layout blocks declared in `block.json` (`supports.matter.slots`), with locked `matter/slot` content areas, a shared editor, a default renderer and `Matter\slots()` for custom `render.php`.
+- **Sections:** layout blocks declared in `block.json` (`supports.matter.slots`), with locked `matter/slot` content areas, a shared editor, a default renderer and `Matter\slots()` for custom `render.php`. Whole-block links (`supports.matter.link`), e.g. for cards, replace pulsar-extensions' group link.
 - **Colour schemes:** `supports.matter.scheme`, a swatch control, and CSS generated from the theme's `custom.scheme`.
 - **Variants:** theme-defined block presets via `matter_variants`, shown as block styles.
 - **Menus:** Appearance › Menus rendered by `Matter\menu()`.

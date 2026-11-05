@@ -15,6 +15,7 @@ use Eighteen73\Matter\Extensions\FocalPoint;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
+use Eighteen73\Matter\Supports\Link;
 use Eighteen73\Matter\Supports\Scheme;
 
 defined( 'ABSPATH' ) || exit;
@@ -43,6 +44,7 @@ class Plugin {
 		// Sections, block supports and core block extensions.
 		Sections::instance()->setup();
 		Scheme::instance()->setup();
+		Link::instance()->setup();
 		ButtonIcon::instance()->setup();
 		FocalPoint::instance()->setup();
 		Editor::instance()->setup();

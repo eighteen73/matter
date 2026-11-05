@@ -21,6 +21,7 @@ import { addFilter } from '@wordpress/hooks';
  */
 import SchemeControl from './components/scheme-control';
 import SectionEdit from './components/section-edit';
+import './extensions/block-link';
 import './extensions/button-icon';
 import './extensions/focal-point';
 import './extensions/parent-toolbar';
