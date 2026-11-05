@@ -8,15 +8,13 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { createBlock } from '@wordpress/blocks';
 import {
-	Button,
 	PanelBody,
 	TextControl,
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
-import { useDispatch, useSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { plus } from '@wordpress/icons';
@@ -30,6 +28,7 @@ import {
 	useLiveCarousel,
 	variantOptions,
 } from '../../carousel/editor/live-carousel';
+import { useAddSlide } from '../../carousel/editor/use-add-slide';
 import {
 	GalleryMediaUpload,
 	useGalleryMedia,
@@ -52,29 +51,11 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const options = variantOptions('matter/carousel', attributes.className);
 	const carousel = useLiveCarousel(options);
 
-	const { lastSlide, slideCount, selectedSlide, isEditing } = useSelect(
-		(select) => {
-			const { getBlocks, isBlockSelected, hasSelectedInnerBlock } =
-				select(blockEditorStore);
-			const blocks = getBlocks(clientId);
-
-			return {
-				// Editor-only buttons show while the carousel is being edited.
-				isEditing:
-					isBlockSelected(clientId) ||
-					hasSelectedInnerBlock(clientId, true),
-				lastSlide: blocks[blocks.length - 1],
-				slideCount: blocks.length,
-				selectedSlide: selectedSlideIndex(
-					select,
-					clientId,
-					blockEditorStore
-				),
-			};
-		},
+	const selectedSlide = useSelect(
+		(select) => selectedSlideIndex(select, clientId, blockEditorStore),
 		[clientId]
 	);
-	const { insertBlock } = useDispatch(blockEditorStore);
+	const { lastSlide, slideCount, addSlide } = useAddSlide(clientId);
 	const { scrollToSlide } = carousel;
 
 	// Bring the slide being edited into view.
@@ -87,14 +68,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	// Image-only carousels (e.g. a slideshow) are managed like a gallery.
 	const media = useGalleryMedia(clientId);
 	const isImages = !isQuery && media.isImageOnly;
-
-	// A new, empty slide like the last one (e.g. another card).
-	const addSlide = () =>
-		insertBlock(
-			createBlock(lastSlide?.name ?? 'core/image'),
-			slideCount,
-			clientId
-		);
 
 	const blockProps = useBlockProps({
 		className: ['is-initialised', carousel.isQuery && 'is-query']
@@ -157,34 +130,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					<div {...innerBlocksProps} />
 				</div>
 				<CarouselControls carousel={carousel} options={options} />
-				{!isQuery && isEditing && (
-					<div className="matter-carousel-editor__actions">
-						{isImages ? (
-							<GalleryMediaUpload
-								ids={media.ids}
-								onSelect={media.update}
-								render={({ open, label }) => (
-									<Button
-										variant="secondary"
-										size="small"
-										onClick={open}
-									>
-										{label}
-									</Button>
-								)}
-							/>
-						) : (
-							<Button
-								variant="secondary"
-								size="small"
-								icon={plus}
-								onClick={addSlide}
-							>
-								{__('Add slide', 'matter')}
-							</Button>
-						)}
-					</div>
-				)}
 			</div>
 		</>
 	);

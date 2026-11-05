@@ -23,6 +23,7 @@ import SchemeControl from './components/scheme-control';
 import SectionEdit from './components/section-edit';
 import './extensions/button-icon';
 import './extensions/focal-point';
+import './extensions/parent-toolbar';
 import '../components/icon-picker/editor.scss';
 import './index.scss';
 
