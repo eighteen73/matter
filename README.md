@@ -27,7 +27,7 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 | --- | --- | --- |
 | `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
 | `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown on smaller screens (a button showing the current tab's icon and name opens the tab list; the theme sets where, see Variants). Tab: icon, chosen from the icon library on the block toolbar. Backspace in an empty tab name, or "Delete tab" in the block's options menu, removes a tab. |
-| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
+| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts or products. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
 | `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. Every image is cropped to one aspect ratio and uses the variant's image size (`imageSize`), so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`, and its toolbar keeps the "Edit images" button. | Layout (grid/carousel), columns (the theme's choices; fewer show where there's less room), images to show (in whole rows of the columns; at any width the grid shows full rows, and the rest open from "View all N images"), aspect ratio (theme.json presets, or the images' own), lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
 | `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
@@ -144,6 +144,16 @@ add_filter( 'matter_variants', fn( $variants ) => array_replace_recursive( $vari
 ```
 
 Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds, 0 = off), `arrows`, `dots`. Slide widths and gaps belong in theme CSS.
+
+Carousel slide types: a new carousel offers images, posts and products (with WooCommerce). `matter_carousel_slides` adds the theme's own slide blocks, and sets the variant each type starts as. With slide types set, a carousel's slides are limited to them, images and queries. A slide block needs `matter/carousel` in its block.json `parent` if it has one.
+
+```php
+add_filter( 'matter_carousel_slides', fn() => [
+	'pulsar/card' => [ 'label' => 'Cards', 'variant' => 'cards' ],
+	'core/image'  => [ 'variant' => 'slides' ],
+	'core/query'  => [ 'variant' => 'cards' ],
+] );
+```
 
 Carousels of only images also take `aspectRatio`: the default crop, a slug from theme.json's `settings.dimensions.aspectRatios`, or `auto` for the images' own shape (default `auto`). Editors can choose another preset.
 

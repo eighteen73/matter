@@ -8,6 +8,7 @@
 
 namespace Eighteen73\Matter;
 
+use Eighteen73\Matter\Blocks\Carousel;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Supports\Scheme;
 
@@ -36,7 +37,15 @@ class Editor {
 	 * @return void
 	 */
 	public function enqueue_canvas_styles(): void {
-		if ( is_admin() && file_exists( MATTER_PATH . 'build/editor/canvas.css' ) ) {
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		// Block icons in the canvas (e.g. the carousel's slide picker) may be
+		// dashicons, which the iframe doesn't load by default.
+		wp_enqueue_style( 'dashicons' );
+
+		if ( file_exists( MATTER_PATH . 'build/editor/canvas.css' ) ) {
 			wp_enqueue_style( 'matter-editor-canvas', MATTER_URL . 'build/editor/canvas.css', [], (string) filemtime( MATTER_PATH . 'build/editor/canvas.css' ) );
 		}
 	}
@@ -70,6 +79,7 @@ class Editor {
 					'iconCollections' => Icons::collections(),
 					'breakpoints'     => Breakpoints::all(),
 					'variants'        => Variants::all(),
+					'carouselSlides'  => Carousel::slide_types(),
 				]
 			) . ';',
 			'before'

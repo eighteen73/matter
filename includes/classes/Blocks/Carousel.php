@@ -88,4 +88,36 @@ class Carousel {
 			esc_html( $label )
 		);
 	}
+
+	/**
+	 * Slide types offered when a carousel is added, beyond the built-in
+	 * images, posts and products. Each may set the variant (block style) the
+	 * carousel starts with; built-in types can be given one too.
+	 *
+	 *     add_filter( 'matter_carousel_slides', fn() => [
+	 *         'pulsar/card' => [ 'label' => 'Cards', 'variant' => 'cards' ],
+	 *         'core/image'  => [ 'variant' => 'slides' ],
+	 *     ] );
+	 *
+	 * @return array<string, array{label: string, variant: string}> Keyed by block name.
+	 */
+	public static function slide_types(): array {
+		/**
+		 * Filters the carousel's slide types.
+		 *
+		 * @param array $types Block name => label, or [ 'label' => …, 'variant' => … ].
+		 */
+		$types = (array) apply_filters( 'matter_carousel_slides', [] );
+		$clean = [];
+
+		foreach ( $types as $name => $type ) {
+			$type           = is_array( $type ) ? $type : [ 'label' => $type ];
+			$clean[ $name ] = [
+				'label'   => (string) ( $type['label'] ?? '' ),
+				'variant' => (string) ( $type['variant'] ?? '' ),
+			];
+		}
+
+		return $clean;
+	}
 }

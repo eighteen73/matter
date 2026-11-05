@@ -15,7 +15,7 @@ import {
 	ToolbarGroup,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { plus } from '@wordpress/icons';
 
@@ -38,8 +38,23 @@ import {
 	GalleryMediaUpload,
 	useGalleryMedia,
 } from '../../components/gallery-media';
+import SlidePicker, { themeSlideTypes } from './slide-picker';
 
-const TEMPLATE = [['core/image'], ['core/image'], ['core/image']];
+// With theme slide types, slides are limited to them, images and queries.
+const allowedSlides = () => {
+	const types = Object.keys(themeSlideTypes());
+
+	return types.length
+		? [
+				...new Set([
+					'core/image',
+					'core/query',
+					'woocommerce/product-collection',
+					...types,
+				]),
+			]
+		: undefined;
+};
 
 /**
  * A live carousel: the variant (block style) decides behaviour and the theme's
@@ -92,14 +107,28 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			.join(' '),
 		style: ratioStyle,
 	});
+	const allowedBlocks = useMemo(allowedSlides, []);
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-carousel__track' },
 		{
-			template: TEMPLATE,
+			allowedBlocks,
 			orientation: 'horizontal',
 			renderAppender: false,
 		}
 	);
+
+	// A new carousel: choose what the slides will be.
+	if (!slideCount) {
+		return (
+			<div {...blockProps}>
+				<SlidePicker
+					clientId={clientId}
+					setAttributes={setAttributes}
+					onImages={media.update}
+				/>
+			</div>
+		);
+	}
 
 	return (
 		<>
