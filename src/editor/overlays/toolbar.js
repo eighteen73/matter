@@ -1,7 +1,8 @@
 /**
- * "Edit modal" (or drawer) on the toolbar of anything that opens one: a
- * button or link block pointing to its #ID, or a block in its trigger area.
- * Collapsibles open in place when their trigger is selected, so need none.
+ * "Edit modal" (or drawer, collapsible) on the toolbar of anything that opens
+ * one: a button or link block pointing to its #ID, or a block in a modal's
+ * or drawer's trigger area. (A collapsible opens in place while its own
+ * trigger is selected.)
  */
 
 /**
@@ -39,9 +40,7 @@ const openedBy = (select, clientId) => {
 	// A link to its #ID.
 	if (typeof url === 'string' && url.startsWith('#') && url.length > 1) {
 		const match = getOverlayIds(select).find(
-			(id) =>
-				DIALOGS.includes(getBlockName(id)) &&
-				getBlockAttributes(id)?.overlayId === url.slice(1)
+			(id) => getBlockAttributes(id)?.overlayId === url.slice(1)
 		);
 
 		if (match) {

@@ -70,10 +70,11 @@ const firstText = (blocks) => {
  * Client IDs of the overlay blocks being edited.
  *
  * @param {Function} select Registry select.
+ * @param {string[]} names  Block names (default: all overlays).
  * @return {string[]} Client IDs.
  */
-export const getOverlayIds = (select) =>
-	select(blockEditorStore).getBlocksByName(OVERLAY_BLOCKS);
+export const getOverlayIds = (select, names = OVERLAY_BLOCKS) =>
+	select(blockEditorStore).getBlocksByName(names);
 
 /**
  * An overlay's details for lists and link suggestions.

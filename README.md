@@ -44,9 +44,9 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 
 **In the editor**, the canvas shows what the front end shows.
 - **Closed:** only the trigger area shows (when "Trigger on the page" is on). An overlay without a trigger takes no space.
-- **Open:** an overlay opens while it, or anything in its content, is selected, and closes when the selection moves on. A modal or drawer opens as it looks on the front end: it takes the dialog's class and `open` attribute, so the theme's styles apply, over a backdrop. A collapsible opens in place, including while its trigger is selected.
-- **Overlays sidebar** (top bar): lists the modals, drawers and collapsibles being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end, where it sits doesn't matter).
-- **Linking:** link search suggests the page's overlays by name, and a button or link to one, or a block in its trigger area, gets **Edit modal** / **Edit drawer** on its toolbar.
+- **Open:** an overlay opens while it, or anything in its content, is selected, and closes when the selection moves on (or its close button or backdrop is clicked). A modal or drawer opens as it does on the front end: the block takes the dialog's class and `open` attribute and becomes a popover in the top layer, so the theme's dialog styles, `::backdrop` and transitions all apply. Grouped modals show their previous/next buttons, which open the group's other modals. A collapsible opens in place, including while its trigger is selected.
+- **Overlays sidebar** (top bar): lists the modals and drawers being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end, where it sits doesn't matter). Collapsibles sit in the page, so aren't listed.
+- **Linking:** link search suggests the page's overlays by name. A button or link to one gets **Edit modal** / **Edit drawer** / **Edit collapsible** on its toolbar, as does a block in a modal's or drawer's trigger area.
 
 Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
 

@@ -1,7 +1,7 @@
 /**
- * The Overlays sidebar: the modals, drawers and collapsibles being edited,
- * to open one for editing (it opens on the canvas as on the front end) or
- * add a modal or drawer.
+ * The Overlays sidebar: the modals and drawers being edited, to open one for
+ * editing (it opens on the canvas as on the front end) or add one.
+ * Collapsibles sit in the page, so aren't listed.
  */
 
 /**
@@ -35,6 +35,8 @@ const icon = (
 		<Path d="M18.5 4h-13A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 18.5 4Zm0 14.5h-13v-13h13v13ZM8 9h8v6H8V9Z" />
 	</SVG>
 );
+
+const LISTED = ['matter/modal', 'matter/drawer'];
 
 const ADDABLE = [
 	['matter/modal', __('Add modal', 'matter')],
@@ -135,7 +137,7 @@ function OverlayItem({ clientId }) {
 }
 
 function OverlaysSidebar() {
-	const ids = useSelect((select) => getOverlayIds(select), []);
+	const ids = useSelect((select) => getOverlayIds(select, LISTED), []);
 	// Joined, so the selector returns a stable value.
 	const canInsert = useSelect(
 		(select) =>
