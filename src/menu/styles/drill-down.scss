@@ -4,7 +4,9 @@
 
 .is-type-drill-down {
 	min-height: 100%;
-	overflow: hidden;
+	// Clip, not hidden: a hidden box can still be scrolled, and Firefox and
+	// Safari scroll it sideways to reveal a submenu focused while it slides in.
+	overflow: clip;
 	position: relative;
 
 	.matter-menu__items {

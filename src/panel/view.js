@@ -97,6 +97,8 @@ const activate = (panel, id) => {
 					element.checkVisibility?.() !== false
 			) || content,
 		fallbackFocus: content,
+		// The panel is still sliding in: don't scroll anything to reveal it.
+		preventScroll: true,
 	});
 
 	traps.set(id, trap);

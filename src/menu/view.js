@@ -190,6 +190,8 @@ const trapDrillDown = (context, submenuId, item) => {
 			item.querySelector(`:scope > ${SELECTORS.toggle}`) || false,
 		initialFocus: () => getSubmenuFocusables(item)[0] || submenu,
 		fallbackFocus: submenu,
+		// The panel is still sliding in: don't scroll the menu to reveal it.
+		preventScroll: true,
 		// Wait for the slide-in panel to become visible before focusing it.
 		checkCanFocusTrap: () =>
 			new Promise((resolve) => {
