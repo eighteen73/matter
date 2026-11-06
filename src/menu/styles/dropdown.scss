@@ -28,7 +28,10 @@
 
 	// Submenus: positioned panels. JS adds .is-positioned once measured so a
 	// panel never flashes in the wrong place, plus offsets to keep it on screen.
+	// Closed submenus aren't displayed, so they never widen the page; display
+	// switches after the fade-out (and is shown while JS measures).
 	.matter-menu__submenu {
+		display: none;
 		inset-block-start: 100%;
 		inset-inline-start: 0;
 		max-height: var(--matter-menu--max-height, none);
@@ -37,13 +40,23 @@
 		transform: translate(var(--matter-menu--offset-x, 0), var(--matter-menu--offset-y, 0));
 		transition:
 			opacity var(--matter-menu--duration),
-			visibility var(--matter-menu--duration);
+			visibility var(--matter-menu--duration),
+			display var(--matter-menu--duration) allow-discrete;
 		width: max-content;
 		z-index: 100;
 	}
 
+	.matter-menu__item.is-open > .matter-menu__submenu,
+	.matter-menu__submenu.is-measuring {
+		display: block;
+	}
+
 	.matter-menu__item.is-open > .matter-menu__submenu.is-positioned {
 		opacity: 1;
+
+		@starting-style {
+			opacity: 0;
+		}
 	}
 
 	.matter-menu__submenu.is-flipped {
@@ -91,9 +104,13 @@
 		position: static;
 	}
 
-	.is-megamenu > .matter-menu__submenu {
+	.is-megamenu.is-open > .matter-menu__submenu,
+	.is-megamenu > .matter-menu__submenu.is-measuring {
 		display: flex;
-		max-width: 100vw;
+	}
+
+	.is-megamenu > .matter-menu__submenu {
+		max-width: var(--matter-menu--max-width, 100vw);
 	}
 
 	.is-megamenu-content > .matter-menu__submenu {
@@ -139,7 +156,13 @@
 	border-radius: 4px;
 	box-shadow: 0 0.5em 1.5em rgb(0 0 0 / 12%);
 	color: var(--scheme--text, inherit);
-	padding: 0.75em 1em;
+	padding: 0.75em 0;
+}
+
+// Items span the panel (it has no side padding), so a nested submenu opens
+// from the panel's edge with no gap for the pointer to cross.
+:where(.is-type-dropdown .matter-menu__submenu-items:not(.matter-menu__columns) > .matter-menu__item) {
+	padding-inline: 1em;
 }
 
 :where(.is-type-dropdown .matter-menu__submenu-items) {

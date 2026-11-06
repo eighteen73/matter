@@ -25,7 +25,8 @@ import { createFocusTrap } from 'focus-trap';
 /**
  * Internal dependencies
  */
-import { unwatchSubmenu, watchSubmenu } from './positioning';
+import { suspendTransitions } from '../interactivity/transitions';
+import { clearPlacements, unwatchSubmenu, watchSubmenu } from './positioning';
 
 const SELECTORS = {
 	menu: '.matter-menu',
@@ -406,7 +407,14 @@ const { state } = store(
 					const type = resolveType(context.types);
 
 					if (type !== context.menuType) {
+						// Switch layouts instantly, without sliding.
+						suspendTransitions(
+							ref.querySelectorAll(
+								`${SELECTORS.submenu}, ${SELECTORS.toggle}`
+							)
+						);
 						closeAll(context, ref);
+						clearPlacements(ref);
 						context.menuType = type;
 					}
 				});

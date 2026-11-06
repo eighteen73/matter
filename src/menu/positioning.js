@@ -19,7 +19,12 @@ const PROPERTIES = {
 	y: '--matter-menu--offset-y',
 	maxHeight: '--matter-menu--max-height',
 	megamenuWidth: '--matter-menu--megamenu-width',
+	maxWidth: '--matter-menu--max-width',
 };
+
+// Closed submenus aren't displayed (so they never widen the page); this class
+// displays one while it's measured.
+const MEASURING = 'is-measuring';
 
 const BOUNDARY_PADDING = 8;
 
@@ -119,6 +124,7 @@ export const positionSubmenu = (item, navigation) => {
 	}
 
 	reset(submenu);
+	submenu.classList.add(MEASURING);
 
 	const boundary = getBoundary(submenu);
 	const isMegamenu = item.classList.contains('is-megamenu');
@@ -131,6 +137,12 @@ export const positionSubmenu = (item, navigation) => {
 			submenu.style.setProperty(
 				PROPERTIES.megamenuWidth,
 				`${viewport.width}px`
+			);
+		} else {
+			// The visible width (100vw would include the scrollbar).
+			submenu.style.setProperty(
+				PROPERTIES.maxWidth,
+				`${boundary.right - boundary.left}px`
 			);
 		}
 
@@ -152,6 +164,7 @@ export const positionSubmenu = (item, navigation) => {
 
 		setOffset(submenu, left - rect.left, offsetY);
 		capHeight(submenu, rect, boundary, offsetY);
+		submenu.classList.remove(MEASURING);
 		return;
 	}
 
@@ -174,11 +187,17 @@ export const positionSubmenu = (item, navigation) => {
 	submenu.classList.add(CLASSES.positioned);
 	rect = submenu.getBoundingClientRect();
 
+	// A nested submenu lines its first item up with the item that opened it.
+	const shiftY = item.parentElement?.closest(SUBMENU)
+		? -(parseFloat(window.getComputedStyle(submenu).paddingTop) || 0)
+		: 0;
+	const top = rect.top + shiftY;
 	const left = clamp(rect.left, boundary.left, boundary.right - rect.width);
-	const offsetY = rect.top < boundary.top ? boundary.top - rect.top : 0;
+	const offsetY = shiftY + (top < boundary.top ? boundary.top - top : 0);
 
 	setOffset(submenu, left - rect.left, offsetY);
 	capHeight(submenu, rect, boundary, offsetY);
+	submenu.classList.remove(MEASURING);
 };
 
 /**
@@ -218,17 +237,23 @@ export const watchSubmenu = (item, navigation) => {
 };
 
 /**
- * Stop watching a submenu and clear its placement.
+ * Stop watching a submenu.
+ *
+ * Its placement is kept, so a closing submenu fades out where it is; it's
+ * recalculated the next time it opens.
  *
  * @param {Element} item Menu item owning the submenu.
  */
 export const unwatchSubmenu = (item) => {
 	watchers.get(item)?.();
 	watchers.delete(item);
+};
 
-	const submenu = item?.querySelector(SUBMENU);
-
-	if (submenu) {
-		reset(submenu);
-	}
+/**
+ * Clear the placement of every submenu in a menu (e.g. when it changes type).
+ *
+ * @param {Element} navigation The menu's <nav>.
+ */
+export const clearPlacements = (navigation) => {
+	navigation?.querySelectorAll(SUBMENU).forEach(reset);
 };

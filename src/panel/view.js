@@ -28,6 +28,7 @@ import { createFocusTrap } from 'focus-trap';
  * Internal dependencies
  */
 import { registerInstance, registerType } from '../interactivity/api';
+import { suspendTransitions } from '../interactivity/transitions';
 
 registerType('panel', '.matter-panel');
 
@@ -174,6 +175,11 @@ const { state, actions } = store(
 					mediaQuery.addEventListener(
 						'change',
 						withScope(() => {
+							// Switch layouts instantly, without sliding.
+							suspendTransitions([
+								ref,
+								...ref.querySelectorAll('*'),
+							]);
 							applyMode(ref, id, label);
 
 							// Becoming inline closes the off-canvas state.
