@@ -269,7 +269,7 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 
 ## Site settings
 
-The theme declares fields, and Matter adds a **Site Settings** page. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
+The theme declares fields, and Matter adds an **Options** page under Appearance. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
 
 ```php
 add_filter( 'matter_settings_fields', fn() => [
@@ -293,7 +293,10 @@ add_filter( 'matter_settings_fields', fn() => [
 - In PHP: `Eighteen73\Matter\setting( 'contact.phone' )`.
 - In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links.
 
-Hooks: `matter_settings_page_title`, `matter_settings_saved`.
+Hooks:
+- `matter_settings_page_title`: the page and menu title (default "Options").
+- `matter_settings_parent`: the admin menu it sits under (default `themes.php`, Appearance; empty for a top-level item).
+- `matter_settings_saved`: fires after saving.
 
 ## Core block extensions
 

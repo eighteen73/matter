@@ -80,6 +80,13 @@ class Settings {
 	private ?array $sections = null;
 
 	/**
+	 * The settings page's hook suffix, once registered.
+	 *
+	 * @var string
+	 */
+	private string $hook_suffix = '';
+
+	/**
 	 * Setup hooks.
 	 *
 	 * @return void
@@ -270,17 +277,23 @@ class Settings {
 		 *
 		 * @param string $title Page and menu title.
 		 */
-		$title = (string) apply_filters( 'matter_settings_page_title', __( 'Site Settings', 'matter' ) );
+		$title = (string) apply_filters( 'matter_settings_page_title', __( 'Options', 'matter' ) );
 
-		add_menu_page(
-			$title,
-			$title,
-			$this->capability(),
-			self::PAGE,
-			[ $this, 'render_page' ],
-			'dashicons-admin-site-alt3',
-			61
-		);
+		/**
+		 * Filters the admin menu the settings page sits under.
+		 *
+		 * A parent page's file name, e.g. `themes.php` (Appearance, the
+		 * default) or `options-general.php`; empty for a top-level menu item.
+		 *
+		 * @param string $parent Parent page.
+		 */
+		$parent = (string) apply_filters( 'matter_settings_parent', 'themes.php' );
+
+		$hook_suffix = '' === $parent
+			? add_menu_page( $title, $title, $this->capability(), self::PAGE, [ $this, 'render_page' ], 'dashicons-admin-site-alt3', 61 )
+			: add_submenu_page( $parent, $title, $title, $this->capability(), self::PAGE, [ $this, 'render_page' ] );
+
+		$this->hook_suffix = (string) $hook_suffix;
 	}
 
 	/**
@@ -302,7 +315,7 @@ class Settings {
 	 * @return void
 	 */
 	public function enqueue_page_assets( string $hook_suffix ): void {
-		if ( 'toplevel_page_' . self::PAGE !== $hook_suffix ) {
+		if ( '' === $this->hook_suffix || $this->hook_suffix !== $hook_suffix ) {
 			return;
 		}
 
