@@ -78,3 +78,14 @@
 :where(.wp-block-matter-accordion-item__content) > :last-child {
 	padding-block-end: 1em;
 }
+
+// From posts: items sit in a Query Loop's list, whose layout would space them.
+.wp-block-matter-accordion :is(.wp-block-post-template, .wc-block-product-template) {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+
+	> * {
+		margin-block: 0;
+	}
+}
