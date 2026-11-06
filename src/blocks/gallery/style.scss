@@ -28,6 +28,64 @@
 	grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--gallery-min-width, 10rem), (100% - (var(--gallery-columns) - 1) * var(--gallery-gap, 1rem)) / var(--gallery-columns))), 1fr));
 }
 
+// Captions: the images' own. "tooltip" hides each behind an info button,
+// "overlay" lays it over the foot of the image, "hidden" hides it. The editor
+// keeps them below the images, to edit.
+.wp-block-matter-gallery .wp-block-image figcaption {
+	margin: 0;
+	text-align: start;
+}
+
+.wp-block-matter-gallery.has-captions-hidden:not(.block-editor-block-list__block) .wp-block-image figcaption {
+	display: none;
+}
+
+.wp-block-matter-gallery.has-captions-overlay .wp-block-image figcaption {
+	inset-block-end: 0;
+	inset-inline: 0;
+	position: absolute;
+	z-index: 2;
+}
+
+.wp-block-matter-gallery.has-captions-tooltip:not(.block-editor-block-list__block) .wp-block-image {
+	figcaption {
+		display: none;
+		inset-block-end: calc(var(--gallery-caption-toggle-size, 2.75rem) + 1rem);
+		inset-inline-start: 0.5rem;
+		max-width: calc(100% - 1rem);
+		position: absolute;
+		z-index: 3;
+	}
+
+	&.is-caption-open figcaption {
+		display: block;
+	}
+}
+
+// Light on dark, to read over any image.
+.wp-block-matter-gallery__caption-toggle {
+	align-items: center;
+	background: rgb(0 0 0 / 55%);
+	color: #fff;
+	cursor: pointer;
+	display: inline-flex;
+	height: var(--gallery-caption-toggle-size, 2.75rem);
+	inset-block-end: 0.5rem;
+	inset-inline-start: 0.5rem;
+	justify-content: center;
+	position: absolute;
+	width: var(--gallery-caption-toggle-size, 2.75rem);
+	z-index: 3;
+
+	&::before {
+		background-color: currentcolor;
+		content: "";
+		height: 1.25rem;
+		mask: url("../../../assets/svg/info.svg") center / contain no-repeat;
+		width: 1.25rem;
+	}
+}
+
 // Images beyond the grid's limit (shown in the lightbox, or by "View all").
 .wp-block-matter-gallery__items > .wp-block-image[hidden] {
 	display: none;
@@ -57,10 +115,11 @@
 	}
 }
 
+// The visible window (100vw would run under the page's scrollbar).
 dialog.wp-block-matter-gallery__lightbox {
-	height: 100dvh;
+	height: 100%;
 	margin: 0;
-	width: 100vw;
+	width: 100%;
 }
 
 .wp-block-matter-gallery__figure {
@@ -105,6 +164,11 @@ dialog.wp-block-matter-gallery__lightbox {
 		mask: url("../../../assets/svg/x.svg") center / contain no-repeat;
 		width: 1.25em;
 	}
+}
+
+.wp-block-matter-gallery__counter {
+	font-variant-numeric: tabular-nums;
+	text-align: center;
 }
 
 .wp-block-matter-gallery__close {
@@ -156,7 +220,36 @@ dialog.wp-block-matter-gallery__lightbox {
 	background: none;
 	border: 0;
 	color: inherit;
-	padding: 0.5rem;
+	height: 3rem;
+	padding: 0;
+	width: 3rem;
+}
+
+:where(.wp-block-matter-gallery__figure figcaption) {
+	max-width: 60ch;
+	text-align: center;
+}
+
+:where(.wp-block-matter-gallery__caption-toggle) {
+	appearance: none;
+	border: 0;
+	border-radius: 50%;
+	padding: 0;
+}
+
+:where(.wp-block-matter-gallery.has-captions-tooltip .wp-block-image figcaption) {
+	background: rgb(0 0 0 / 85%);
+	border-radius: 4px;
+	color: #fff;
+	font-size: 0.875em;
+	padding: 0.5em 0.75em;
+}
+
+:where(.wp-block-matter-gallery.has-captions-overlay .wp-block-image figcaption) {
+	background: linear-gradient(transparent, rgb(0 0 0 / 70%));
+	color: #fff;
+	font-size: 0.875em;
+	padding: 2em 0.75em 0.5em;
 }
 
 :where(.wp-block-matter-gallery__more) {

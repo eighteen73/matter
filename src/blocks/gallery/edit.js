@@ -99,6 +99,7 @@ function useVisibleCount(ref, limit, key) {
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
 		lightbox,
+		captions,
 		label,
 		layout,
 		limit,
@@ -152,11 +153,13 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const aspectRatios = useAspectRatios();
 	const currentRatio = aspectRatio || options.aspectRatio || 'auto';
+	const currentCaptions = captions || options.captions || 'tooltip';
 
 	const blockProps = useBlockProps({
 		className: [
 			isCarousel ? 'is-carousel' : 'is-grid',
 			hasColumns && `has-columns has-columns-${currentColumns}`,
+			`has-captions-${currentCaptions}`,
 		]
 			.filter(Boolean)
 			.join(' '),
@@ -299,6 +302,43 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							setAttributes({ aspectRatio: value })
 						}
 					/>
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+						isBlock
+						label={__('Captions', 'matter')}
+						help={
+							{
+								tooltip: __(
+									'Behind an info button on each image.',
+									'matter'
+								),
+								overlay: __(
+									'Over the bottom of each image.',
+									'matter'
+								),
+								hidden: __(
+									'Not shown on the page or in the lightbox.',
+									'matter'
+								),
+							}[currentCaptions]
+						}
+						value={currentCaptions}
+						onChange={(value) => setAttributes({ captions: value })}
+					>
+						<ToggleGroupControlOption
+							value="tooltip"
+							label={__('Info button', 'matter')}
+						/>
+						<ToggleGroupControlOption
+							value="overlay"
+							label={__('Over image', 'matter')}
+						/>
+						<ToggleGroupControlOption
+							value="hidden"
+							label={__('Hidden', 'matter')}
+						/>
+					</ToggleGroupControl>
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={__('Open images in a lightbox', 'matter')}

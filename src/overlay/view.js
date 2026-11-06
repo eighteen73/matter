@@ -191,6 +191,20 @@ const stepGroup = (id, offset) => {
 	}
 
 	const target = members[(index + offset + members.length) % members.length];
+	const from = elements.get(id);
+	const to = elements.get(target);
+
+	// Switch without closing and reopening: the backdrop stays, the current
+	// modal goes at once and the next fades in from the side it comes from.
+	from?.classList.add('is-switching-out');
+	to?.classList.add('is-switching-in');
+	to?.style.setProperty('--matter-modal--switch', String(Math.sign(offset)));
+
+	window.setTimeout(() => {
+		from?.classList.remove('is-switching-out');
+		to?.classList.remove('is-switching-in');
+		to?.style.removeProperty('--matter-modal--switch');
+	}, 400);
 
 	state.items[id].isOpen = false;
 	state.items[target].isOpen = true;
@@ -299,6 +313,30 @@ const { state, actions } = store('matter/overlay', {
 				return;
 			}
 
+			const params = new URLSearchParams(window.location.search);
+			const matchesUrl = (item.urlTriggers ?? []).some(
+				({ param, value }) =>
+					param &&
+					params.has(param) &&
+					(!value || params.get(param) === value)
+			);
+
+			// A matching URL parameter is asked for (e.g. a campaign link), so
+			// it opens even after a dismissal; dismissals stop the automatic
+			// opens on load and on scroll.
+			if (matchesUrl) {
+				window.setTimeout(
+					() => {
+						if (!item.isOpen) {
+							item.autoOpened = true;
+							item.isOpen = true;
+						}
+					},
+					(item.openDelay ?? 0) * 1000
+				);
+				return;
+			}
+
 			if (isDismissed(id)) {
 				return;
 			}
@@ -310,15 +348,7 @@ const { state, actions } = store('matter/overlay', {
 				}
 			};
 
-			const params = new URLSearchParams(window.location.search);
-			const matchesUrl = (item.urlTriggers ?? []).some(
-				({ param, value }) =>
-					param &&
-					params.has(param) &&
-					(!value || params.get(param) === value)
-			);
-
-			if (matchesUrl || item.openOnLoad) {
+			if (item.openOnLoad) {
 				window.setTimeout(autoOpen, (item.openDelay ?? 0) * 1000);
 			}
 

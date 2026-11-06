@@ -75,6 +75,32 @@ const show = (element, context, index) => {
 
 const instanceFor = (target) => instances.get(resolve(target, SELECTOR));
 
+const CAPTION_TOGGLE = '.wp-block-matter-gallery__caption-toggle';
+
+/**
+ * Show or hide an image's caption (the "tooltip" caption style).
+ *
+ * @param {Element} button The image's caption button.
+ * @param {boolean} open   Whether to show it.
+ */
+const setCaption = (button, open) => {
+	button.setAttribute('aria-expanded', String(open));
+	button
+		.closest('.wp-block-image')
+		?.classList.toggle('is-caption-open', open);
+};
+
+/**
+ * Hide a gallery's open captions.
+ *
+ * @param {Element}      gallery Gallery.
+ * @param {Element|null} except  A caption button to leave alone.
+ */
+const closeCaptions = (gallery, except = null) =>
+	gallery
+		?.querySelectorAll(`${CAPTION_TOGGLE}[aria-expanded="true"]`)
+		.forEach((button) => button !== except && setCaption(button, false));
+
 const { actions } = store('matter/gallery', {
 	callbacks: {
 		init() {
@@ -112,6 +138,31 @@ const { actions } = store('matter/gallery', {
 			instances.set(ref, instance);
 			announced.set(ref, context.index);
 			registerInstance('gallery', ref, instance);
+
+			// Open captions close on a click elsewhere, or Escape.
+			if (ref.querySelector(CAPTION_TOGGLE)) {
+				const { ownerDocument } = ref;
+
+				ownerDocument.addEventListener('click', (event) => {
+					if (
+						!event.target.closest?.(
+							`${CAPTION_TOGGLE}, .wp-block-image figcaption`
+						)
+					) {
+						closeCaptions(ref);
+					}
+				});
+				ownerDocument.addEventListener('keydown', (event) => {
+					const open = ref.querySelector(
+						`${CAPTION_TOGGLE}[aria-expanded="true"]`
+					);
+
+					if (event.key === 'Escape' && open) {
+						closeCaptions(ref);
+						open.focus();
+					}
+				});
+			}
 		},
 		// Announce moving between images while the lightbox is open.
 		announce() {
@@ -207,6 +258,14 @@ const { actions } = store('matter/gallery', {
 			const context = getContext();
 
 			show(getElement().ref, context, context.imageIndex);
+		},
+		// An image's info button: show or hide its caption.
+		toggleCaption() {
+			const { ref } = getElement();
+			const open = ref.getAttribute('aria-expanded') !== 'true';
+
+			closeCaptions(ref.closest(SELECTOR), ref);
+			setCaption(ref, open);
 		},
 		// The carousel layout's "expand" control: the current slide's image.
 		openCurrent() {

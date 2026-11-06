@@ -29,6 +29,16 @@
 			"type": "boolean",
 			"default": true
 		},
+		"captions": {
+			"type": "string",
+			"enum": [
+				"",
+				"tooltip",
+				"overlay",
+				"hidden"
+			],
+			"default": ""
+		},
 		"label": {
 			"type": "string",
 			"default": "",

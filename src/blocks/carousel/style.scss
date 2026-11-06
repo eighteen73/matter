@@ -25,8 +25,10 @@
 	touch-action: pan-y pinch-zoom;
 }
 
-.wp-block-matter-carousel__track > *,
-.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) > * {
+// One slide per view by default, at zero specificity so a theme's slide widths
+// win whichever stylesheet loads last.
+:where(.wp-block-matter-carousel__track) > *,
+:where(.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template)) > * {
 	flex: 0 0 100%;
 	margin: 0;
 	min-width: 0;

@@ -11,6 +11,11 @@
  * The carousel layout reuses the carousel block's markup and behaviour, with
  * the carousel's default options overridden by the gallery variant's.
  *
+ * Captions (the images' own, or their media library captions) show behind an
+ * info button ("tooltip"), over the image ("overlay") or not at all
+ * ("hidden"); the variant's `captions` option sets the default. The lightbox
+ * shows them too, unless hidden.
+ *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered images.
  * @param WP_Block $block      Block instance.
@@ -30,6 +35,8 @@ $matter_size     = (string) ( $matter_options['imageSize'] ?? '' );
 $matter_size     = in_array( $matter_size, get_intermediate_image_sizes(), true ) || 'full' === $matter_size ? $matter_size : '';
 $matter_images   = [];
 $matter_ids      = [];
+$matter_captions = (string) ( ( $attributes['captions'] ?? '' ) ?: ( $matter_options['captions'] ?? '' ) );
+$matter_captions = in_array( $matter_captions, [ 'tooltip', 'overlay', 'hidden' ], true ) ? $matter_captions : 'tooltip';
 
 // Lightbox data from the images' attachments (captions, larger sizes).
 foreach ( $block->inner_blocks as $matter_inner ) {
@@ -41,11 +48,15 @@ foreach ( $block->inner_blocks as $matter_inner ) {
 	$matter_ids[]      = $matter_attachment;
 	$matter_full       = $matter_attachment ? wp_get_attachment_image_src( $matter_attachment, 'full' ) : false;
 
+	// The image's own caption, else its media library caption.
+	$matter_caption = preg_match( '/<figcaption\b[^>]*>(.*?)<\/figcaption>/is', (string) $matter_inner->inner_html, $matter_match ) ? $matter_match[1] : '';
+	$matter_caption = trim( wp_strip_all_tags( $matter_caption ) ) ?: ( $matter_attachment ? (string) wp_get_attachment_caption( $matter_attachment ) : '' );
+
 	$matter_images[] = [
 		'src'     => $matter_full ? $matter_full[0] : '',
 		'srcset'  => $matter_attachment ? (string) wp_get_attachment_image_srcset( $matter_attachment, 'full' ) : '',
 		'alt'     => $matter_attachment ? (string) get_post_meta( $matter_attachment, '_wp_attachment_image_alt', true ) : '',
-		'caption' => $matter_attachment ? (string) wp_get_attachment_caption( $matter_attachment ) : '',
+		'caption' => 'hidden' === $matter_captions ? '' : $matter_caption,
 	];
 }
 
@@ -117,6 +128,24 @@ if ( $matter_lightbox && $matter_images ) {
 	);
 }
 
+// Info buttons: each caption is hidden until its button is pressed.
+if ( 'tooltip' === $matter_captions ) {
+	$content = preg_replace_callback(
+		'/<figcaption\b([^>]*)>/',
+		function ( $matches ) {
+			$id = wp_unique_id( 'matter-gallery-caption-' );
+
+			return sprintf(
+				'<button type="button" class="wp-block-matter-gallery__caption-toggle" aria-expanded="false" aria-controls="%1$s" data-wp-on--click="matter/gallery::actions.toggleCaption"><span class="screen-reader-text">%2$s</span></button><figcaption id="%1$s"%3$s>',
+				esc_attr( $id ),
+				esc_html__( 'Caption', 'matter' ),
+				$matches[1]
+			);
+		},
+		$content
+	);
+}
+
 $matter_lightbox_html = '';
 
 if ( $matter_lightbox && $matter_images ) {
@@ -129,14 +158,16 @@ if ( $matter_lightbox && $matter_images ) {
 			</figure>
 			<div class="wp-block-matter-gallery__nav">
 				<button type="button" class="wp-block-matter-gallery__prev" data-wp-on--click="actions.prev"><span class="screen-reader-text">%3$s</span></button>
-				<span class="wp-block-matter-gallery__counter" data-wp-text="state.counter"></span>
+				<span class="wp-block-matter-gallery__counter" style="min-inline-size:%5$s" data-wp-text="state.counter"></span>
 				<button type="button" class="wp-block-matter-gallery__next" data-wp-on--click="actions.next"><span class="screen-reader-text">%4$s</span></button>
 			</div>
 		</dialog>',
 		esc_attr__( 'Image viewer', 'matter' ),
 		esc_html__( 'Close', 'matter' ),
 		esc_html__( 'Previous image', 'matter' ),
-		esc_html__( 'Next image', 'matter' )
+		esc_html__( 'Next image', 'matter' ),
+		// Room for the widest count ("12 / 12"), so the arrows stay put.
+		esc_attr( ( 2 * strlen( (string) count( $matter_images ) ) + 3 ) . 'ch' )
 	);
 }
 
@@ -183,7 +214,7 @@ if ( $matter_limit && $matter_figure > $matter_limit ) {
 
 // Grid columns: one of the theme's choices; fewer show where there's less room.
 $matter_columns = (int) ( $attributes['columns'] ?? 0 ) ?: (int) ( $matter_options['defaultColumns'] ?? 0 );
-$matter_classes = [ $matter_carousel ? 'is-carousel' : 'is-grid' ];
+$matter_classes = [ $matter_carousel ? 'is-carousel' : 'is-grid', 'has-captions-' . $matter_captions ];
 
 if ( ! $matter_carousel && in_array( $matter_columns, array_map( 'intval', (array) ( $matter_options['columns'] ?? [] ) ), true ) ) {
 	$matter_classes[] = 'has-columns has-columns-' . $matter_columns;
