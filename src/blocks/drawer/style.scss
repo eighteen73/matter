@@ -89,9 +89,10 @@
 	}
 }
 
-// Core layout rules (`:root :where(.is-layout-*) > *`) set block margins on
-// post content children; the element selector outranks them.
-dialog.wp-block-matter-drawer {
+// Core layout rules set margins on post content children, including
+// `:root :where(.is-layout-*) > :last-child` (0,2,0), which would zero the
+// bottom margin when this is the last block. This selector outranks them.
+:root dialog.wp-block-matter-drawer {
 	margin: 0;
 }
 
