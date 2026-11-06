@@ -170,10 +170,15 @@ const updateUi = (embla, root, context) => {
 		);
 
 		if (active && strip.scrollWidth > strip.clientWidth) {
+			// Centre it, measured within the strip (offsetLeft is relative to
+			// the nearest positioned ancestor, not the strip).
+			const offset =
+				active.getBoundingClientRect().left -
+				strip.getBoundingClientRect().left +
+				strip.scrollLeft;
+
 			strip.scrollTo({
-				left:
-					active.offsetLeft -
-					(strip.clientWidth - active.offsetWidth) / 2,
+				left: offset - (strip.clientWidth - active.offsetWidth) / 2,
 				behavior: reducedMotion.matches ? 'auto' : 'smooth',
 			});
 		}

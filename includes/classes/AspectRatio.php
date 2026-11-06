@@ -49,6 +49,12 @@ class AspectRatio {
 	public static function style( string $slug ): string {
 		$value = self::value( $slug );
 
-		return '' === $value ? '' : sprintf( '--image-aspect-ratio:%s;', $value );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		// Images keeping their own shape aren't cropped, even if the theme caps
+		// their size (e.g. logos).
+		return sprintf( '--image-aspect-ratio:%s;', $value ) . ( 'auto' === $value ? '--image-object-fit:contain;' : '' );
 	}
 }

@@ -43,7 +43,7 @@
 .wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image img {
 	aspect-ratio: var(--image-aspect-ratio);
 	height: auto;
-	object-fit: cover;
+	object-fit: var(--image-object-fit, cover);
 	width: 100%;
 }
 
