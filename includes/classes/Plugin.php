@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter;
 
+use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\Registry;
@@ -55,6 +56,9 @@ class Plugin {
 
 		// Site settings.
 		Settings::instance()->setup();
+
+		// Editable content around archive lists.
+		Archives::instance()->setup();
 	}
 
 	/**

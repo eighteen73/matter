@@ -13,6 +13,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
   - Dropdown, accordion and drill-down types, switchable per breakpoint without JavaScript.
   - Megamenus built from menu structure, with optional theme panels.
 - **Panels:** `Matter\panel()` / `panel_toggle()`, off-canvas below a breakpoint and inline above.
+- **Archive content:** content above and below post type, taxonomy, search and 404 lists, edited like pages (Appearance › Archive content). `matter/archive-content` wraps a template's list; `matter/archive-loop` places it, with variants and a live preview. Terms inherit from their parents, their taxonomy, then the post type; the newest published entry wins, so new versions can be scheduled. The `matter/archive` bindings source gives the archive's title, description, count and image.
 - **Site settings:** config-driven fields, a React settings page, `Matter\setting()` and the `matter/setting` bindings source.
 - **Extensions:** button icon (icon registry, chosen from a core-style icon library; `matter_icon_collections`) and focal point (image blocks and featured images).
 - Theme-owned breakpoints (`matter_breakpoints`).

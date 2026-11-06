@@ -34,7 +34,7 @@ class Variants {
 	 * @var array<string, array<string, mixed>>
 	 */
 	private const DEFAULTS = [
-		'matter/carousel' => [
+		'matter/carousel'     => [
 			'label'          => 'Default',
 			// Behaviour (Embla options).
 			'loop'           => false,
@@ -54,14 +54,17 @@ class Variants {
 			// (theme.json) or 'auto' for the images' own shape.
 			'aspectRatio'    => 'auto',
 		],
-		'matter/tabs'     => [
+		'matter/tabs'         => [
 			'label'         => 'Default',
 			// Breakpoint below which tabs set to "Show as a dropdown on
 			// smaller screens" switch to the dropdown. False: the theme does
 			// it in CSS (`.wp-block-matter-tabs.has-dropdown`).
 			'dropdownBelow' => 'md',
 		],
-		'matter/gallery'  => [
+		'matter/archive-loop' => [
+			'label' => 'Default',
+		],
+		'matter/gallery'      => [
 			'label'          => 'Default',
 			// Registered image size used for every image in the gallery.
 			// Carousel options above also apply to the gallery's carousel

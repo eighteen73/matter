@@ -300,6 +300,48 @@ Hooks:
 - `matter_settings_parent`: the admin menu it sits under (default `themes.php`, Appearance; empty for a top-level item).
 - `matter_settings_saved`: fires after saving.
 
+## Archive content
+
+Marketing teams and clients can add content above and below an archive's list, and give an archive its own design, without the Site Editor. The database holds only content; the templates, and the list in them, stay in the theme.
+
+**In a template**, wrap the list of posts or products in `matter/archive-content`:
+
+```html
+<!-- wp:matter/archive-content -->
+	<!-- wp:query {"query":{"inherit":true}} --> … <!-- /wp:query -->
+<!-- /wp:matter/archive-content -->
+```
+
+It renders the archive's **Archive content** entry. Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". In the editor it previews the real list for the archive. Without the block, the list goes at the end.
+
+**Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), `search` or `404`. Matter looks in this order:
+1. the term's entry;
+2. its parent terms' entries;
+3. the taxonomy's entry;
+4. the post type archive's entry (the blog's for categories, tags, author and date archives);
+5. the theme's default content.
+
+Only published entries count. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
+
+**Default content.** Filter `matter_archive_default_content( $content, $target )` with block markup; it's also where a customised entry starts.
+
+**Bindings.** `matter/archive` gives the archive's `title`, `description`, `count` and `image` (a term's `thumbnail_id`), so one layout serves every term:
+
+```json
+"metadata": { "bindings": { "content": { "source": "matter/archive", "args": { "key": "title" } } } }
+```
+
+A bound paragraph that comes out empty (a term without a description) isn't output.
+
+**Where editors find it:**
+- Appearance › Archive content: every entry, with what it shows on and shortcuts for each archive.
+- "Customise archive" / "Edit archive content" in the admin bar on any archive.
+- An "Archive content" row on term edit screens, and a link for the taxonomy's default below term lists.
+- "Archive page" under each post type with an archive, and under Posts.
+- "New version" on an entry: a draft copy to schedule as its replacement.
+
+Preview shows the entry, including unsaved changes, on its archive. The entry editor's "Shows on" panel changes which archive it's for.
+
 ## Core block extensions
 
 - **Button icon.** An icon from the icon registry on `core/button`, rendered as `.wp-block-button__icon` inside a `.has-icon` link. Chosen from a library modal like core's Icon block. Limit the collections offered (for button and tab icons) with `matter_icon_collections`.
