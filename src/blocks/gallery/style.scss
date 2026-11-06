@@ -103,15 +103,64 @@
 	z-index: 1;
 }
 
+// Opens and closes like the modal: it fades, and the image scales up from 95%.
 .wp-block-matter-gallery__lightbox {
 	border: 0;
 	max-height: 100dvh;
 	max-width: 100vw;
+	opacity: 0;
 	padding: 0;
+	transition:
+		opacity 200ms,
+		overlay 200ms allow-discrete,
+		display 200ms allow-discrete;
+
+	.wp-block-matter-gallery__figure {
+		scale: 0.95;
+		transition: scale 200ms;
+	}
 
 	&[open] {
 		display: flex;
 		flex-direction: column;
+		opacity: 1;
+
+		@starting-style {
+			opacity: 0;
+		}
+
+		.wp-block-matter-gallery__figure {
+			scale: 1;
+
+			@starting-style {
+				scale: 0.95;
+			}
+		}
+	}
+
+	&::backdrop {
+		opacity: 0;
+		transition:
+			opacity 200ms,
+			overlay 200ms allow-discrete,
+			display 200ms allow-discrete;
+	}
+
+	&[open]::backdrop {
+		opacity: 1;
+
+		@starting-style {
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&::backdrop,
+		.wp-block-matter-gallery__figure {
+			transition: none;
+		}
 	}
 }
 
