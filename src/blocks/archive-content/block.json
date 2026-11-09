@@ -6,7 +6,7 @@
 	"title": "Archive content",
 	"category": "theme",
 	"icon": "archive",
-	"description": "For archive templates: wrap the list of posts or products. Editors add content above and below it in Appearance › Archive content.",
+	"description": "For archive templates: wrap the list of posts or products. Editors add content above and below it in Appearance › Archive pages.",
 	"supports": {
 		"html": false,
 		"inserter": false,

@@ -1,13 +1,15 @@
 <?php
 /**
- * Archive content in the admin: where editors find and start entries.
+ * Archive pages in the admin: where editors find and start entries.
  *
- * - Front end: "Edit archive content" / "Customise" in the admin bar.
- * - Term screens: the term's content, with Edit or Customise; the term list
- *   links to the taxonomy's default.
+ * - Front end: "Edit archive page" / "Customise archive page" in the admin
+ *   bar, after the core edit link.
+ * - Term screens: where the term's content comes from, with Edit or
+ *   Customise; the term list links to the taxonomy's default.
  * - "Archive page" under each post type with an archive (and Posts).
- * - Appearance › Archive content: every entry, what it shows on, and
- *   shortcuts for each archive.
+ * - Appearance › Archive pages: every entry and what it shows on. "Customise
+ *   a page" (Add new) chooses the archive first; the Help tab explains which
+ *   content shows.
  * - Customise: creates a draft for an archive, starting from what shows
  *   there now, and opens it; or opens the archive's own entry.
  *
@@ -25,7 +27,7 @@ use WP_Term;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Archive content admin.
+ * Archive pages admin.
  */
 class Admin {
 
@@ -33,17 +35,23 @@ class Admin {
 
 	private const ACTION = 'matter_archive_customise';
 
+	private const CHOOSER = 'matter-archive-pages';
+
 	/**
 	 * Setup hooks.
 	 *
 	 * @return void
 	 */
 	public function setup(): void {
-		add_action( 'admin_bar_menu', [ $this, 'admin_bar' ], 80 );
+		// After core's "Edit Category" / "Edit Page" (80).
+		add_action( 'admin_bar_menu', [ $this, 'admin_bar' ], 81 );
+		add_action( 'wp_enqueue_scripts', [ $this, 'admin_bar_icon' ] );
 		add_action( 'admin_post_' . self::ACTION, [ $this, 'customise' ] );
 		add_action( 'admin_menu', [ $this, 'post_type_menus' ] );
+		add_action( 'admin_menu', [ $this, 'chooser_page' ] );
+		add_action( 'load-post-new.php', [ $this, 'redirect_add_new' ] );
 		add_action( 'admin_init', [ $this, 'term_screens' ] );
-		add_action( 'admin_notices', [ $this, 'shortcuts' ] );
+		add_action( 'current_screen', [ $this, 'help' ] );
 		add_action( 'rest_api_init', [ $this, 'register_routes' ] );
 		add_action( 'enqueue_block_editor_assets', [ $this, 'editor_data' ], 11 );
 		add_filter( 'manage_' . Archives::POST_TYPE . '_posts_columns', [ $this, 'columns' ] );
@@ -141,6 +149,53 @@ class Admin {
 	}
 
 	/**
+	 * Where an archive's content comes from, for editors: "Customised",
+	 * "Uses the content from Shop", "Draft · Uses the theme's default".
+	 *
+	 * @param Target $target Archive.
+	 * @return string HTML.
+	 */
+	private function status( Target $target ): string {
+		[ 'own' => $own, 'shown' => $shown ] = $this->state( $target );
+
+		if ( $own && $shown && $own->ID === $shown->ID ) {
+			return '<strong>' . esc_html__( 'Customised', 'matter' ) . '</strong>';
+		}
+
+		$source = $shown ? Archives::target_of( $shown ) : null;
+		$now    = $source
+			/* translators: %s: archive name, e.g. "Shop". */
+			? sprintf( esc_html__( 'Uses the content from %s', 'matter' ), '<strong>' . esc_html( $source->label() ) . '</strong>' )
+			: esc_html__( 'Uses the theme’s default', 'matter' );
+
+		if ( ! $own ) {
+			return $now;
+		}
+
+		$state = 'future' === $own->post_status
+			/* translators: %s: date. */
+			? sprintf( __( 'Scheduled for %s', 'matter' ), get_the_date( '', $own ) )
+			: (string) get_post_status_object( $own->post_status )->label;
+
+		return '<strong>' . esc_html( $state ) . '</strong> &middot; ' . $now;
+	}
+
+	/**
+	 * Edit (own entry) or Customise buttons for an archive.
+	 *
+	 * @param Target $target    Archive.
+	 * @param string $customise Customise button text.
+	 * @return string HTML.
+	 */
+	private function actions( Target $target, string $customise ): string {
+		$own = Archives::instance()->own_entry( $target );
+
+		return $own
+			? sprintf( '<a class="button" href="%1$s">%2$s</a>', esc_url( (string) get_edit_post_link( $own->ID ) ), esc_html__( 'Edit', 'matter' ) )
+			: sprintf( '<a class="button" href="%1$s">%2$s</a>', esc_url( self::customise_url( $target ) ), esc_html( $customise ) );
+	}
+
+	/**
 	 * Front end: edit or customise the archive being viewed.
 	 *
 	 * @param WP_Admin_Bar $admin_bar Admin bar.
@@ -159,7 +214,7 @@ class Admin {
 			$admin_bar->add_node(
 				[
 					'id'    => 'matter-archive',
-					'title' => __( 'Edit archive content', 'matter' ),
+					'title' => __( 'Edit archive page', 'matter' ),
 					'href'  => get_edit_post_link( $own->ID, 'raw' ),
 				]
 			);
@@ -170,7 +225,7 @@ class Admin {
 		$admin_bar->add_node(
 			[
 				'id'    => 'matter-archive',
-				'title' => __( 'Customise archive', 'matter' ),
+				'title' => __( 'Customise archive page', 'matter' ),
 				'href'  => self::customise_url( $target ),
 			]
 		);
@@ -195,11 +250,22 @@ class Admin {
 			[
 				'parent' => 'matter-archive',
 				'id'     => 'matter-archive-shared',
-				/* translators: %s: entry title. */
-				'title'  => sprintf( __( 'Edit “%s” (shared)', 'matter' ), get_the_title( $shown ) ),
+				/* translators: %s: archive the content is set for, e.g. "Shop". */
+				'title'  => sprintf( __( 'Edit the shared content (%s)', 'matter' ), Archives::target_of( $shown )?->label() ?? get_the_title( $shown ) ),
 				'href'   => get_edit_post_link( $shown->ID, 'raw' ),
 			]
 		);
+	}
+
+	/**
+	 * The admin bar item's icon, like core's items.
+	 *
+	 * @return void
+	 */
+	public function admin_bar_icon(): void {
+		if ( is_admin_bar_showing() ) {
+			wp_add_inline_style( 'admin-bar', '#wpadminbar #wp-admin-bar-matter-archive > .ab-item::before { content: "\\f538"; top: 2px; }' );
+		}
 	}
 
 	/**
@@ -260,13 +326,20 @@ class Admin {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( $target->label() ); ?></h1>
+			<p><?php echo wp_kses_post( $this->status( $target ) ); ?>.</p>
 			<p>
-				<?php esc_html_e( 'This archive shows the theme’s default content above and below its list. Customise it to add your own sections; the list itself stays as the theme sets it.', 'matter' ); ?>
+				<?php
+				printf(
+					/* translators: %s: items listed, e.g. "products". */
+					esc_html__( 'Customise it to add your own sections above and below its list of %s. The list itself stays as the theme sets it.', 'matter' ),
+					esc_html( mb_strtolower( (string) get_post_type_object( (string) $target->post_type() )->labels->name ) )
+				);
+				?>
 			</p>
 			<p>
 				<a class="button button-primary" href="<?php echo esc_url( self::customise_url( $target ) ); ?>"><?php esc_html_e( 'Customise', 'matter' ); ?></a>
 				<?php if ( $url ) : ?>
-					<a class="button" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'View archive', 'matter' ); ?></a>
+					<a class="button" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'View page', 'matter' ); ?></a>
 				<?php endif; ?>
 			</p>
 		</div>
@@ -291,7 +364,8 @@ class Admin {
 	}
 
 	/**
-	 * Edit term: its archive content.
+	 * Edit term: where its archive page content comes from, then Edit or
+	 * Customise.
 	 *
 	 * @param WP_Term $term Term.
 	 * @return void
@@ -301,36 +375,50 @@ class Admin {
 			return;
 		}
 
-		$target                              = new Target( 'term', $term->taxonomy, $term->term_id );
-		[ 'own' => $own, 'shown' => $shown ] = $this->state( $target );
+		$target   = new Target( 'term', $term->taxonomy, $term->term_id );
+		$taxonomy = get_taxonomy( $term->taxonomy );
+		$singular = mb_strtolower( (string) $taxonomy->labels->singular_name );
+		$items    = mb_strtolower( (string) ( get_post_type_object( (string) $target->post_type() )->labels->name ?? '' ) );
+		$own      = Archives::instance()->own_entry( $target );
+		$shown    = Archives::instance()->resolve( $target );
 		?>
 		<tr class="form-field">
-			<th scope="row"><?php esc_html_e( 'Archive content', 'matter' ); ?></th>
+			<th scope="row"><?php esc_html_e( 'Archive page', 'matter' ); ?></th>
 			<td>
-				<?php if ( $own ) : ?>
-					<p>
-						<a class="button" href="<?php echo esc_url( (string) get_edit_post_link( $own->ID ) ); ?>"><?php esc_html_e( 'Edit archive content', 'matter' ); ?></a>
-						<?php echo 'publish' === $own->post_status ? '' : esc_html( ' ' . get_post_status_object( $own->post_status )->label ); ?>
-					</p>
-				<?php else : ?>
-					<p>
-						<?php
-						echo $shown
-							/* translators: %s: entry title. */
-							? esc_html( sprintf( __( 'Uses “%s”.', 'matter' ), get_the_title( $shown ) ) )
-							: esc_html__( 'Uses the theme’s default.', 'matter' );
-						?>
-						<a class="button" href="<?php echo esc_url( self::customise_url( $target ) ); ?>"><?php esc_html_e( 'Customise', 'matter' ); ?></a>
-					</p>
-				<?php endif; ?>
-				<p class="description"><?php esc_html_e( 'Content above and below this archive’s list. Child terms use it too, unless they have their own.', 'matter' ); ?></p>
+				<p><?php echo wp_kses_post( $this->status( $target ) ); ?></p>
+				<p>
+					<?php
+					/* translators: %s: taxonomy singular name, e.g. "category". */
+					echo wp_kses_post( $this->actions( $target, sprintf( __( 'Customise for this %s', 'matter' ), $singular ) ) );
+
+					if ( ! $own && $shown && current_user_can( 'edit_post', $shown->ID ) ) {
+						printf(
+							' <a href="%1$s" style="margin-inline-start: 0.5em;">%2$s</a>',
+							esc_url( (string) get_edit_post_link( $shown->ID ) ),
+							esc_html__( 'Edit the shared content', 'matter' )
+						);
+					}
+					?>
+				</p>
+				<p class="description">
+					<?php
+					/* translators: 1: taxonomy singular name, e.g. "category"; 2: items listed, e.g. "products". */
+					echo esc_html( sprintf( __( 'Content above and below this %1$s’s list of %2$s.', 'matter' ), $singular, $items ) );
+
+					if ( $taxonomy->hierarchical ) {
+						echo ' ';
+						/* translators: %s: taxonomy name, e.g. "Product categories". */
+						echo esc_html( sprintf( __( '%s inside it use it too, unless they have their own.', 'matter' ), $taxonomy->labels->name ) );
+					}
+					?>
+				</p>
 			</td>
 		</tr>
 		<?php
 	}
 
 	/**
-	 * Term list: the taxonomy's default archive content.
+	 * Term list: the taxonomy's default archive page.
 	 *
 	 * @param string $taxonomy Taxonomy.
 	 * @return void
@@ -345,11 +433,11 @@ class Admin {
 		?>
 		<p>
 			<?php
-			/* translators: %s: archive name, e.g. "All product categories". */
-			echo esc_html( sprintf( __( 'Archive content for %s:', 'matter' ), mb_strtolower( $target->label() ) ) );
+			/* translators: %s: taxonomy name, e.g. "Product categories". */
+			echo esc_html( sprintf( __( '%s without their own archive page share one layout.', 'matter' ), get_taxonomy( $taxonomy )->labels->name ) );
 			?>
 			<a href="<?php echo esc_url( $own ? (string) get_edit_post_link( $own->ID ) : self::customise_url( $target ) ); ?>">
-				<?php $own ? esc_html_e( 'Edit', 'matter' ) : esc_html_e( 'Customise', 'matter' ); ?>
+				<?php $own ? esc_html_e( 'Edit it', 'matter' ) : esc_html_e( 'Customise it', 'matter' ); ?>
 			</a>
 		</p>
 		<?php
@@ -396,38 +484,129 @@ class Admin {
 	}
 
 	/**
-	 * Appearance › Archive content: shortcuts for each archive.
+	 * "Customise a page": choose the archive, then customise it. Hidden from
+	 * the menu; Add new leads here.
 	 *
 	 * @return void
 	 */
-	public function shortcuts(): void {
-		$screen = get_current_screen();
+	public function chooser_page(): void {
+		$hook = add_submenu_page(
+			'',
+			__( 'Customise an archive page', 'matter' ),
+			'',
+			get_post_type_object( Archives::POST_TYPE )->cap->edit_posts,
+			self::CHOOSER,
+			[ $this, 'render_chooser' ]
+		);
 
-		if ( ! $screen || 'edit-' . Archives::POST_TYPE !== $screen->id ) {
+		// Highlight Appearance › Archive pages.
+		add_action(
+			"load-{$hook}",
+			function () {
+				add_filter( 'parent_file', fn() => 'themes.php' );
+				add_filter( 'submenu_file', fn() => 'edit.php?post_type=' . Archives::POST_TYPE );
+			}
+		);
+	}
+
+	/**
+	 * Add new: choose the archive first (`blank` starts an empty entry).
+	 *
+	 * @return void
+	 */
+	public function redirect_add_new(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Navigation only.
+		if ( Archives::POST_TYPE === ( $_GET['post_type'] ?? '' ) && ! isset( $_GET['blank'] ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::CHOOSER ) );
+			exit;
+		}
+	}
+
+	/**
+	 * The chooser: each archive, where its content comes from, and Customise.
+	 *
+	 * @return void
+	 */
+	public function render_chooser(): void {
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Customise an archive page', 'matter' ); ?></h1>
+			<p><?php esc_html_e( 'Choose a page to add your own sections above and below its list. The list itself stays as the theme sets it.', 'matter' ); ?></p>
+
+			<table class="widefat striped" style="max-width: 60rem;">
+				<thead>
+					<tr>
+						<th scope="col"><?php esc_html_e( 'Page', 'matter' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Currently', 'matter' ); ?></th>
+						<th scope="col"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'matter' ); ?></span></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( self::top_level_targets() as $target ) : ?>
+						<tr>
+							<td>
+								<strong><?php echo esc_html( $target->label() ); ?></strong><br>
+								<span class="description"><?php echo esc_html( $target->description() ); ?></span>
+							</td>
+							<td><?php echo wp_kses_post( $this->status( $target ) ); ?></td>
+							<td style="text-align: end; white-space: nowrap;">
+								<?php if ( $target->url() ) : ?>
+									<a href="<?php echo esc_url( (string) $target->url() ); ?>" style="margin-inline-end: 0.5em;"><?php esc_html_e( 'View', 'matter' ); ?></a>
+								<?php endif; ?>
+								<?php echo wp_kses_post( $this->actions( $target, __( 'Customise', 'matter' ) ) ); ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+
+			<h2><?php esc_html_e( 'A single category or tag', 'matter' ); ?></h2>
+			<p>
+				<?php esc_html_e( 'Edit the category or tag and choose Customise under Archive page, or view it on the site and choose Customise archive page in the toolbar.', 'matter' ); ?>
+			</p>
+			<p>
+				<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=' . Archives::POST_TYPE . '&blank=1' ) ); ?>"><?php esc_html_e( 'Or start from a blank page and choose where it shows', 'matter' ); ?></a>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Help tab on the list and chooser: which content shows, and scheduling.
+	 *
+	 * @param \WP_Screen $screen Screen.
+	 * @return void
+	 */
+	public function help( \WP_Screen $screen ): void {
+		if ( 'edit-' . Archives::POST_TYPE !== $screen->id && 'admin_page_' . self::CHOOSER !== $screen->id ) {
 			return;
 		}
 
-		$links = array_map(
-			function ( Target $target ) {
-				$own = Archives::instance()->own_entry( $target );
-
-				return sprintf(
-					'%1$s: <a href="%2$s">%3$s</a>',
-					esc_html( $target->label() ),
-					esc_url( $own ? (string) get_edit_post_link( $own->ID ) : self::customise_url( $target ) ),
-					$own ? esc_html__( 'Edit', 'matter' ) : esc_html__( 'Customise', 'matter' )
-				);
-			},
-			self::top_level_targets()
+		$screen->add_help_tab(
+			[
+				'id'      => 'matter-archive-overview',
+				'title'   => __( 'Overview', 'matter' ),
+				'content' => '<p>' . esc_html__( 'Archive pages list things: the shop, the blog, categories and tags, search results, and the page shown when a page can’t be found. The theme controls each list; here you add sections above and below it.', 'matter' ) . '</p>'
+					. '<p>' . esc_html__( 'Start from the toolbar while viewing a page (Customise archive page), from a category’s edit screen, or with Customise a page here.', 'matter' ) . '</p>',
+			]
 		);
-		?>
-		<div class="notice notice-info">
-			<p>
-				<?php esc_html_e( 'Content above and below archive lists. Terms use their parent’s, then their taxonomy’s, then the post type’s, then the theme’s default. Customise a single term from its edit screen or from the admin bar on its archive. The newest published entry for an archive shows, so you can schedule a replacement.', 'matter' ); ?>
-			</p>
-			<p><?php echo wp_kses_post( implode( ' &middot; ', $links ) ); ?></p>
-		</div>
-		<?php
+
+		$screen->add_help_tab(
+			[
+				'id'      => 'matter-archive-which',
+				'title'   => __( 'Which content shows', 'matter' ),
+				'content' => '<p>' . esc_html__( 'A category shows its own archive page if it has one. If not, it uses its parent category’s, then the one for all its categories, then the shop’s or blog’s, then the theme’s default.', 'matter' ) . '</p>'
+					. '<p>' . esc_html__( 'The Shows on column says which page each one is for.', 'matter' ) . '</p>',
+			]
+		);
+
+		$screen->add_help_tab(
+			[
+				'id'      => 'matter-archive-schedule',
+				'title'   => __( 'Scheduling', 'matter' ),
+				'content' => '<p>' . esc_html__( 'Only published archive pages show, and the newest wins. To prepare a seasonal version, choose New version under a page in the list, edit it, and schedule it. It replaces the current one on its date; unpublish it to bring the old one back.', 'matter' ) . '</p>',
+			]
+		);
 	}
 
 	/**

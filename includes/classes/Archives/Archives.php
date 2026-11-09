@@ -82,22 +82,23 @@ class Archives {
 			self::POST_TYPE,
 			[
 				'labels'              => [
-					'name'               => __( 'Archive content', 'matter' ),
-					'singular_name'      => __( 'Archive content', 'matter' ),
-					'menu_name'          => __( 'Archive content', 'matter' ),
-					'all_items'          => __( 'Archive content', 'matter' ),
-					'add_new_item'       => __( 'Add archive content', 'matter' ),
-					'edit_item'          => __( 'Edit archive content', 'matter' ),
-					'new_item'           => __( 'New archive content', 'matter' ),
-					'view_item'          => __( 'View archive', 'matter' ),
-					'search_items'       => __( 'Search archive content', 'matter' ),
-					'not_found'          => __( 'No archive content yet. Archives show the theme’s default.', 'matter' ),
-					'not_found_in_trash' => __( 'No archive content in the bin.', 'matter' ),
-					'item_published'     => __( 'Archive content published.', 'matter' ),
-					'item_scheduled'     => __( 'Archive content scheduled.', 'matter' ),
-					'item_updated'       => __( 'Archive content updated.', 'matter' ),
+					'name'               => __( 'Archive pages', 'matter' ),
+					'singular_name'      => __( 'Archive page', 'matter' ),
+					'menu_name'          => __( 'Archive pages', 'matter' ),
+					'all_items'          => __( 'Archive pages', 'matter' ),
+					'add_new'            => __( 'Customise a page', 'matter' ),
+					'add_new_item'       => __( 'Customise an archive page', 'matter' ),
+					'edit_item'          => __( 'Edit archive page', 'matter' ),
+					'new_item'           => __( 'New archive page', 'matter' ),
+					'view_item'          => __( 'View page', 'matter' ),
+					'search_items'       => __( 'Search archive pages', 'matter' ),
+					'not_found'          => __( 'No archive pages customised yet: they all show the theme’s default.', 'matter' ),
+					'not_found_in_trash' => __( 'No archive pages in the bin.', 'matter' ),
+					'item_published'     => __( 'Archive page published.', 'matter' ),
+					'item_scheduled'     => __( 'Archive page scheduled.', 'matter' ),
+					'item_updated'       => __( 'Archive page updated.', 'matter' ),
 				],
-				'description'         => __( 'Content above and below archive listings.', 'matter' ),
+				'description'         => __( 'Content above and below the lists on shop, blog, category, search and 404 pages.', 'matter' ),
 				'public'              => false,
 				'publicly_queryable'  => true,
 				'exclude_from_search' => true,
@@ -505,16 +506,21 @@ class Archives {
 	}
 
 	/**
-	 * A post type archive's title (the blog: its page's title).
+	 * A post type archive's title (the blog and shop: their page's title).
 	 *
 	 * @param string $post_type Post type.
 	 * @return string
 	 */
-	private static function post_type_title( string $post_type ): string {
+	public static function post_type_title( string $post_type ): string {
 		if ( 'post' === $post_type ) {
 			$page = (int) get_option( 'page_for_posts' );
 
 			return $page ? get_the_title( $page ) : __( 'Blog', 'matter' );
+		}
+
+		// WooCommerce's shop page names the products archive.
+		if ( 'product' === $post_type && function_exists( 'wc_get_page_id' ) && wc_get_page_id( 'shop' ) > 0 ) {
+			return get_the_title( wc_get_page_id( 'shop' ) );
 		}
 
 		// Core's filter, as post_type_archive_title() applies it (WooCommerce

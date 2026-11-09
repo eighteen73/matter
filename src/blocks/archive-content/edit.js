@@ -20,7 +20,7 @@ export default function Edit() {
 		<div {...blockProps}>
 			<p className="wp-block-matter-archive-content__note">
 				{__(
-					'Archive content: editors add sections above and below this list in Appearance › Archive content.',
+					'Archive page: editors add sections above and below this list in Appearance › Archive pages.',
 					'matter'
 				)}
 			</p>

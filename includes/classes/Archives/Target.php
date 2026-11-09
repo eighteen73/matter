@@ -176,7 +176,7 @@ final readonly class Target {
 	}
 
 	/**
-	 * A name for editors, e.g. "Products", "All product categories",
+	 * A name for editors, e.g. "Shop", "All product categories",
 	 * "Christmas (Product categories)".
 	 *
 	 * @return string
@@ -185,7 +185,7 @@ final readonly class Target {
 		$taxonomy = in_array( $this->type, [ 'term', 'taxonomy' ], true ) ? get_taxonomy( $this->name ) : null;
 
 		return match ( $this->type ) {
-			'post_type' => (string) ( get_post_type_object( $this->name )->labels->name ?? $this->name ),
+			'post_type' => Archives::post_type_title( $this->name ),
 			/* translators: %s: taxonomy name, e.g. "product categories". */
 			'taxonomy'  => sprintf( __( 'All %s', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->name ?? $this->name ) ) ),
 			// The taxonomy's plural: singular names can clash (WooCommerce's
@@ -199,6 +199,32 @@ final readonly class Target {
 			'search'    => __( 'Search results', 'matter' ),
 			'404'       => __( 'Page not found (404)', 'matter' ),
 			default     => $this->key(),
+		};
+	}
+
+	/**
+	 * Where it shows, for editors, e.g. "Each of the product categories,
+	 * unless it has its own".
+	 *
+	 * @return string
+	 */
+	public function description(): string {
+		$taxonomy = in_array( $this->type, [ 'term', 'taxonomy' ], true ) ? get_taxonomy( $this->name ) : null;
+		$items    = mb_strtolower( (string) ( get_post_type_object( (string) $this->post_type() )->labels->name ?? '' ) );
+
+		return match ( $this->type ) {
+			/* translators: %s: items listed, e.g. "products". */
+			'post_type' => sprintf( __( 'The page listing all %s', 'matter' ), $items ),
+			/* translators: %s: taxonomy name, e.g. "product categories". */
+			'taxonomy'  => sprintf( __( 'Each of the %s, unless it has its own', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->name ?? $this->name ) ) ),
+			'term'      => $taxonomy && $taxonomy->hierarchical
+				/* translators: %s: taxonomy singular name, e.g. "category". */
+				? sprintf( __( 'This %s’s page, and its children without their own', 'matter' ), mb_strtolower( (string) $taxonomy->labels->singular_name ) )
+				/* translators: %s: taxonomy singular name, e.g. "tag". */
+				: sprintf( __( 'This %s’s page', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->singular_name ?? $this->name ) ) ),
+			'search'    => __( 'Shown when someone searches the site', 'matter' ),
+			'404'       => __( 'Shown when a page can’t be found', 'matter' ),
+			default     => '',
 		};
 	}
 

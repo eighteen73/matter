@@ -300,7 +300,7 @@ Hooks:
 - `matter_settings_parent`: the admin menu it sits under (default `themes.php`, Appearance; empty for a top-level item).
 - `matter_settings_saved`: fires after saving.
 
-## Archive content
+## Archive pages
 
 Marketing teams and clients can add content above and below an archive's list, and give an archive its own design, without the Site Editor. The database holds only content; the templates, and the list in them, stay in the theme.
 
@@ -312,7 +312,7 @@ Marketing teams and clients can add content above and below an archive's list, a
 <!-- /wp:matter/archive-content -->
 ```
 
-It renders the archive's **Archive content** entry. Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". In the editor it previews the real list for the archive. Without the block, the list goes at the end.
+It renders the archive's **Archive page** entry (post type `matter_archive`). Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". In the editor it previews the real list for the archive. Without the block, the list goes at the end.
 
 **Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), `search` or `404`. Matter looks in this order:
 1. the term's entry;
@@ -334,9 +334,9 @@ Only published entries count. Among several for one archive the newest wins, so 
 A bound paragraph that comes out empty (a term without a description) isn't output.
 
 **Where editors find it:**
-- Appearance › Archive content: every entry, with what it shows on and shortcuts for each archive.
-- "Customise archive" / "Edit archive content" in the admin bar on any archive.
-- An "Archive content" row on term edit screens, and a link for the taxonomy's default below term lists.
+- Appearance › Archive pages: every entry and what it shows on. "Customise a page" (Add new) lists each archive with where its content comes from; the Help tab explains the lookup order and scheduling.
+- "Customise archive page" / "Edit archive page" in the admin bar on any archive, after the core edit link.
+- An "Archive page" row on term edit screens (where its content comes from, then Edit or Customise), and a link for the taxonomy's default below term lists.
 - "Archive page" under each post type with an archive, and under Posts.
 - "New version" on an entry: a draft copy to schedule as its replacement.
 
