@@ -113,7 +113,7 @@ class Archives {
 				'hierarchical'        => false,
 				'capability_type'     => 'page',
 				'map_meta_cap'        => true,
-				'supports'            => [ 'title', 'editor', 'revisions', 'custom-fields', 'author' ],
+				'supports'            => [ 'title', 'editor', 'revisions', 'custom-fields' ],
 				'template'            => [ [ 'matter/archive-loop' ] ],
 			]
 		);

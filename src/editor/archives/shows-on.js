@@ -93,7 +93,7 @@ function ShowsOn() {
 					editPost({ meta: { [META]: value ?? '' } })
 				}
 				help={__(
-					'Type to find a category or other term. Child terms use this too, unless they have their own.',
+					'Type to find a category or tag. Categories inside it use this too, unless they have their own.',
 					'matter'
 				)}
 			/>
@@ -106,7 +106,7 @@ function ShowsOn() {
 			)}
 			<p className="components-base-control__help">
 				{__(
-					'The newest published entry for an archive shows. Schedule a new version to replace this one on a date; unpublish it to go back.',
+					'If an archive has more than one, the newest published one shows. To replace this one on a date, use New version in Appearance › Archives and schedule it.',
 					'matter'
 				)}
 			</p>

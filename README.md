@@ -334,7 +334,7 @@ Only published entries count. Among several for one archive the newest wins, so 
 A bound paragraph that comes out empty (a term without a description) isn't output.
 
 **Where editors find it:**
-- Appearance › Archives: every entry and what it shows on. "Customise an archive" (Add new) lists each archive with where its content comes from; the Help tab explains the lookup order and scheduling.
+- Appearance › Archives: every entry and what it shows on. "Customise an archive" (Add new) lists each archive, grouped by post type, with a status badge (Customised, Shared, Theme default, Draft, Scheduled), plus a picker for a single term; the Help tab explains the lookup order and scheduling.
 - "Customise archive" / "Edit archive" in the admin bar on any archive, after the core edit link.
 - An "Archive" row on term edit screens (where its content comes from, then Edit or Customise), and a link for the taxonomy's default below term lists.
 - "Archive" under each post type with an archive, and under Posts.
