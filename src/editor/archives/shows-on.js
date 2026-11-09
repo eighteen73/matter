@@ -100,7 +100,7 @@ function ShowsOn() {
 			{selected?.url && (
 				<p>
 					<ExternalLink href={selected.url}>
-						{__('View page', 'matter')}
+						{__('View archive', 'matter')}
 					</ExternalLink>
 				</p>
 			)}

@@ -1,14 +1,14 @@
 <?php
 /**
- * Archive pages in the admin: where editors find and start entries.
+ * Archives in the admin: where editors find and start entries.
  *
- * - Front end: "Edit archive page" / "Customise archive page" in the admin
- *   bar, after the core edit link.
+ * - Front end: "Edit archive" / "Customise archive" in the admin bar,
+ *   after the core edit link.
  * - Term screens: where the term's content comes from, with Edit or
  *   Customise; the term list links to the taxonomy's default.
- * - "Archive page" under each post type with an archive (and Posts).
- * - Appearance › Archive pages: every entry and what it shows on. "Customise
- *   a page" (Add new) chooses the archive first; the Help tab explains which
+ * - "Archive" under each post type with an archive (and Posts).
+ * - Appearance › Archives: every entry and what it shows on. "Customise an
+ *   archive" (Add new) chooses the archive first; the Help tab explains which
  *   content shows.
  * - Customise: creates a draft for an archive, starting from what shows
  *   there now, and opens it; or opens the archive's own entry.
@@ -27,7 +27,7 @@ use WP_Term;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Archive pages admin.
+ * Archives admin.
  */
 class Admin {
 
@@ -214,7 +214,7 @@ class Admin {
 			$admin_bar->add_node(
 				[
 					'id'    => 'matter-archive',
-					'title' => __( 'Edit archive page', 'matter' ),
+					'title' => __( 'Edit archive', 'matter' ),
 					'href'  => get_edit_post_link( $own->ID, 'raw' ),
 				]
 			);
@@ -225,7 +225,7 @@ class Admin {
 		$admin_bar->add_node(
 			[
 				'id'    => 'matter-archive',
-				'title' => __( 'Customise archive page', 'matter' ),
+				'title' => __( 'Customise archive', 'matter' ),
 				'href'  => self::customise_url( $target ),
 			]
 		);
@@ -269,7 +269,7 @@ class Admin {
 	}
 
 	/**
-	 * Post types with an archive (and Posts, for the blog): "Archive page".
+	 * Post types with an archive (and Posts, for the blog): "Archive".
 	 *
 	 * @return void
 	 */
@@ -294,7 +294,7 @@ class Admin {
 			$hook   = add_submenu_page(
 				'post' === $post_type ? 'edit.php' : 'edit.php?post_type=' . $post_type,
 				$target->label(),
-				__( 'Archive page', 'matter' ),
+				__( 'Archive', 'matter' ),
 				get_post_type_object( Archives::POST_TYPE )->cap->edit_posts,
 				$slug,
 				fn() => $this->render_default_page( $target )
@@ -316,7 +316,7 @@ class Admin {
 	}
 
 	/**
-	 * "Archive page" for an archive still on the theme default.
+	 * "Archive" for an archive still on the theme default.
 	 *
 	 * @param Target $target Archive.
 	 * @return void
@@ -339,7 +339,7 @@ class Admin {
 			<p>
 				<a class="button button-primary" href="<?php echo esc_url( self::customise_url( $target ) ); ?>"><?php esc_html_e( 'Customise', 'matter' ); ?></a>
 				<?php if ( $url ) : ?>
-					<a class="button" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'View page', 'matter' ); ?></a>
+					<a class="button" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'View archive', 'matter' ); ?></a>
 				<?php endif; ?>
 			</p>
 		</div>
@@ -364,7 +364,7 @@ class Admin {
 	}
 
 	/**
-	 * Edit term: where its archive page content comes from, then Edit or
+	 * Edit term: where its archive content comes from, then Edit or
 	 * Customise.
 	 *
 	 * @param WP_Term $term Term.
@@ -383,7 +383,7 @@ class Admin {
 		$shown    = Archives::instance()->resolve( $target );
 		?>
 		<tr class="form-field">
-			<th scope="row"><?php esc_html_e( 'Archive page', 'matter' ); ?></th>
+			<th scope="row"><?php esc_html_e( 'Archive', 'matter' ); ?></th>
 			<td>
 				<p><?php echo wp_kses_post( $this->status( $target ) ); ?></p>
 				<p>
@@ -418,7 +418,7 @@ class Admin {
 	}
 
 	/**
-	 * Term list: the taxonomy's default archive page.
+	 * Term list: the taxonomy's default archive.
 	 *
 	 * @param string $taxonomy Taxonomy.
 	 * @return void
@@ -434,7 +434,7 @@ class Admin {
 		<p>
 			<?php
 			/* translators: %s: taxonomy name, e.g. "Product categories". */
-			echo esc_html( sprintf( __( '%s without their own archive page share one layout.', 'matter' ), get_taxonomy( $taxonomy )->labels->name ) );
+			echo esc_html( sprintf( __( '%s without their own archive share one layout.', 'matter' ), get_taxonomy( $taxonomy )->labels->name ) );
 			?>
 			<a href="<?php echo esc_url( $own ? (string) get_edit_post_link( $own->ID ) : self::customise_url( $target ) ); ?>">
 				<?php $own ? esc_html_e( 'Edit it', 'matter' ) : esc_html_e( 'Customise it', 'matter' ); ?>
@@ -484,7 +484,7 @@ class Admin {
 	}
 
 	/**
-	 * "Customise a page": choose the archive, then customise it. Hidden from
+	 * "Customise an archive": choose the archive, then customise it. Hidden from
 	 * the menu; Add new leads here.
 	 *
 	 * @return void
@@ -492,14 +492,14 @@ class Admin {
 	public function chooser_page(): void {
 		$hook = add_submenu_page(
 			'',
-			__( 'Customise an archive page', 'matter' ),
+			__( 'Customise an archive', 'matter' ),
 			'',
 			get_post_type_object( Archives::POST_TYPE )->cap->edit_posts,
 			self::CHOOSER,
 			[ $this, 'render_chooser' ]
 		);
 
-		// Highlight Appearance › Archive pages.
+		// Highlight Appearance › Archives.
 		add_action(
 			"load-{$hook}",
 			function () {
@@ -530,13 +530,13 @@ class Admin {
 	public function render_chooser(): void {
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Customise an archive page', 'matter' ); ?></h1>
-			<p><?php esc_html_e( 'Choose a page to add your own sections above and below its list. The list itself stays as the theme sets it.', 'matter' ); ?></p>
+			<h1><?php esc_html_e( 'Customise an archive', 'matter' ); ?></h1>
+			<p><?php esc_html_e( 'Choose an archive to add your own sections above and below its list. The list itself stays as the theme sets it.', 'matter' ); ?></p>
 
 			<table class="widefat striped" style="max-width: 60rem;">
 				<thead>
 					<tr>
-						<th scope="col"><?php esc_html_e( 'Page', 'matter' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Archive', 'matter' ); ?></th>
 						<th scope="col"><?php esc_html_e( 'Currently', 'matter' ); ?></th>
 						<th scope="col"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'matter' ); ?></span></th>
 					</tr>
@@ -562,7 +562,7 @@ class Admin {
 
 			<h2><?php esc_html_e( 'A single category or tag', 'matter' ); ?></h2>
 			<p>
-				<?php esc_html_e( 'Edit the category or tag and choose Customise under Archive page, or view it on the site and choose Customise archive page in the toolbar.', 'matter' ); ?>
+				<?php esc_html_e( 'Edit the category or tag and choose Customise under Archive, or view it on the site and choose Customise archive in the toolbar.', 'matter' ); ?>
 			</p>
 			<p>
 				<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=' . Archives::POST_TYPE . '&blank=1' ) ); ?>"><?php esc_html_e( 'Or start from a blank page and choose where it shows', 'matter' ); ?></a>
@@ -586,8 +586,8 @@ class Admin {
 			[
 				'id'      => 'matter-archive-overview',
 				'title'   => __( 'Overview', 'matter' ),
-				'content' => '<p>' . esc_html__( 'Archive pages list things: the shop, the blog, categories and tags, search results, and the page shown when a page can’t be found. The theme controls each list; here you add sections above and below it.', 'matter' ) . '</p>'
-					. '<p>' . esc_html__( 'Start from the toolbar while viewing a page (Customise archive page), from a category’s edit screen, or with Customise a page here.', 'matter' ) . '</p>',
+				'content' => '<p>' . esc_html__( 'Archives list things: the shop, the blog, categories and tags, search results, and the page shown when a page can’t be found. The theme controls each list; here you add sections above and below it.', 'matter' ) . '</p>'
+					. '<p>' . esc_html__( 'Start from the toolbar while viewing one (Customise archive), from a category’s edit screen, or with Customise an archive here.', 'matter' ) . '</p>',
 			]
 		);
 
@@ -595,7 +595,7 @@ class Admin {
 			[
 				'id'      => 'matter-archive-which',
 				'title'   => __( 'Which content shows', 'matter' ),
-				'content' => '<p>' . esc_html__( 'A category shows its own archive page if it has one. If not, it uses its parent category’s, then the one for all its categories, then the shop’s or blog’s, then the theme’s default.', 'matter' ) . '</p>'
+				'content' => '<p>' . esc_html__( 'A category shows its own archive if it has one. If not, it uses its parent category’s, then the one for all its categories, then the shop’s or blog’s, then the theme’s default.', 'matter' ) . '</p>'
 					. '<p>' . esc_html__( 'The Shows on column says which page each one is for.', 'matter' ) . '</p>',
 			]
 		);
@@ -604,7 +604,7 @@ class Admin {
 			[
 				'id'      => 'matter-archive-schedule',
 				'title'   => __( 'Scheduling', 'matter' ),
-				'content' => '<p>' . esc_html__( 'Only published archive pages show, and the newest wins. To prepare a seasonal version, choose New version under a page in the list, edit it, and schedule it. It replaces the current one on its date; unpublish it to bring the old one back.', 'matter' ) . '</p>',
+				'content' => '<p>' . esc_html__( 'Only published archives show, and the newest wins. To prepare a seasonal version, choose New version under one in the list, edit it, and schedule it. It replaces the current one on its date; unpublish it to bring the old one back.', 'matter' ) . '</p>',
 			]
 		);
 	}
