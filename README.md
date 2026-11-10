@@ -44,6 +44,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 | `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
 | `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
 | `matter/slot` | A named content area inside a section (added automatically). | None. |
+| `matter/card` | The theme's card for the current item in a loop (Query Loop, Product Collection, or a carousel's posts). Not in the inserter: templates and carousels add it. See [Cards](#cards). | None. |
 
 **Opening overlays.**
 - The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
@@ -63,6 +64,18 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
 
 Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
+
+## Cards
+
+Every loop shows the same card for a post type: the shop, a category, related products and a carousel of products all use one design, and changing it changes them all, including carousels already placed in content.
+
+- The theme registers a pattern per post type, `{theme}/card-{post_type}` (e.g. `pulsar/card-product`), and `{theme}/card` for any other post type. Child themes are checked first. Override the choice with the `matter_card_pattern` filter (`$slug`, `$post_type`).
+- A loop's post template contains just `<!-- wp:matter/card /-->`. Matter renders the pattern with the item's block context and sets the global post, so post, product and term blocks inside it show that item.
+- In the editor the card is a server-rendered preview of the real card, and it can't be selected: clicks go to the loop or carousel around it.
+- Without a card pattern, the block falls back to a link to the item.
+- Differences between loops (e.g. no add-to-basket button in related products) belong in CSS on the loop, not in a second card.
+
+The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; clear the cache after adding a new card pattern (`wp eval 'wp_get_theme()->delete_pattern_cache();'`).
 
 ## Sections
 
