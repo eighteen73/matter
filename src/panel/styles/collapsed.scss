@@ -3,10 +3,10 @@
 // class and wraps these rules in the panel's "below breakpoint" media query.
 
 .matter-panel.is-collapsed {
-	--matter-panel--duration: 0.3s;
+	--panel-duration: 0.3s;
 
 	@media (prefers-reduced-motion: reduce) {
-		--matter-panel--duration: 0s;
+		--panel-duration: 0s;
 	}
 
 	.matter-panel__content {
@@ -20,8 +20,8 @@
 		position: fixed;
 		transform: translateX(100%);
 		transition:
-			transform var(--matter-panel--duration),
-			visibility var(--matter-panel--duration);
+			transform var(--panel-duration),
+			visibility var(--panel-duration);
 		visibility: hidden;
 		z-index: 1000;
 	}
@@ -49,8 +49,8 @@
 		opacity: 0;
 		position: fixed;
 		transition:
-			opacity var(--matter-panel--duration),
-			visibility var(--matter-panel--duration);
+			opacity var(--panel-duration),
+			visibility var(--panel-duration);
 		visibility: hidden;
 		z-index: 999;
 	}

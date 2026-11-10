@@ -67,7 +67,7 @@ addFilter(
 						...props.wrapperProps,
 						style: {
 							...props.wrapperProps?.style,
-							'--matter-button-icon': svgToDataUri(icon.content),
+							'--button-icon': svgToDataUri(icon.content),
 						},
 					}}
 				/>

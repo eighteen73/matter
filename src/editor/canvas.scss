@@ -7,14 +7,14 @@
 	display: inline-block;
 	height: 1em;
 	margin-inline-start: 0.5em;
-	mask: var(--matter-button-icon) center / contain no-repeat;
+	mask: var(--button-icon) center / contain no-repeat;
 	vertical-align: -0.125em;
 	width: 1em;
 }
 
 // Image focal point preview.
-.wp-block-image[style*="--matter-focal-point"] img {
-	object-position: var(--matter-focal-point);
+.wp-block-image[style*="--image-focal-point"] img {
+	object-position: var(--image-focal-point);
 }
 
 // Slot labels (e.g. an overlay's "Trigger" and "Content" areas).

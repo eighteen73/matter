@@ -15,11 +15,11 @@ const CLASSES = {
 };
 
 const PROPERTIES = {
-	x: '--matter-menu--offset-x',
-	y: '--matter-menu--offset-y',
-	maxHeight: '--matter-menu--max-height',
-	megamenuWidth: '--matter-menu--megamenu-width',
-	maxWidth: '--matter-menu--max-width',
+	x: '--menu-offset-x',
+	y: '--menu-offset-y',
+	maxHeight: '--menu-max-height',
+	megamenuWidth: '--menu-megamenu-width',
+	maxWidth: '--menu-max-width',
 };
 
 // Closed submenus aren't displayed (so they never widen the page); this class

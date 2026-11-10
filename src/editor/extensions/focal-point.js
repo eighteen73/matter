@@ -82,7 +82,7 @@ addFilter(
 						...props.wrapperProps,
 						style: {
 							...props.wrapperProps?.style,
-							'--matter-focal-point': toPosition(focalPoint),
+							'--image-focal-point': toPosition(focalPoint),
 						},
 					}}
 				/>

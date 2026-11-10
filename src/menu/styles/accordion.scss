@@ -26,9 +26,9 @@
 		grid-auto-rows: 0fr;
 		grid-template-rows: 0fr;
 		transition:
-			grid-template-rows var(--matter-menu--duration),
-			grid-auto-rows var(--matter-menu--duration),
-			visibility var(--matter-menu--duration);
+			grid-template-rows var(--menu-duration),
+			grid-auto-rows var(--menu-duration),
+			visibility var(--menu-duration);
 
 		> * {
 			min-height: 0;

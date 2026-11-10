@@ -198,12 +198,12 @@ const stepGroup = (id, offset) => {
 	// modal goes at once and the next fades in from the side it comes from.
 	from?.classList.add('is-switching-out');
 	to?.classList.add('is-switching-in');
-	to?.style.setProperty('--matter-modal--switch', String(Math.sign(offset)));
+	to?.style.setProperty('--modal-switch', String(Math.sign(offset)));
 
 	window.setTimeout(() => {
 		from?.classList.remove('is-switching-out');
 		to?.classList.remove('is-switching-in');
-		to?.style.removeProperty('--matter-modal--switch');
+		to?.style.removeProperty('--modal-switch');
 	}, 400);
 
 	state.items[id].isOpen = false;

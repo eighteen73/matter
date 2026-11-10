@@ -4,10 +4,10 @@
 // Type-specific layout lives in dropdown/accordion/drill-down.scss.
 
 .matter-menu {
-	--matter-menu--duration: 0.3s;
+	--menu-duration: 0.3s;
 
 	@media (prefers-reduced-motion: reduce) {
-		--matter-menu--duration: 0s;
+		--menu-duration: 0s;
 	}
 }
 
@@ -51,7 +51,7 @@
 	flex: none;
 	height: 0.75em;
 	mask: url("../../../assets/svg/caret-down.svg") center / contain no-repeat;
-	transition: rotate var(--matter-menu--duration);
+	transition: rotate var(--menu-duration);
 	width: 0.75em;
 }
 

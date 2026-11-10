@@ -45,7 +45,7 @@
 
 	// Moving between grouped modals: the backdrop stays, the current modal
 	// goes at once and the next fades in from the side it comes from
-	// (`--matter-modal--switch`: 1 for next, -1 for previous).
+	// (`--modal-switch`: 1 for next, -1 for previous).
 	&.is-switching-out,
 	&.is-switching-out::backdrop,
 	&.is-switching-in::backdrop {
@@ -64,7 +64,7 @@
 		@starting-style {
 			opacity: 0;
 			scale: 1;
-			translate: calc(var(--matter-modal--switch, 1) * 2rem) 0;
+			translate: calc(var(--modal-switch, 1) * 2rem) 0;
 		}
 	}
 
