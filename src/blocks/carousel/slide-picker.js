@@ -25,9 +25,7 @@ import { gallery, postList } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
-import { queryTemplate } from './templates';
-
-const PRODUCTS = 'woocommerce/product-collection';
+import { POSTS, PRODUCTS, productsTemplate, queryTemplate } from './templates';
 
 // New slides of a theme slide type.
 const SLIDE_COUNT = 3;
@@ -50,7 +48,7 @@ function slideOptions() {
 	const custom = Object.keys(theme)
 		.filter(
 			(name) =>
-				!['core/image', 'core/query', PRODUCTS].includes(name) &&
+				!['core/image', POSTS, PRODUCTS].includes(name) &&
 				getBlockType(name)
 		)
 		.map((name) => ({
@@ -68,8 +66,8 @@ function slideOptions() {
 		},
 		...custom,
 		{
-			name: 'core/query',
-			title: theme['core/query']?.label || __('Posts', 'matter'),
+			name: POSTS,
+			title: theme[POSTS]?.label || __('Posts', 'matter'),
 			description: __('One slide per post.', 'matter'),
 			icon: postList,
 		},
@@ -122,13 +120,16 @@ export default function SlidePicker({ clientId, setAttributes, onImages }) {
 
 		if (name === 'core/image') {
 			setIsChoosingImages(true);
-		} else if (name === 'core/query') {
+		} else if (name === POSTS) {
 			replaceInnerBlocks(
 				clientId,
 				createBlocksFromInnerBlocksTemplate([queryTemplate('post')])
 			);
 		} else if (name === PRODUCTS) {
-			replaceInnerBlocks(clientId, [createBlock(PRODUCTS)]);
+			replaceInnerBlocks(
+				clientId,
+				createBlocksFromInnerBlocksTemplate([productsTemplate()])
+			);
 		} else {
 			replaceInnerBlocks(
 				clientId,

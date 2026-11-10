@@ -38,21 +38,17 @@ import {
 	GalleryMediaUpload,
 	useGalleryMedia,
 } from '../../components/gallery-media';
+import QueryPanel from './query-panel';
 import SlidePicker, { themeSlideTypes } from './slide-picker';
+import { POSTS, PRODUCTS, QUERY_BLOCKS } from './templates';
+import { useLockedQuery } from './use-locked-query';
 
 // With theme slide types, slides are limited to them, images and queries.
 const allowedSlides = () => {
 	const types = Object.keys(themeSlideTypes());
 
 	return types.length
-		? [
-				...new Set([
-					'core/image',
-					'core/query',
-					'woocommerce/product-collection',
-					...types,
-				]),
-			]
+		? [...new Set(['core/image', POSTS, PRODUCTS, ...types])]
 		: undefined;
 };
 
@@ -83,7 +79,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		scrollToSlide(selectedSlide);
 	}, [selectedSlide, slideCount, scrollToSlide]);
 
-	const isQuery = lastSlide?.name === 'core/query';
+	// Posts or products: the query is edited from the carousel's inspector,
+	// and its blocks can't be selected.
+	const isQuery = QUERY_BLOCKS.includes(lastSlide?.name);
+	useLockedQuery(isQuery ? lastSlide.clientId : undefined);
 
 	// Image-only carousels (e.g. a slideshow) are managed like a gallery.
 	const media = useGalleryMedia(clientId);
@@ -178,6 +177,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					)}
 				</PanelBody>
 			</InspectorControls>
+			{isQuery && <QueryPanel clientId={clientId} />}
 			<div {...blockProps}>
 				<CarouselFrame
 					carousel={carousel}
