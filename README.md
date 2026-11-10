@@ -17,6 +17,16 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 - WordPress 7.1+
 - PHP 8.3+
 
+## Installing
+
+Matter is a must-use plugin, so it's always active and themes can rely on it without checking. Its Composer package type is `wordpress-muplugin`, which Bedrock-style installers put in `web/app/mu-plugins/matter/`:
+
+```bash
+composer require eighteen73/matter:^1.0
+```
+
+A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-autoloader.php`) loads it.
+
 ### Upgrading from 0.x
 
 1.0 is not compatible with 0.x content: blocks were merged, renamed or removed. Keep existing sites on 0.x (`"eighteen73/matter": "^0.7"` does not resolve to 1.0).

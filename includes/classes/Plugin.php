@@ -67,6 +67,7 @@ class Plugin {
 	 * @return void
 	 */
 	public function load_textdomain(): void {
-		load_plugin_textdomain( 'matter', false, dirname( plugin_basename( MATTER_PATH . 'matter.php' ) ) . '/languages' );
+		// Matter is a must-use plugin, so its path is relative to the mu-plugins folder.
+		load_muplugin_textdomain( 'matter', basename( MATTER_PATH ) . '/languages' );
 	}
 }

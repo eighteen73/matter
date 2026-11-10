@@ -1,7 +1,7 @@
 {
 	"name": "eighteen73/matter",
 	"description": "Matter",
-	"type": "wordpress-plugin",
+	"type": "wordpress-muplugin",
 	"license": "GPL-2.0-or-later",
 	"minimum-stability": "dev",
 	"authors": [
