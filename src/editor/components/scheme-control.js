@@ -11,10 +11,16 @@ import { __, sprintf } from '@wordpress/i18n';
 
 const { schemes = [] } = window.matterEditor ?? {};
 
+// A palette colour referenced inside another value, e.g. in `color-mix()`.
+const PALETTE_REFERENCE =
+	/var\(--wp--preset--color--([\w-]+)\s*(?:,[^()]*)?\)|var:preset\|color\|([\w-]+)/g;
+
 /**
- * Resolve a theme.json value (`var:preset|color|base`, `var(--wp--custom--…)`
- * or a literal colour) to something the inspector can paint. The inspector
- * sits outside the editor canvas, so theme CSS variables aren't available.
+ * Resolve a theme.json value (`var:preset|color|base`, `var(--wp--custom--…)`,
+ * a literal colour, or a CSS colour function such as `color-mix()` that
+ * references palette colours) to something the inspector can paint. The
+ * inspector sits outside the editor canvas, so theme CSS variables aren't
+ * available: palette references are replaced with their resolved values.
  *
  * @param {string} value   Raw value.
  * @param {Array}  palette Theme palette.
@@ -32,15 +38,28 @@ const resolveColor = (value, palette, custom, depth = 0) => {
 	const [, kind, path] = shorthand || variable || [];
 
 	if (!kind) {
-		return value;
+		// Literal colour, or a colour function referencing palette colours.
+		return value.replace(
+			PALETTE_REFERENCE,
+			(reference, slug, shortSlug) => {
+				const color = palette?.find(
+					(entry) => entry.slug === (slug ?? shortSlug)
+				)?.color;
+
+				return color
+					? resolveColor(color, palette, custom, depth + 1)
+					: reference;
+			}
+		);
 	}
 
 	const segments = shorthand ? path.split('|') : path.split('--');
 
 	if (kind === 'preset') {
 		const slug = segments[segments.length - 1];
+		const color = palette?.find((entry) => entry.slug === slug)?.color;
 
-		return palette?.find((color) => color.slug === slug)?.color ?? value;
+		return color ? resolveColor(color, palette, custom, depth + 1) : value;
 	}
 
 	const resolved = segments.reduce((node, key) => node?.[key], custom);
@@ -104,12 +123,13 @@ export default function SchemeControl({ value, onChange }) {
 									custom
 								),
 								'--swatch-text': resolveColor(
-									tokens.heading ?? tokens.text,
+									tokens['text-heading'] ?? tokens.text,
 									palette,
 									custom
 								),
 								'--swatch-accent': resolveColor(
-									tokens['button-background'] ?? tokens.link,
+									tokens['background-fill'] ??
+										tokens['text-link'],
 									palette,
 									custom
 								),
