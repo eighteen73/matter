@@ -39,9 +39,9 @@
 		position: absolute;
 		transform: translate(var(--menu-offset-x, 0), var(--menu-offset-y, 0));
 		transition:
-			opacity var(--menu-duration),
-			visibility var(--menu-duration),
-			display var(--menu-duration) allow-discrete;
+			opacity var(--_menu-duration),
+			visibility var(--_menu-duration),
+			display var(--_menu-duration) allow-discrete;
 		width: max-content;
 		z-index: 100;
 	}

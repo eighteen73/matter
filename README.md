@@ -377,21 +377,36 @@ Preview shows the entry, including unsaved changes, on its archive. The entry ed
 
 Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs) and `gravityforms/form`.
 
+## CSS conventions
+
+Themes restyle Matter with plain class selectors and never need `!important`.
+
+**Specificity**
+- Functional rules (layout, visibility, the things a theme shouldn't change) use one class per selector.
+- The default skin (colours, spacing, borders, type) is wrapped in `:where()`, so it has zero specificity and any theme class beats it.
+- No IDs, no `!important`, and no design values in inline styles.
+
+**Class names**
+- `.wp-block-matter-{block}` and `__{element}` for its parts.
+- `.is-style-{variant}` for variants, `.has-{option}` for options (`.has-columns-3`, `.has-captions-overlay`), `.is-{state}` for states set by JavaScript or PHP (`.is-open`, `.is-collapsed`), `.has-scheme-{slug}` for schemes.
+
+**CSS variables**
+- Colours come from the scheme (`--scheme--{role}`) and other values from theme.json (`--wp--preset--…`, `--wp--custom--…`).
+- A block's own variables are named `--{block}-{setting}`, with no `matter-` prefix and single hyphens, and exist only for:
+  - **theme settings**: Matter only reads them, with a fallback (`var(--gallery-gap, 1rem)`), and never declares them, so a theme can set them on `:root` or on the block's class;
+  - **runtime values**: set inline by JavaScript or PHP for one instance (submenu offsets, carousel progress, the crop a client picked).
+- Private helpers a block computes for itself are `--_{block}-{name}` (`--_gallery-columns`). Themes don't set these.
+- A value used once is written as a property, not a variable.
+
 ## CSS variables
-
-Matter's blocks and components have their own CSS variables only for:
-- values Matter's JavaScript (or PHP) sets at runtime, for theme CSS to read;
-- settings a theme sets on that block.
-
-Both are named `--{block}-{setting}`, with no `matter-` prefix and single hyphens (`--menu-max-width`, `--gallery-gap`). Colours come from the scheme (`--scheme--{role}`), and other values from theme.json presets (`--wp--preset--…`).
 
 ### Menu
 
-On `.matter-menu` and its submenus.
+Theme settings can go anywhere, such as `:root`. Runtime values are set on `.matter-menu`'s submenus.
 
 | Variable | Default | |
 |---|---|---|
-| `--menu-duration` | `0.3s` (`0s` with reduced motion) | Theme setting: open and close transitions. |
+| `--menu-duration` | `0.3s` | Theme setting: open and close transitions. Reduced motion always wins. |
 | `--menu-offset-x`, `--menu-offset-y` | `0` | Runtime, on dropdown submenus: nudges them inside the viewport. |
 | `--menu-max-height` | `none` | Runtime, on dropdown submenus: the room below, so long menus scroll. |
 | `--menu-max-width` | `100vw` | Runtime, on megamenus: the room available. |
@@ -399,15 +414,15 @@ On `.matter-menu` and its submenus.
 
 ### Panel
 
-On `.matter-panel.is-collapsed`.
+Set anywhere, such as `:root`.
 
 | Variable | Default | |
 |---|---|---|
-| `--panel-duration` | `0.3s` (`0s` with reduced motion) | Theme setting: off-canvas transitions. |
+| `--panel-duration` | `0.3s` | Theme setting: off-canvas transitions. Reduced motion always wins. |
 
 ### Gallery
 
-On `.wp-block-matter-gallery`.
+On `:root` or `.wp-block-matter-gallery` (or one of its variants).
 
 | Variable | Default | |
 |---|---|---|
@@ -434,7 +449,7 @@ On the modal's dialog.
 
 ### Images
 
-Inline on galleries and image carousels, from their aspect ratio.
+Inline on galleries and image carousels, from the aspect ratio the client picks (the variant's ratio is the default). To change a crop for a variant, set `aspect-ratio` on its images with a class selector; there's no need to override the variable.
 
 | Variable | Default | |
 |---|---|---|

@@ -18,14 +18,14 @@
 
 @for $i from 1 through 6 {
 	.wp-block-matter-gallery.has-columns-#{$i} {
-		--gallery-columns: #{$i};
+		--_gallery-columns: #{$i};
 	}
 }
 
 .wp-block-matter-gallery.has-columns .wp-block-matter-gallery__items {
 	display: grid;
 	gap: var(--gallery-gap, 1rem);
-	grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--gallery-min-width, 10rem), (100% - (var(--gallery-columns) - 1) * var(--gallery-gap, 1rem)) / var(--gallery-columns))), 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--gallery-min-width, 10rem), (100% - (var(--_gallery-columns) - 1) * var(--gallery-gap, 1rem)) / var(--_gallery-columns))), 1fr));
 }
 
 // Captions: the images' own. "tooltip" hides each behind an info button,

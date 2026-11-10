@@ -52,8 +52,8 @@
 		position: absolute;
 		transform: translateX(100%);
 		transition:
-			transform var(--menu-duration),
-			visibility var(--menu-duration);
+			transform var(--_menu-duration),
+			visibility var(--_menu-duration);
 		z-index: 1;
 	}
 
