@@ -2,9 +2,25 @@
 /**
  * Colour schemes.
  *
- * Schemes are defined by the theme in theme.json under `settings.custom.scheme`:
+ * Schemes are defined by the theme in theme.json under `settings.custom.scheme`,
+ * each setting the same roles, usually from the palette:
  *
- *     "custom": { "scheme": { "default": { "background": "…", "text": "…" }, "brand": { … } } }
+ *     "custom": { "scheme": {
+ *         "default": {
+ *             "background":         "var:preset|color|base",           // the section's background
+ *             "background-surface": "var:preset|color|base-subtle",    // cards, inputs, accordion panels on it
+ *             "background-fill":    "var:preset|color|brand-primary",  // strong fills: buttons, badges, active tab
+ *             "text":               "var:preset|color|contrast",       // body text
+ *             "text-subtle":        "var:preset|color|contrast-subtle", // dates, captions, help text
+ *             "text-heading":       "var:preset|color|contrast",       // headings
+ *             "text-link":          "var:preset|color|brand-primary",  // links
+ *             "text-fill":          "var:preset|color|base",           // text and icons on background-fill
+ *             "border":             "var:preset|color|border",         // dividers and card outlines
+ *             "border-strong":      "var:preset|color|border-strong",  // input borders, anything that must be seen (3:1)
+ *             "highlight":          "var:preset|color|brand-secondary" // eyebrows, icons, active indicators
+ *         },
+ *         "brand": { … }
+ *     } }
  *
  * WordPress turns those into `--wp--custom--scheme--{slug}--{token}` variables.
  * This class maps the active scheme onto short `--scheme--{token}` variables:

@@ -118,20 +118,48 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 
 ## Colour schemes
 
-Define schemes in the theme's `theme.json`:
+Define schemes in the theme's `theme.json`. Every scheme sets the same roles, usually from the palette (palette colours can themselves be `color-mix()` of other palette colours):
 
 ```json
 "custom": {
 	"scheme": {
-		"default": { "background": "var:preset|color|base", "text": "var:preset|color|contrast", "button-background": "…" },
-		"brand":   { "background": "var:preset|color|brand-primary", "text": "var:preset|color|base" }
+		"default": {
+			"background": "var:preset|color|base",
+			"background-surface": "var:preset|color|base-subtle",
+			"background-fill": "var:preset|color|brand-primary",
+			"text": "var:preset|color|contrast",
+			"text-subtle": "var:preset|color|contrast-subtle",
+			"text-heading": "var:preset|color|contrast",
+			"text-link": "var:preset|color|brand-primary",
+			"text-fill": "var:preset|color|base",
+			"border": "var:preset|color|border",
+			"border-strong": "var:preset|color|border-strong",
+			"highlight": "var:preset|color|brand-secondary"
+		},
+		"brand": { "background": "var:preset|color|brand-primary", "…": "…" }
 	}
 }
 ```
 
+| Role | For |
+|---|---|
+| `background` | The section's background. |
+| `background-surface` | Things that sit on it and need to stand apart: cards, inputs, accordion panels. |
+| `background-fill` | Strong solid fills: buttons, badges, the active tab. |
+| `text` | Body text. |
+| `text-subtle` | Secondary text: dates, captions, help text. |
+| `text-heading` | Headings. |
+| `text-link` | Links. |
+| `text-fill` | Text and icons on `background-fill`. |
+| `border` | Dividers and card outlines. |
+| `border-strong` | Input borders and anything that must be seen (3:1 contrast). |
+| `highlight` | Small accents: eyebrows, icons, active indicators. |
+
 Matter outputs:
 - `:root` with the default scheme;
-- `.has-scheme-{slug}` rules mapping each token to `--scheme--{token}`.
+- `.has-scheme-{slug}` rules mapping each role to `--scheme--{role}` (e.g. `--scheme--text-heading`).
+
+Matter's own default styles use only `--scheme--background`, `--scheme--text` and `--scheme--border`, each with a fallback, so Matter works on a theme without schemes.
 
 Blocks declaring `supports.matter.scheme` get a swatch control in the Styles tab. Selecting the active scheme again inherits the surrounding scheme.
 
@@ -348,6 +376,74 @@ Preview shows the entry, including unsaved changes, on its archive. The entry ed
 - **Focal point.** On `core/image` (block attribute) and featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images.
 
 Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs) and `gravityforms/form`.
+
+## CSS variables
+
+Matter's blocks and components have their own CSS variables only for:
+- values Matter's JavaScript (or PHP) sets at runtime, for theme CSS to read;
+- settings a theme sets on that block.
+
+Both are named `--{block}-{setting}`, with no `matter-` prefix and single hyphens (`--menu-max-width`, `--gallery-gap`). Colours come from the scheme (`--scheme--{role}`), and other values from theme.json presets (`--wp--preset--…`).
+
+### Menu
+
+On `.matter-menu` and its submenus.
+
+| Variable | Default | |
+|---|---|---|
+| `--menu-duration` | `0.3s` (`0s` with reduced motion) | Theme setting: open and close transitions. |
+| `--menu-offset-x`, `--menu-offset-y` | `0` | Runtime, on dropdown submenus: nudges them inside the viewport. |
+| `--menu-max-height` | `none` | Runtime, on dropdown submenus: the room below, so long menus scroll. |
+| `--menu-max-width` | `100vw` | Runtime, on megamenus: the room available. |
+| `--menu-megamenu-width` | `100vw` | Runtime, on full-width megamenus: the viewport's width. |
+
+### Panel
+
+On `.matter-panel.is-collapsed`.
+
+| Variable | Default | |
+|---|---|---|
+| `--panel-duration` | `0.3s` (`0s` with reduced motion) | Theme setting: off-canvas transitions. |
+
+### Gallery
+
+On `.wp-block-matter-gallery`.
+
+| Variable | Default | |
+|---|---|---|
+| `--gallery-gap` | `1rem` | Theme setting: the grid's gap. |
+| `--gallery-min-width` | `10rem` | Theme setting: images never get narrower; the grid drops columns instead. |
+| `--gallery-caption-toggle-size` | `2.75rem` | Theme setting: the caption info button. |
+
+### Carousel
+
+On `.wp-block-matter-carousel`.
+
+| Variable | Default | |
+|---|---|---|
+| `--carousel-progress` | `0` | Runtime: how far through the carousel (0–1). |
+| `--carousel-autoplay` | `5000ms` | Runtime: each slide's autoplay time. |
+
+### Modal
+
+On the modal's dialog.
+
+| Variable | Default | |
+|---|---|---|
+| `--modal-switch` | `1` | Runtime, while moving between grouped modals: `1` for next, `-1` for previous. |
+
+### Images
+
+Inline on galleries and image carousels, from their aspect ratio.
+
+| Variable | Default | |
+|---|---|---|
+| `--image-aspect-ratio` | `auto` | Runtime: the crop. |
+| `--image-object-fit` | `cover` | Runtime: `contain` when the ratio is `auto`. |
+
+### Editor
+
+The editor also sets `--button-icon` and `--image-focal-point` on blocks in the canvas, for its button icon and focal point previews.
 
 ## Breakpoints
 
