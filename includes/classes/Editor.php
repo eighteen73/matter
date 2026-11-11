@@ -81,7 +81,9 @@ class Editor {
 					'breakpoints'     => Breakpoints::all(),
 					'variants'        => Variants::all(),
 					'carouselSlides'  => Carousel::slide_types(),
-					'templateParts'   => TemplatePart::all(),
+					// Template parts are placed in templates, so only the Site
+					// Editor needs the list.
+					'templateParts'   => 'site-editor' === get_current_screen()?->id ? TemplatePart::all() : [],
 				]
 			) . ';',
 			'before'
