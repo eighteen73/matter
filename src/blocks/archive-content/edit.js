@@ -11,8 +11,14 @@ import { __ } from '@wordpress/i18n';
 
 export default function Edit() {
 	const blockProps = useBlockProps();
+	// On the front end the list is always inside the archive list block's
+	// wrapper (see archive-loop/render.php), so the same classes here give it
+	// the theme's styles for that band (e.g. its padding and wide width).
 	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'wp-block-matter-archive-content__loop' },
+		{
+			className:
+				'wp-block-matter-archive-content__loop wp-block-matter-archive-loop alignfull',
+		},
 		{ templateLock: false }
 	);
 
