@@ -41,6 +41,8 @@ class Plugin {
 		Instances::instance()->setup();
 		GravityForm::instance()->setup();
 		Variants::instance()->setup();
+		AllowedBlocks::instance()->setup();
+		Icons::instance()->setup();
 
 		// Sections, block supports and core block extensions.
 		Sections::instance()->setup();

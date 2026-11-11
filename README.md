@@ -44,6 +44,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 | `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
 | `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
 | `matter/slot` | A named content area inside a section (added automatically). | None. |
+| `matter/template-part` | A PHP file from the theme's `template-parts/` folder, e.g. `<!-- wp:matter/template-part {"slug":"site-header"} /-->` in a block template. The slug is the file's path there without `.php`. The part gets the block's context (`postId`, `postType`, `queryId`) as `$args`. Not in the inserter: developers place it in templates. | Template part (files with a `Title:` header; filter with `matter_template_parts`). |
 
 **Opening overlays.**
 - The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
@@ -379,6 +380,24 @@ A bound paragraph that comes out empty (a term without a description) isn't outp
 - "New version" on an entry: a draft copy to schedule as its replacement.
 
 Preview shows the entry, including unsaved changes, on its archive. The entry editor's "Shows on" panel changes which archive it's for.
+
+## Allowed blocks
+
+The theme lists the blocks content editors can add, and Matter enforces the list in the post editor. Templates are developer-owned and the Site Editor keeps every block. Entries ending in `/*` allow a whole namespace; an empty list leaves the editor unrestricted. A list set earlier by other code still applies (the two are intersected).
+
+```php
+add_filter( 'matter_allowed_blocks', fn( $blocks ) => [ ...$blocks, 'core/heading', 'core/paragraph', 'pulsar/*', 'matter/*' ] );
+```
+
+## Theme icons
+
+The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's folder; icon names are saved in content (`pulsar/arrow-right`), so name it explicitly if the folder may change:
+
+```php
+add_filter( 'matter_theme_icons', fn( $icons ) => [ ...$icons, 'collection' => 'pulsar', 'label' => 'Theme icons' ] );
+```
+
+`directories` changes the folders.
 
 ## Core block extensions
 

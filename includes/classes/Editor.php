@@ -9,6 +9,7 @@
 namespace Eighteen73\Matter;
 
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Supports\Scheme;
 
@@ -80,6 +81,7 @@ class Editor {
 					'breakpoints'     => Breakpoints::all(),
 					'variants'        => Variants::all(),
 					'carouselSlides'  => Carousel::slide_types(),
+					'templateParts'   => TemplatePart::all(),
 				]
 			) . ';',
 			'before'
