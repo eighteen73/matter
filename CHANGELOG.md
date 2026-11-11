@@ -17,7 +17,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 - **Site settings:** config-driven fields, a React settings page, `Matter\setting()` and the `matter/setting` bindings source.
 - **Extensions:** button icon (icon registry, chosen from a core-style icon library; `matter_icon_collections`) and focal point (image blocks and featured images).
 - Theme-owned breakpoints (`matter_breakpoints`).
-- **Theme template parts:** `matter/template-part` renders a PHP file from the theme's `template-parts/` folder in block templates (from Pulsar's `pulsar/template-part`).
+- **Theme template parts:** `matter/template-part` renders a PHP file from the theme's `template-parts/` folder in block templates (from Pulsar's `pulsar/template-part`). Its editor preview includes the styles the part enqueues, such as menus and panels.
 - **Allowed blocks:** the theme's list (`matter_allowed_blocks`, with `namespace/*` wildcards) is enforced in the post editor.
 - **Theme icons:** the theme's `assets/svg/icons/` SVGs are registered as an icon collection (`matter_theme_icons`).
 - **JavaScript API:** `matter.carousel()`, `matter.tabs()`, `matter.accordion()`, `matter.gallery()`, `matter.overlay()` and `matter.panel()` return instances with methods and read-only state; `matter.ready()` waits for a block; every block dispatches `matter-{block}-*` events. The block stores take a target too.

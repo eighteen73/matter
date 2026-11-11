@@ -7,13 +7,20 @@
  * file in the theme's `template-parts/` folder (child theme first); its slug
  * is its path there without `.php`, e.g. `site-header` or `footer/social`.
  *
+ * The editor previews a part with the stylesheets its render enqueues (e.g.
+ * a menu's or panel's, with their generated breakpoint CSS), which core's
+ * block renderer endpoint would drop, so the preview matches the front end.
+ *
  * @package Eighteen73\Matter
  */
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Singleton;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use WP_REST_Request;
+use WP_REST_Server;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -22,10 +29,76 @@ defined( 'ABSPATH' ) || exit;
  */
 final class TemplatePart {
 
+	use Singleton;
+
 	/**
 	 * The folder parts live in, relative to the theme.
 	 */
 	public const DIRECTORY = 'template-parts';
+
+	/**
+	 * Setup hooks.
+	 *
+	 * @return void
+	 */
+	public function setup(): void {
+		add_action( 'rest_api_init', [ $this, 'register_route' ] );
+	}
+
+	/**
+	 * `GET matter/v1/template-part?slug=…`: the part's HTML and the styles it
+	 * enqueued, for the editor preview.
+	 *
+	 * @return void
+	 */
+	public function register_route(): void {
+		register_rest_route(
+			'matter/v1',
+			'/template-part',
+			[
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => [ $this, 'preview' ],
+				'permission_callback' => fn() => current_user_can( 'edit_posts' ),
+				'args'                => [
+					'slug' => [
+						'type'              => 'string',
+						'required'          => true,
+						'validate_callback' => fn( $slug ) => is_string( $slug ) && self::is_valid_slug( $slug ),
+					],
+				],
+			]
+		);
+	}
+
+	/**
+	 * Render a part through its block, collecting the stylesheets (with
+	 * their inline CSS) enqueued while it rendered.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return array{html: string, styles: string}
+	 */
+	public function preview( WP_REST_Request $request ): array {
+		$styles = wp_styles();
+		$queued = $styles->queue;
+
+		$html = render_block(
+			[
+				'blockName'    => 'matter/template-part',
+				'attrs'        => [ 'slug' => (string) $request['slug'] ],
+				'innerBlocks'  => [],
+				'innerHTML'    => '',
+				'innerContent' => [],
+			]
+		);
+
+		ob_start();
+		$styles->do_items( array_values( array_diff( $styles->queue, $queued ) ) );
+
+		return [
+			'html'   => $html,
+			'styles' => (string) ob_get_clean(),
+		];
+	}
 
 	/**
 	 * Whether a slug is a plain path inside the folder: no dots, so it can't
