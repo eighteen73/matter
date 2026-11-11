@@ -26,6 +26,7 @@ import { gallery, postList } from '@wordpress/icons';
  * Internal dependencies
  */
 import { POSTS, PRODUCTS, productsTemplate, queryTemplate } from './templates';
+import { useSwapBlock } from './use-swap-block';
 
 // New slides of a theme slide type.
 const SLIDE_COUNT = 3;
@@ -90,6 +91,7 @@ function slideOptions() {
 export default function SlidePicker({ clientId, setAttributes, onImages }) {
 	const [isChoosingImages, setIsChoosingImages] = useState(false);
 	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const swapBlock = useSwapBlock();
 
 	if (isChoosingImages) {
 		return (
@@ -114,22 +116,25 @@ export default function SlidePicker({ clientId, setAttributes, onImages }) {
 	const choose = ({ name }) => {
 		const variant = themeSlideTypes()[name]?.variant;
 
+		// Posts and products: the query block is the carousel, so it takes
+		// this block's place.
+		if (name === POSTS || name === PRODUCTS) {
+			const [block] = createBlocksFromInnerBlocksTemplate([
+				name === POSTS
+					? queryTemplate('post', variant)
+					: productsTemplate(variant),
+			]);
+
+			swapBlock(clientId, block);
+			return;
+		}
+
 		if (variant) {
 			setAttributes({ className: `is-style-${variant}` });
 		}
 
 		if (name === 'core/image') {
 			setIsChoosingImages(true);
-		} else if (name === POSTS) {
-			replaceInnerBlocks(
-				clientId,
-				createBlocksFromInnerBlocksTemplate([queryTemplate('post')])
-			);
-		} else if (name === PRODUCTS) {
-			replaceInnerBlocks(
-				clientId,
-				createBlocksFromInnerBlocksTemplate([productsTemplate()])
-			);
 		} else {
 			replaceInnerBlocks(
 				clientId,

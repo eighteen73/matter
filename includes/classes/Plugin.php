@@ -10,6 +10,7 @@ namespace Eighteen73\Matter;
 use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Blocks\QueryCarousel;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Extensions\ButtonIcon;
 use Eighteen73\Matter\Extensions\FocalPoint;
@@ -40,6 +41,7 @@ class Plugin {
 		Registry::instance()->setup();
 		Instances::instance()->setup();
 		GravityForm::instance()->setup();
+		QueryCarousel::instance()->setup();
 		Variants::instance()->setup();
 
 		// Sections, block supports and core block extensions.

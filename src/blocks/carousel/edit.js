@@ -15,6 +15,7 @@ import {
 	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
 	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
+import { cloneBlock } from '@wordpress/blocks';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -40,17 +41,22 @@ import {
 	useGalleryMedia,
 } from '../../components/gallery-media';
 import SlidePicker, { themeSlideTypes } from './slide-picker';
-import { POSTS, PRODUCTS, QUERY_BLOCKS } from './templates';
-import { useLockedQuery } from './use-locked-query';
+import { QUERY_BLOCKS } from './templates';
+import { useSwapBlock } from './use-swap-block';
 
-// With theme slide types, slides are limited to them, images and queries.
+// With theme slide types, slides are limited to them and images. Posts and
+// products carousels are query blocks of their own.
 const allowedSlides = () => {
-	const types = Object.keys(themeSlideTypes());
+	const types = Object.keys(themeSlideTypes()).filter(
+		(name) => !QUERY_BLOCKS.includes(name)
+	);
 
-	return types.length
-		? [...new Set(['core/image', POSTS, PRODUCTS, ...types])]
-		: undefined;
+	return types.length ? [...new Set(['core/image', ...types])] : undefined;
 };
+
+// The carousel's style, from its class.
+const styleOf = (className = '') =>
+	className.match(/(?:^|\s)is-style-([\w-]+)/)?.[1];
 
 /**
  * A live carousel: the variant (block style) decides behaviour and the theme's
@@ -71,7 +77,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		(select) => selectedSlideIndex(select, clientId, blockEditorStore),
 		[clientId]
 	);
-	const { lastSlide, slideCount, addSlide } = useAddSlide(clientId);
+	const { slideCount, addSlide } = useAddSlide(clientId);
 	const { scrollToSlide } = carousel;
 
 	// Bring the slide being edited into view.
@@ -79,15 +85,42 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		scrollToSlide(selectedSlide);
 	}, [selectedSlide, slideCount, scrollToSlide]);
 
-	// Posts or products: clicking the slides selects the query, which has the
-	// filters and the carousel's settings. It's locked in place, and its
-	// contents can't be selected.
-	const isQuery = QUERY_BLOCKS.includes(lastSlide?.name);
-	useLockedQuery(isQuery ? lastSlide.clientId : undefined);
+	// A carousel holding a Query Loop or Product Collection (made before
+	// those were carousels themselves) becomes that query, with this
+	// carousel's settings. Not an edit: the page isn't marked as changed.
+	const swapBlock = useSwapBlock();
+	const legacyQuery = useSelect(
+		(select) => {
+			const blocks = select(blockEditorStore).getBlocks(clientId);
+
+			return blocks.length === 1 && QUERY_BLOCKS.includes(blocks[0].name)
+				? blocks[0]
+				: null;
+		},
+		[clientId]
+	);
+
+	useEffect(() => {
+		if (!legacyQuery) {
+			return;
+		}
+
+		swapBlock(
+			clientId,
+			cloneBlock(legacyQuery, {
+				carousel: {
+					style: styleOf(attributes.className),
+					scheme: attributes.scheme,
+					label: attributes.label,
+				},
+			}),
+			{ persistent: false }
+		);
+	}, [legacyQuery, clientId, swapBlock, attributes]);
 
 	// Image-only carousels (e.g. a slideshow) are managed like a gallery.
 	const media = useGalleryMedia(clientId);
-	const isImages = !isQuery && media.isImageOnly;
+	const isImages = media.isImageOnly;
 
 	// Image slides share an aspect ratio (the variant's by default).
 	const aspectRatios = useAspectRatios();
@@ -100,7 +133,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const blockProps = useBlockProps({
 		className: [
 			carouselClasses(carousel),
-			carousel.isQuery && 'is-query',
 			ratioStyle && 'has-image-aspect-ratio',
 		]
 			.filter(Boolean)
@@ -114,7 +146,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			allowedBlocks,
 			orientation: 'horizontal',
 			renderAppender: false,
-			templateLock: isQuery ? 'all' : undefined,
 		}
 	);
 
@@ -146,7 +177,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					/>
 				</BlockControls>
 			)}
-			{!isQuery && !isImages && (
+			{!isImages && (
 				<BlockControls group="block">
 					<ToolbarGroup>
 						<ToolbarButton onClick={addSlide}>

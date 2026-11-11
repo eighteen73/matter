@@ -119,3 +119,14 @@
 .block-editor-block-inspector:has(.matter-carousel-query-panel) .wc-block-editor-product-collection__settings_panel .components-tools-panel-item:has([data-value="carousel"], [data-value="fixed"]) {
 	display: none;
 }
+
+// A query carousel's style buttons (Matter's: the carousel's block styles).
+.matter-carousel-styles {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+
+	.components-button {
+		justify-content: center;
+	}
+}

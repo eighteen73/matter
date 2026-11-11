@@ -3,10 +3,10 @@
  * theme's loop item (`matter/loop-item`), so the design lives in the theme and
  * clients never need to edit the loop.
  *
- * A carousel's query is marked as Matter's (`namespace` on a Query Loop,
- * `collection` on a Product Collection), which gives it a "Posts carousel" /
- * "Products carousel" title and limits its native controls to those that make
- * sense for slides (see query-blocks.js).
+ * A posts or products carousel is the query block itself, with a `carousel`
+ * attribute, marked as Matter's (`namespace` on a Query Loop, `collection` on
+ * a Product Collection) for its title and the native controls it offers (see
+ * editor/extensions/carousel-query.js and Blocks\QueryCarousel).
  */
 
 export const POSTS = 'core/query';
@@ -44,15 +44,17 @@ export const PRODUCTS_HIDDEN_CONTROLS = [
 export const PRODUCTS_LAYOUT = { type: 'list' };
 
 /**
- * A query of posts (of a type) whose items become slides.
+ * A posts carousel: a Query Loop (of a type) that is the carousel.
  *
  * @param {string} postType Post type.
+ * @param {string} style    Carousel style (block style name), if any.
  * @return {Array} Block template.
  */
-export const queryTemplate = (postType) => [
+export const queryTemplate = (postType, style) => [
 	POSTS,
 	{
 		namespace: POSTS_NAMESPACE,
+		carousel: style ? { style } : {},
 		query: { perPage: 9, postType, inherit: false },
 	},
 	[['core/post-template', {}, [['matter/loop-item']]]],
@@ -86,9 +88,11 @@ function stockStatuses() {
  * The whole `query` is given because WooCommerce replaces, rather than
  * merges, it.
  *
+ * @param {string} style Carousel style (block style name), if any.
  * @return {Object} Block attributes.
  */
-export const productsAttributes = () => ({
+export const productsAttributes = (style) => ({
+	carousel: style ? { style } : {},
 	query: {
 		perPage: 9,
 		pages: 0,
@@ -119,13 +123,14 @@ export const productsAttributes = () => ({
 });
 
 /**
- * A Product Collection whose products become slides.
+ * A products carousel: a Product Collection that is the carousel.
  *
+ * @param {string} style Carousel style (block style name), if any.
  * @return {Array} Block template.
  */
-export const productsTemplate = () => [
+export const productsTemplate = (style) => [
 	PRODUCTS,
-	productsAttributes(),
+	productsAttributes(style),
 	[['woocommerce/product-template', {}, [['matter/loop-item']]]],
 ];
 

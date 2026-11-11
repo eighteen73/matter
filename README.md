@@ -79,14 +79,15 @@ The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; c
 
 ## Carousels of posts or products
 
-A carousel of posts or products holds a Query Loop or Product Collection whose items are the theme's [loop items](#loop-items). Clicking the slides selects that query, so its sidebar has everything in one place:
+A carousel of posts or products is the Query Loop or Product Collection itself: one block, one row in List View. A `carousel` attribute (`style`, `scheme`, `label`) makes the query a carousel:
 
-- **The carousel's settings**: its styles, colour scheme and name (they're the carousel's; Matter adds them to the query's sidebar).
-- **WordPress's or WooCommerce's own controls**, trimmed to those that suit a carousel:
-  - Posts are a "Posts carousel" Query Loop variation (`namespace: matter/carousel-posts`) allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
-  - Products are a "Products carousel" Product Collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable. Its empty scope keeps it out of the inserter and hides "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them while the carousel's panel is shown.
-
-The query is locked in the carousel (to move or remove the carousel, select it with the toolbar's parent button or the breadcrumb), and its items can't be selected. Carousels made before this get the variation's attributes when opened, without marking the page as changed.
+- **Front end:** the query's output is rendered inside the carousel block (`Blocks\QueryCarousel`), so the carousel's markup, script, styles (Matter's and the theme's `matter-carousel` CSS) and colour scheme apply as for any carousel. The query's alignment moves to the carousel.
+- **Editor:** a live carousel around the query, whose items are the theme's [loop items](#loop-items) and can't be selected or added to. Its sidebar has a **Carousel** panel (style, colour scheme, name) above WordPress's or WooCommerce's own controls, trimmed to suit a carousel:
+  - Posts: a "Posts carousel" Query Loop variation (`namespace: matter/carousel-posts`) allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
+  - Products: a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
+- **Inserting:** a carousel's picker offers posts and products, which replace the carousel block with the query. In the post editor, "Posts carousel" and "Products carousel" also replace the plain Query Loop and Product Collection (and WooCommerce's other collections) in the inserter; the Site Editor keeps those for templates.
+- The theme's allowed blocks need `core/query` and `woocommerce/product-collection`, so carousels can be duplicated, pasted and moved.
+- A carousel block holding a query (from before) becomes the query when opened, keeping its style, scheme and name.
 
 ## Sections
 
