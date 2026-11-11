@@ -56,6 +56,48 @@ class Registry {
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register' ] );
 		add_filter( 'register_block_type_args', [ $this, 'hide_replaced_blocks' ], 10, 2 );
+		add_filter( 'block_type_metadata', [ $this, 'version_styles' ] );
+	}
+
+	/**
+	 * Cache-bust Matter's block stylesheets when they change.
+	 *
+	 * Core versions a block's scripts from their `.asset.php` hash, but its
+	 * styles from block.json's `version`, which only changes on release, so
+	 * browsers would keep an old stylesheet after an update. The version
+	 * becomes the newest modification time of the block's built stylesheets
+	 * (as Assets does for Matter's other files).
+	 *
+	 * @param array $metadata Block metadata.
+	 * @return array
+	 */
+	public function version_styles( array $metadata ): array {
+		if ( ! str_starts_with( (string) ( $metadata['name'] ?? '' ), 'matter/' ) || empty( $metadata['file'] ) ) {
+			return $metadata;
+		}
+
+		$folder = dirname( $metadata['file'] );
+		$times  = [];
+
+		foreach ( [ 'style', 'editorStyle', 'viewStyle' ] as $field ) {
+			foreach ( (array) ( $metadata[ $field ] ?? [] ) as $style ) {
+				if ( ! is_string( $style ) || ! str_starts_with( $style, 'file:' ) ) {
+					continue;
+				}
+
+				$path = $folder . '/' . remove_block_asset_path_prefix( $style );
+
+				if ( file_exists( $path ) ) {
+					$times[] = filemtime( $path );
+				}
+			}
+		}
+
+		if ( $times ) {
+			$metadata['version'] = (string) max( $times );
+		}
+
+		return $metadata;
 	}
 
 	/**
