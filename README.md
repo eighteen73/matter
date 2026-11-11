@@ -37,13 +37,14 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 | --- | --- | --- |
 | `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
 | `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown on smaller screens (a button showing the current tab's icon and name opens the tab list; the theme sets where, see Variants). Tab: icon, chosen from the icon library on the block toolbar. Backspace in an empty tab name, or "Delete tab" in the block's options menu, removes a tab. |
-| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts or products. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
+| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts or products. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. Posts and products: see [Carousels of posts or products](#carousels-of-posts-or-products). | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
 | `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. Every image is cropped to one aspect ratio and uses the variant's image size (`imageSize`), so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`, and its toolbar keeps the "Edit images" button. | Layout (grid/carousel), columns (the theme's choices; fewer show where there's less room), images to show (in whole rows of the columns; at any width the grid shows full rows, and the rest open from "View all N images"), aspect ratio (theme.json presets, or the images' own), captions (behind an info button, over the image, or hidden; each image's own caption, else its media library caption, also shown in the lightbox), lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
 | `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
 | `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
 | `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
 | `matter/slot` | A named content area inside a section (added automatically). | None. |
+| `matter/loop-item` | The theme's design for the current item in a loop (Query Loop, Product Collection, or a carousel's posts). Not in the inserter: templates and carousels add it. See [Loop items](#loop-items). | None. |
 | `matter/template-part` | A PHP file from the theme's `template-parts/` folder, e.g. `<!-- wp:matter/template-part {"slug":"site-header"} /-->` in a block template. The slug is the file's path there without `.php`. The part gets its `slug` and the block's context (`postId`, `postType`, `queryId`) as `$args`; other attributes aren't passed, as anyone who can edit content could set them. Not in the inserter: developers place it in templates. The Site Editor previews the part with the stylesheets its render enqueues (e.g. a menu's or panel's), so it looks as on the front end. WooCommerce's mini-cart renders nothing in the editor. | Template part (files with a `Title:` header; filter with `matter_template_parts`). |
 
 **Opening overlays.**
@@ -64,6 +65,31 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
 
 Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
+
+## Loop items
+
+Every loop shows the same design for a post type: the shop, a category, related products and a carousel of products all use one loop item, and changing it changes them all, including carousels already placed in content.
+
+- The theme registers a pattern per post type, `{theme}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{theme}/loop-item` for any other post type. Child themes are checked first. Give the patterns `Inserter: false` so they stay out of the Patterns panel. Override the choice with the `matter_loop_item_pattern` filter (`$slug`, `$post_type`).
+- A loop's post template contains just `<!-- wp:matter/loop-item /-->`. Matter renders the pattern with the item's block context and sets the global post, so post, product and term blocks inside it show that item.
+- In the editor the loop item is a server-rendered preview of the real thing, and it can't be selected: clicks go to the loop or carousel around it. Items that load together (a carousel's or an archive's) share one request to `matter/v1/loop-items`, which renders only items the user can read. List View and the breadcrumb name it after the post type ("Product", "Post").
+- Without a pattern, the block falls back to a link to the item.
+- Differences between loops (e.g. no add-to-basket button in related products) belong in CSS on the loop, not in a second pattern.
+
+The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; clear the cache after adding a new loop item pattern (`wp eval 'wp_get_theme()->delete_pattern_cache();'`).
+
+## Carousels of posts or products
+
+A carousel of posts or products is the Query Loop or Product Collection itself: one block, one row in List View. A `matterCarousel` attribute (`style`, `scheme`, `label`) makes the query a carousel:
+
+- **Front end:** the query's output is rendered inside the carousel block (`Blocks\QueryCarousel`), so the carousel's markup, script, styles (Matter's and the theme's `matter-carousel` CSS) and colour scheme apply as for any carousel. The query's alignment moves to the carousel.
+- **Editor:** a live carousel around the query, whose items are the theme's [loop items](#loop-items) and can't be selected or added to. Its sidebar has a **Carousel** panel (style, colour scheme, name) above WordPress's or WooCommerce's own controls, trimmed to suit a carousel:
+  - Posts: a "Posts carousel" Query Loop variation (`namespace: matter/carousel-posts`) allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
+  - Products: a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
+- **Inserting:** a carousel's picker offers posts and products, which replace the carousel block with the query. In the post editor, "Posts carousel" and "Products carousel" also replace the plain Query Loop and Product Collection (and WooCommerce's other collections) in the inserter; the Site Editor keeps those for templates.
+- Wherever the theme allows `matter/carousel`, Matter also allows `core/query` and `woocommerce/product-collection`, so carousels can be inserted, duplicated, pasted and moved. The theme's list doesn't name them.
+- If Matter's handling ever stops, the live site shows the query as a normal grid. Saving the page in the editor then drops `matterCarousel`, and the carousel stays a grid.
+- A carousel block holding a query (from before) becomes the query when opened, keeping its style, scheme and name.
 
 ## Sections
 
@@ -498,6 +524,16 @@ add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'l
 ```
 
 `config/breakpoints.json` is the fallback.
+
+## Theme contract
+
+What a theme's files and saved content depend on. Each project's theme is its own copy and isn't updated with Matter, so these change only in a major version, with a changelog entry and a migration for saved content. Everything else (editor internals, PHP classes, JavaScript modules) can change in any release.
+
+- **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterCarousel` (`style`, `scheme`, `label`) on queries, the posts carousel's `namespace: matter/carousel-posts` and the products carousel's `collection: matter/product-collection/carousel`.
+- **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns `{theme}/loop-item-{post_type}` and `{theme}/loop-item`.
+- **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()` and `slots()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
+- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts or products carousel the slides are the items of the post or product template inside the track), state classes (`is-*`, `has-*`), the `--scheme--*` roles and the variables under [CSS variables](#css-variables).
+- **Icon names** (`{collection}/{icon}`), saved in content.
 
 ## Development
 

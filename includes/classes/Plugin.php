@@ -10,6 +10,8 @@ namespace Eighteen73\Matter;
 use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Blocks\LoopItem;
+use Eighteen73\Matter\Blocks\QueryCarousel;
 use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Extensions\ButtonIcon;
@@ -41,6 +43,8 @@ class Plugin {
 		Registry::instance()->setup();
 		Instances::instance()->setup();
 		GravityForm::instance()->setup();
+		QueryCarousel::instance()->setup();
+		LoopItem::instance()->setup();
 		Variants::instance()->setup();
 		AllowedBlocks::instance()->setup();
 		TemplatePart::instance()->setup();

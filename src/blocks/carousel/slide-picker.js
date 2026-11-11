@@ -25,9 +25,8 @@ import { gallery, postList } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
-import { queryTemplate } from './templates';
-
-const PRODUCTS = 'woocommerce/product-collection';
+import { POSTS, PRODUCTS, productsTemplate, queryTemplate } from './templates';
+import { useSwapBlock } from './use-swap-block';
 
 // New slides of a theme slide type.
 const SLIDE_COUNT = 3;
@@ -50,7 +49,7 @@ function slideOptions() {
 	const custom = Object.keys(theme)
 		.filter(
 			(name) =>
-				!['core/image', 'core/query', PRODUCTS].includes(name) &&
+				!['core/image', POSTS, PRODUCTS].includes(name) &&
 				getBlockType(name)
 		)
 		.map((name) => ({
@@ -68,8 +67,8 @@ function slideOptions() {
 		},
 		...custom,
 		{
-			name: 'core/query',
-			title: theme['core/query']?.label || __('Posts', 'matter'),
+			name: POSTS,
+			title: theme[POSTS]?.label || __('Posts', 'matter'),
 			description: __('One slide per post.', 'matter'),
 			icon: postList,
 		},
@@ -92,6 +91,7 @@ function slideOptions() {
 export default function SlidePicker({ clientId, setAttributes, onImages }) {
 	const [isChoosingImages, setIsChoosingImages] = useState(false);
 	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const swapBlock = useSwapBlock();
 
 	if (isChoosingImages) {
 		return (
@@ -116,19 +116,25 @@ export default function SlidePicker({ clientId, setAttributes, onImages }) {
 	const choose = ({ name }) => {
 		const variant = themeSlideTypes()[name]?.variant;
 
+		// Posts and products: the query block is the carousel, so it takes
+		// this block's place.
+		if (name === POSTS || name === PRODUCTS) {
+			const [block] = createBlocksFromInnerBlocksTemplate([
+				name === POSTS
+					? queryTemplate('post', variant)
+					: productsTemplate(variant),
+			]);
+
+			swapBlock(clientId, block);
+			return;
+		}
+
 		if (variant) {
 			setAttributes({ className: `is-style-${variant}` });
 		}
 
 		if (name === 'core/image') {
 			setIsChoosingImages(true);
-		} else if (name === 'core/query') {
-			replaceInnerBlocks(
-				clientId,
-				createBlocksFromInnerBlocksTemplate([queryTemplate('post')])
-			);
-		} else if (name === PRODUCTS) {
-			replaceInnerBlocks(clientId, [createBlock(PRODUCTS)]);
 		} else {
 			replaceInnerBlocks(
 				clientId,
