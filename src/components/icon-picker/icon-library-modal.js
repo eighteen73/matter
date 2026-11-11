@@ -74,13 +74,13 @@ export function IconLibraryModal({ value, title, onSelect, onRequestClose }) {
 
 	return (
 		<Modal
-			className="wp-block-icon__inserter-modal matter-icon-library-modal"
+			className="matter-icon-library-modal"
 			title={title || __('Icon library', 'matter')}
 			onRequestClose={onRequestClose}
 			isFullScreen
 		>
-			<div className="wp-block-icon__inserter">
-				<div className="wp-block-icon__inserter-sidebar">
+			<div className="matter-icon-library-modal__layout">
+				<div className="matter-icon-library-modal__sidebar">
 					<SearchControl
 						__nextHasNoMarginBottom
 						value={inputValue}
@@ -116,7 +116,7 @@ export function IconLibraryModal({ value, title, onSelect, onRequestClose }) {
 						</div>
 					)}
 				</div>
-				<div className="wp-block-icon__inserter-panel">
+				<div className="matter-icon-library-modal__panel">
 					<IconLibraryPanel
 						collection={collection}
 						search={search}
@@ -149,7 +149,7 @@ function IconLibraryPanel({ collection, search, value, onSelect }) {
 	if (icons === null) {
 		return (
 			<div
-				className="wp-block-icon__inserter-loading"
+				className="matter-icon-library-modal__loading"
 				role="status"
 				aria-label={__('Loading…', 'matter')}
 			>
