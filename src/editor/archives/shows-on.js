@@ -13,6 +13,7 @@ import {
 	ComboboxControl,
 	ExternalLink,
 	ToggleControl,
+	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core's document panels use for spacing.
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import {
@@ -91,42 +92,49 @@ function ShowsOn() {
 			name="matter-archive-target"
 			title={__('Shows on', 'matter')}
 		>
-			<ComboboxControl
-				__next40pxDefaultSize
-				label={__('Archive', 'matter')}
-				hideLabelFromVision
-				value={target || null}
-				options={options}
-				onFilterValueChange={setSearch}
-				onChange={(value) =>
-					editPost({ meta: { [META]: value ?? '' } })
-				}
-				help={__('Type to find a category or tag.', 'matter')}
-			/>
-			{selected?.cascade && (
-				<ToggleControl
-					__nextHasNoMarginBottom
-					label={selected.cascade}
-					help={__('Those without their own.', 'matter')}
-					checked={cascade}
-					onChange={(value) =>
-						editPost({ meta: { [CASCADE]: value } })
-					}
-				/>
-			)}
-			{selected?.url && (
-				<p>
-					<ExternalLink href={selected.url}>
-						{__('View archive', 'matter')}
-					</ExternalLink>
-				</p>
-			)}
-			<p className="components-base-control__help">
-				{__(
-					'If an archive has more than one, the newest published one shows. To replace this one on a date, use New version in Appearance › Archives and schedule it.',
-					'matter'
+			{/* Spaced like core's document panels (e.g. Summary). */}
+			<VStack spacing={4}>
+				<VStack spacing={2}>
+					<ComboboxControl
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+						label={__('Archive', 'matter')}
+						hideLabelFromVision
+						value={target || null}
+						options={options}
+						onFilterValueChange={setSearch}
+						onChange={(value) =>
+							editPost({ meta: { [META]: value ?? '' } })
+						}
+						help={__('Type to find a category or tag.', 'matter')}
+					/>
+					{selected?.url && (
+						<ExternalLink href={selected.url}>
+							{__('View archive', 'matter')}
+						</ExternalLink>
+					)}
+				</VStack>
+				{selected?.cascade && (
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={selected.cascade}
+						help={__('Those without their own content.', 'matter')}
+						checked={cascade}
+						onChange={(value) =>
+							editPost({ meta: { [CASCADE]: value } })
+						}
+					/>
 				)}
-			</p>
+				<p
+					className="components-base-control__help"
+					style={{ margin: 0 }}
+				>
+					{__(
+						'If an archive has more than one, the newest published one shows. To replace this one on a date, use New version in Appearance › Archives and schedule it.',
+						'matter'
+					)}
+				</p>
+			</VStack>
 		</PluginDocumentSettingPanel>
 	);
 }
