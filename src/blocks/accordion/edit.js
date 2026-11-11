@@ -6,13 +6,32 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, ToggleControl } from '@wordpress/components';
+import {
+	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
+} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-const ALLOWED_BLOCKS = ['matter/accordion-item', 'core/query'];
+/**
+ * Internal dependencies
+ */
+import { useLegacyQuery } from '../../query-display/use-legacy-query';
+import { ACCORDION_SETTINGS, AccordionSettings } from './settings';
 
-export default function Edit({ attributes, setAttributes }) {
-	const { headingLevel, autoclose, openFirst, faqSchema } = attributes;
+const ALLOWED_BLOCKS = ['matter/accordion-item'];
+
+/**
+ * An accordion of items written in the editor. An accordion of posts is a
+ * Query Loop shown as an accordion ("Posts accordion").
+ *
+ * @param {Object}   props
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Attribute setter.
+ * @param {string}   props.clientId      Block client ID.
+ * @return {Element} Accordion editor.
+ */
+export default function Edit({ attributes, setAttributes, clientId }) {
+	// An accordion holding a Query Loop (from before) becomes the query.
+	useLegacyQuery(clientId, 'accordion', attributes, ACCORDION_SETTINGS);
 
 	const blockProps = useBlockProps();
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
@@ -23,49 +42,24 @@ export default function Edit({ attributes, setAttributes }) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={__('Settings', 'matter')}>
-					<SelectControl
-						__nextHasNoMarginBottom
-						__next40pxDefaultSize
-						label={__('Item heading level', 'matter')}
-						value={String(headingLevel)}
-						options={[2, 3, 4, 5, 6].map((level) => ({
-							value: String(level),
-							label: `H${level}`,
-						}))}
-						onChange={(value) =>
-							setAttributes({ headingLevel: Number(value) })
-						}
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() =>
+						setAttributes(
+							Object.fromEntries(
+								ACCORDION_SETTINGS.map((key) => [
+									key,
+									undefined,
+								])
+							)
+						)
+					}
+				>
+					<AccordionSettings
+						values={attributes}
+						set={setAttributes}
 					/>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={__('Only one item open at a time', 'matter')}
-						checked={autoclose}
-						onChange={(value) =>
-							setAttributes({ autoclose: value })
-						}
-					/>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={__('Open the first item', 'matter')}
-						checked={openFirst}
-						onChange={(value) =>
-							setAttributes({ openFirst: value })
-						}
-					/>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={__('FAQ schema', 'matter')}
-						help={__(
-							'Describe these items to search engines as questions and answers.',
-							'matter'
-						)}
-						checked={faqSchema}
-						onChange={(value) =>
-							setAttributes({ faqSchema: value })
-						}
-					/>
-				</PanelBody>
+				</ToolsPanel>
 			</InspectorControls>
 			<div {...innerBlocksProps} />
 		</>

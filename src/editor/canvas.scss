@@ -35,14 +35,32 @@
 	position: static;
 }
 
-// A posts or products carousel (a query block that is the carousel): one
-// outline around the whole carousel, controls included, rather than core's
-// around the query's own element (just the slides).
-.block-editor-block-list__layout .block-editor-block-list__block.is-carousel-query::after {
+// A query shown as a carousel, accordion or tabs: one outline around the
+// whole block (a carousel's controls included) rather than core's around the
+// query's own element.
+.block-editor-block-list__layout .block-editor-block-list__block.is-display-query::after {
 	display: none;
 }
 
-.wp-block-matter-carousel.is-query.is-block-selected {
+.matter-query-display.is-block-selected {
 	outline: var(--wp-admin-border-width-focus) solid var(--wp-admin-theme-color);
 	outline-offset: calc(var(--wp-admin-border-width-focus) * -1);
+}
+
+// An accordion or tabs of posts shows the server's rendering; the query's own
+// items (fixed, and shown by the preview) are hidden, leaving its element as
+// the block's anchor for selection and the toolbar.
+.matter-query-display:is(.is-accordion, .is-tabs) {
+	> .wp-block-query {
+		margin: 0;
+
+		> * {
+			display: none;
+		}
+	}
+
+	> .components-spinner {
+		display: block;
+		margin: 1rem auto;
+	}
 }

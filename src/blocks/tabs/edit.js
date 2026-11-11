@@ -14,11 +14,7 @@ import { createBlock } from '@wordpress/blocks';
 import {
 	Button,
 	MenuItem,
-	PanelBody,
-	TextControl,
-	ToggleControl,
-	__experimentalToggleGroupControl as ToggleGroupControl, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Stable in practice since 6.2.
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
+	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
@@ -30,7 +26,9 @@ import { plus } from '@wordpress/icons';
  * Internal dependencies
  */
 import { IconToolbar, useIcon } from '../../components/icon-picker';
+import { useLegacyQuery } from '../../query-display/use-legacy-query';
 import { ActiveTabContext } from './context';
+import { TABS_SETTINGS, TabsSettings } from './settings';
 
 function TabIcon({ name }) {
 	const icon = useIcon(name);
@@ -44,7 +42,8 @@ function TabIcon({ name }) {
 	) : null;
 }
 
-const ALLOWED_BLOCKS = ['matter/tab', 'core/query'];
+// Tabs of posts are a Query Loop shown as tabs ("Posts tabs").
+const ALLOWED_BLOCKS = ['matter/tab'];
 
 export default function Edit({
 	attributes,
@@ -52,7 +51,10 @@ export default function Edit({
 	clientId,
 	isSelected,
 }) {
-	const { label, deepLink, orientation, dropdown } = attributes;
+	const { orientation } = attributes;
+
+	// Tabs holding a Query Loop (from before) become the query.
+	useLegacyQuery(clientId, 'tabs', attributes, TABS_SETTINGS);
 	const [activeId, setActiveId] = useState(null);
 
 	const { tabs, isQuery, isEditing } = useSelect(
@@ -170,61 +172,18 @@ export default function Edit({
 				</BlockSettingsMenuControls>
 			)}
 			<InspectorControls>
-				<PanelBody title={__('Settings', 'matter')}>
-					<TextControl
-						__nextHasNoMarginBottom
-						__next40pxDefaultSize
-						label={__('Name', 'matter')}
-						help={__(
-							'Describes the tab list to screen readers.',
-							'matter'
-						)}
-						value={label}
-						onChange={(value) => setAttributes({ label: value })}
-					/>
-					<ToggleGroupControl
-						__nextHasNoMarginBottom
-						__next40pxDefaultSize
-						isBlock
-						label={__('Orientation', 'matter')}
-						value={orientation}
-						onChange={(value) =>
-							setAttributes({ orientation: value })
-						}
-					>
-						<ToggleGroupControlOption
-							value="horizontal"
-							label={__('Horizontal', 'matter')}
-						/>
-						<ToggleGroupControlOption
-							value="vertical"
-							label={__('Vertical', 'matter')}
-						/>
-					</ToggleGroupControl>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={__('Link to tabs', 'matter')}
-						help={__(
-							'Update the address bar when a tab is chosen, so it can be shared.',
-							'matter'
-						)}
-						checked={deepLink}
-						onChange={(value) => setAttributes({ deepLink: value })}
-					/>
-					<ToggleControl
-						__nextHasNoMarginBottom
-						label={__(
-							'Show as a dropdown on smaller screens',
-							'matter'
-						)}
-						help={__(
-							'Replace the tabs with a dropdown menu where there is less room.',
-							'matter'
-						)}
-						checked={dropdown}
-						onChange={(value) => setAttributes({ dropdown: value })}
-					/>
-				</PanelBody>
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() =>
+						setAttributes(
+							Object.fromEntries(
+								TABS_SETTINGS.map((key) => [key, undefined])
+							)
+						)
+					}
+				>
+					<TabsSettings values={attributes} set={setAttributes} />
+				</ToolsPanel>
 			</InspectorControls>
 			<div {...blockProps}>
 				{!isQuery && (

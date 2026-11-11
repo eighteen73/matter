@@ -20,7 +20,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { QUERY_BLOCKS } from '../../blocks/carousel/templates';
+import { QUERY_BLOCKS } from '../../query-display/templates';
 import { useAddSlide } from '../../carousel/editor/use-add-slide';
 import {
 	GalleryMediaUpload,

@@ -24,30 +24,5 @@ registerBlockType(metadata.name, {
 			scope: ['inserter'],
 			innerBlocks: [['matter/tab'], ['matter/tab']],
 		},
-		{
-			name: 'posts',
-			title: __('Tabs from posts', 'matter'),
-			description: __('One tab per post from a query.', 'matter'),
-			scope: ['inserter'],
-			innerBlocks: [
-				[
-					'core/query',
-					{
-						query: {
-							perPage: 5,
-							postType: 'post',
-							inherit: false,
-						},
-					},
-					[
-						[
-							'core/post-template',
-							{},
-							[['matter/tab', {}, [['core/post-excerpt']]]],
-						],
-					],
-				],
-			],
-		},
 	],
 });

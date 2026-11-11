@@ -16,7 +16,12 @@
 
 use Eighteen73\Matter\Blocks\LoopItem;
 
-$matter_loop_item = LoopItem::render( (int) ( $block->context['postId'] ?? get_the_ID() ), (string) ( $block->context['postType'] ?? '' ) );
+$matter_loop_item = LoopItem::render(
+	(int) ( $block->context['postId'] ?? get_the_ID() ),
+	(string) ( $block->context['postType'] ?? '' ),
+	// The block its query is shown as, if any (Blocks\QueryDisplay).
+	(string) ( $block->context['matter/display']['type'] ?? '' )
+);
 
 if ( '' === $matter_loop_item ) {
 	return;

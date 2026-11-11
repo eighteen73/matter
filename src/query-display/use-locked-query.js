@@ -8,19 +8,19 @@ import { useEffect } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { carouselQueryAttributes } from './templates';
+import { displayQueryAttributes } from './templates';
 
 /**
- * Set up a carousel's query (Query Loop or Product Collection).
+ * Set up a displayed query (carousel, accordion or tabs).
  *
- * - The query itself can be selected: clicking a slide selects it, and its
- *   sidebar has the native filters plus the carousel's settings (see
- *   editor/extensions/carousel-query.js). The carousel locks it in place.
- * - Everything inside it (template, loop item) can't be selected or edited:
- *   the design is the theme's. Its block editing mode is 'disabled'
+ * - The query itself can be selected: clicking it selects it, and its
+ *   sidebar has the native filters plus the block's settings (see
+ *   editor/extensions/query-display).
+ * - Everything inside it (template, items, loop items) can't be selected or
+ *   edited: the design is the theme's. Its block editing mode is 'disabled'
  *   (block-editor's public `setBlockEditingMode`), unset again on cleanup and
  *   reapplied when the query's blocks change.
- * - A query from before carousels marked theirs gets the marker attributes.
+ * - A query made before (or by hand) gets the marker attributes.
  *
  * None of this is an edit: opening a page doesn't mark it as changed.
  *
@@ -50,7 +50,7 @@ export function useLockedQuery(queryId) {
 
 			const { getBlockName, getBlockAttributes } =
 				select(blockEditorStore);
-			const changes = carouselQueryAttributes(
+			const changes = displayQueryAttributes(
 				getBlockName(queryId),
 				getBlockAttributes(queryId) ?? {}
 			);

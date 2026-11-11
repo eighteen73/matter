@@ -6,8 +6,17 @@
 	"title": "Loop item",
 	"category": "theme",
 	"description": "The theme's design for the current item in a loop. The design lives in the theme, so every loop and carousel shows the same thing.",
-	"keywords": [ "loop", "item", "post", "product" ],
-	"usesContext": [ "postId", "postType" ],
+	"keywords": [
+		"loop",
+		"item",
+		"post",
+		"product"
+	],
+	"usesContext": [
+		"postId",
+		"postType",
+		"matter/display"
+	],
 	"attributes": {
 		"itemLabel": {
 			"type": "string",
