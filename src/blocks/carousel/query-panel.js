@@ -31,6 +31,10 @@ import { PRODUCTS, QUERY_BLOCKS } from './templates';
 const MAX_ITEMS = 24;
 const EMPTY = {};
 
+// Viewable post types that aren't content to list: media, and Matter's archive
+// content (queryable only for its previews).
+const EXCLUDED_POST_TYPES = ['attachment', 'matter_archive'];
+
 const POST_ORDERS = [
 	{ label: __('Newest first', 'matter'), value: 'date/desc' },
 	{ label: __('Oldest first', 'matter'), value: 'date/asc' },
@@ -247,14 +251,14 @@ function PostsControls({ query, update }) {
 
 			return {
 				postTypes: (getPostTypes({ per_page: -1 }) ?? []).filter(
-					(type) => type.viewable && type.slug !== 'attachment'
+					(type) =>
+						type.viewable &&
+						!EXCLUDED_POST_TYPES.includes(type.slug)
 				),
+				// The default (edit) context, as core's Query Loop: `visibility`
+				// isn't in the view context.
 				taxonomy: (
-					getTaxonomies({
-						type: postType,
-						per_page: -1,
-						context: 'view',
-					}) ?? []
+					getTaxonomies({ type: postType, per_page: -1 }) ?? []
 				).find(
 					(tax) =>
 						tax.hierarchical && tax.visibility?.publicly_queryable
