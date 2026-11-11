@@ -323,7 +323,49 @@ Eighteen73\Matter\menu( [
 
 Also available: `get_menu()` returns the HTML rather than echoing it.
 
-**Megamenus.** On a top-level menu item, tick "Display submenu as a megamenu". Second-level items become column headings and third-level items their links. Optionally attach a panel from the theme's `template-parts/megamenu/*.php` (files need a `Title:` header).
+**Megamenus.** On a top-level menu item in Appearance › Menus, tick "Display submenu as a megamenu" (and choose its width). Its second-level items become column headings (use `#` links) and third-level items the links under them. Matter lays out the columns; the theme styles them, e.g.:
+
+```scss
+// Column headings (second-level items) and their links.
+.is-megamenu .is-column > .matter-menu__link {
+	font-size: var(--wp--preset--font-size--sm);
+	text-transform: uppercase;
+}
+
+.matter-menu__column-items {
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--xs);
+}
+```
+
+A megamenu can also show a **panel** beside its columns: a PHP file in the theme's `template-parts/megamenu/` with a `Title:` header, chosen in the item's "Megamenu panel" list (`matter_megamenu_panels` filters the list). It receives the menu item as `$args['item']`, so it can use the item's description, and settings from Appearance › Options:
+
+```php
+<?php
+/**
+ * Megamenu panel: get in touch.
+ *
+ * Title: Get in touch
+ */
+
+use function Eighteen73\Matter\setting;
+
+$item  = $args['item'] ?? null;
+$phone = setting( 'contact.phone' );
+?>
+<div class="megamenu-panel has-scheme has-scheme-tint">
+	<p class="megamenu-panel__title"><?php esc_html_e( 'Get in touch', 'theme' ); ?></p>
+	<?php if ( $item instanceof WP_Post && $item->description ) : ?>
+		<p><?php echo esc_html( $item->description ); ?></p>
+	<?php endif; ?>
+	<?php if ( $phone ) : ?>
+		<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a>
+	<?php endif; ?>
+</div>
+```
+
+The panel sits in `.matter-menu__panel`; give it a width beside the columns, e.g. `@media (--lg) { .matter-menu__panel { flex: 0 0 18rem; } }`.
 
 **Accessibility:**
 - Arrow, Home and End keys move between items; Escape closes the innermost submenu.
