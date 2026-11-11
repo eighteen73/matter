@@ -1,6 +1,6 @@
 /**
  * The query blocks a carousel can hold as its slides. Each item is the
- * theme's card (`matter/card`), so the design lives in the theme and clients
+ * theme's loop item (`matter/loop-item`), so the design lives in the theme and clients
  * never need to edit the loop.
  */
 
@@ -17,7 +17,7 @@ export const QUERY_BLOCKS = [POSTS, PRODUCTS];
 export const queryTemplate = (postType) => [
 	POSTS,
 	{ query: { perPage: 9, postType, inherit: false } },
-	[['core/post-template', {}, [['matter/card']]]],
+	[['core/post-template', {}, [['matter/loop-item']]]],
 ];
 
 /**
@@ -85,5 +85,5 @@ export const productsAttributes = () => ({
 export const productsTemplate = () => [
 	PRODUCTS,
 	productsAttributes(),
-	[['woocommerce/product-template', {}, [['matter/card']]]],
+	[['woocommerce/product-template', {}, [['matter/loop-item']]]],
 ];

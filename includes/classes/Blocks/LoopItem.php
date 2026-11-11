@@ -1,12 +1,12 @@
 <?php
 /**
- * Cards: the theme's design for one item in a loop.
+ * Loop items: the theme's design for one item in a loop.
  *
- * A theme registers a pattern per post type, `{theme}/card-{post_type}`
- * (e.g. `pulsar/card-product`), with `{theme}/card` as the fallback for any
- * other post type. The `matter/card` block renders that pattern with the
- * item's block context, so loops in templates and carousels in content all
- * show the same, theme-owned card.
+ * A theme registers a pattern per post type, `{theme}/loop-item-{post_type}`
+ * (e.g. `pulsar/loop-item-product`), with `{theme}/loop-item` as the fallback
+ * for any other post type. The `matter/loop-item` block renders that pattern
+ * with the item's block context, so loops in templates and carousels in
+ * content all show the same, theme-owned design.
  *
  * @package Eighteen73\Matter
  */
@@ -19,9 +19,9 @@ use WP_Block_Patterns_Registry;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Card rendering.
+ * Loop item rendering.
  */
-final class Card {
+final class LoopItem {
 
 	/**
 	 * Parsed pattern blocks, keyed by pattern slug.
@@ -31,7 +31,7 @@ final class Card {
 	private static array $blocks = [];
 
 	/**
-	 * The rendered card for an item.
+	 * The rendered loop item for an item.
 	 *
 	 * @param int    $post_id   Item ID.
 	 * @param string $post_type Item post type (looked up when empty).
@@ -48,7 +48,7 @@ final class Card {
 		$slug      = self::pattern( $post_type );
 
 		if ( null === $slug ) {
-			// No card in the theme: a plain link, so the loop still works.
+			// No pattern in the theme: a plain link, so the loop still works.
 			return sprintf( '<a href="%s">%s</a>', esc_url( get_permalink( $post ) ), esc_html( get_the_title( $post ) ) );
 		}
 
@@ -85,7 +85,7 @@ final class Card {
 	}
 
 	/**
-	 * The card pattern for a post type.
+	 * The loop item pattern for a post type.
 	 *
 	 * @param string $post_type Post type.
 	 * @return string|null Pattern slug, or null when the theme has none.
@@ -96,11 +96,11 @@ final class Card {
 		$candidates = [];
 
 		foreach ( $themes as $theme ) {
-			$candidates[] = "{$theme}/card-{$post_type}";
+			$candidates[] = "{$theme}/loop-item-{$post_type}";
 		}
 
 		foreach ( $themes as $theme ) {
-			$candidates[] = "{$theme}/card";
+			$candidates[] = "{$theme}/loop-item";
 		}
 
 		$slug = null;
@@ -113,12 +113,12 @@ final class Card {
 		}
 
 		/**
-		 * Filters the pattern used as the card for a post type.
+		 * Filters the pattern used as the loop item for a post type.
 		 *
 		 * @param string|null $slug      Pattern slug, or null for none.
 		 * @param string      $post_type Post type.
 		 */
-		$slug = apply_filters( 'matter_card_pattern', $slug, $post_type );
+		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type );
 
 		return is_string( $slug ) && $registry->is_registered( $slug ) ? $slug : null;
 	}
