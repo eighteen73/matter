@@ -1,6 +1,7 @@
 /**
  * WordPress dependencies
  */
+import apiFetch from '@wordpress/api-fetch';
 import {
 	store as blockEditorStore,
 	useBlockProps,
@@ -8,12 +9,109 @@ import {
 import { Placeholder, Spinner } from '@wordpress/components';
 import { store as coreStore } from '@wordpress/core-data';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { useServerSideRender } from '@wordpress/server-side-render';
+import { addQueryArgs } from '@wordpress/url';
 
-// Rendered items by post ID, for the editor session.
+// Most items in one request (LoopItem::MAX_PREVIEWS).
+const MAX_PER_REQUEST = 100;
+
+// Rendered items by post ID for the editor session: the HTML, or null when
+// the item can't be shown (e.g. the user can't read it). Kept so a preview
+// that remounts (e.g. when its loop is selected) shows at once.
 const previews = new Map();
+
+// Each loading item's request, and the batch still collecting items.
+const pending = new Map();
+let batch = null;
+
+/**
+ * Fetch items' previews, up to 100 per request, into `previews`. Items that
+ * aren't returned (or fail) are stored as null.
+ *
+ * @param {number[]} ids Item IDs.
+ * @return {Promise} Settles when every request has.
+ */
+async function fetchPreviews(ids) {
+	const requests = [];
+
+	for (let i = 0; i < ids.length; i += MAX_PER_REQUEST) {
+		requests.push(
+			apiFetch({
+				path: addQueryArgs('/matter/v1/loop-items', {
+					ids: ids.slice(i, i + MAX_PER_REQUEST),
+				}),
+			})
+				.then((items) =>
+					items.forEach(({ id, html }) => previews.set(id, html))
+				)
+				.catch(() => {})
+		);
+	}
+
+	await Promise.all(requests);
+
+	ids.forEach((id) => previews.has(id) || previews.set(id, null));
+}
+
+/**
+ * Load an item's preview. Items that start loading in the same tick (a
+ * carousel's or an archive's) share one request.
+ *
+ * @param {number} postId Item ID.
+ * @return {Promise} Settles once the preview is in `previews`.
+ */
+function loadPreview(postId) {
+	if (!pending.has(postId)) {
+		if (!batch) {
+			const ids = new Set();
+
+			batch = {
+				ids,
+				request: new Promise((resolve) => setTimeout(resolve)).then(
+					() => {
+						batch = null;
+						return fetchPreviews([...ids]);
+					}
+				),
+			};
+		}
+
+		batch.ids.add(postId);
+		pending.set(
+			postId,
+			batch.request.finally(() => pending.delete(postId))
+		);
+	}
+
+	return pending.get(postId);
+}
+
+/**
+ * An item's preview: its HTML, null when it can't be shown, or undefined
+ * while it loads.
+ *
+ * @param {number} postId Item ID.
+ * @return {string|null|undefined} Preview.
+ */
+function usePreview(postId) {
+	const [, setLoaded] = useState(0);
+
+	useEffect(() => {
+		if (!postId || previews.has(postId)) {
+			return;
+		}
+
+		let current = true;
+		loadPreview(postId).then(() => current && setLoaded((n) => n + 1));
+
+		return () => {
+			current = false;
+		};
+	}, [postId]);
+
+	return postId ? previews.get(postId) : undefined;
+}
 
 /**
  * The theme's design for the loop item, rendered by the server exactly as on
@@ -37,19 +135,8 @@ export default function Edit({
 }) {
 	useItemLabel(postType, itemLabel, setAttributes);
 
-	const { content = '', status } = useServerSideRender({
-		block: 'matter/loop-item',
-		attributes: {},
-		urlQueryArgs: postId ? { post_id: postId } : {},
-	});
-	// The last render of each item, shown while a remounted preview (e.g.
-	// when its loop is selected) fetches again, so slides don't collapse.
-	if (postId && status === 'success' && content) {
-		previews.set(postId, innerHtml(content));
-	}
-
-	const preview = postId ? previews.get(postId) : undefined;
-	const hasPreview = preview !== undefined;
+	const preview = usePreview(postId);
+	const hasPreview = typeof preview === 'string';
 	const blockProps = useBlockProps(
 		hasPreview
 			? { inert: '', dangerouslySetInnerHTML: { __html: preview } }
@@ -63,7 +150,7 @@ export default function Edit({
 	return (
 		<div {...blockProps}>
 			{postId ? (
-				status !== 'error' && <Spinner />
+				preview === undefined && <Spinner />
 			) : (
 				<Placeholder
 					label={__('Loop item', 'matter')}
@@ -108,20 +195,4 @@ function useItemLabel(postType, itemLabel, setAttributes) {
 		setAttributes,
 		__unstableMarkNextChangeAsNotPersistent,
 	]);
-}
-
-/**
- * The server output without its own wrapper, which useBlockProps provides.
- *
- * @param {string} html Rendered block.
- * @return {string} Inner HTML.
- */
-function innerHtml(html) {
-	const template = document.createElement('template');
-	template.innerHTML = html.trim();
-	const wrapper = template.content.firstElementChild;
-
-	return wrapper?.classList.contains('wp-block-matter-loop-item')
-		? wrapper.innerHTML
-		: html;
 }

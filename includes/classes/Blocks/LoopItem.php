@@ -8,13 +8,19 @@
  * with the item's block context, so loops in templates and carousels in
  * content all show the same, theme-owned design.
  *
+ * The editor previews items through `matter/v1/loop-items`, many per request
+ * (a carousel's or archive's items together), for items the user can read.
+ *
  * @package Eighteen73\Matter
  */
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Singleton;
 use WP_Block;
 use WP_Block_Patterns_Registry;
+use WP_REST_Request;
+use WP_REST_Server;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -23,12 +29,79 @@ defined( 'ABSPATH' ) || exit;
  */
 final class LoopItem {
 
+	use Singleton;
+
+	/**
+	 * Most items previewed in one request.
+	 */
+	public const MAX_PREVIEWS = 100;
+
 	/**
 	 * Parsed pattern blocks, keyed by pattern slug.
 	 *
 	 * @var array<string, array>
 	 */
 	private static array $blocks = [];
+
+	/**
+	 * Setup hooks.
+	 *
+	 * @return void
+	 */
+	public function setup(): void {
+		add_action( 'rest_api_init', [ $this, 'register_route' ] );
+	}
+
+	/**
+	 * `GET matter/v1/loop-items?ids[]=…`: rendered items by ID, for the
+	 * editor's previews.
+	 *
+	 * @return void
+	 */
+	public function register_route(): void {
+		register_rest_route(
+			'matter/v1',
+			'/loop-items',
+			[
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => [ $this, 'previews' ],
+				'permission_callback' => fn() => current_user_can( 'edit_posts' ),
+				'args'                => [
+					'ids' => [
+						'type'     => 'array',
+						'items'    => [
+							'type'    => 'integer',
+							'minimum' => 1,
+						],
+						'maxItems' => self::MAX_PREVIEWS,
+						'required' => true,
+					],
+				],
+			]
+		);
+	}
+
+	/**
+	 * Render the requested items the user can read. Items they can't (or
+	 * that don't exist) are left out.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return array<int, array{id: int, html: string}> Rendered items (without the block's wrapper).
+	 */
+	public function previews( WP_REST_Request $request ): array {
+		$previews = [];
+
+		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
+			if ( current_user_can( 'read_post', $id ) ) {
+				$previews[] = [
+					'id'   => $id,
+					'html' => self::render( $id ),
+				];
+			}
+		}
+
+		return $previews;
+	}
 
 	/**
 	 * The rendered loop item for an item.

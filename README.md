@@ -72,7 +72,7 @@ Every loop shows the same design for a post type: the shop, a category, related 
 
 - The theme registers a pattern per post type, `{theme}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{theme}/loop-item` for any other post type. Child themes are checked first. Give the patterns `Inserter: false` so they stay out of the Patterns panel. Override the choice with the `matter_loop_item_pattern` filter (`$slug`, `$post_type`).
 - A loop's post template contains just `<!-- wp:matter/loop-item /-->`. Matter renders the pattern with the item's block context and sets the global post, so post, product and term blocks inside it show that item.
-- In the editor the loop item is a server-rendered preview of the real thing, and it can't be selected: clicks go to the loop or carousel around it. List View and the breadcrumb name it after the post type ("Product", "Post").
+- In the editor the loop item is a server-rendered preview of the real thing, and it can't be selected: clicks go to the loop or carousel around it. Items that load together (a carousel's or an archive's) share one request to `matter/v1/loop-items`, which renders only items the user can read. List View and the breadcrumb name it after the post type ("Product", "Post").
 - Without a pattern, the block falls back to a link to the item.
 - Differences between loops (e.g. no add-to-basket button in related products) belong in CSS on the loop, not in a second pattern.
 
