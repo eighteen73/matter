@@ -37,7 +37,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 | --- | --- | --- |
 | `matter/accordion` › `matter/accordion-item` | Expandable items. An "Accordion from posts" variation lists posts with a Query Loop. | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
 | `matter/tabs` › `matter/tab` | Tabbed content. A "Tabs from posts" variation is available. | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown on smaller screens (a button showing the current tab's icon and name opens the tab list; the theme sets where, see Variants). Tab: icon, chosen from the icon library on the block toolbar. Backspace in an empty tab name, or "Delete tab" in the block's options menu, removes a tab. |
-| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts or products. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
+| `matter/carousel` | Each inner block is a slide, or the items of a Query Loop / Product Collection. A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts or products. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. Posts and products: see [Carousels of posts or products](#carousels-of-posts-or-products). | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
 | `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. Every image is cropped to one aspect ratio and uses the variant's image size (`imageSize`), so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`, and its toolbar keeps the "Edit images" button. | Layout (grid/carousel), columns (the theme's choices; fewer show where there's less room), images to show (in whole rows of the columns; at any width the grid shows full rows, and the rest open from "View all N images"), aspect ratio (theme.json presets, or the images' own), captions (behind an info button, over the image, or hidden; each image's own caption, else its media library caption, also shown in the lightbox), lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
 | `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
@@ -76,6 +76,17 @@ Every loop shows the same design for a post type: the shop, a category, related 
 - Differences between loops (e.g. no add-to-basket button in related products) belong in CSS on the loop, not in a second pattern.
 
 The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; clear the cache after adding a new loop item pattern (`wp eval 'wp_get_theme()->delete_pattern_cache();'`).
+
+## Carousels of posts or products
+
+A carousel of posts or products holds a Query Loop or Product Collection whose items are the theme's [loop items](#loop-items). Clicking the slides selects that query, so its sidebar has everything in one place:
+
+- **The carousel's settings**: its styles, colour scheme and name (they're the carousel's; Matter adds them to the query's sidebar).
+- **WordPress's or WooCommerce's own controls**, trimmed to those that suit a carousel:
+  - Posts are a "Posts carousel" Query Loop variation (`namespace: matter/carousel-posts`) allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
+  - Products are a "Products carousel" Product Collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable. Its empty scope keeps it out of the inserter and hides "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them while the carousel's panel is shown.
+
+The query is locked in the carousel (to move or remove the carousel, select it with the toolbar's parent button or the breadcrumb), and its items can't be selected. Carousels made before this get the variation's attributes when opened, without marking the page as changed.
 
 ## Sections
 

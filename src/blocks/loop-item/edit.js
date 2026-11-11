@@ -12,6 +12,9 @@ import { useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { useServerSideRender } from '@wordpress/server-side-render';
 
+// Rendered items by post ID, for the editor session.
+const previews = new Map();
+
 /**
  * The theme's design for the loop item, rendered by the server exactly as on
  * the front end (same wrapper, same markup). There's nothing to edit: the
@@ -39,13 +42,17 @@ export default function Edit({
 		attributes: {},
 		urlQueryArgs: postId ? { post_id: postId } : {},
 	});
-	const hasPreview = Boolean(postId) && status === 'success' && content;
+	// The last render of each item, shown while a remounted preview (e.g.
+	// when its loop is selected) fetches again, so slides don't collapse.
+	if (postId && status === 'success' && content) {
+		previews.set(postId, innerHtml(content));
+	}
+
+	const preview = postId ? previews.get(postId) : undefined;
+	const hasPreview = preview !== undefined;
 	const blockProps = useBlockProps(
 		hasPreview
-			? {
-					inert: '',
-					dangerouslySetInnerHTML: { __html: innerHtml(content) },
-				}
+			? { inert: '', dangerouslySetInnerHTML: { __html: preview } }
 			: {}
 	);
 

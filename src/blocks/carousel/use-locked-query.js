@@ -6,14 +6,23 @@ import { useRegistry, useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
 
 /**
- * Lock a carousel's query (Query Loop or Product Collection) and everything
- * in it, so its blocks can't be selected or edited in the canvas: clicking a
- * slide selects the carousel, whose inspector edits the query instead.
+ * Internal dependencies
+ */
+import { carouselQueryAttributes } from './templates';
+
+/**
+ * Set up a carousel's query (Query Loop or Product Collection).
  *
- * Sets the block editing mode of the query and each descendant to
- * 'disabled' (block-editor's public `setBlockEditingMode`), and unsets them
- * again on cleanup. Reapplied whenever the query's blocks change. Not saved
- * with the post, so it isn't an undo step either.
+ * - The query itself can be selected: clicking a slide selects it, and its
+ *   sidebar has the native filters plus the carousel's settings (see
+ *   editor/extensions/carousel-query.js). The carousel locks it in place.
+ * - Everything inside it (template, loop item) can't be selected or edited:
+ *   the design is the theme's. Its block editing mode is 'disabled'
+ *   (block-editor's public `setBlockEditingMode`), unset again on cleanup and
+ *   reapplied when the query's blocks change.
+ * - A query from before carousels marked theirs gets the marker attributes.
+ *
+ * None of this is an edit: opening a page doesn't mark it as changed.
  *
  * @param {string|undefined} queryId Client ID of the query block, if any.
  */
@@ -31,12 +40,47 @@ export function useLockedQuery(queryId) {
 		[queryId]
 	);
 
+	// What the query still needs to be the carousel's, rechecked when its
+	// attributes change.
+	const missing = useSelect(
+		(select) => {
+			if (!queryId) {
+				return '';
+			}
+
+			const { getBlockName, getBlockAttributes } =
+				select(blockEditorStore);
+			const changes = carouselQueryAttributes(
+				getBlockName(queryId),
+				getBlockAttributes(queryId) ?? {}
+			);
+
+			return Object.keys(changes).length ? JSON.stringify(changes) : '';
+		},
+		[queryId]
+	);
+
 	useEffect(() => {
-		if (!queryId) {
+		if (!queryId || !missing) {
 			return;
 		}
 
-		const clientIds = [queryId, ...descendants.split(' ').filter(Boolean)];
+		const {
+			updateBlockAttributes,
+			__unstableMarkNextChangeAsNotPersistent: markNotPersistent,
+		} = registry.dispatch(blockEditorStore);
+
+		markNotPersistent();
+		updateBlockAttributes(queryId, JSON.parse(missing));
+	}, [registry, queryId, missing]);
+
+	useEffect(() => {
+		const clientIds = descendants.split(' ').filter(Boolean);
+
+		if (!clientIds.length) {
+			return;
+		}
+
 		const {
 			setBlockEditingMode,
 			unsetBlockEditingMode,
@@ -58,5 +102,5 @@ export function useLockedQuery(queryId) {
 				});
 			});
 		};
-	}, [registry, queryId, descendants]);
+	}, [registry, descendants]);
 }

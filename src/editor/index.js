@@ -25,6 +25,7 @@ import './archives/bindings';
 import './archives/shows-on';
 import './extensions/block-link';
 import './extensions/button-icon';
+import './extensions/carousel-query';
 import './extensions/focal-point';
 import './extensions/parent-toolbar';
 import './overlays/link-suggestions';

@@ -9,10 +9,11 @@ import {
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
 import {
-	PanelBody,
 	TextControl,
 	ToolbarButton,
 	ToolbarGroup,
+	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
+	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
@@ -38,7 +39,6 @@ import {
 	GalleryMediaUpload,
 	useGalleryMedia,
 } from '../../components/gallery-media';
-import QueryPanel from './query-panel';
 import SlidePicker, { themeSlideTypes } from './slide-picker';
 import { POSTS, PRODUCTS, QUERY_BLOCKS } from './templates';
 import { useLockedQuery } from './use-locked-query';
@@ -79,8 +79,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		scrollToSlide(selectedSlide);
 	}, [selectedSlide, slideCount, scrollToSlide]);
 
-	// Posts or products: the query is edited from the carousel's inspector,
-	// and its blocks can't be selected.
+	// Posts or products: clicking the slides selects the query, which has the
+	// filters and the carousel's settings. It's locked in place, and its
+	// contents can't be selected.
 	const isQuery = QUERY_BLOCKS.includes(lastSlide?.name);
 	useLockedQuery(isQuery ? lastSlide.clientId : undefined);
 
@@ -113,6 +114,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			allowedBlocks,
 			orientation: 'horizontal',
 			renderAppender: false,
+			templateLock: isQuery ? 'all' : undefined,
 		}
 	);
 
@@ -154,30 +156,53 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				</BlockControls>
 			)}
 			<InspectorControls>
-				<PanelBody title={__('Settings', 'matter')}>
-					<TextControl
-						__nextHasNoMarginBottom
-						__next40pxDefaultSize
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() =>
+						setAttributes({
+							label: undefined,
+							aspectRatio: undefined,
+						})
+					}
+				>
+					<ToolsPanelItem
 						label={__('Name', 'matter')}
-						help={__(
-							'Describes the carousel to screen readers, e.g. "Customer stories".',
-							'matter'
-						)}
-						value={attributes.label}
-						onChange={(label) => setAttributes({ label })}
-					/>
-					{isImages && (
-						<AspectRatioControl
-							value={currentRatio}
-							presets={aspectRatios}
-							onChange={(value) =>
-								setAttributes({ aspectRatio: value })
-							}
+						hasValue={() => !!attributes.label}
+						onDeselect={() => setAttributes({ label: undefined })}
+						isShownByDefault
+					>
+						<TextControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							label={__('Name', 'matter')}
+							help={__(
+								'Describes the carousel to screen readers, e.g. "Customer stories".',
+								'matter'
+							)}
+							value={attributes.label ?? ''}
+							onChange={(label) => setAttributes({ label })}
 						/>
+					</ToolsPanelItem>
+					{isImages && (
+						<ToolsPanelItem
+							label={__('Aspect ratio', 'matter')}
+							hasValue={() => !!attributes.aspectRatio}
+							onDeselect={() =>
+								setAttributes({ aspectRatio: undefined })
+							}
+							isShownByDefault
+						>
+							<AspectRatioControl
+								value={currentRatio}
+								presets={aspectRatios}
+								onChange={(value) =>
+									setAttributes({ aspectRatio: value })
+								}
+							/>
+						</ToolsPanelItem>
 					)}
-				</PanelBody>
+				</ToolsPanel>
 			</InspectorControls>
-			{isQuery && <QueryPanel clientId={clientId} />}
 			<div {...blockProps}>
 				<CarouselFrame
 					carousel={carousel}
