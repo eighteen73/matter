@@ -80,14 +80,15 @@ The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; c
 
 ## Carousels of posts or products
 
-A carousel of posts or products is the Query Loop or Product Collection itself: one block, one row in List View. A `carousel` attribute (`style`, `scheme`, `label`) makes the query a carousel:
+A carousel of posts or products is the Query Loop or Product Collection itself: one block, one row in List View. A `matterCarousel` attribute (`style`, `scheme`, `label`) makes the query a carousel:
 
 - **Front end:** the query's output is rendered inside the carousel block (`Blocks\QueryCarousel`), so the carousel's markup, script, styles (Matter's and the theme's `matter-carousel` CSS) and colour scheme apply as for any carousel. The query's alignment moves to the carousel.
 - **Editor:** a live carousel around the query, whose items are the theme's [loop items](#loop-items) and can't be selected or added to. Its sidebar has a **Carousel** panel (style, colour scheme, name) above WordPress's or WooCommerce's own controls, trimmed to suit a carousel:
   - Posts: a "Posts carousel" Query Loop variation (`namespace: matter/carousel-posts`) allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
   - Products: a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
 - **Inserting:** a carousel's picker offers posts and products, which replace the carousel block with the query. In the post editor, "Posts carousel" and "Products carousel" also replace the plain Query Loop and Product Collection (and WooCommerce's other collections) in the inserter; the Site Editor keeps those for templates.
-- The theme's allowed blocks need `core/query` and `woocommerce/product-collection`, so carousels can be duplicated, pasted and moved.
+- Wherever the theme allows `matter/carousel`, Matter also allows `core/query` and `woocommerce/product-collection`, so carousels can be inserted, duplicated, pasted and moved. The theme's list doesn't name them.
+- If Matter's handling ever stops, the live site shows the query as a normal grid. Saving the page in the editor then drops `matterCarousel`, and the carousel stays a grid.
 - A carousel block holding a query (from before) becomes the query when opened, keeping its style, scheme and name.
 
 ## Sections
@@ -523,6 +524,16 @@ add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'l
 ```
 
 `config/breakpoints.json` is the fallback.
+
+## Theme contract
+
+What a theme's files and saved content depend on. Each project's theme is its own copy and isn't updated with Matter, so these change only in a major version, with a changelog entry and a migration for saved content. Everything else (editor internals, PHP classes, JavaScript modules) can change in any release.
+
+- **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterCarousel` (`style`, `scheme`, `label`) on queries, the posts carousel's `namespace: matter/carousel-posts` and the products carousel's `collection: matter/product-collection/carousel`.
+- **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns `{theme}/loop-item-{post_type}` and `{theme}/loop-item`.
+- **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()` and `slots()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
+- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts or products carousel the slides are the items of the post or product template inside the track), state classes (`is-*`, `has-*`), the `--scheme--*` roles and the variables under [CSS variables](#css-variables).
+- **Icon names** (`{collection}/{icon}`), saved in content.
 
 ## Development
 

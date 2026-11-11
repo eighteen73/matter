@@ -67,7 +67,7 @@ import SchemeControl from '../components/scheme-control';
 
 const CAROUSEL = 'matter/carousel';
 const LOOP_ITEM = [['matter/loop-item']];
-const CAROUSEL_ATTRIBUTE = { carousel: { type: 'object' } };
+const CAROUSEL_ATTRIBUTE = { matterCarousel: { type: 'object' } };
 
 // The Site Editor keeps the plain query blocks in its inserter.
 const isPostEditor = () => !document.body.classList.contains('site-editor-php');
@@ -95,7 +95,7 @@ const addAttributeToRegistered = () =>
 	QUERY_BLOCKS.forEach((name) => {
 		const blockType = getBlockType(name);
 
-		if (blockType && !blockType.attributes?.carousel) {
+		if (blockType && !blockType.attributes?.matterCarousel) {
 			dispatch(blocksStore).addBlockTypes({
 				...blockType,
 				attributes: { ...blockType.attributes, ...CAROUSEL_ATTRIBUTE },
@@ -114,7 +114,7 @@ registerBlockVariation(POSTS, {
 	isDefault: isPostEditor(),
 	attributes: {
 		namespace: POSTS_NAMESPACE,
-		carousel: {},
+		matterCarousel: {},
 		query: { perPage: 9, postType: 'post', inherit: false },
 	},
 	isActive: ['namespace'],
@@ -133,7 +133,7 @@ domReady(() => {
 		icon: shop,
 		scope: isPostEditor() ? ['inserter'] : [],
 		attributes: {
-			carousel: {},
+			matterCarousel: {},
 			hideControls: PRODUCTS_HIDDEN_CONTROLS,
 			displayLayout: PRODUCTS_LAYOUT,
 			query: { perPage: 9 },
@@ -187,7 +187,7 @@ addFilter(
 
 		return root &&
 			QUERY_BLOCKS.includes(root.name) &&
-			root.attributes?.carousel
+			root.attributes?.matterCarousel
 			? false
 			: canInsert;
 	}
@@ -230,7 +230,7 @@ function StylePicker({ value, onChange }) {
  * The carousel's settings, above the query's own controls.
  *
  * @param {Object}   props
- * @param {Object}   props.carousel The `carousel` attribute.
+ * @param {Object}   props.carousel The `matterCarousel` attribute.
  * @param {Function} props.set      Updates it.
  * @return {Element} Inspector panel.
  */
@@ -304,7 +304,7 @@ function CarouselPanel({ carousel, set }) {
  */
 function QueryCarouselEdit({ BlockEdit, props }) {
 	const { attributes, setAttributes, clientId, isSelected } = props;
-	const carousel = attributes.carousel;
+	const carousel = attributes.matterCarousel;
 	const styleClass = carousel.style ? `is-style-${carousel.style}` : '';
 	const options = variantOptions(CAROUSEL, styleClass);
 	const live = useLiveCarousel(options);
@@ -312,7 +312,7 @@ function QueryCarouselEdit({ BlockEdit, props }) {
 	useLockedQuery(clientId);
 
 	const set = (changes) =>
-		setAttributes({ carousel: { ...carousel, ...changes } });
+		setAttributes({ matterCarousel: { ...carousel, ...changes } });
 
 	// The whole carousel acts as the block: clicking its controls (outside
 	// the query's own element) selects it too, and it has the outline.
@@ -363,8 +363,8 @@ addFilter(
 			function CarouselQueryEdit(props) {
 				const isCarousel =
 					QUERY_BLOCKS.includes(props.name) &&
-					!!props.attributes?.carousel &&
-					typeof props.attributes.carousel === 'object';
+					!!props.attributes?.matterCarousel &&
+					typeof props.attributes.matterCarousel === 'object';
 
 				return isCarousel ? (
 					<QueryCarouselEdit BlockEdit={BlockEdit} props={props} />
@@ -386,8 +386,8 @@ addFilter(
 			function CarouselQueryBlock(props) {
 				const isCarousel =
 					QUERY_BLOCKS.includes(props.name) &&
-					!!props.attributes?.carousel &&
-					typeof props.attributes.carousel === 'object';
+					!!props.attributes?.matterCarousel &&
+					typeof props.attributes.matterCarousel === 'object';
 
 				return isCarousel ? (
 					<BlockListBlock

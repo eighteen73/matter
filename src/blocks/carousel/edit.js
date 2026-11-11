@@ -108,7 +108,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		swapBlock(
 			clientId,
 			cloneBlock(legacyQuery, {
-				carousel: {
+				matterCarousel: {
 					style: styleOf(attributes.className),
 					scheme: attributes.scheme,
 					label: attributes.label,

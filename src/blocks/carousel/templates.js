@@ -3,7 +3,7 @@
  * theme's loop item (`matter/loop-item`), so the design lives in the theme and
  * clients never need to edit the loop.
  *
- * A posts or products carousel is the query block itself, with a `carousel`
+ * A posts or products carousel is the query block itself, with a `matterCarousel`
  * attribute, marked as Matter's (`namespace` on a Query Loop, `collection` on
  * a Product Collection) for its title and the native controls it offers (see
  * editor/extensions/carousel-query.js and Blocks\QueryCarousel).
@@ -54,7 +54,7 @@ export const queryTemplate = (postType, style) => [
 	POSTS,
 	{
 		namespace: POSTS_NAMESPACE,
-		carousel: style ? { style } : {},
+		matterCarousel: style ? { style } : {},
 		query: { perPage: 9, postType, inherit: false },
 	},
 	[['core/post-template', {}, [['matter/loop-item']]]],
@@ -92,7 +92,7 @@ function stockStatuses() {
  * @return {Object} Block attributes.
  */
 export const productsAttributes = (style) => ({
-	carousel: style ? { style } : {},
+	matterCarousel: style ? { style } : {},
 	query: {
 		perPage: 9,
 		pages: 0,
