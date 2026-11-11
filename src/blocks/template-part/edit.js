@@ -14,6 +14,11 @@ import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
+/**
+ * Internal dependencies
+ */
+import { useInert } from '../../components/use-inert';
+
 // Previews by slug, for the editor session (a template shows the same
 // header as the next).
 const previews = new Map();
@@ -105,6 +110,7 @@ const templateParts = () => window.matterEditor?.templateParts ?? [];
 export default function Edit({ attributes: { slug }, setAttributes }) {
 	const blockProps = useBlockProps();
 	const preview = usePreview(slug);
+	const inertRef = useInert();
 
 	return (
 		<div {...blockProps}>
@@ -146,7 +152,7 @@ export default function Edit({ attributes: { slug }, setAttributes }) {
 			</InspectorControls>
 			{slug && preview.markup !== undefined && (
 				<div
-					inert=""
+					ref={inertRef}
 					dangerouslySetInnerHTML={{ __html: preview.markup }}
 				/>
 			)}
