@@ -18,6 +18,34 @@ import { addQueryArgs } from '@wordpress/url';
 // header as the next).
 const previews = new Map();
 
+// Requests in flight by slug, so parts that mount together (the same header
+// in the template and its preview) share one.
+const requests = new Map();
+
+/**
+ * Fetch a part's preview markup, once per slug at a time.
+ *
+ * @param {string} slug Part slug.
+ * @return {Promise<string>} Styles and HTML.
+ */
+function fetchPreview(slug) {
+	if (!requests.has(slug)) {
+		requests.set(
+			slug,
+			apiFetch({
+				path: addQueryArgs('/matter/v1/template-part', { slug }),
+			})
+				.then(({ html, styles }) => {
+					previews.set(slug, styles + html);
+					return styles + html;
+				})
+				.finally(() => requests.delete(slug))
+		);
+	}
+
+	return requests.get(slug);
+}
+
 /**
  * A part's preview: its HTML plus the stylesheets its render enqueued (menu
  * and panel CSS, with their breakpoint rules), from Matter's endpoint.
@@ -43,14 +71,8 @@ function usePreview(slug) {
 		let current = true;
 		setState({});
 
-		apiFetch({ path: addQueryArgs('/matter/v1/template-part', { slug }) })
-			.then(({ html, styles }) => {
-				previews.set(slug, styles + html);
-
-				if (current) {
-					setState({ markup: styles + html });
-				}
-			})
+		fetchPreview(slug)
+			.then((markup) => current && setState({ markup }))
 			.catch(() => current && setState({ error: true }));
 
 		return () => {
