@@ -11,6 +11,7 @@ use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\Registry;
+use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Extensions\ButtonIcon;
 use Eighteen73\Matter\Extensions\FocalPoint;
 use Eighteen73\Matter\Navigation\Megamenu;
@@ -42,6 +43,7 @@ class Plugin {
 		GravityForm::instance()->setup();
 		Variants::instance()->setup();
 		AllowedBlocks::instance()->setup();
+		TemplatePart::instance()->setup();
 		Icons::instance()->setup();
 
 		// Sections, block supports and core block extensions.
