@@ -15,7 +15,6 @@ import {
 	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
 	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
-import { cloneBlock } from '@wordpress/blocks';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -41,8 +40,8 @@ import {
 	useGalleryMedia,
 } from '../../components/gallery-media';
 import SlidePicker, { themeSlideTypes } from './slide-picker';
-import { QUERY_BLOCKS } from './templates';
-import { useSwapBlock } from './use-swap-block';
+import { QUERY_BLOCKS } from '../../query-display/templates';
+import { useLegacyQuery } from '../../query-display/use-legacy-query';
 
 // With theme slide types, slides are limited to them and images. Posts and
 // products carousels are query blocks of their own.
@@ -53,10 +52,6 @@ const allowedSlides = () => {
 
 	return types.length ? [...new Set(['core/image', ...types])] : undefined;
 };
-
-// The carousel's style, from its class.
-const styleOf = (className = '') =>
-	className.match(/(?:^|\s)is-style-([\w-]+)/)?.[1];
 
 /**
  * A live carousel: the variant (block style) decides behaviour and the theme's
@@ -86,37 +81,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	}, [selectedSlide, slideCount, scrollToSlide]);
 
 	// A carousel holding a Query Loop or Product Collection (made before
-	// those were carousels themselves) becomes that query, with this
-	// carousel's settings. Not an edit: the page isn't marked as changed.
-	const swapBlock = useSwapBlock();
-	const legacyQuery = useSelect(
-		(select) => {
-			const blocks = select(blockEditorStore).getBlocks(clientId);
-
-			return blocks.length === 1 && QUERY_BLOCKS.includes(blocks[0].name)
-				? blocks[0]
-				: null;
-		},
-		[clientId]
-	);
-
-	useEffect(() => {
-		if (!legacyQuery) {
-			return;
-		}
-
-		swapBlock(
-			clientId,
-			cloneBlock(legacyQuery, {
-				matterCarousel: {
-					style: styleOf(attributes.className),
-					scheme: attributes.scheme,
-					label: attributes.label,
-				},
-			}),
-			{ persistent: false }
-		);
-	}, [legacyQuery, clientId, swapBlock, attributes]);
+	// those were carousels themselves) becomes that query.
+	useLegacyQuery(clientId, 'carousel', attributes, ['label']);
 
 	// Image-only carousels (e.g. a slideshow) are managed like a gallery.
 	const media = useGalleryMedia(clientId);

@@ -15,6 +15,9 @@
  * render_block(), Query Loops (fresh block instances per post) and blocks such
  * as WooCommerce's product details that construct WP_Block directly.
  *
+ * A Query Loop shown as an accordion or tabs (QueryDisplay) is that container
+ * too, with its display settings standing in for the block's attributes.
+ *
  * It also tracks whether a Query Loop's post template is rendering, so blocks
  * can tell a per-post render from the page's own post context.
  *
@@ -66,9 +69,16 @@ class Instances {
 	private static array $items = [];
 
 	/**
-	 * Started containers: block object ID => container ID.
+	 * Settings (attributes) of each container, keyed by container ID.
 	 *
-	 * @var array<int, string>
+	 * @var array<string, array<string, mixed>>
+	 */
+	private static array $settings = [];
+
+	/**
+	 * Started containers: block object ID => [ container ID, container name ].
+	 *
+	 * @var array<int, array{0: string, 1: string}>
 	 */
 	private static array $active = [];
 
@@ -95,20 +105,31 @@ class Instances {
 			++self::$loop_depth;
 		}
 
-		if ( null === $parent_block || ! in_array( $parent_block->name, self::CONTAINERS, true ) ) {
+		if ( null === $parent_block ) {
 			return $parsed_block;
 		}
 
 		$key = spl_object_id( $parent_block );
 
-		if ( ! isset( self::$active[ $key ] ) ) {
-			$anchor = sanitize_html_class( (string) ( $parent_block->attributes['anchor'] ?? '' ) );
-			$id     = '' !== $anchor ? $anchor : wp_unique_id( str_replace( 'matter/', '', $parent_block->name ) . '-' );
-
-			self::$active[ $key ]                 = $id;
-			self::$stack[ $parent_block->name ][] = $id;
-			self::$items[ $id ]                   = [];
+		if ( isset( self::$active[ $key ] ) ) {
+			return $parsed_block;
 		}
+
+		$container = self::container( $parent_block );
+
+		if ( null === $container ) {
+			return $parsed_block;
+		}
+
+		[ $name, $settings ] = $container;
+
+		$anchor = sanitize_html_class( (string) ( $parent_block->attributes['anchor'] ?? '' ) );
+		$id     = '' !== $anchor ? $anchor : wp_unique_id( str_replace( 'matter/', '', $name ) . '-' );
+
+		self::$active[ $key ]   = [ $id, $name ];
+		self::$stack[ $name ][] = $id;
+		self::$items[ $id ]     = [];
+		self::$settings[ $id ]  = $settings;
 
 		return $parsed_block;
 	}
@@ -129,11 +150,43 @@ class Instances {
 		$key = null !== $instance ? spl_object_id( $instance ) : null;
 
 		if ( null !== $key && isset( self::$active[ $key ] ) ) {
-			array_pop( self::$stack[ $instance->name ] );
-			unset( self::$items[ self::$active[ $key ] ], self::$active[ $key ] );
+			[ $id, $name ] = self::$active[ $key ];
+
+			array_pop( self::$stack[ $name ] );
+			unset( self::$items[ $id ], self::$settings[ $id ], self::$active[ $key ] );
 		}
 
 		return $block_content;
+	}
+
+	/**
+	 * The container a block is, if any: its name and settings.
+	 *
+	 * @param \WP_Block $block Block instance.
+	 * @return array{0: string, 1: array}|null
+	 */
+	private static function container( \WP_Block $block ): ?array {
+		if ( in_array( $block->name, self::CONTAINERS, true ) ) {
+			return [ $block->name, $block->attributes ];
+		}
+
+		$display = QueryDisplay::of( $block->name, $block->attributes );
+
+		return null !== $display && in_array( $display['block'], self::CONTAINERS, true )
+			? [ $display['block'], $display['attributes'] ]
+			: null;
+	}
+
+	/**
+	 * Settings of the innermost container of a type currently rendering.
+	 *
+	 * @param string $name Container block name.
+	 * @return array|null
+	 */
+	public static function settings( string $name ): ?array {
+		$id = self::current( $name );
+
+		return null !== $id ? ( self::$settings[ $id ] ?? [] ) : null;
 	}
 
 	/**

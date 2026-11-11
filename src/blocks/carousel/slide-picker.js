@@ -25,8 +25,13 @@ import { gallery, postList } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
-import { POSTS, PRODUCTS, productsTemplate, queryTemplate } from './templates';
-import { useSwapBlock } from './use-swap-block';
+import {
+	POSTS,
+	PRODUCTS,
+	productsTemplate,
+	queryTemplate,
+} from '../../query-display/templates';
+import { useSwapBlock } from '../../query-display/use-swap-block';
 
 // New slides of a theme slide type.
 const SLIDE_COUNT = 3;

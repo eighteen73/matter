@@ -8,6 +8,11 @@
  * with the item's block context, so loops in templates and carousels in
  * content all show the same, theme-owned design.
  *
+ * A loop item can ask for a design: `panel` is an accordion item's or tab's
+ * content in an accordion or tabs of posts. Its patterns are
+ * `{theme}/loop-item-{post_type}-{design}` then `{theme}/loop-item-{design}`;
+ * without one, a panel shows the item's excerpt.
+ *
  * The editor previews items through `matter/v1/loop-items`, many per request
  * (a carousel's or archive's items together), for items the user can read.
  *
@@ -53,8 +58,8 @@ final class LoopItem {
 	}
 
 	/**
-	 * `GET matter/v1/loop-items?ids[]=…`: rendered items by ID, for the
-	 * editor's previews.
+	 * `GET matter/v1/loop-items?ids[]=…&design=…`: rendered items by ID, for
+	 * the editor's previews.
 	 *
 	 * @return void
 	 */
@@ -76,6 +81,11 @@ final class LoopItem {
 						'maxItems' => self::MAX_PREVIEWS,
 						'required' => true,
 					],
+					'design' => [
+						'type'    => 'string',
+						'default' => '',
+						'pattern' => '^[a-z0-9_-]*$',
+					],
 				],
 			]
 		);
@@ -90,12 +100,13 @@ final class LoopItem {
 	 */
 	public function previews( WP_REST_Request $request ): array {
 		$previews = [];
+		$design   = (string) $request['design'];
 
 		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
 			if ( current_user_can( 'read_post', $id ) ) {
 				$previews[] = [
 					'id'   => $id,
-					'html' => self::render( $id ),
+					'html' => self::render( $id, '', $design ),
 				];
 			}
 		}
@@ -108,9 +119,10 @@ final class LoopItem {
 	 *
 	 * @param int    $post_id   Item ID.
 	 * @param string $post_type Item post type (looked up when empty).
+	 * @param string $design    Design, e.g. `panel`; empty for the item's own.
 	 * @return string Empty when there's no item.
 	 */
-	public static function render( int $post_id, string $post_type = '' ): string {
+	public static function render( int $post_id, string $post_type = '', string $design = '' ): string {
 		$post = get_post( $post_id );
 
 		if ( ! $post ) {
@@ -118,7 +130,13 @@ final class LoopItem {
 		}
 
 		$post_type = $post_type ?: $post->post_type;
-		$slug      = self::pattern( $post_type );
+		$design    = sanitize_key( $design );
+		$slug      = self::pattern( $post_type, $design );
+
+		if ( null === $slug && '' !== $design ) {
+			// No design in the theme: the item's excerpt.
+			return wp_kses_post( wpautop( get_the_excerpt( $post ) ) );
+		}
 
 		if ( null === $slug ) {
 			// No pattern in the theme: a plain link, so the loop still works.
@@ -158,22 +176,24 @@ final class LoopItem {
 	}
 
 	/**
-	 * The loop item pattern for a post type.
+	 * The loop item pattern for a post type (and design).
 	 *
 	 * @param string $post_type Post type.
+	 * @param string $design    Design, e.g. `panel`; empty for the item's own.
 	 * @return string|null Pattern slug, or null when the theme has none.
 	 */
-	public static function pattern( string $post_type ): ?string {
+	public static function pattern( string $post_type, string $design = '' ): ?string {
 		$registry   = WP_Block_Patterns_Registry::get_instance();
 		$themes     = array_unique( [ get_stylesheet(), get_template() ] );
+		$suffix     = '' !== $design ? "-{$design}" : '';
 		$candidates = [];
 
 		foreach ( $themes as $theme ) {
-			$candidates[] = "{$theme}/loop-item-{$post_type}";
+			$candidates[] = "{$theme}/loop-item-{$post_type}{$suffix}";
 		}
 
 		foreach ( $themes as $theme ) {
-			$candidates[] = "{$theme}/loop-item";
+			$candidates[] = "{$theme}/loop-item{$suffix}";
 		}
 
 		$slug = null;
@@ -190,8 +210,9 @@ final class LoopItem {
 		 *
 		 * @param string|null $slug      Pattern slug, or null for none.
 		 * @param string      $post_type Post type.
+		 * @param string      $design    Design, e.g. `panel`; empty for the item's own.
 		 */
-		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type );
+		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type, $design );
 
 		return is_string( $slug ) && $registry->is_registered( $slug ) ? $slug : null;
 	}

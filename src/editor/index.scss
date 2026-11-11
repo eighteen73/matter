@@ -120,8 +120,8 @@
 	display: none;
 }
 
-// A query carousel's style buttons (Matter's: the carousel's block styles).
-.matter-carousel-styles {
+// A displayed query's style buttons (the block's own block styles).
+.matter-display-styles {
 	display: grid;
 	gap: 8px;
 	grid-template-columns: repeat(2, minmax(0, 1fr));

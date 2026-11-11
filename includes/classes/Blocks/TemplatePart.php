@@ -71,17 +71,13 @@ final class TemplatePart {
 	}
 
 	/**
-	 * Render a part through its block, collecting the stylesheets (with
-	 * their inline CSS) enqueued while it rendered.
+	 * Render a part through its block, with the stylesheets it enqueued.
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return array{html: string, styles: string}
 	 */
 	public function preview( WP_REST_Request $request ): array {
-		$styles = wp_styles();
-		$queued = $styles->queue;
-
-		$html = render_block(
+		return Preview::render(
 			[
 				'blockName'    => 'matter/template-part',
 				'attrs'        => [ 'slug' => (string) $request['slug'] ],
@@ -90,14 +86,6 @@ final class TemplatePart {
 				'innerContent' => [],
 			]
 		);
-
-		ob_start();
-		$styles->do_items( array_values( array_diff( $styles->queue, $queued ) ) );
-
-		return [
-			'html'   => $html,
-			'styles' => (string) ob_get_clean(),
-		];
 	}
 
 	/**

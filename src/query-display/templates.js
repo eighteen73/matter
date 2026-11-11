@@ -1,22 +1,49 @@
 /**
- * The query blocks a carousel can hold as its slides. Each item is the
- * theme's loop item (`matter/loop-item`), so the design lives in the theme and
- * clients never need to edit the loop.
+ * Queries shown as a carousel, accordion or tabs (see Blocks\QueryDisplay for
+ * the front end and editor/extensions/query-display for the editor).
  *
- * A posts or products carousel is the query block itself, with a `matterCarousel`
- * attribute, marked as Matter's (`namespace` on a Query Loop, `collection` on
- * a Product Collection) for its title and the native controls it offers (see
- * editor/extensions/carousel-query.js and Blocks\QueryCarousel).
+ * The query block itself is the carousel, accordion or tabs: a
+ * `matterDisplay` attribute holds the type, the block's style and colour
+ * scheme and its own settings. It's marked as Matter's (`namespace` on a
+ * Query Loop, `collection` on a Product Collection) for its title and the
+ * native controls it offers. Its items are fixed: the theme's loop item for
+ * a carousel's slides, or an accordion item or tab holding the theme's panel
+ * design (a loop item with the `panel` design).
  */
 
 export const POSTS = 'core/query';
 export const PRODUCTS = 'woocommerce/product-collection';
 export const QUERY_BLOCKS = [POSTS, PRODUCTS];
 
-export const POSTS_NAMESPACE = 'matter/carousel-posts';
+export const ATTRIBUTE = 'matterDisplay';
+
+// The block each type is shown as.
+export const DISPLAY_BLOCKS = {
+	carousel: 'matter/carousel',
+	accordion: 'matter/accordion',
+	tabs: 'matter/tabs',
+};
+
+// Each type's Query Loop variation, matched by `namespace`.
+export const NAMESPACES = {
+	carousel: 'matter/carousel-posts',
+	accordion: 'matter/accordion-posts',
+	tabs: 'matter/tabs-posts',
+};
+
+export const POSTS_NAMESPACE = NAMESPACES.carousel;
 export const PRODUCTS_COLLECTION = 'matter/product-collection/carousel';
 
-// Query Loop controls a carousel offers (core's `allowedControls`).
+const PANEL = ['matter/loop-item', { design: 'panel' }];
+
+// What the post template holds, per type.
+export const ITEMS = {
+	carousel: [['matter/loop-item']],
+	accordion: [['matter/accordion-item', {}, [PANEL]]],
+	tabs: [['matter/tab', {}, [PANEL]]],
+};
+
+// Query Loop controls these offer (core's `allowedControls`).
 export const POSTS_CONTROLS = [
 	'postType',
 	'postCount',
@@ -44,21 +71,60 @@ export const PRODUCTS_HIDDEN_CONTROLS = [
 export const PRODUCTS_LAYOUT = { type: 'list' };
 
 /**
- * A posts carousel: a Query Loop (of a type) that is the carousel.
+ * A query's display (its `matterDisplay`), if it's shown as a block.
+ *
+ * @param {string} name       Block name.
+ * @param {Object} attributes Block attributes.
+ * @return {Object|null} Display, with its `type`.
+ */
+export function displayOf(name, attributes) {
+	const display = attributes?.[ATTRIBUTE];
+
+	if (
+		!QUERY_BLOCKS.includes(name) ||
+		!display ||
+		typeof display !== 'object' ||
+		!DISPLAY_BLOCKS[display.type]
+	) {
+		return null;
+	}
+
+	// Products are carousels only.
+	return name === POSTS || display.type === 'carousel' ? display : null;
+}
+
+/**
+ * A query of posts shown as a block.
+ *
+ * @param {string} type     Display type (carousel, accordion or tabs).
+ * @param {string} postType Post type.
+ * @param {Object} display  The block's settings (e.g. its `style`).
+ * @return {Array} Block template.
+ */
+export const postsTemplate = (type, postType, display = {}) => [
+	POSTS,
+	{
+		namespace: NAMESPACES[type],
+		[ATTRIBUTE]: { ...display, type },
+		query: {
+			perPage: type === 'carousel' ? 9 : 10,
+			postType,
+			inherit: false,
+			...(type !== 'carousel' && { order: 'asc', orderBy: 'title' }),
+		},
+	},
+	[['core/post-template', {}, ITEMS[type]]],
+];
+
+/**
+ * A posts carousel.
  *
  * @param {string} postType Post type.
  * @param {string} style    Carousel style (block style name), if any.
  * @return {Array} Block template.
  */
-export const queryTemplate = (postType, style) => [
-	POSTS,
-	{
-		namespace: POSTS_NAMESPACE,
-		matterCarousel: style ? { style } : {},
-		query: { perPage: 9, postType, inherit: false },
-	},
-	[['core/post-template', {}, [['matter/loop-item']]]],
-];
+export const queryTemplate = (postType, style) =>
+	postsTemplate('carousel', postType, style ? { style } : {});
 
 /**
  * WooCommerce's stock statuses to show, as its own Product Collection
@@ -92,7 +158,7 @@ function stockStatuses() {
  * @return {Object} Block attributes.
  */
 export const productsAttributes = (style) => ({
-	matterCarousel: style ? { style } : {},
+	[ATTRIBUTE]: { type: 'carousel', ...(style && { style }) },
 	query: {
 		perPage: 9,
 		pages: 0,
@@ -131,22 +197,27 @@ export const productsAttributes = (style) => ({
 export const productsTemplate = (style) => [
 	PRODUCTS,
 	productsAttributes(style),
-	[['woocommerce/product-template', {}, [['matter/loop-item']]]],
+	[['woocommerce/product-template', {}, ITEMS.carousel]],
 ];
 
 /**
- * The attributes that make a carousel's query Matter's, for carousels made
- * before it was (or by hand). Empty when it already is.
+ * The attributes that mark a displayed query as Matter's, for queries made
+ * before (or by hand). Empty when it already is.
  *
  * @param {string} name       Query block name.
  * @param {Object} attributes Its attributes.
  * @return {Object} Attributes to set.
  */
-export function carouselQueryAttributes(name, attributes) {
+export function displayQueryAttributes(name, attributes) {
+	const display = displayOf(name, attributes);
 	const changes = {};
 
-	if (name === POSTS && attributes.namespace !== POSTS_NAMESPACE) {
-		changes.namespace = POSTS_NAMESPACE;
+	if (!display) {
+		return changes;
+	}
+
+	if (name === POSTS && attributes.namespace !== NAMESPACES[display.type]) {
+		changes.namespace = NAMESPACES[display.type];
 	}
 
 	if (name === PRODUCTS) {
