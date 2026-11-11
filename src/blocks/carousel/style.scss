@@ -36,7 +36,9 @@
 // Slides sit in a row, so the vertical spacing of a flow layout (core's
 // `:root :where(.is-layout-flow) > *`, on the post template) would push every
 // slide but the first down. Gaps between slides come from the theme's `gap`.
-.wp-block-matter-carousel__track > *,
+// The track's own child gets none either, e.g. WooCommerce's 30px below a
+// Product Collection (a single class, so this needs two).
+.wp-block-matter-carousel .wp-block-matter-carousel__track > *,
 .wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) > * {
 	margin-block: 0;
 }

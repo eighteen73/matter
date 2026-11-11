@@ -19,7 +19,10 @@
 /**
  * WordPress dependencies
  */
-import { InspectorControls } from '@wordpress/block-editor';
+import {
+	InspectorControls,
+	store as blockEditorStore,
+} from '@wordpress/block-editor';
 import {
 	getBlockType,
 	getBlockVariations,
@@ -34,7 +37,7 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { createHigherOrderComponent } from '@wordpress/compose';
-import { dispatch, useSelect } from '@wordpress/data';
+import { dispatch, useDispatch, useSelect } from '@wordpress/data';
 import domReady from '@wordpress/dom-ready';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
@@ -311,9 +314,14 @@ function QueryCarouselEdit({ BlockEdit, props }) {
 	const set = (changes) =>
 		setAttributes({ carousel: { ...carousel, ...changes } });
 
+	// The whole carousel acts as the block: clicking its controls (outside
+	// the query's own element) selects it too, and it has the outline.
+	const { selectBlock } = useDispatch(blockEditorStore);
+
 	return (
 		<>
 			{isSelected && <CarouselPanel carousel={carousel} set={set} />}
+			{/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- Mouse only: keyboard users reach the block as usual. */}
 			<div
 				className={[
 					'wp-block-matter-carousel',
@@ -323,12 +331,14 @@ function QueryCarouselEdit({ BlockEdit, props }) {
 					carousel.scheme &&
 						`has-scheme has-scheme-${carousel.scheme}`,
 					carouselClasses(live),
+					isSelected && 'is-block-selected',
 				]
 					.filter(Boolean)
 					.join(' ')}
 				role="region"
 				aria-roledescription={__('carousel', 'matter')}
 				aria-label={carousel.label || undefined}
+				onClick={() => !isSelected && selectBlock(clientId)}
 			>
 				<CarouselFrame carousel={live} options={options}>
 					<div
@@ -363,5 +373,33 @@ addFilter(
 				);
 			},
 		'withQueryCarousel'
+	)
+);
+
+// The query's own outline is drawn around the whole carousel instead (see
+// editor/canvas.scss).
+addFilter(
+	'editor.BlockListBlock',
+	'matter/carousel/query-outline',
+	createHigherOrderComponent(
+		(BlockListBlock) =>
+			function CarouselQueryBlock(props) {
+				const isCarousel =
+					QUERY_BLOCKS.includes(props.name) &&
+					!!props.attributes?.carousel &&
+					typeof props.attributes.carousel === 'object';
+
+				return isCarousel ? (
+					<BlockListBlock
+						{...props}
+						className={[props.className, 'is-carousel-query']
+							.filter(Boolean)
+							.join(' ')}
+					/>
+				) : (
+					<BlockListBlock {...props} />
+				);
+			},
+		'withCarouselQueryOutline'
 	)
 );

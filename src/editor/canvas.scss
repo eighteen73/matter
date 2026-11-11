@@ -34,3 +34,15 @@
 .wp-block-matter-slot > .block-list-appender {
 	position: static;
 }
+
+// A posts or products carousel (a query block that is the carousel): one
+// outline around the whole carousel, controls included, rather than core's
+// around the query's own element (just the slides).
+.block-editor-block-list__layout .block-editor-block-list__block.is-carousel-query::after {
+	display: none;
+}
+
+.wp-block-matter-carousel.is-query.is-block-selected {
+	outline: var(--wp-admin-border-width-focus) solid var(--wp-admin-theme-color);
+	outline-offset: calc(var(--wp-admin-border-width-focus) * -1);
+}
