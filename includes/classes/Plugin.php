@@ -43,6 +43,8 @@ class Plugin {
 		GravityForm::instance()->setup();
 		QueryCarousel::instance()->setup();
 		Variants::instance()->setup();
+		AllowedBlocks::instance()->setup();
+		Icons::instance()->setup();
 
 		// Sections, block supports and core block extensions.
 		Sections::instance()->setup();
