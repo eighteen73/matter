@@ -118,7 +118,6 @@ function ShowsOn() {
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={selected.cascade}
-						help={__('Unless they have their own.', 'matter')}
 						checked={cascade}
 						onChange={(value) =>
 							editPost({ meta: { [CASCADE]: value } })
