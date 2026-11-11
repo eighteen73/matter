@@ -399,7 +399,7 @@ It renders the archive's **Archive** entry (post type `matter_archive`). Entries
 4. the post type archive's entry (the blog's for categories, tags, author and date archives), if set to show on its category and tag pages;
 5. the theme's default content.
 
-Whether a term's or post type archive's entry also shows further down is the entry's choice ("Also show on…" in Shows on; `_matter_archive_cascade`), off by default: usually a category's content is about that category only. A taxonomy's entry is for each of its terms. Only published entries count, and a parent's or post type's newest entry decides: if it doesn't cascade, an older one that did doesn't either. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
+Whether a term's or post type archive's entry also shows further down is the entry's choice ("Include subcategories", or for a post type "Include category and tag pages", in Shows on; `_matter_archive_cascade`), off by default: usually a category's content is about that category only. A taxonomy's entry is for each of its terms. Only published entries count, and a parent's or post type's newest entry decides: if it doesn't cascade, an older one that did doesn't either. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
 
 **Default content.** Filter `matter_archive_default_content( $content, $target )` with block markup; it's also where a customised entry starts.
 

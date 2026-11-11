@@ -118,7 +118,7 @@ function ShowsOn() {
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={selected.cascade}
-						help={__('Those without their own content.', 'matter')}
+						help={__('Unless they have their own.', 'matter')}
 						checked={cascade}
 						onChange={(value) =>
 							editPost({ meta: { [CASCADE]: value } })
@@ -130,7 +130,7 @@ function ShowsOn() {
 					style={{ margin: 0 }}
 				>
 					{__(
-						'If an archive has more than one, the newest published one shows. To replace this one on a date, use New version in Appearance › Archives and schedule it.',
+						'The newest published one shows. To swap it on a date, schedule a new version in Appearance › Archives.',
 						'matter'
 					)}
 				</p>

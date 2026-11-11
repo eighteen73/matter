@@ -237,10 +237,7 @@ final readonly class Target {
 		if ( 'term' === $this->type ) {
 			$taxonomy = get_taxonomy( $this->name );
 
-			return $taxonomy && $taxonomy->hierarchical
-				/* translators: %s: taxonomy name, e.g. "product categories". */
-				? sprintf( __( 'Also show on the %s inside it', 'matter' ), mb_strtolower( (string) $taxonomy->labels->name ) )
-				: '';
+			return $taxonomy && $taxonomy->hierarchical ? __( 'Include subcategories', 'matter' ) : '';
 		}
 
 		if ( 'post_type' !== $this->type ) {
@@ -256,7 +253,7 @@ final readonly class Target {
 		);
 
 		/* translators: %l: taxonomy names, e.g. "category and tag". */
-		return $names ? wp_sprintf( __( 'Also show on its %l pages', 'matter' ), array_values( $names ) ) : '';
+		return $names ? wp_sprintf( __( 'Include %l pages', 'matter' ), array_values( $names ) ) : '';
 	}
 
 	/**
