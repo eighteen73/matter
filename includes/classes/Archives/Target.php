@@ -105,7 +105,8 @@ final readonly class Target {
 
 	/**
 	 * Where to look for content, most specific first: a term, its ancestors,
-	 * its taxonomy, then the post type's archive.
+	 * its taxonomy, then the post type's archive. Ancestors' and the post type
+	 * archive's entries only count when set to cascade (Archives::resolve()).
 	 *
 	 * @return self[]
 	 */
@@ -217,15 +218,45 @@ final readonly class Target {
 			'post_type' => sprintf( __( 'The page listing all %s', 'matter' ), $items ),
 			/* translators: %s: taxonomy name, e.g. "product categories". */
 			'taxonomy'  => sprintf( __( 'Each of the %s, unless it has its own', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->name ?? $this->name ) ) ),
-			'term'      => $taxonomy && $taxonomy->hierarchical
-				/* translators: %s: taxonomy singular name, e.g. "category". */
-				? sprintf( __( 'This %s’s page, and its children without their own', 'matter' ), mb_strtolower( (string) $taxonomy->labels->singular_name ) )
-				/* translators: %s: taxonomy singular name, e.g. "tag". */
-				: sprintf( __( 'This %s’s page', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->singular_name ?? $this->name ) ) ),
+			/* translators: %s: taxonomy singular name, e.g. "category". */
+			'term'      => sprintf( __( 'This %s’s page', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->singular_name ?? $this->name ) ) ),
 			'search'    => __( 'Shown when someone searches the site', 'matter' ),
 			'404'       => __( 'Shown when a page can’t be found', 'matter' ),
 			default     => '',
 		};
+	}
+
+	/**
+	 * What an entry for this archive can also show on, as the editor's
+	 * toggle: a term's children (hierarchical taxonomies), or a post type
+	 * archive's term archives. Empty when nothing is below it.
+	 *
+	 * @return string
+	 */
+	public function cascade_label(): string {
+		if ( 'term' === $this->type ) {
+			$taxonomy = get_taxonomy( $this->name );
+
+			return $taxonomy && $taxonomy->hierarchical
+				/* translators: %s: taxonomy name, e.g. "product categories". */
+				? sprintf( __( 'Also show on the %s inside it', 'matter' ), mb_strtolower( (string) $taxonomy->labels->name ) )
+				: '';
+		}
+
+		if ( 'post_type' !== $this->type ) {
+			return '';
+		}
+
+		$names = array_map(
+			fn( $taxonomy ) => mb_strtolower( (string) $taxonomy->labels->singular_name ),
+			array_filter(
+				get_object_taxonomies( $this->name, 'objects' ),
+				fn( $taxonomy ) => $taxonomy->public && $taxonomy->publicly_queryable && $taxonomy->show_ui
+			)
+		);
+
+		/* translators: %l: taxonomy names, e.g. "category and tag". */
+		return $names ? wp_sprintf( __( 'Also show on its %l pages', 'matter' ), array_values( $names ) ) : '';
 	}
 
 	/**

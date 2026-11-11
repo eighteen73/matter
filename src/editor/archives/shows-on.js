@@ -1,13 +1,19 @@
 /**
  * Archive content: the "Shows on" panel, choosing the archive an entry is for
- * (a post type archive, all terms of a taxonomy, one term, search or 404).
+ * (a post type archive, all terms of a taxonomy, one term, search or 404),
+ * and whether it also shows on the archives below it (a category's
+ * subcategories; a post type's category and tag pages) without their own.
  */
 
 /**
  * WordPress dependencies
  */
 import apiFetch from '@wordpress/api-fetch';
-import { ComboboxControl, ExternalLink } from '@wordpress/components';
+import {
+	ComboboxControl,
+	ExternalLink,
+	ToggleControl,
+} from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import {
 	PluginDocumentSettingPanel,
@@ -24,17 +30,20 @@ import { registerPlugin } from '@wordpress/plugins';
 import { rememberTarget } from './targets';
 
 const META = '_matter_archive_target';
+const CASCADE = '_matter_archive_cascade';
 
 const fetchTargets = (args) =>
 	apiFetch({ path: addQueryArgs('/matter/v1/archive-targets', args) });
 
 function ShowsOn() {
-	const { isArchive, target } = useSelect((select) => {
+	const { isArchive, target, cascade } = useSelect((select) => {
 		const editor = select(editorStore);
+		const meta = editor.getEditedPostAttribute('meta');
 
 		return {
 			isArchive: 'matter_archive' === editor.getCurrentPostType(),
-			target: editor.getEditedPostAttribute('meta')?.[META] ?? '',
+			target: meta?.[META] ?? '',
+			cascade: !!meta?.[CASCADE],
 		};
 	}, []);
 	const { editPost } = useDispatch(editorStore);
@@ -92,11 +101,19 @@ function ShowsOn() {
 				onChange={(value) =>
 					editPost({ meta: { [META]: value ?? '' } })
 				}
-				help={__(
-					'Type to find a category or tag. Categories inside it use this too, unless they have their own.',
-					'matter'
-				)}
+				help={__('Type to find a category or tag.', 'matter')}
 			/>
+			{selected?.cascade && (
+				<ToggleControl
+					__nextHasNoMarginBottom
+					label={selected.cascade}
+					help={__('Those without their own.', 'matter')}
+					checked={cascade}
+					onChange={(value) =>
+						editPost({ meta: { [CASCADE]: value } })
+					}
+				/>
+			)}
 			{selected?.url && (
 				<p>
 					<ExternalLink href={selected.url}>

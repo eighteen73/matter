@@ -919,10 +919,11 @@ class Admin {
 	 */
 	public static function describe( Target $target ): array {
 		return [
-			'value'  => $target->key(),
-			'label'  => $target->label(),
-			'url'    => $target->url(),
-			'values' => [
+			'value'   => $target->key(),
+			'label'   => $target->label(),
+			'url'     => $target->url(),
+			'cascade' => $target->cascade_label(),
+			'values'  => [
 				'title'       => wp_specialchars_decode( (string) Archives::value( $target, 'title' ) ),
 				'description' => wp_strip_all_tags( (string) Archives::value( $target, 'description' ) ),
 				'count'       => (string) Archives::value( $target, 'count' ),

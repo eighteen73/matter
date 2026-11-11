@@ -7,9 +7,12 @@
  * block renders an "Archive" entry, edited like a page with sections,
  * in which `matter/archive-loop` marks where the template's list goes.
  *
- * Which entry shows (see Target::chain()): the term's own, its parent's, the
- * taxonomy's, then the post type archive's; without one, the theme's default
- * content (`matter_archive_default_content`). Among published entries for the
+ * Which entry shows (see Target::chain()): the archive's own; for a term,
+ * then its parent's (and theirs), the taxonomy's, then the post type
+ * archive's; without one, the theme's default content
+ * (`matter_archive_default_content`). A parent term's or post type archive's
+ * entry only shows further down when it's set to (`_matter_archive_cascade`,
+ * off by default); a taxonomy's is for every term in it. Among published entries for the
  * same archive the newest wins, so a scheduled replacement takes over on its
  * date and unpublishing it falls back.
  *
@@ -37,6 +40,12 @@ class Archives {
 	public const POST_TYPE = 'matter_archive';
 
 	public const META = '_matter_archive_target';
+
+	/**
+	 * Whether a term's or post type archive's entry also shows on the archives
+	 * below it (child terms; the post type's term archives) without their own.
+	 */
+	public const CASCADE = '_matter_archive_cascade';
 
 	/**
 	 * Lists of posts being rendered, innermost last: each the template's
@@ -159,6 +168,18 @@ class Archives {
 				'auth_callback'     => fn( $allowed, $meta_key, $post_id ) => current_user_can( 'edit_post', $post_id ),
 			]
 		);
+
+		register_post_meta(
+			self::POST_TYPE,
+			self::CASCADE,
+			[
+				'type'          => 'boolean',
+				'single'        => true,
+				'default'       => false,
+				'show_in_rest'  => true,
+				'auth_callback' => fn( $allowed, $meta_key, $post_id ) => current_user_can( 'edit_post', $post_id ),
+			]
+		);
 	}
 
 	/**
@@ -208,12 +229,22 @@ class Archives {
 
 		$this->resolved[ $key ] = null;
 
-		foreach ( $keys as $candidate ) {
-			foreach ( $posts as $post ) {
-				if ( get_post_meta( $post->ID, self::META, true ) === $candidate ) {
-					$this->resolved[ $key ] = $post;
-					break 2;
-				}
+		foreach ( $target->chain() as $index => $candidate ) {
+			// Each archive's entry is its newest published one (posts are
+			// newest first).
+			$entry = current(
+				array_filter( $posts, fn( WP_Post $post ) => get_post_meta( $post->ID, self::META, true ) === $candidate->key() )
+			);
+
+			if ( ! $entry ) {
+				continue;
+			}
+
+			// The archive's own, a taxonomy's (for each of its terms), or one
+			// set to show further down.
+			if ( 0 === $index || 'taxonomy' === $candidate->type || get_post_meta( $entry->ID, self::CASCADE, true ) ) {
+				$this->resolved[ $key ] = $entry;
+				break;
 			}
 		}
 

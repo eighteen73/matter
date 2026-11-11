@@ -394,12 +394,12 @@ It renders the archive's **Archive** entry (post type `matter_archive`). Entries
 
 **Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), `search` or `404`. Matter looks in this order:
 1. the term's entry;
-2. its parent terms' entries;
+2. its parent terms' entries, if set to show on the categories inside them;
 3. the taxonomy's entry;
-4. the post type archive's entry (the blog's for categories, tags, author and date archives);
+4. the post type archive's entry (the blog's for categories, tags, author and date archives), if set to show on its category and tag pages;
 5. the theme's default content.
 
-Only published entries count. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
+Whether a term's or post type archive's entry also shows further down is the entry's choice ("Also show on…" in Shows on; `_matter_archive_cascade`), off by default: usually a category's content is about that category only. A taxonomy's entry is for each of its terms. Only published entries count, and a parent's or post type's newest entry decides: if it doesn't cascade, an older one that did doesn't either. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
 
 **Default content.** Filter `matter_archive_default_content( $content, $target )` with block markup; it's also where a customised entry starts.
 
