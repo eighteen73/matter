@@ -65,8 +65,37 @@ class Archives {
 		add_filter( 'post_type_link', [ $this, 'permalink' ], 10, 2 );
 		add_filter( 'preview_post_link', [ $this, 'preview_link' ], 10, 2 );
 		add_filter( 'render_block_core/paragraph', [ $this, 'drop_empty_bound_paragraph' ], 10, 2 );
+		add_filter( 'rest_request_after_callbacks', [ $this, 'hide_from_post_type_list' ], 10, 3 );
 
 		Admin::instance()->setup();
+	}
+
+	/**
+	 * Leave entries out of the post type lists the editor offers wherever a
+	 * post type is chosen (e.g. a Query Loop's "Post type", which asks for
+	 * `/wp/v2/types?per_page=-1`): they're publicly queryable only so the
+	 * entry editor offers Preview. The editor's own list of post types (no
+	 * `per_page`), from which it sets up what it can edit, keeps them, as does
+	 * `/wp/v2/types/matter_archive`.
+	 *
+	 * @param \WP_REST_Response|\WP_HTTP_Response|\WP_Error|mixed $response Response.
+	 * @param array                                               $handler  Route handler.
+	 * @param \WP_REST_Request                                    $request  Request.
+	 * @return mixed
+	 */
+	public function hide_from_post_type_list( $response, $handler, $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
+		if ( '/wp/v2/types' !== $request->get_route() || null === $request->get_param( 'per_page' ) || ! $response instanceof \WP_HTTP_Response ) {
+			return $response;
+		}
+
+		$data = $response->get_data();
+
+		if ( is_array( $data ) && isset( $data[ self::POST_TYPE ] ) ) {
+			unset( $data[ self::POST_TYPE ] );
+			$response->set_data( $data );
+		}
+
+		return $response;
 	}
 
 	/**
