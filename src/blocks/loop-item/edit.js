@@ -13,6 +13,11 @@ import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
+/**
+ * Internal dependencies
+ */
+import { useInert } from '../../components/use-inert';
+
 // Most items in one request (LoopItem::MAX_PREVIEWS).
 const MAX_PER_REQUEST = 100;
 
@@ -137,11 +142,10 @@ export default function Edit({
 
 	const preview = usePreview(postId);
 	const hasPreview = typeof preview === 'string';
-	const blockProps = useBlockProps(
-		hasPreview
-			? { inert: '', dangerouslySetInnerHTML: { __html: preview } }
-			: {}
-	);
+	const blockProps = useBlockProps({
+		ref: useInert(),
+		...(hasPreview && { dangerouslySetInnerHTML: { __html: preview } }),
+	});
 
 	if (hasPreview) {
 		return <div {...blockProps} />;
