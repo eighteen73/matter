@@ -2,10 +2,12 @@
 @use "@wordpress/base-styles/colors" as *;
 @use "@wordpress/base-styles/mixins" as *;
 
-// Inserter layout and grid match Gutenberg's Icon block.
+// Inserter layout and grid match Gutenberg's Icon block, under Matter's own
+// class names: this is editor UI, and the editor copies any stylesheet with a
+// `.wp-block` selector into the canvas iframe (with a console warning).
 // @see https://github.com/WordPress/gutenberg/blob/57c278ca272f3aa9a0e5e44b80c603a34f167e5b/packages/block-library/src/icon/editor.scss
 .matter-icon-library-modal {
-	.wp-block-icon__inserter-sidebar {
+	.matter-icon-library-modal__sidebar {
 		display: flex;
 		flex-direction: column;
 		gap: $grid-unit-20;
@@ -25,36 +27,36 @@
 		}
 	}
 
-	.wp-block-icon__inserter-panel {
+	.matter-icon-library-modal__panel {
 		@include break-medium() {
 			margin-inline-start: $sidebar-width;
 		}
 	}
 
-	.wp-block-icon__inserter-loading {
+	.matter-icon-library-modal__loading {
 		display: flex;
 		justify-content: center;
 		padding: $grid-unit-30;
 	}
 
-	.wp-block-icon__inserter-grid-icons-list {
+	.matter-icon-library-modal__grid-icons-list {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 	}
 
-	.wp-block-icon__inserter-grid-no-results {
+	.matter-icon-library-modal__grid-no-results {
 		display: flex;
 		justify-content: center;
 	}
 
-	.wp-block-icon__inserter-grid-icons-list-item {
+	.matter-icon-library-modal__grid-icons-list-item {
 		display: flex;
 		flex-direction: column;
 		/* stylelint-disable-next-line declaration-no-important -- Matches core; Button's 40px height must yield to the labeled cell. */
 		height: auto !important;
 	}
 
-	.wp-block-icon__inserter-grid-icons-list-item-icon {
+	.matter-icon-library-modal__grid-icons-list-item-icon {
 		padding: $grid-unit-15;
 
 		svg {
@@ -64,7 +66,7 @@
 		}
 	}
 
-	.wp-block-icon__inserter-grid-icons-list-item-title {
+	.matter-icon-library-modal__grid-icons-list-item-title {
 		font-size: $font-size-small;
 		overflow-wrap: break-word;
 		padding: $grid-unit-05 $grid-unit-05 $grid-unit-10;

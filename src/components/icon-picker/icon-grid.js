@@ -46,14 +46,14 @@ export const IconGrid = ({ icons, value, onSelect }) => {
 	}, [isReadyToScroll]);
 
 	return (
-		<div className="wp-block-icon__inserter-grid">
+		<div className="matter-icon-library-modal__grid">
 			{!icons?.length ? (
-				<div className="wp-block-icon__inserter-grid-no-results">
+				<div className="matter-icon-library-modal__grid-no-results">
 					<p>{__('No results found.', 'matter')}</p>
 				</div>
 			) : (
 				<div
-					className="wp-block-icon__inserter-grid-icons-list"
+					className="matter-icon-library-modal__grid-icons-list"
 					aria-label={__('Icon library', 'matter')}
 				>
 					{shownIcons.map((icon) => (
@@ -64,7 +64,7 @@ export const IconGrid = ({ icons, value, onSelect }) => {
 									? selectedIconRef
 									: undefined
 							}
-							className="wp-block-icon__inserter-grid-icons-list-item"
+							className="matter-icon-library-modal__grid-icons-list-item"
 							onClick={() => onSelect(icon.name)}
 							variant={
 								icon.name === value ? 'primary' : undefined
@@ -73,17 +73,17 @@ export const IconGrid = ({ icons, value, onSelect }) => {
 						>
 							{icon.content ? (
 								<span
-									className="wp-block-icon__inserter-grid-icons-list-item-icon"
+									className="matter-icon-library-modal__grid-icons-list-item-icon"
 									dangerouslySetInnerHTML={{
 										__html: safeHTML(icon.content),
 									}}
 								/>
 							) : (
-								<span className="wp-block-icon__inserter-grid-icons-list-item-icon">
+								<span className="matter-icon-library-modal__grid-icons-list-item-icon">
 									{icon.text}
 								</span>
 							)}
-							<span className="wp-block-icon__inserter-grid-icons-list-item-title">
+							<span className="matter-icon-library-modal__grid-icons-list-item-title">
 								{icon.label}
 							</span>
 						</Button>
