@@ -59,6 +59,7 @@ import CarouselEdit from './carousel-edit';
 import PreviewEdit from './preview-edit';
 
 const DISPLAY_ATTRIBUTE = { [ATTRIBUTE]: { type: 'object' } };
+const DISPLAY_CONTEXT = 'matter/display';
 
 // The Site Editor keeps the plain query blocks in its inserter.
 const isPostEditor = () => !document.body.classList.contains('site-editor-php');
@@ -88,19 +89,23 @@ const POSTS_VARIATIONS = {
  * The attribute, on query blocks registered after this script (filter) and
  * before it (e.g. WooCommerce's, updated in the store).
  */
+const withDisplay = (settings) => ({
+	...settings,
+	attributes: { ...settings.attributes, ...DISPLAY_ATTRIBUTE },
+	// Loop items inside pick the theme's pattern for the block (also in the
+	// post template's previews of its other items, which are outside the
+	// editor's block tree but inside this context).
+	providesContext: {
+		...settings.providesContext,
+		[DISPLAY_CONTEXT]: ATTRIBUTE,
+	},
+});
+
 addFilter(
 	'blocks.registerBlockType',
 	'matter/query-display/attribute',
 	(settings, name) =>
-		QUERY_BLOCKS.includes(name)
-			? {
-					...settings,
-					attributes: {
-						...settings.attributes,
-						...DISPLAY_ATTRIBUTE,
-					},
-				}
-			: settings
+		QUERY_BLOCKS.includes(name) ? withDisplay(settings) : settings
 );
 
 const addAttributeToRegistered = () =>
@@ -108,10 +113,7 @@ const addAttributeToRegistered = () =>
 		const blockType = getBlockType(name);
 
 		if (blockType && !blockType.attributes?.[ATTRIBUTE]) {
-			dispatch(blocksStore).addBlockTypes({
-				...blockType,
-				attributes: { ...blockType.attributes, ...DISPLAY_ATTRIBUTE },
-			});
+			dispatch(blocksStore).addBlockTypes(withDisplay(blockType));
 		}
 	});
 

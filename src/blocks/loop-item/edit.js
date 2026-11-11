@@ -21,27 +21,27 @@ import { useInert } from '../../components/use-inert';
 // Most items in one request (LoopItem::MAX_PREVIEWS).
 const MAX_PER_REQUEST = 100;
 
-// Rendered items by design and post ID (`panel:12`) for the editor session:
+// Rendered items by block and post ID (`carousel:12`) for the editor session:
 // the HTML, or null when the item can't be shown (e.g. the user can't read
 // it). Kept so a preview that remounts (e.g. when its loop is selected) shows
 // at once.
 const previews = new Map();
 
-// Each loading item's request, and per design the batch still collecting.
+// Each loading item's request, and per block the batch still collecting.
 const pending = new Map();
 const batches = new Map();
 
-const keyOf = (design, postId) => `${design}:${postId}`;
+const keyOf = (block, postId) => `${block}:${postId}`;
 
 /**
- * Fetch items' previews in a design, up to 100 per request, into `previews`.
+ * Fetch items' previews (in a displayed query's block), up to 100 per request, into `previews`.
  * Items that aren't returned (or fail) are stored as null.
  *
- * @param {string}   design Design (empty for the item's own).
- * @param {number[]} ids    Item IDs.
+ * @param {string}   block The block its query is shown as (empty for none).
+ * @param {number[]} ids   Item IDs.
  * @return {Promise} Settles when every request has.
  */
-async function fetchPreviews(design, ids) {
+async function fetchPreviews(block, ids) {
 	const requests = [];
 
 	for (let i = 0; i < ids.length; i += MAX_PER_REQUEST) {
@@ -49,12 +49,12 @@ async function fetchPreviews(design, ids) {
 			apiFetch({
 				path: addQueryArgs('/matter/v1/loop-items', {
 					ids: ids.slice(i, i + MAX_PER_REQUEST),
-					...(design && { design }),
+					...(block && { block }),
 				}),
 			})
 				.then((items) =>
 					items.forEach(({ id, html }) =>
-						previews.set(keyOf(design, id), html)
+						previews.set(keyOf(block, id), html)
 					)
 				)
 				.catch(() => {})
@@ -65,38 +65,38 @@ async function fetchPreviews(design, ids) {
 
 	ids.forEach(
 		(id) =>
-			previews.has(keyOf(design, id)) ||
-			previews.set(keyOf(design, id), null)
+			previews.has(keyOf(block, id)) ||
+			previews.set(keyOf(block, id), null)
 	);
 }
 
 /**
- * Load an item's preview. Items in the same design that start loading in the
+ * Load an item's preview. Items for the same block that start loading in the
  * same tick (a carousel's or an archive's) share one request.
  *
- * @param {string} design Design (empty for the item's own).
+ * @param {string} block  The block its query is shown as (empty for none).
  * @param {number} postId Item ID.
  * @return {Promise} Settles once the preview is in `previews`.
  */
-function loadPreview(design, postId) {
-	const key = keyOf(design, postId);
+function loadPreview(block, postId) {
+	const key = keyOf(block, postId);
 
 	if (!pending.has(key)) {
-		if (!batches.has(design)) {
+		if (!batches.has(block)) {
 			const ids = new Set();
 
-			batches.set(design, {
+			batches.set(block, {
 				ids,
 				request: new Promise((resolve) => setTimeout(resolve)).then(
 					() => {
-						batches.delete(design);
-						return fetchPreviews(design, [...ids]);
+						batches.delete(block);
+						return fetchPreviews(block, [...ids]);
 					}
 				),
 			});
 		}
 
-		const batch = batches.get(design);
+		const batch = batches.get(block);
 
 		batch.ids.add(postId);
 		pending.set(
@@ -112,13 +112,13 @@ function loadPreview(design, postId) {
  * An item's preview: its HTML, null when it can't be shown, or undefined
  * while it loads.
  *
- * @param {string} design Design (empty for the item's own).
+ * @param {string} block  The block its query is shown as (empty for none).
  * @param {number} postId Item ID.
  * @return {string|null|undefined} Preview.
  */
-function usePreview(design, postId) {
+function usePreview(block, postId) {
 	const [, setLoaded] = useState(0);
-	const key = keyOf(design, postId);
+	const key = keyOf(block, postId);
 
 	useEffect(() => {
 		if (!postId || previews.has(key)) {
@@ -126,14 +126,14 @@ function usePreview(design, postId) {
 		}
 
 		let current = true;
-		loadPreview(design, postId).then(
+		loadPreview(block, postId).then(
 			() => current && setLoaded((n) => n + 1)
 		);
 
 		return () => {
 			current = false;
 		};
-	}, [design, postId, key]);
+	}, [block, postId, key]);
 
 	return postId ? previews.get(key) : undefined;
 }
@@ -145,23 +145,25 @@ function usePreview(design, postId) {
  * loop or carousel around it.
  *
  * @param {Object}   props
- * @param {Object}   props.attributes           Block attributes.
- * @param {string}   props.attributes.design    Design (e.g. `panel`), if not the item's own.
- * @param {string}   props.attributes.itemLabel The post type's name, for List View.
- * @param {Object}   props.context              Block context.
- * @param {number}   props.context.postId       The loop item.
- * @param {string}   props.context.postType     The loop item's post type.
- * @param {Function} props.setAttributes        Attribute setter.
+ * @param {Object}   props.attributes               Block attributes.
+ * @param {string}   props.attributes.itemLabel     The post type's name, for List View.
+ * @param {Object}   props.context                  Block context.
+ * @param {number}   props.context.postId           The loop item.
+ * @param {string}   props.context.postType         The loop item's post type.
+ * @param {Object}   props.context.'matter/display' The query's display (carousel, accordion or tabs), if any.
+ * @param {Function} props.setAttributes            Attribute setter.
  * @return {Element} Loop item preview.
  */
 export default function Edit({
-	attributes: { design = '', itemLabel },
-	context: { postId, postType },
+	attributes: { itemLabel },
+	context: { postId, postType, 'matter/display': display },
 	setAttributes,
 }) {
 	useItemLabel(postType, itemLabel, setAttributes);
 
-	const preview = usePreview(design, postId);
+	// The block its query is shown as, if any, from the query's context.
+	const block = display?.type ?? '';
+	const preview = usePreview(block, postId);
 	const hasPreview = typeof preview === 'string';
 	const blockProps = useBlockProps({
 		ref: useInert(),

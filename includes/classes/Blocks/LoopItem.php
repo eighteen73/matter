@@ -8,10 +8,15 @@
  * with the item's block context, so loops in templates and carousels in
  * content all show the same, theme-owned design.
  *
- * A loop item can ask for a design: `panel` is an accordion item's or tab's
- * content in an accordion or tabs of posts. Its patterns are
- * `{theme}/loop-item-{post_type}-{design}` then `{theme}/loop-item-{design}`;
- * without one, a panel shows the item's excerpt.
+ * In a query shown as a block (Blocks\QueryDisplay), the block can have its
+ * own patterns, most specific first, like WordPress's template hierarchy:
+ *
+ * - Carousel slides: `loop-item-{post_type}-carousel`, `loop-item-{post_type}`,
+ *   `loop-item-carousel`, `loop-item`.
+ * - Accordion and tabs content: `loop-item-{post_type}-accordion` (or
+ *   `-tabs`), `loop-item-accordion` (or `loop-item-tabs`), else the item's
+ *   excerpt. Not the item's own design: the post's title is already the
+ *   heading or tab.
  *
  * The editor previews items through `matter/v1/loop-items`, many per request
  * (a carousel's or archive's items together), for items the user can read.
@@ -58,8 +63,8 @@ final class LoopItem {
 	}
 
 	/**
-	 * `GET matter/v1/loop-items?ids[]=…&design=…`: rendered items by ID, for
-	 * the editor's previews.
+	 * `GET matter/v1/loop-items?ids[]=…&block=…`: rendered items by ID (in a
+	 * query shown as that block, if any), for the editor's previews.
 	 *
 	 * @return void
 	 */
@@ -72,7 +77,7 @@ final class LoopItem {
 				'callback'            => [ $this, 'previews' ],
 				'permission_callback' => fn() => current_user_can( 'edit_posts' ),
 				'args'                => [
-					'ids' => [
+					'ids'   => [
 						'type'     => 'array',
 						'items'    => [
 							'type'    => 'integer',
@@ -81,10 +86,10 @@ final class LoopItem {
 						'maxItems' => self::MAX_PREVIEWS,
 						'required' => true,
 					],
-					'design' => [
+					'block' => [
 						'type'    => 'string',
 						'default' => '',
-						'pattern' => '^[a-z0-9_-]*$',
+						'enum'    => array_merge( [ '' ], array_keys( QueryDisplay::TYPES ) ),
 					],
 				],
 			]
@@ -100,13 +105,13 @@ final class LoopItem {
 	 */
 	public function previews( WP_REST_Request $request ): array {
 		$previews = [];
-		$design   = (string) $request['design'];
+		$block    = (string) $request['block'];
 
 		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
 			if ( current_user_can( 'read_post', $id ) ) {
 				$previews[] = [
 					'id'   => $id,
-					'html' => self::render( $id, '', $design ),
+					'html' => self::render( $id, '', $block ),
 				];
 			}
 		}
@@ -119,10 +124,11 @@ final class LoopItem {
 	 *
 	 * @param int    $post_id   Item ID.
 	 * @param string $post_type Item post type (looked up when empty).
-	 * @param string $design    Design, e.g. `panel`; empty for the item's own.
+	 * @param string $block     The block the item's query is shown as
+	 *                          (carousel, accordion or tabs); empty for none.
 	 * @return string Empty when there's no item.
 	 */
-	public static function render( int $post_id, string $post_type = '', string $design = '' ): string {
+	public static function render( int $post_id, string $post_type = '', string $block = '' ): string {
 		$post = get_post( $post_id );
 
 		if ( ! $post ) {
@@ -130,11 +136,11 @@ final class LoopItem {
 		}
 
 		$post_type = $post_type ?: $post->post_type;
-		$design    = sanitize_key( $design );
-		$slug      = self::pattern( $post_type, $design );
+		$block     = isset( QueryDisplay::TYPES[ $block ] ) ? $block : '';
+		$slug      = self::pattern( $post_type, $block );
 
-		if ( null === $slug && '' !== $design ) {
-			// No design in the theme: the item's excerpt.
+		if ( null === $slug && '' !== $block && ! QueryDisplay::TYPES[ $block ]['cards'] ) {
+			// No accordion or tabs pattern in the theme: the item's excerpt.
 			return wp_kses_post( wpautop( get_the_excerpt( $post ) ) );
 		}
 
@@ -176,24 +182,30 @@ final class LoopItem {
 	}
 
 	/**
-	 * The loop item pattern for a post type (and design).
+	 * The loop item pattern for a post type, in a block if any (see the
+	 * hierarchy above). Child theme first at each step.
 	 *
 	 * @param string $post_type Post type.
-	 * @param string $design    Design, e.g. `panel`; empty for the item's own.
+	 * @param string $block     The block the item's query is shown as; empty for none.
 	 * @return string|null Pattern slug, or null when the theme has none.
 	 */
-	public static function pattern( string $post_type, string $design = '' ): ?string {
-		$registry   = WP_Block_Patterns_Registry::get_instance();
-		$themes     = array_unique( [ get_stylesheet(), get_template() ] );
-		$suffix     = '' !== $design ? "-{$design}" : '';
-		$candidates = [];
+	public static function pattern( string $post_type, string $block = '' ): ?string {
+		$registry = WP_Block_Patterns_Registry::get_instance();
+		$themes   = array_unique( [ get_stylesheet(), get_template() ] );
+		$names    = [ "loop-item-{$post_type}", 'loop-item' ];
 
-		foreach ( $themes as $theme ) {
-			$candidates[] = "{$theme}/loop-item-{$post_type}{$suffix}";
+		if ( isset( QueryDisplay::TYPES[ $block ] ) ) {
+			$names = QueryDisplay::TYPES[ $block ]['cards']
+				? [ "loop-item-{$post_type}-{$block}", "loop-item-{$post_type}", "loop-item-{$block}", 'loop-item' ]
+				: [ "loop-item-{$post_type}-{$block}", "loop-item-{$block}" ];
 		}
 
-		foreach ( $themes as $theme ) {
-			$candidates[] = "{$theme}/loop-item{$suffix}";
+		$candidates = [];
+
+		foreach ( $names as $name ) {
+			foreach ( $themes as $theme ) {
+				$candidates[] = "{$theme}/{$name}";
+			}
 		}
 
 		$slug = null;
@@ -210,9 +222,10 @@ final class LoopItem {
 		 *
 		 * @param string|null $slug      Pattern slug, or null for none.
 		 * @param string      $post_type Post type.
-		 * @param string      $design    Design, e.g. `panel`; empty for the item's own.
+		 * @param string      $block     The block the item's query is shown as
+		 *                               (carousel, accordion or tabs); empty for none.
 		 */
-		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type, $design );
+		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type, $block );
 
 		return is_string( $slug ) && $registry->is_registered( $slug ) ? $slug : null;
 	}

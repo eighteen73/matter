@@ -14,13 +14,10 @@
 	],
 	"usesContext": [
 		"postId",
-		"postType"
+		"postType",
+		"matter/display"
 	],
 	"attributes": {
-		"design": {
-			"type": "string",
-			"default": ""
-		},
 		"itemLabel": {
 			"type": "string",
 			"role": "local"

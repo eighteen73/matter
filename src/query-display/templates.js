@@ -7,8 +7,9 @@
  * scheme and its own settings. It's marked as Matter's (`namespace` on a
  * Query Loop, `collection` on a Product Collection) for its title and the
  * native controls it offers. Its items are fixed: the theme's loop item for
- * a carousel's slides, or an accordion item or tab holding the theme's panel
- * design (a loop item with the `panel` design).
+ * a carousel's slides, or an accordion item or tab holding one. A loop item
+ * picks the theme's pattern for the block it's in (Blocks\LoopItem), e.g.
+ * `loop-item-faq-accordion`.
  */
 
 export const POSTS = 'core/query';
@@ -34,13 +35,11 @@ export const NAMESPACES = {
 export const POSTS_NAMESPACE = NAMESPACES.carousel;
 export const PRODUCTS_COLLECTION = 'matter/product-collection/carousel';
 
-const PANEL = ['matter/loop-item', { design: 'panel' }];
-
 // What the post template holds, per type.
 export const ITEMS = {
 	carousel: [['matter/loop-item']],
-	accordion: [['matter/accordion-item', {}, [PANEL]]],
-	tabs: [['matter/tab', {}, [PANEL]]],
+	accordion: [['matter/accordion-item', {}, [['matter/loop-item']]]],
+	tabs: [['matter/tab', {}, [['matter/loop-item']]]],
 };
 
 // Query Loop controls these offer (core's `allowedControls`).

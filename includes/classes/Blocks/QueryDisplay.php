@@ -13,7 +13,8 @@
  * colour scheme apply as for the block itself. Accordion and tabs items are
  * the post template's `matter/accordion-item` or `matter/tab`, recorded by
  * Instances as they render (the query counts as the container), so the tab
- * list and FAQ schema work too. In the editor it's one block: "Posts
+ * list and FAQ schema work too. Their content, and a carousel's slides, are
+ * the theme's loop items for that block (Blocks\LoopItem). In the editor it's one block: "Posts
  * carousel", "Posts accordion" or "Posts tabs", with the block's settings and
  * the query's own filters (editor/extensions/query-display).
  *
@@ -49,27 +50,40 @@ final class QueryDisplay {
 	public const BLOCKS = [ 'core/query', 'woocommerce/product-collection' ];
 
 	/**
-	 * Display types: the block each wraps the query in, and the query blocks
-	 * it supports (products are carousels only).
+	 * Display types: the block each wraps the query in, the query blocks it
+	 * supports (products are carousels only), and whether its loop items can
+	 * fall back to the item's own design (a card). An accordion's or tabs'
+	 * can't: the post's title is already the heading or tab.
 	 */
 	public const TYPES = [
 		'carousel'  => [
 			'block'   => 'matter/carousel',
 			'queries' => self::BLOCKS,
+			'cards'   => true,
 		],
 		'accordion' => [
 			'block'   => 'matter/accordion',
 			'queries' => [ 'core/query' ],
+			'cards'   => false,
 		],
 		'tabs'      => [
 			'block'   => 'matter/tabs',
 			'queries' => [ 'core/query' ],
+			'cards'   => false,
 		],
 	];
 
 	/**
+	 * Types of the displayed queries currently rendering, by block object ID
+	 * (innermost last).
+	 *
+	 * @var array<int, string>
+	 */
+	private static array $rendering = [];
+
+	/**
 	 * Each item of an accordion or tabs query: the block, with the theme's
-	 * panel design (a loop item) inside.
+	 * loop item for it inside.
 	 */
 	private const ITEMS = [
 		'accordion' => 'matter/accordion-item',
@@ -87,7 +101,9 @@ final class QueryDisplay {
 
 		// Before Instances finishes the query (10), so the block sees its items.
 		add_filter( 'render_block', [ $this, 'render' ], 5, 3 );
+		add_filter( 'render_block_data', [ $this, 'start' ], 10, 3 );
 		add_filter( 'render_block_context', [ $this, 'item_context' ], 10, 2 );
+		add_filter( 'render_block_context', [ $this, 'loop_item_context' ], 10, 2 );
 		add_action( 'rest_api_init', [ $this, 'register_route' ] );
 	}
 
@@ -171,6 +187,56 @@ final class QueryDisplay {
 	}
 
 	/**
+	 * A displayed query's first child is about to render: note its type, so
+	 * loop items inside know which block they're in. Keyed on the query's
+	 * block object (like Instances), so it holds however the query renders.
+	 *
+	 * @param array         $parsed_block Parsed block about to render.
+	 * @param array         $source_block Original parsed block.
+	 * @param WP_Block|null $parent_block Parent block instance.
+	 * @return array
+	 */
+	public function start( array $parsed_block, array $source_block = [], ?WP_Block $parent_block = null ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
+		if ( null === $parent_block || isset( self::$rendering[ spl_object_id( $parent_block ) ] ) ) {
+			return $parsed_block;
+		}
+
+		$display = self::of( $parent_block->name, $parent_block->attributes );
+
+		if ( null !== $display ) {
+			self::$rendering[ spl_object_id( $parent_block ) ] = $display['type'];
+		}
+
+		return $parsed_block;
+	}
+
+	/**
+	 * The block the innermost displayed query rendering is shown as.
+	 *
+	 * @return string Type (carousel, accordion or tabs), or empty outside one.
+	 */
+	public static function current(): string {
+		return self::$rendering ? (string) end( self::$rendering ) : '';
+	}
+
+	/**
+	 * Loop items get the type of the displayed query they're in, which picks
+	 * their pattern (Blocks\LoopItem).
+	 *
+	 * @param array $context      Block context.
+	 * @param array $parsed_block Parsed block.
+	 * @return array
+	 */
+	public function loop_item_context( array $context, array $parsed_block ): array {
+		if ( 'matter/loop-item' === ( $parsed_block['blockName'] ?? '' ) && '' !== self::current() ) {
+			// As the editor's context: the query's display (here, its type).
+			$context['matter/display'] = [ 'type' => self::current() ];
+		}
+
+		return $context;
+	}
+
+	/**
 	 * Render a displayed query's output inside its block.
 	 *
 	 * @param string        $content Rendered query.
@@ -179,6 +245,10 @@ final class QueryDisplay {
 	 * @return string
 	 */
 	public function render( string $content, array $block, ?WP_Block $instance = null ): string {
+		if ( null !== $instance ) {
+			unset( self::$rendering[ spl_object_id( $instance ) ] );
+		}
+
 		if ( ! in_array( $block['blockName'] ?? '', self::BLOCKS, true ) || '' === trim( $content ) ) {
 			return $content;
 		}
@@ -249,8 +319,8 @@ final class QueryDisplay {
 	/**
 	 * `POST matter/v1/query-display`: an accordion or tabs query rendered as
 	 * on the front end, with the styles it enqueued, for the editor preview.
-	 * Its items are always Matter's (the item block and the theme's panel),
-	 * whatever the request.
+	 * Its items are always Matter's (the item block and the theme's loop item
+	 * for it), whatever the request.
 	 *
 	 * @return void
 	 */
@@ -303,15 +373,14 @@ final class QueryDisplay {
 
 	/**
 	 * A displayed query with Matter's items: the post template holds the
-	 * item block, which holds the theme's panel design.
+	 * item block, which holds the theme's loop item.
 	 *
 	 * @param array  $attributes Query attributes.
 	 * @param string $type       Display type (accordion or tabs).
 	 * @return array Parsed block.
 	 */
 	public static function query_block( array $attributes, string $type ): array {
-		$panel = self::parsed( 'matter/loop-item', [ 'design' => 'panel' ] );
-		$item  = self::parsed( self::ITEMS[ $type ], [], [ $panel ] );
+		$item = self::parsed( self::ITEMS[ $type ], [], [ self::parsed( 'matter/loop-item' ) ] );
 
 		return self::parsed(
 			'core/query',

@@ -17,7 +17,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 - **Site settings:** config-driven fields, a React settings page, `Matter\setting()` and the `matter/setting` bindings source.
 - **Extensions:** button icon (icon registry, chosen from a core-style icon library; `matter_icon_collections`) and focal point (image blocks and featured images).
 - Theme-owned breakpoints (`matter_breakpoints`).
-- **Loop items:** `matter/loop-item` shows the theme's pattern for an item (`{theme}/loop-item-{post_type}`, else `{theme}/loop-item`; `matter_loop_item_pattern`) in every loop and carousel, previewed in the editor as on the front end.
+- **Loop items:** `matter/loop-item` shows the theme's pattern for an item (`{theme}/loop-item-{post_type}`, else `{theme}/loop-item`; `matter_loop_item_pattern`) in every loop and carousel, previewed in the editor as on the front end. Carousels, accordions and tabs of posts can have their own (`loop-item-{post_type}-accordion`, `loop-item-accordion`…), in a template-hierarchy order.
 - **Theme contract:** the README lists what themes and saved content depend on, which changes only in a major version.
 - **Theme template parts:** `matter/template-part` renders a PHP file from the theme's `template-parts/` folder in block templates (from Pulsar's `pulsar/template-part`). Its editor preview includes the styles the part enqueues, such as menus and panels.
 - **Allowed blocks:** the theme's list (`matter_allowed_blocks`, with `namespace/*` wildcards) is enforced in the post editor.
@@ -26,7 +26,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 
 ### Changed
 
-- **Accordion:** two blocks (accordion, item), with FAQ schema output inline. An accordion of posts is a Query Loop shown as one ("Posts accordion"), each panel the theme's `panel` design; accordions from before that held a query convert when opened.
+- **Accordion:** two blocks (accordion, item), with FAQ schema output inline. An accordion of posts is a Query Loop shown as one ("Posts accordion"), its content the theme's `loop-item-accordion` pattern (or a post type's own); accordions from before that held a query convert when opened.
 - **Tabs:** two blocks (tabs, tab). Tabs of posts are a Query Loop shown as tabs ("Posts tabs"), converted from before as for accordions. The tab list is built on the server. Horizontal or vertical, optional tab icons (chosen on the block toolbar), tabs removed with Backspace in an empty name or "Delete tab", and optionally a dropdown on smaller screens (showing tab icons), where the theme sets the breakpoint.
 - **Carousel:** one block. Slides are its inner blocks, and behaviour comes from variants. A carousel of posts or products is the Query Loop or Product Collection itself (`matterDisplay`), shown as "Posts carousel" and "Products carousel" with the query's own filters; carousels from before that held a query convert when opened.
 - **Gallery:** grid or carousel layout, with a native `<dialog>` lightbox. Editors choose the columns (from the theme's choices) and an aspect ratio preset; the theme sets the image size. The grid can show the first N images, in whole rows at any width, with a "View all" button. Images are managed in the media library's gallery mode, as in core's Gallery. Captions show behind an info button, over the image or not at all (the theme sets the default), and in the lightbox. Embla is now bundled once.
