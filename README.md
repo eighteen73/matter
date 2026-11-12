@@ -103,7 +103,6 @@ A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, 
 - **Inserting:** a carousel's picker offers posts and products, which replace the carousel block with the query. In the post editor the three posts variations and "Products carousel" replace the plain Query Loop and Product Collection (and WooCommerce's other collections) in the inserter; the Site Editor keeps those for templates.
 - Wherever the theme allows `matter/carousel`, `matter/accordion` or `matter/tabs`, Matter also allows the query blocks they use, so they can be inserted, duplicated, pasted and moved. The theme's list doesn't name them.
 - If Matter's handling ever stops, the live site shows the query as a normal list. Saving the page in the editor then drops `matterDisplay`, and it stays a list.
-- A carousel, accordion or tabs block holding a query (from before) becomes the query when opened, keeping its style, scheme and settings.
 
 ## Sections
 

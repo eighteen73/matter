@@ -20,7 +20,7 @@ import {
 } from '@wordpress/components';
 import { useCopyToClipboard } from '@wordpress/compose';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { PluginSidebar } from '@wordpress/editor';
+import { PluginSidebar, store as editorStore } from '@wordpress/editor';
 import { __, sprintf } from '@wordpress/i18n';
 import { moreVertical } from '@wordpress/icons';
 import { registerPlugin } from '@wordpress/plugins';
@@ -138,19 +138,32 @@ function OverlayItem({ clientId }) {
 
 function OverlaysSidebar() {
 	const ids = useSelect((select) => getOverlayIds(select, LISTED), []);
+	// Where new overlays go: the post's content. Editing a page with its
+	// template shown, that's the Post Content block, not the top level
+	// (which is the template, and locked).
+	const rootId = useSelect((select) => {
+		const isTemplateShown =
+			select(editorStore).getRenderingMode?.() === 'template-locked';
+
+		return isTemplateShown
+			? (select(blockEditorStore).getBlocksByName(
+					'core/post-content'
+				)[0] ?? '')
+			: '';
+	}, []);
 	// Joined, so the selector returns a stable value.
 	const canInsert = useSelect(
 		(select) =>
 			ADDABLE.filter(([name]) =>
-				select(blockEditorStore).canInsertBlockType(name, '')
+				select(blockEditorStore).canInsertBlockType(name, rootId)
 			)
 				.map(([name]) => name)
 				.join(','),
-		[]
+		[rootId]
 	);
 	const blockCount = useSelect(
-		(select) => select(blockEditorStore).getBlockCount(''),
-		[]
+		(select) => select(blockEditorStore).getBlockCount(rootId),
+		[rootId]
 	);
 	const { insertBlock } = useDispatch(blockEditorStore);
 
@@ -190,7 +203,11 @@ function OverlaysSidebar() {
 								// At the end: where it sits doesn't matter, and
 								// selecting it opens it.
 								onClick={() =>
-									insertBlock(createBlock(name), blockCount)
+									insertBlock(
+										createBlock(name),
+										blockCount,
+										rootId
+									)
 								}
 							>
 								{label}

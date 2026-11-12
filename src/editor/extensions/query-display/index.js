@@ -27,11 +27,9 @@ import {
 	getBlockType,
 	getBlockVariations,
 	registerBlockVariation,
-	store as blocksStore,
 	unregisterBlockVariation,
 } from '@wordpress/blocks';
 import { createHigherOrderComponent } from '@wordpress/compose';
-import { dispatch } from '@wordpress/data';
 import domReady from '@wordpress/dom-ready';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
@@ -101,6 +99,9 @@ const withDisplay = (settings) => ({
 	},
 });
 
+// Also reaches blocks registered before this script (e.g. WooCommerce's
+// Product Collection): the post and site editors reapply block type filters
+// when they start.
 addFilter(
 	'blocks.registerBlockType',
 	'matter/query-display/attribute',
@@ -108,21 +109,8 @@ addFilter(
 		QUERY_BLOCKS.includes(name) ? withDisplay(settings) : settings
 );
 
-const addAttributeToRegistered = () =>
-	QUERY_BLOCKS.forEach((name) => {
-		const blockType = getBlockType(name);
-
-		if (blockType && !blockType.attributes?.[ATTRIBUTE]) {
-			dispatch(blocksStore).addBlockTypes(withDisplay(blockType));
-		}
-	});
-
-addAttributeToRegistered();
-
 // After the blocks register (their icons) and WooCommerce's registry loads.
 domReady(() => {
-	addAttributeToRegistered();
-
 	Object.entries(POSTS_VARIATIONS).forEach(([type, variation]) => {
 		const [, attributes] = postsTemplate(type, 'post');
 

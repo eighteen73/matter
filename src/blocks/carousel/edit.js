@@ -40,7 +40,6 @@ import {
 } from '../../components/gallery-media';
 import SlidePicker, { themeSlideTypes } from './slide-picker';
 import { QUERY_BLOCKS } from '../../query-display/templates';
-import { useLegacyQuery } from '../../query-display/use-legacy-query';
 
 // With theme slide types, slides are limited to them and images. Posts and
 // products carousels are query blocks of their own.
@@ -81,7 +80,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	// A carousel holding a Query Loop or Product Collection (made before
 	// those were carousels themselves) becomes that query.
-	useLegacyQuery(clientId, 'carousel', attributes, ['label']);
 
 	// Image-only carousels (e.g. a slideshow) are managed like a gallery.
 	const media = useGalleryMedia(clientId);
