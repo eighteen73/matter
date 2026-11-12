@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter-test/section",
+	"title": "Test section",
+	"category": "sections",
+	"supports": {
+		"html": false,
+		"anchor": true,
+		"matter": {
+			"scheme": true,
+			"align": "full",
+			"slots": {
+				"content": {
+					"allowedBlocks": [ "core/heading", "core/paragraph" ],
+					"template": [ [ "core/heading", { "level": 2 } ], [ "core/paragraph" ] ]
+				},
+				"media": {
+					"allowedBlocks": [ "core/image" ],
+					"template": [ [ "core/image" ] ],
+					"templateLock": "contentOnly"
+				}
+			}
+		}
+	}
+}

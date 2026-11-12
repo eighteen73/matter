@@ -48,3 +48,7 @@ tmp/
 vendor/
 bin/composer/**/vendor/
 lib/vendor/
+
+# PHPUnit
+.phpunit.result.cache
+tests/php/__snapshots__/*.actual

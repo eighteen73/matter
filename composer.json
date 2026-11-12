@@ -19,11 +19,14 @@
 		"php": ">=8.3"
 	},
 	"require-dev": {
-		"eighteen73/wordpress-coding-standards": "^2.0.0"
+		"eighteen73/wordpress-coding-standards": "^2.0.0",
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^4.0"
 	},
 	"scripts": {
 		"lint": "./vendor/bin/phpcs",
-		"format": "./vendor/bin/phpcbf"
+		"format": "./vendor/bin/phpcbf",
+		"test": "./vendor/bin/phpunit"
 	},
 	"config": {
 		"allow-plugins": {

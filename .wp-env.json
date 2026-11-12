@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/wp-env.json",
+	"core": "WordPress/WordPress#7.1",
+	"phpVersion": "8.3",
+	"plugins": [ "https://downloads.wordpress.org/plugin/woocommerce.10.9.4.zip" ],
+	"themes": [ "./tests/fixtures/matter-test-theme" ],
+	"mappings": {
+		"wp-content/mu-plugins/matter": ".",
+		"wp-content/mu-plugins/matter-loader.php": "./tests/wp-env/matter-loader.php"
+	},
+	"config": {
+		"WP_DEVELOPMENT_MODE": "theme"
+	},
+	"lifecycleScripts": {
+		"afterStart": "wp-env run cli wp theme activate matter-test-theme && wp-env run tests-cli wp theme activate matter-test-theme"
+	}
+}

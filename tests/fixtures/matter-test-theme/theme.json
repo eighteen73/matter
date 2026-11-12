@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"color": {
+			"palette": [
+				{ "name": "Base", "slug": "base", "color": "#ffffff" },
+				{ "name": "Contrast", "slug": "contrast", "color": "#111111" },
+				{ "name": "Brand", "slug": "brand", "color": "#1d2b4f" }
+			]
+		},
+		"dimensions": {
+			"aspectRatios": [
+				{ "name": "Square", "slug": "square", "ratio": "1" },
+				{ "name": "16:9", "slug": "16-9", "ratio": "16/9" }
+			]
+		},
+		"custom": {
+			"scheme": {
+				"default": {
+					"background": "var:preset|color|base",
+					"text": "var:preset|color|contrast",
+					"border": "var:preset|color|contrast"
+				},
+				"brand": {
+					"background": "var:preset|color|brand",
+					"text": "var:preset|color|base",
+					"border": "var:preset|color|base"
+				}
+			}
+		}
+	}
+}
