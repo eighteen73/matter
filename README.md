@@ -438,7 +438,7 @@ Marketing teams and clients can add content above and below an archive's list, a
 <!-- /wp:matter/archive-content -->
 ```
 
-It renders the archive's **Archive** entry (post type `matter_archive`). Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". In the editor it previews the real list for the archive. Without the block, the list goes at the end.
+It renders the archive's **Archive** entry (post type `matter_archive`). Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". If it's removed anyway (by grouping it first), it can be added again from the inserter, which offers it only in entries and only once. In the editor it previews the real list for the archive. Without the block, the list goes at the end.
 
 **Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), `search` or `404`. Matter looks in this order:
 1. the term's entry;

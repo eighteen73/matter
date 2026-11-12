@@ -75,6 +75,8 @@ class Archives {
 		add_filter( 'preview_post_link', [ $this, 'preview_link' ], 10, 2 );
 		add_filter( 'render_block_core/paragraph', [ $this, 'drop_empty_bound_paragraph' ], 10, 2 );
 		add_filter( 'rest_request_after_callbacks', [ $this, 'hide_from_post_type_list' ], 10, 3 );
+		// After the theme's list (AllowedBlocks, 10) and the query blocks (20).
+		add_filter( 'allowed_block_types_all', [ $this, 'allow_archive_loop' ], 30, 2 );
 
 		Admin::instance()->setup();
 	}
@@ -105,6 +107,33 @@ class Archives {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * The archive list block can be added only to an entry, and there only
+	 * once (`supports.multiple`), so it can be put back if it's removed (it
+	 * can't be deleted on its own, but can by grouping it first).
+	 *
+	 * @param array|bool               $allowed_blocks Block names, or true/false for all/none.
+	 * @param \WP_Block_Editor_Context $editor_context Editor context.
+	 * @return array|bool
+	 */
+	public function allow_archive_loop( array|bool $allowed_blocks, \WP_Block_Editor_Context $editor_context ): array|bool {
+		$block = 'matter/archive-loop';
+
+		if ( false === $allowed_blocks ) {
+			return false;
+		}
+
+		if ( self::POST_TYPE === ( $editor_context->post->post_type ?? '' ) ) {
+			return is_array( $allowed_blocks ) ? array_values( array_unique( [ ...$allowed_blocks, $block ] ) ) : $allowed_blocks;
+		}
+
+		if ( true === $allowed_blocks ) {
+			$allowed_blocks = array_keys( \WP_Block_Type_Registry::get_instance()->get_all_registered() );
+		}
+
+		return array_values( array_diff( $allowed_blocks, [ $block ] ) );
 	}
 
 	/**

@@ -17,7 +17,7 @@
 	},
 	"supports": {
 		"html": false,
-		"inserter": false,
+		"inserter": true,
 		"multiple": false,
 		"reusable": false,
 		"lock": false,
