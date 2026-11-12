@@ -119,16 +119,6 @@
 	padding: 0;
 	transition: opacity 200ms;
 
-	// Exit transitions keep the dialog in the top layer while it fades
-	// (`overlay`); without that, it would show in the page as it closed,
-	// so browsers that lack it close at once.
-	@supports (overlay: auto) {
-		transition:
-			opacity 200ms,
-			overlay 200ms allow-discrete,
-			display 200ms allow-discrete;
-	}
-
 	.wp-block-matter-gallery__figure {
 		scale: 0.95;
 		transition: scale 200ms;
@@ -156,15 +146,6 @@
 		opacity: 0;
 		transition: opacity 200ms;
 
-		// Exit transitions keep the dialog in the top layer while it fades
-		// (`overlay`); without that, it would show in the page as it closed,
-		// so browsers that lack it close at once.
-		@supports (overlay: auto) {
-			transition:
-				opacity 200ms,
-				overlay 200ms allow-discrete,
-				display 200ms allow-discrete;
-		}
 	}
 
 	&[open]::backdrop {
@@ -173,6 +154,21 @@
 		@starting-style {
 			opacity: 0;
 		}
+	}
+
+	// Closing: the lightbox stays open while these transitions run, then
+	// closes (interactivity/dialog.js), so the exit animates in every
+	// browser.
+	&[open].is-closing {
+		opacity: 0;
+
+		.wp-block-matter-gallery__figure {
+			scale: 0.95;
+		}
+	}
+
+	&[open].is-closing::backdrop {
+		opacity: 0;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

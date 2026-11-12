@@ -58,6 +58,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 - **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate): the dialog has `closedby="none"`, and reopens if the browser closes it anyway. A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
 - **Backdrop clicks** close a modal or drawer only when pressed on the backdrop, not when a drag (e.g. selecting text) ends there.
 - **Scroll lock:** while a modal or drawer is open, `<html>` has `has-overlay-open` and the page doesn't scroll.
+- **Closing animates in every browser:** a closing modal, drawer or gallery lightbox stays open with `is-closing` while its transitions run, then closes (up to a second). Style a theme's exit on `[open].is-closing` (e.g. `.wp-block-matter-modal[open].is-closing { opacity: 0; }`); the entry uses `@starting-style`. Without a transition (reduced motion) it closes at once, and reopening while closing cancels it.
 
 **In the editor**, the canvas shows what the front end shows.
 - **Closed:** only the trigger area shows (when "Trigger on the page" is on). An overlay without a trigger takes no space.

@@ -35,6 +35,7 @@ import {
 	resolve,
 } from '../../interactivity/api';
 import { isBackdropClick } from '../../interactivity/backdrop';
+import { cancelClose, closeDialog } from '../../interactivity/dialog';
 
 const SELECTOR = '.wp-block-matter-gallery';
 
@@ -66,6 +67,9 @@ const show = (element, context, index) => {
 	context.index = Math.min(Math.max(0, index), context.images.length - 1);
 	context.opened = true;
 	announced.set(element.closest(SELECTOR), context.index);
+
+	// Reopened while closing.
+	cancelClose(dialog);
 
 	if (!dialog.open) {
 		dialog.showModal();
@@ -132,7 +136,7 @@ const { actions } = store('matter/gallery', {
 					return context.images.length;
 				},
 				open: withScope((index = 0) => show(ref, context, index)),
-				close: () => getDialog(ref)?.close(),
+				close: () => closeDialog(getDialog(ref)),
 				next: () => step(1),
 				prev: () => step(-1),
 			};
@@ -356,7 +360,7 @@ const { actions } = store('matter/gallery', {
 				return;
 			}
 
-			getDialog(getElement().ref)?.close();
+			closeDialog(getDialog(getElement().ref));
 		},
 		prev(target) {
 			if (!fromDirective(target)) {
@@ -383,7 +387,12 @@ const { actions } = store('matter/gallery', {
 			context.index = (context.index + 1) % context.images.length;
 		},
 		onKeydown: withSyncEvent((event) => {
-			if (event.key === 'ArrowLeft') {
+			if (event.key === 'Escape') {
+				// Close with the closing transition, rather than the
+				// browser's instant close.
+				event.preventDefault();
+				closeDialog(getElement().ref);
+			} else if (event.key === 'ArrowLeft') {
 				event.preventDefault();
 				actions.prev();
 			} else if (event.key === 'ArrowRight') {
@@ -395,7 +404,7 @@ const { actions } = store('matter/gallery', {
 			const { ref } = getElement();
 
 			if (isBackdropClick(event, ref)) {
-				ref.close();
+				closeDialog(ref);
 			}
 		}),
 		onClose() {

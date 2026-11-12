@@ -41,6 +41,7 @@ import {
  */
 import { registerInstance, registerType } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
+import { cancelClose, closeDialog, isClosing } from '../interactivity/dialog';
 
 const SELECTOR =
 	'[data-wp-interactive="matter/overlay"][data-wp-watch="callbacks.sync"]';
@@ -525,7 +526,10 @@ const { state, actions } = store('matter/overlay', {
 			const isOpen = !!item?.isOpen;
 
 			if (isDialog(id)) {
-				if (isOpen && !ref.open) {
+				if (isOpen && isClosing(ref)) {
+					// Reopened while closing.
+					cancelClose(ref);
+				} else if (isOpen && !ref.open) {
 					// Inside a closed tab, accordion item, collapsible or dialog,
 					// open that first, then this once it's shown.
 					if (revealContainers(ref)) {
@@ -534,7 +538,8 @@ const { state, actions } = store('matter/overlay', {
 						showDialog(ref, id);
 					}
 				} else if (!isOpen && ref.open) {
-					ref.close();
+					// After its closing transition (interactivity/dialog).
+					closeDialog(ref);
 				}
 
 				syncDocumentClass();
@@ -587,10 +592,16 @@ const { state, actions } = store('matter/overlay', {
 
 			syncDocumentClass();
 		},
-		// Escape: ignored by dialogs that can't be closed.
+		// Escape: ignored by dialogs that can't be closed; others close as
+		// any close does, with their closing transition. (Chromium may not
+		// let a repeated Escape be prevented: onClose handles that.)
 		onCancel: withSyncEvent((event) => {
-			if (state.items[getContext().id]?.dismissible === false) {
-				event.preventDefault();
+			const item = state.items[getContext().id];
+
+			event.preventDefault();
+
+			if (item && item.dismissible !== false) {
+				item.isOpen = false;
 			}
 		}),
 		// Clicking the ::backdrop targets the dialog itself (pressed there

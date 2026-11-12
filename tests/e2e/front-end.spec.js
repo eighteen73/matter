@@ -146,6 +146,31 @@ test.describe('overlays', () => {
 	});
 });
 
+test.describe('overlays, with motion', () => {
+	test.use({
+		viewport: DESKTOP,
+		contextOptions: {
+			reducedMotion: 'no-preference',
+			strictSelectors: true,
+		},
+	});
+
+	test('closing animates out, then closes', async ({ page }) => {
+		await page.goto(kitchenSink.link);
+
+		const drawer = page.locator('#filters');
+
+		await page.getByRole('link', { name: 'Filters' }).click();
+		await expect(drawer).toHaveAttribute('open', '');
+		await drawer.locator('.wp-block-matter-drawer__close').click();
+
+		// Still open while it slides out (in every browser), then closed.
+		await expect(drawer).toHaveClass(/\bis-closing\b/);
+		await expect(drawer).not.toHaveAttribute('open', '');
+		await expect(drawer).not.toHaveClass(/\bis-closing\b/);
+	});
+});
+
 test.describe('carousel', () => {
 	test.use({
 		viewport: DESKTOP,
