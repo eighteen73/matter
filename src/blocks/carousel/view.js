@@ -57,6 +57,15 @@ const instances = new WeakMap();
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /**
+ * Whether a scroll should jump rather than animate: when asked, or when the
+ * visitor prefers reduced motion.
+ *
+ * @param {boolean} instant Asked for.
+ * @return {boolean} Jump.
+ */
+const jump = (instant = false) => instant || reducedMotion.matches;
+
+/**
  * Minimal sprintf for translated labels: `%1$d`, `%2$d` and `%d`.
  *
  * @param {string}    template Label template.
@@ -135,7 +144,9 @@ const updateUi = (embla, root, context) => {
 						'aria-label',
 						format(context.labels.goTo, index + 1)
 					);
-					dot.addEventListener('click', () => embla.scrollTo(index));
+					dot.addEventListener('click', () =>
+						embla.scrollTo(index, jump())
+					);
 
 					return dot;
 				})
@@ -272,6 +283,16 @@ store('matter/carousel', {
 				context.isPlaying = false;
 			}
 
+			// Nothing moves by itself for visitors who prefer reduced motion,
+			// so there's nothing to pause.
+			if (!canMove) {
+				own(ref, '.wp-block-matter-carousel__play').forEach(
+					(button) => {
+						button.hidden = true;
+					}
+				);
+			}
+
 			const embla = EmblaCarousel(
 				viewport,
 				{ ...context.options, container: queryList || track },
@@ -301,12 +322,19 @@ store('matter/carousel', {
 					String(clamp(embla.scrollProgress()))
 				);
 
+			// Paused with the pause button or the API. Embla's plugins start
+			// again by themselves (pointer leaving, focus leaving, a swipe
+			// ending, reInit), which must not override a pause (WCAG 2.2.2).
+			let isPaused = false;
+
 			const setPlaying = withScope((isPlaying) => {
 				const plugin = motion();
 
 				if (!plugin || context.isPlaying === isPlaying) {
 					return;
 				}
+
+				isPaused = !isPlaying;
 
 				if (isPlaying) {
 					plugin.play();
@@ -318,6 +346,11 @@ store('matter/carousel', {
 				ref.classList.toggle('is-playing', isPlaying);
 				emit(ref, 'carousel', isPlaying ? 'play' : 'pause');
 			});
+
+			// The plugins announce they're playing before they start their
+			// timer, so stop them just after.
+			const holdPause = () =>
+				window.queueMicrotask(() => isPaused && motion()?.stop());
 
 			// Restart the countdown (timer part) whenever a slide's timer starts.
 			const restartTimer = () => {
@@ -357,6 +390,8 @@ store('matter/carousel', {
 							)
 						);
 				})
+				.on('autoplay:play', holdPause)
+				.on('autoScroll:play', holdPause)
 				.on('autoplay:timerset', restartTimer)
 				.on('autoplay:timerstopped', () =>
 					ref.classList.remove('is-timing')
@@ -371,7 +406,11 @@ store('matter/carousel', {
 
 					if (thumbnail) {
 						embla.scrollTo(
-							snapForSlide(embla, Number(thumbnail.dataset.index))
+							snapForSlide(
+								embla,
+								Number(thumbnail.dataset.index)
+							),
+							jump()
 						);
 					}
 				})
@@ -423,11 +462,11 @@ store('matter/carousel', {
 					return embla;
 				},
 				goTo: (index, instant = false) =>
-					embla.scrollTo(index, instant),
+					embla.scrollTo(index, jump(instant)),
 				goToSlide: (slide, instant = false) =>
-					embla.scrollTo(snapForSlide(embla, slide), instant),
-				next: (instant = false) => embla.scrollNext(instant),
-				prev: (instant = false) => embla.scrollPrev(instant),
+					embla.scrollTo(snapForSlide(embla, slide), jump(instant)),
+				next: (instant = false) => embla.scrollNext(jump(instant)),
+				prev: (instant = false) => embla.scrollPrev(jump(instant)),
 				play: () => setPlaying(true),
 				pause: () => setPlaying(false),
 				reInit: (options) => embla.reInit(options),
