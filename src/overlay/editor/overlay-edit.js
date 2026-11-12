@@ -29,7 +29,7 @@ import {
 } from '@wordpress/components';
 import { useCopyToClipboard } from '@wordpress/compose';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect, useState } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 /**
@@ -37,46 +37,7 @@ import { __, sprintf } from '@wordpress/i18n';
  */
 import UrlTriggersControl from './url-triggers-control';
 import useSlots from '../../editor/components/use-slots';
-
-const randomSuffix = () => Math.random().toString(36).slice(2, 7);
-
-/**
- * Give the block a unique overlay ID: one on insert, and a new one when the
- * block is duplicated (duplicates copy attributes).
- *
- * @param {string}   clientId      Block client ID.
- * @param {string}   overlayId     Current ID.
- * @param {string}   type          Overlay type.
- * @param {Function} setAttributes Attribute setter.
- */
-const useUniqueOverlayId = (clientId, overlayId, type, setAttributes) => {
-	const isDuplicate = useSelect(
-		(select) => {
-			if (!overlayId) {
-				return false;
-			}
-
-			const { getClientIdsWithDescendants, getBlockAttributes } =
-				select(blockEditorStore);
-			const ids = getClientIdsWithDescendants();
-
-			return ids.some(
-				(id) =>
-					id !== clientId &&
-					getBlockAttributes(id)?.overlayId === overlayId &&
-					// The first block keeps the ID; later copies change.
-					ids.indexOf(id) < ids.indexOf(clientId)
-			);
-		},
-		[clientId, overlayId]
-	);
-
-	useEffect(() => {
-		if (!overlayId || isDuplicate) {
-			setAttributes({ overlayId: `${type}-${randomSuffix()}` });
-		}
-	}, [overlayId, isDuplicate, type, setAttributes]);
-};
+import { IdControl, useStableId } from '../../components/stable-id';
 
 export default function OverlayEdit({
 	type,
@@ -142,7 +103,7 @@ export default function OverlayEdit({
 		window.setTimeout(() => setCopied(false), 2000);
 	});
 
-	useUniqueOverlayId(clientId, overlayId, type, setAttributes);
+	useStableId(clientId, 'overlayId', type);
 
 	// Trigger and content areas: slots declared in each block's block.json.
 	useSlots(clientId, name);
@@ -197,17 +158,12 @@ export default function OverlayEdit({
 				<PanelBody title={__('Settings', 'matter')}>
 					<Flex align="flex-end">
 						<FlexBlock>
-							<TextControl
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-								label={__('ID', 'matter')}
+							<IdControl
+								clientId={clientId}
+								attribute="overlayId"
 								value={overlayId}
 								onChange={(value) =>
-									setAttributes({
-										overlayId: value
-											.toLowerCase()
-											.replace(/[^a-z0-9-_]/g, '-'),
-									})
+									setAttributes({ overlayId: value })
 								}
 							/>
 						</FlexBlock>
