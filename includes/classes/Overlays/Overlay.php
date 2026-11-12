@@ -155,15 +155,18 @@ class Overlay {
 		$dismissible = ! isset( $attributes['dismissible'] ) || ! empty( $attributes['dismissible'] );
 		$label       = trim( (string) ( $attributes['label'] ?? '' ) );
 
+		// `closedby="none"`: browsers that support it ignore Escape and light
+		// dismiss for a dialog that can't be closed (view.js also reopens it).
 		$dialog = sprintf(
-			'<dialog %1$s %2$s aria-label="%3$s" data-wp-on--close="callbacks.onClose" data-wp-on--cancel="callbacks.onCancel" data-wp-on--click="callbacks.onBackdropClick">%4$s<div class="%5$s__content">%6$s%7$s</div></dialog>',
+			'<dialog %1$s %2$s aria-label="%3$s"%8$s data-wp-on--close="callbacks.onClose" data-wp-on--cancel="callbacks.onCancel" data-wp-on--click="callbacks.onBackdropClick">%4$s<div class="%5$s__content">%6$s%7$s</div></dialog>',
 			get_block_wrapper_attributes( array_merge( [ 'id' => $id ], $extra ) ),
 			self::directives( $id ),
 			esc_attr( '' !== $label ? $label : __( 'Dialog', 'matter' ) ),
 			$dismissible ? self::close_button( $class ) : '',
 			esc_attr( $class ),
 			$slots['content'],
-			'' !== $group ? self::group_nav( $class ) : ''
+			'' !== $group ? self::group_nav( $class ) : '',
+			$dismissible ? '' : ' closedby="none"'
 		);
 
 		return '' !== $trigger

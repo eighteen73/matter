@@ -404,9 +404,23 @@ const { state, actions } = store('matter/overlay', {
 			lastStates.set(id, isOpen);
 		},
 		// Native dialog close (Escape, form[method=dialog], dialog.close()).
+		// When Matter closes a dialog, its item is already closed; otherwise
+		// the browser or other code closed it.
 		onClose() {
 			const { id } = getContext();
+			const { ref } = getElement();
 			const item = state.items[id];
+
+			// A dialog that can't be closed reopens: Chromium closes it on a
+			// second Escape (a cancel event it won't let be prevented), and
+			// that mustn't count as dismissing it (e.g. an age gate).
+			if (item?.isOpen && item.dismissible === false) {
+				if (ref.isConnected && !ref.open) {
+					ref.showModal();
+				}
+
+				return;
+			}
 
 			if (item?.isOpen) {
 				item.isOpen = false;
