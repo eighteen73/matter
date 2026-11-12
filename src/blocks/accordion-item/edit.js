@@ -56,7 +56,10 @@ function selectedItem(select) {
  */
 export default function Edit({ attributes, setAttributes, context, clientId }) {
 	const { title, open } = attributes;
-	const { postId, postType } = context;
+	// Only an item in a loop is titled after its post: outside one, postId
+	// is the page being edited.
+	const { queryId, postType } = context;
+	const postId = queryId === undefined ? undefined : context.postId;
 	const level = Math.min(6, Math.max(2, context['matter/headingLevel'] ?? 3));
 	const HeadingTag = `h${level}`;
 	const [postTitle] = useEntityProp('postType', postType, 'title', postId);

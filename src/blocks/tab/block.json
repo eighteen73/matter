@@ -24,7 +24,8 @@
 	},
 	"usesContext": [
 		"postId",
-		"postType"
+		"postType",
+		"queryId"
 	],
 	"supports": {
 		"html": false,

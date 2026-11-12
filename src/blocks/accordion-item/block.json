@@ -27,7 +27,8 @@
 		"matter/autoclose",
 		"matter/openFirst",
 		"postId",
-		"postType"
+		"postType",
+		"queryId"
 	],
 	"supports": {
 		"html": false,

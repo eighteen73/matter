@@ -14,7 +14,8 @@ use Eighteen73\Matter\Blocks\Instances;
 
 $matter_label = trim( (string) ( $attributes['label'] ?? '' ) );
 
-if ( '' === $matter_label && ! empty( $block->context['postId'] ) ) {
+// Only in a loop: elsewhere, postId is the page's own post.
+if ( '' === $matter_label && Instances::in_query_loop() && ! empty( $block->context['postId'] ) ) {
 	$matter_label = get_the_title( (int) $block->context['postId'] );
 }
 

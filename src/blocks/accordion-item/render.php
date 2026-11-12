@@ -2,7 +2,7 @@
 /**
  * Accordion item: a heading button and a panel.
  *
- * Inside a Query Loop an empty title falls back to the post title.
+ * Inside a Query Loop an empty title falls back to the post's title.
  *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered inner blocks.
@@ -15,7 +15,8 @@ use Eighteen73\Matter\Blocks\Instances;
 
 $matter_title = trim( (string) ( $attributes['title'] ?? '' ) );
 
-if ( '' === $matter_title && ! empty( $block->context['postId'] ) ) {
+// Only in a loop: elsewhere, postId is the page's own post.
+if ( '' === $matter_title && Instances::in_query_loop() && ! empty( $block->context['postId'] ) ) {
 	$matter_title = get_the_title( (int) $block->context['postId'] );
 }
 

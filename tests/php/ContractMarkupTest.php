@@ -126,6 +126,42 @@ class ContractMarkupTest extends TestCase {
 	}
 
 	/**
+	 * Only items in a loop are titled after their post; a hand-written item
+	 * on a page doesn't take the page's title.
+	 *
+	 * @return void
+	 */
+	public function test_item_title_fallback_only_in_loops(): void {
+		$page = self::factory()->post->create(
+			[
+				'post_type'  => 'page',
+				'post_title' => 'The page title',
+			]
+		);
+		$post = self::factory()->post->create( [ 'post_title' => 'The post title' ] );
+
+		// As post content renders: with the page as context.
+		$item = parse_blocks( '<!-- wp:matter/accordion --><!-- wp:matter/accordion-item --><!-- wp:paragraph --><p>Answer</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item --><!-- /wp:matter/accordion -->' )[0];
+		$html = ( new \WP_Block(
+			$item,
+			[
+				'postId'   => $page,
+				'postType' => 'page',
+			]
+		) )->render();
+
+		$this->assertStringNotContainsString( 'The page title', $html );
+
+		$loop = $this->render(
+			'<!-- wp:query {"queryId":9,"query":{"perPage":1,"postType":"post","include":[' . $post . '],"inherit":false},"matterDisplay":{"type":"accordion"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/accordion-item --><!-- wp:matter/loop-item /--><!-- /wp:matter/accordion-item --><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->'
+		);
+
+		$this->assertStringContainsString( '<span class="wp-block-matter-accordion-item__title">The post title</span>', $loop );
+	}
+
+	/**
 	 * Posts accordions and tabs take the query's anchor as their ID (once,
 	 * not repeated on the query), and name each item after its post, so
 	 * links to an item survive new posts.
