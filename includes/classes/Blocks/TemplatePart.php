@@ -3,9 +3,9 @@
  * The theme's PHP template parts, for the matter/template-part block.
  *
  * Block templates render version-controlled PHP parts (header, footer…) with
- * `<!-- wp:matter/template-part {"slug":"site-header"} /-->`. A part is any PHP
+ * `<!-- wp:matter/template-part {"slug":"header"} /-->`. A part is any PHP
  * file in the theme's `template-parts/` folder (child theme first); its slug
- * is its path there without `.php`, e.g. `site-header` or `footer/social`.
+ * is its path there without `.php`, e.g. `header` or `footer/social`.
  *
  * The editor previews a part with the stylesheets its render enqueues (e.g.
  * a menu's or panel's, with their generated breakpoint CSS), which core's
