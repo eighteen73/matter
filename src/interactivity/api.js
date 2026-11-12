@@ -12,7 +12,10 @@
  * dispatches `matter-{type}-ready`; `matter.ready( target )` waits for that.
  *
  * Each block's script module bundles this file, so state lives on
- * `window.matter`, shared between them.
+ * `window.matter`, shared between them. A small stub printed in the page's
+ * head (Assets::api_stub()) defines `matter.ready()` and the accessors before
+ * any module loads, so theme scripts can call them early, or on pages
+ * without the block; the first module to load takes over its queue.
  */
 
 const api = () => {
@@ -24,9 +27,58 @@ const api = () => {
 	matter._instances ??= new WeakMap();
 	matter._selectors ??= {};
 	matter._waiting ??= [];
-	matter.ready ??= ready;
+
+	if (matter._stub || !matter.ready) {
+		const queued = matter._queue ?? [];
+
+		matter._stub = false;
+		matter._queue = [];
+		matter.ready = ready;
+		queued.forEach(([target, resolvePromise]) =>
+			ready(target).then(resolvePromise)
+		);
+	}
 
 	return matter;
+};
+
+/**
+ * A target as an element.
+ *
+ * @param {string|Element} target Element ID or element.
+ * @return {Element|null} Element.
+ */
+const toElement = (target) => {
+	const element =
+		typeof target === 'string' ? document.getElementById(target) : target;
+
+	return element instanceof window.Element ? element : null;
+};
+
+/**
+ * The Matter block a target refers to, of any type: the target itself if
+ * it's one (even if it hasn't started yet, so a block nested inside it isn't
+ * mistaken for it), else the first block inside it in page order, else the
+ * block around it.
+ *
+ * @param {string|Element} target Element ID or element.
+ * @return {Element|null} Block element.
+ */
+const blockFor = (target) => {
+	const element = toElement(target);
+	const selectors = Object.values(api()._selectors);
+
+	if (!element || !selectors.length) {
+		return null;
+	}
+
+	if (selectors.some((selector) => element.matches(selector))) {
+		return element;
+	}
+
+	const any = selectors.join(',');
+
+	return element.querySelector(any) ?? element.closest(any);
 };
 
 /**
@@ -37,10 +89,9 @@ const api = () => {
  * @return {Element|null} Block element.
  */
 export function resolve(target, selector) {
-	const element =
-		typeof target === 'string' ? document.getElementById(target) : target;
+	const element = toElement(target);
 
-	if (!(element instanceof window.Element)) {
+	if (!element) {
 		return null;
 	}
 
@@ -60,31 +111,14 @@ function ready(target) {
 
 	return new Promise((resolvePromise) => {
 		const find = () => {
-			// The target itself first, then a block inside (or around) it.
-			const own = matter._instances.get(
-				typeof target === 'string'
-					? document.getElementById(target)
-					: target
-			);
+			const element = blockFor(target);
+			const entry = element && matter._instances.get(element);
 
-			if (own) {
-				resolvePromise(own.instance);
-
-				return true;
+			if (entry) {
+				resolvePromise(entry.instance);
 			}
 
-			for (const selector of Object.values(matter._selectors)) {
-				const element = resolve(target, selector);
-				const entry = element && matter._instances.get(element);
-
-				if (entry) {
-					resolvePromise(entry.instance);
-
-					return true;
-				}
-			}
-
-			return false;
+			return !!entry;
 		};
 
 		if (!find()) {
@@ -103,7 +137,13 @@ export function registerType(type, selector) {
 	const matter = api();
 
 	matter._selectors[type] = selector;
-	matter[type] ??= (target) => {
+
+	// The head stub's placeholder (returns null) gives way to the real one.
+	if (matter[type] && !matter[type]._stub) {
+		return;
+	}
+
+	matter[type] = (target) => {
 		const element = resolve(target, selector);
 
 		return element

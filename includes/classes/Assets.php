@@ -46,6 +46,36 @@ class Assets {
 	 */
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register' ], 9 );
+		add_action( 'wp_head', [ $this, 'print_api_stub' ], 1 );
+	}
+
+	/**
+	 * Block types with a `matter.{type}()` accessor.
+	 */
+	public const API_TYPES = [ 'accordion', 'carousel', 'gallery', 'overlay', 'panel', 'tabs' ];
+
+	/**
+	 * A small `window.matter` for theme scripts that run before Matter's
+	 * modules load, or on pages without the block: `matter.ready()` queues
+	 * until a module takes over (src/interactivity/api.js), and each
+	 * `matter.{type}()` returns null until then.
+	 *
+	 * @return string
+	 */
+	public static function api_stub(): string {
+		return sprintf(
+			'(function(m){if(m.ready)return;var q=m._queue=[];m._stub=true;m.ready=function(t){return new Promise(function(r){q.push([t,r]);});};%s.forEach(function(t){var f=function(){return null;};f._stub=true;m[t]=f;});})(window.matter=window.matter||{});',
+			wp_json_encode( self::API_TYPES )
+		);
+	}
+
+	/**
+	 * Print the API stub in the page's head.
+	 *
+	 * @return void
+	 */
+	public function print_api_stub(): void {
+		wp_print_inline_script_tag( self::api_stub(), [ 'id' => 'matter-api' ] );
 	}
 
 	/**
