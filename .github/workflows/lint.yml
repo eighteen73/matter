@@ -37,12 +37,10 @@ jobs:
           php-version: '8.3'
           tools: composer:v2
 
-      # Node 24: wp-env 12 depends on WordPress Playground packages that
-      # need it (the build itself works on .nvmrc's version too).
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version-file: '.nvmrc'
           cache: npm
 
       # Installs Composer dependencies too (postinstall).

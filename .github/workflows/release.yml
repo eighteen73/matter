@@ -14,7 +14,7 @@ jobs:
     name: "Update release branch"
     uses: eighteen73/github-actions/.github/workflows/build-and-release-node.yml@main
     with:
-      node_version: 22
+      node_version: 26
       source_branch: main
       release_branch: release
       run_composer_install: true

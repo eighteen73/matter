@@ -614,6 +614,8 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 
 ## Development
 
+Node 26 (the LTS, in `.nvmrc`) and npm 11.
+
 ```bash
 npm install
 npm run start   # watch
