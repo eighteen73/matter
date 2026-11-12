@@ -116,11 +116,8 @@
 	display: block;
 	height: 100%;
 	transform: scaleX(0);
+	// Fills from the start: the RTL stylesheet (rtlcss) flips this.
 	transform-origin: 0 50%;
-
-	[dir="rtl"] & {
-		transform-origin: 100% 50%;
-	}
 }
 
 .wp-block-matter-carousel__progress-bar {

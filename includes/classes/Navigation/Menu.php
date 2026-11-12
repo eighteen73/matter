@@ -241,7 +241,7 @@ class Menu {
 
 		foreach ( $ranges as $range ) {
 			$css .= Breakpoints::scope_stylesheet(
-				Assets::path( 'menu/' . $range['value'] . '.css' ),
+				Assets::style_path( 'menu/' . $range['value'] . '.css' ),
 				sprintf( self::TYPE_CLASS, $range['value'] ),
 				$instance_class,
 				$range['query']

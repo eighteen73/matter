@@ -140,11 +140,11 @@ class Panel {
 			return;
 		}
 
-		$css = Breakpoints::scope_stylesheet( Assets::path( 'panel/collapsed.css' ), 'is-collapsed', $settings['class'], $settings['query'] );
+		$css = Breakpoints::scope_stylesheet( Assets::style_path( 'panel/collapsed.css' ), 'is-collapsed', $settings['class'], $settings['query'] );
 
 		// A panel that is always off-canvas has no expanded mode.
 		if ( '' !== $settings['query'] ) {
-			$css .= Breakpoints::scope_stylesheet( Assets::path( 'panel/expanded.css' ), 'is-expanded', $settings['class'], $settings['expanded'] );
+			$css .= Breakpoints::scope_stylesheet( Assets::style_path( 'panel/expanded.css' ), 'is-expanded', $settings['class'], $settings['expanded'] );
 		}
 
 		wp_add_inline_style( 'matter-panel', $css );

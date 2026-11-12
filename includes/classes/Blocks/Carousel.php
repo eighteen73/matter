@@ -48,6 +48,8 @@ class Carousel {
 				'loop'           => ! empty( $options['loop'] ),
 				'align'          => in_array( $align, [ 'start', 'center', 'end' ], true ) ? $align : 'start',
 				'slidesToScroll' => 'auto' === $scroll ? 'auto' : max( 1, (int) $scroll ),
+				// Right-to-left sites scroll the other way.
+				'direction'      => is_rtl() ? 'rtl' : 'ltr',
 			],
 			'autoplay'     => $autoplay * 1000,
 			'autoScroll'   => $auto_scroll,
