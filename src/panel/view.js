@@ -198,6 +198,31 @@ const { state, actions } = store(
 					}
 				};
 
+				// Following a link closes the panel: a same-page link (e.g.
+				// /#contact) would otherwise scroll the page behind it while
+				// the panel, scroll lock and focus trap stayed. Links opened
+				// in a new tab or window leave it open.
+				const closeOnNavigate = withScope(() => {
+					if (state.panels[id]?.isOpen) {
+						setOpen(false);
+					}
+				});
+
+				ref.addEventListener('click', (event) => {
+					const link = event.target.closest?.('a[href]');
+					const newTab =
+						event.metaKey ||
+						event.ctrlKey ||
+						event.shiftKey ||
+						link?.target === '_blank';
+
+					if (link && ref.contains(link) && !newTab) {
+						closeOnNavigate();
+					}
+				});
+
+				window.addEventListener('hashchange', closeOnNavigate);
+
 				registerInstance('panel', ref, {
 					element: ref,
 					id,
