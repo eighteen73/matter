@@ -210,6 +210,87 @@ const stepGroup = (id, offset) => {
 	state.items[target].isOpen = true;
 };
 
+/**
+ * Open the Matter containers a dialog is hidden in (an inactive tab, a closed
+ * accordion item, collapsible or dialog), outermost last, so the dialog can
+ * show: a modal inside a hidden element opens invisibly and blocks the page.
+ *
+ * @param {HTMLDialogElement} dialog Dialog.
+ * @return {boolean} Whether anything was opened.
+ */
+const revealContainers = (dialog) => {
+	let revealed = false;
+
+	for (let el = dialog.parentElement; el; el = el.parentElement) {
+		if (el.matches('.wp-block-matter-tab[hidden]')) {
+			window.matter
+				?.tabs?.(el.closest('.wp-block-matter-tabs'))
+				?.select(el.id);
+			revealed = true;
+		} else if (
+			el.matches('.wp-block-matter-accordion-item__panel[inert]')
+		) {
+			const item = el.closest('.wp-block-matter-accordion-item');
+
+			window.matter
+				?.accordion?.(item.closest('.wp-block-matter-accordion'))
+				?.open(item.id);
+			revealed = true;
+		} else if (
+			(el.matches('.wp-block-matter-collapsible__content[hidden]') ||
+				el.matches('dialog:not([open])')) &&
+			state.items[el.id]
+		) {
+			state.items[el.id].isOpen = true;
+			revealed = true;
+		}
+	}
+
+	return revealed;
+};
+
+/**
+ * Whether an element is rendered: neither it nor an ancestor is
+ * `display: none` (a closed dialog's own display doesn't count).
+ *
+ * @param {Element} element Element.
+ * @return {boolean} Rendered.
+ */
+const isRendered = (element) => {
+	for (let el = element.parentElement; el; el = el.parentElement) {
+		if (window.getComputedStyle(el).display === 'none') {
+			return false;
+		}
+	}
+
+	return true;
+};
+
+/**
+ * Show a dialog as a modal, unless it still can't be seen (e.g. the theme
+ * hides its container), which would leave the page blocked behind an
+ * invisible dialog.
+ *
+ * @param {HTMLDialogElement} dialog Dialog.
+ * @param {string}            id     Overlay ID.
+ */
+const showDialog = (dialog, id) => {
+	if (dialog.open || !state.items[id]?.isOpen) {
+		return;
+	}
+
+	if (!isRendered(dialog) || dialog.closest('[inert]')) {
+		// eslint-disable-next-line no-console -- Tells the developer why it didn't open.
+		console.warn(
+			`Matter: "#${id}" wasn't opened because it's inside something hidden.`
+		);
+		state.items[id].isOpen = false;
+		return;
+	}
+
+	dialog.showModal();
+};
+
 const { state, actions } = store('matter/overlay', {
 	state: {
 		get isOpen() {
@@ -378,7 +459,13 @@ const { state, actions } = store('matter/overlay', {
 
 			if (isDialog(id)) {
 				if (isOpen && !ref.open) {
-					ref.showModal();
+					// Inside a closed tab, accordion item, collapsible or dialog,
+					// open that first, then this once it's shown.
+					if (revealContainers(ref)) {
+						window.requestAnimationFrame(() => showDialog(ref, id));
+					} else {
+						showDialog(ref, id);
+					}
 				} else if (!isOpen && ref.open) {
 					ref.close();
 				}
