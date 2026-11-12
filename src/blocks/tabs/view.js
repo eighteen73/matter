@@ -241,8 +241,13 @@ const { state, actions } = store('matter/tabs', {
 				}
 			});
 
+			// Removed with the block (e.g. by client-side navigation).
+			const controller = new AbortController();
+
 			selectFromHash();
-			window.addEventListener('hashchange', selectFromHash);
+			window.addEventListener('hashchange', selectFromHash, {
+				signal: controller.signal,
+			});
 
 			const choose = withScope((tab) => {
 				const tabs = tabsOf(ref);
@@ -286,6 +291,8 @@ const { state, actions } = store('matter/tabs', {
 			instances.set(ref, instance);
 			announced.set(ref, context.active);
 			registerInstance('tabs', ref, instance);
+
+			return () => controller.abort();
 		},
 		// Announce tab changes (from a click, the keyboard or the API).
 		announce() {

@@ -166,8 +166,13 @@ const { state } = store('matter/accordion', {
 				);
 			});
 
+			// Removed with the block (e.g. by client-side navigation).
+			const controller = new AbortController();
+
 			openFromHash();
-			window.addEventListener('hashchange', openFromHash);
+			window.addEventListener('hashchange', openFromHash, {
+				signal: controller.signal,
+			});
 
 			const idOf = (key) =>
 				typeof key === 'number' ? itemsOf(ref)[key]?.id : key;
@@ -222,6 +227,8 @@ const { state } = store('matter/accordion', {
 			instances.set(ref, instance);
 			announced.set(ref, [...context.openItems]);
 			registerInstance('accordion', ref, instance);
+
+			return () => controller.abort();
 		},
 		// Announce items opening and closing (from a click or the API).
 		announce() {

@@ -316,6 +316,78 @@ const showDialog = (dialog, id) => {
 	syncDocumentClass();
 };
 
+/**
+ * Open an overlay by itself when it should: its #hash on load, a matching URL
+ * parameter, or on load or scroll unless dismissed.
+ *
+ * @param {string}      id     Overlay ID.
+ * @param {Object}      item   Its state.
+ * @param {Function}    later  setTimeout, cleared with the overlay.
+ * @param {AbortSignal} signal Removes listeners with the overlay.
+ */
+const startAutomaticOpens = (id, item, later, signal) => {
+	// A matching hash always opens (deep links).
+	if (window.location.hash === `#${id}`) {
+		item.isOpen = true;
+		return;
+	}
+
+	const params = new URLSearchParams(window.location.search);
+	const matchesUrl = (item.urlTriggers ?? []).some(
+		({ param, value }) =>
+			param &&
+			params.has(param) &&
+			(!value || params.get(param) === value)
+	);
+
+	// A matching URL parameter is asked for (e.g. a campaign link), so
+	// it opens even after a dismissal; dismissals stop the automatic
+	// opens on load and on scroll.
+	if (matchesUrl) {
+		later(
+			() => {
+				if (!item.isOpen) {
+					item.autoOpened = true;
+					item.isOpen = true;
+				}
+			},
+			(item.openDelay ?? 0) * 1000
+		);
+		return;
+	}
+
+	if (isDismissed(id)) {
+		return;
+	}
+
+	const autoOpen = () => {
+		if (!item.isOpen && !isDismissed(id)) {
+			item.autoOpened = true;
+			item.isOpen = true;
+		}
+	};
+
+	if (item.openOnLoad) {
+		later(autoOpen, (item.openDelay ?? 0) * 1000);
+	}
+
+	if (item.openOnScroll) {
+		const threshold = (item.scrollThreshold ?? 50) / 100;
+		const onScroll = () => {
+			const { scrollHeight, clientHeight } = document.documentElement;
+			const progress =
+				window.scrollY / Math.max(1, scrollHeight - clientHeight);
+
+			if (progress >= threshold) {
+				window.removeEventListener('scroll', onScroll);
+				autoOpen();
+			}
+		};
+
+		window.addEventListener('scroll', onScroll, { passive: true, signal });
+	}
+};
+
 const { state, actions } = store('matter/overlay', {
 	state: {
 		get isOpen() {
@@ -388,6 +460,15 @@ const { state, actions } = store('matter/overlay', {
 				previous: () => actions.previous(id),
 			});
 
+			// Listeners outside the overlay (triggers, the window) and timers
+			// go when it's removed, e.g. by client-side navigation, so a
+			// trigger that stays on the page isn't wired twice.
+			const controller = new AbortController();
+			const { signal } = controller;
+			const timers = [];
+			const later = (callback, delay) =>
+				timers.push(window.setTimeout(callback, delay));
+
 			// Wire up triggers: links to #id and elements controlling the ID.
 			const found = findTriggers(id);
 
@@ -400,17 +481,21 @@ const { state, actions } = store('matter/overlay', {
 					trigger.setAttribute('aria-haspopup', 'dialog');
 				}
 
-				trigger.addEventListener('click', (event) => {
-					event.preventDefault();
+				trigger.addEventListener(
+					'click',
+					(event) => {
+						event.preventDefault();
 
-					// Opening by hand isn't an automatic open; closing an
-					// automatic one (e.g. an age gate's own link) dismisses it.
-					if (!item.isOpen) {
-						item.autoOpened = false;
-					}
+						// Opening by hand isn't an automatic open; closing an
+						// automatic one (e.g. an age gate's own link) dismisses it.
+						if (!item.isOpen) {
+							item.autoOpened = false;
+						}
 
-					actions.toggle(id);
-				});
+						actions.toggle(id);
+					},
+					{ signal }
+				);
 			});
 
 			// A matching hash always opens (deep links), on load and when the
@@ -421,71 +506,18 @@ const { state, actions } = store('matter/overlay', {
 					if (window.location.hash === `#${id}` && state.items[id]) {
 						state.items[id].isOpen = true;
 					}
-				})
+				}),
+				{ signal }
 			);
 
-			if (window.location.hash === `#${id}`) {
-				item.isOpen = true;
-				return;
-			}
+			startAutomaticOpens(id, item, later, signal);
 
-			const params = new URLSearchParams(window.location.search);
-			const matchesUrl = (item.urlTriggers ?? []).some(
-				({ param, value }) =>
-					param &&
-					params.has(param) &&
-					(!value || params.get(param) === value)
-			);
-
-			// A matching URL parameter is asked for (e.g. a campaign link), so
-			// it opens even after a dismissal; dismissals stop the automatic
-			// opens on load and on scroll.
-			if (matchesUrl) {
-				window.setTimeout(
-					() => {
-						if (!item.isOpen) {
-							item.autoOpened = true;
-							item.isOpen = true;
-						}
-					},
-					(item.openDelay ?? 0) * 1000
-				);
-				return;
-			}
-
-			if (isDismissed(id)) {
-				return;
-			}
-
-			const autoOpen = () => {
-				if (!item.isOpen && !isDismissed(id)) {
-					item.autoOpened = true;
-					item.isOpen = true;
-				}
+			return () => {
+				controller.abort();
+				timers.forEach((timer) => window.clearTimeout(timer));
 			};
-
-			if (item.openOnLoad) {
-				window.setTimeout(autoOpen, (item.openDelay ?? 0) * 1000);
-			}
-
-			if (item.openOnScroll) {
-				const threshold = (item.scrollThreshold ?? 50) / 100;
-				const onScroll = () => {
-					const { scrollHeight, clientHeight } =
-						document.documentElement;
-					const progress =
-						window.scrollY /
-						Math.max(1, scrollHeight - clientHeight);
-
-					if (progress >= threshold) {
-						window.removeEventListener('scroll', onScroll);
-						autoOpen();
-					}
-				};
-
-				window.addEventListener('scroll', onScroll, { passive: true });
-			}
 		},
+
 		sync() {
 			const { id } = getContext();
 			const { ref } = getElement();

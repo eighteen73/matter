@@ -498,6 +498,12 @@ store('matter/carousel', {
 
 			instances.set(ref, instance);
 			registerInstance('carousel', ref, instance);
+
+			// Removed with the block (e.g. by client-side navigation).
+			return () => {
+				embla.destroy();
+				instances.delete(ref);
+			};
 		},
 	},
 });

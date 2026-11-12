@@ -141,30 +141,48 @@ const { actions } = store('matter/gallery', {
 			announced.set(ref, context.index);
 			registerInstance('gallery', ref, instance);
 
+			// Document listeners go with the block (e.g. client-side
+			// navigation), rather than piling up.
+			const controller = new AbortController();
+			const { signal } = controller;
+
 			// Open captions close on a click elsewhere, or Escape.
 			if (ref.querySelector(CAPTION_TOGGLE)) {
 				const { ownerDocument } = ref;
 
-				ownerDocument.addEventListener('click', (event) => {
-					if (
-						!event.target.closest?.(
-							`${CAPTION_TOGGLE}, .wp-block-image figcaption`
-						)
-					) {
-						closeCaptions(ref);
-					}
-				});
-				ownerDocument.addEventListener('keydown', (event) => {
-					const open = ref.querySelector(
-						`${CAPTION_TOGGLE}[aria-expanded="true"]`
-					);
+				ownerDocument.addEventListener(
+					'click',
+					(event) => {
+						if (
+							!event.target.closest?.(
+								`${CAPTION_TOGGLE}, .wp-block-image figcaption`
+							)
+						) {
+							closeCaptions(ref);
+						}
+					},
+					{ signal }
+				);
+				ownerDocument.addEventListener(
+					'keydown',
+					(event) => {
+						const open = ref.querySelector(
+							`${CAPTION_TOGGLE}[aria-expanded="true"]`
+						);
 
-					if (event.key === 'Escape' && open) {
-						closeCaptions(ref);
-						open.focus();
-					}
-				});
+						if (event.key === 'Escape' && open) {
+							closeCaptions(ref);
+							open.focus();
+						}
+					},
+					{ signal }
+				);
 			}
+
+			return () => {
+				controller.abort();
+				instances.delete(ref);
+			};
 		},
 		// Announce moving between images while the lightbox is open.
 		announce() {
