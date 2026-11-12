@@ -1,0 +1,72 @@
+name: Compatibility
+
+# Weekly: the PHP and browser tests against WordPress nightly and the latest
+# WooCommerce, to catch changes to the editor APIs Matter relies on (some
+# experimental, see src/components/compat.js) and to the WooCommerce internals
+# copied into src/query-display/templates.js before they reach a site.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  upcoming:
+    name: WordPress nightly, latest WooCommerce
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # Merged over .wp-env.json for this run only.
+      - name: Use WordPress nightly and the latest WooCommerce
+        run: |
+          cat > .wp-env.override.json <<'JSON'
+          {
+            "core": "https://wordpress.org/nightly-builds/wordpress-latest.zip",
+            "plugins": [ "https://downloads.wordpress.org/plugin/woocommerce.zip" ]
+          }
+          JSON
+
+      - name: Start wp-env
+        run: npm run env:start
+
+      - name: Versions
+        run: |
+          npx wp-env run cli wp core version
+          npx wp-env run cli wp plugin get woocommerce --field=version
+
+      - name: Run PHPUnit
+        run: npm run test:php
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - name: Keep browser test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-artifacts
+          path: artifacts/
+          retention-days: 14
