@@ -23,6 +23,8 @@ jobs:
 
       - name: Run Lint Suite
         uses: eighteen73/github-actions/.github/actions/lint@main
+        with:
+          node-version-file: .nvmrc
 
   tests:
     name: Unit tests and PHPUnit (wp-env)
