@@ -51,7 +51,19 @@
 		flex-direction: column;
 	}
 
+	// Click to open: the toggle replaces the parent link…
 	&.opens-on-click .has-submenu:not(.is-column) > .matter-menu__link {
+		display: none;
+	}
+
+	// …so the submenu leads with a "View all" link to the parent page (the
+	// drill-down header, without its back button and label).
+	&.opens-on-click .matter-menu__submenu-header {
+		display: block;
+	}
+
+	&.opens-on-click .matter-menu__back,
+	&.opens-on-click .matter-menu__parent-label {
 		display: none;
 	}
 

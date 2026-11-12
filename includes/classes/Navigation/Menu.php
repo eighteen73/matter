@@ -82,7 +82,8 @@ class Menu {
 	 *     @type string       $label       Accessible label. Defaults to the menu name.
 	 *     @type string       $class       Extra classes for the <nav>.
 	 *     @type string       $id          Element ID. Defaults to matter-menu-{location}.
-	 *     @type bool         $view_all    Show "View all" links in drill-down submenus.
+	 *     @type bool         $view_all    Show "View all" links in drill-down submenus. Always
+	 *                                     shown when submenus open on click.
 	 * }
 	 * @return string
 	 */
@@ -104,7 +105,9 @@ class Menu {
 
 		$id     = self::unique_id( (string) ( $args['id'] ?: 'matter-menu-' . ( $args['location'] ?: $menu->slug ) ) );
 		$ranges = self::get_type_ranges( $args['type'] );
-		$walker = new Walker( $id, (bool) $args['view_all'] );
+		// Menus that open on click hide parent links, so their "View all"
+		// links are the only way to reach those pages.
+		$walker = new Walker( $id, (bool) $args['view_all'] || 'click' === $args['opens_on'] );
 
 		$items = wp_nav_menu(
 			[

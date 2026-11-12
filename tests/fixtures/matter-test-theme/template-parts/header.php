@@ -18,6 +18,7 @@
 				[
 					'location' => 'primary',
 					'type'     => [ 'drill-down', 'lg' => 'dropdown' ],
+					'opens_on' => 'click',
 				]
 			);
 		},
