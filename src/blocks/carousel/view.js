@@ -314,6 +314,9 @@ store('matter/carousel', {
 				);
 			}
 
+			// Slides may have been scrolled natively before Embla started.
+			viewport.scrollLeft = 0;
+
 			const embla = EmblaCarousel(
 				viewport,
 				{ ...context.options, container: queryList || track },

@@ -31,14 +31,27 @@ if ( $matter_is_images ) {
 	$matter_style = AspectRatio::style( (string) ( ( $attributes['aspectRatio'] ?? '' ) ?: ( $matter_options['aspectRatio'] ?? '' ) ) );
 }
 
+// A query shown as a carousel (Blocks\QueryDisplay) has no inner blocks: its
+// items are the slides. Marked here too (view.js marks it as well), so the
+// layout is right before the script starts.
+$matter_is_query = ! $block->inner_blocks && preg_match( '/\b(?:wp-block-post-template|wc-block-product-template|wp-block-woocommerce-product-template)\b/', $content );
+$matter_classes  = array_filter(
+	[
+		$matter_style ? 'has-image-aspect-ratio' : '',
+		$matter_is_query ? 'is-query' : '',
+	]
+);
+
 $matter_html = Carousel::render(
 	$content,
 	$matter_options,
 	get_block_wrapper_attributes(
-		$matter_style ? [
-			'class' => 'has-image-aspect-ratio',
-			'style' => $matter_style,
-		] : []
+		array_filter(
+			[
+				'class' => implode( ' ', $matter_classes ),
+				'style' => $matter_style,
+			]
+		)
 	),
 	trim( (string) ( $attributes['label'] ?? '' ) ),
 	// Image slides can have thumbnails.

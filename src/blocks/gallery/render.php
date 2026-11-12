@@ -243,6 +243,8 @@ printf(
 		[
 			'images'  => $matter_images,
 			'index'   => 0,
+			// The lightbox's image loads only once it's opened.
+			'opened'  => false,
 			'limit'   => $matter_limit,
 			'counter' => __( '%1$d / %2$d', 'matter' ), // phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
 		]

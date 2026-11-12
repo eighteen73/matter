@@ -58,9 +58,18 @@
 	width: 100%;
 }
 
-// Before Embla starts, show the first slide only (avoids a flash of all slides).
-.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track > :not(:first-child) {
-	visibility: hidden;
+// Before Embla starts, or if its script never runs, the slides scroll
+// natively (swipe, trackpad, keyboard), so every slide stays reachable.
+.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__viewport {
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+}
+
+.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track > *,
+.wp-block-matter-carousel:not(.is-initialised).is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) > * {
+	scroll-snap-align: start;
 }
 
 .wp-block-matter-carousel__controls {

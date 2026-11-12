@@ -64,6 +64,7 @@ const show = (element, context, index) => {
 	}
 
 	context.index = Math.min(Math.max(0, index), context.images.length - 1);
+	context.opened = true;
 	announced.set(element.closest(SELECTOR), context.index);
 
 	if (!dialog.open) {
@@ -229,9 +230,11 @@ const { actions } = store('matter/gallery', {
 	},
 	state: {
 		get image() {
-			const { images, index } = getContext();
+			const { images, index, opened } = getContext();
 
-			return images[index] ?? {};
+			// Nothing to load until the lightbox first opens, so a closed
+			// lightbox doesn't download a full-size image with the page.
+			return opened ? (images[index] ?? {}) : {};
 		},
 		get counter() {
 			const { images, index, counter } = getContext();
