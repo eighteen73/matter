@@ -36,12 +36,7 @@ import { __, sprintf } from '@wordpress/i18n';
  * Internal dependencies
  */
 import UrlTriggersControl from './url-triggers-control';
-
-// Trigger and content areas: slots configured in each block's block.json.
-const TEMPLATE = [
-	['matter/slot', { name: 'trigger' }],
-	['matter/slot', { name: 'content' }],
-];
+import useSlots from '../../editor/components/use-slots';
 
 const randomSuffix = () => Math.random().toString(36).slice(2, 7);
 
@@ -85,6 +80,7 @@ const useUniqueOverlayId = (clientId, overlayId, type, setAttributes) => {
 
 export default function OverlayEdit({
 	type,
+	name,
 	attributes,
 	setAttributes,
 	clientId,
@@ -148,6 +144,9 @@ export default function OverlayEdit({
 
 	useUniqueOverlayId(clientId, overlayId, type, setAttributes);
 
+	// Trigger and content areas: slots declared in each block's block.json.
+	useSlots(clientId, name);
+
 	const setHasTrigger = (value) => {
 		if (!triggerId) {
 			return;
@@ -187,7 +186,6 @@ export default function OverlayEdit({
 		blockProps,
 		{
 			allowedBlocks: ['matter/slot'],
-			template: TEMPLATE,
 			templateLock: 'all',
 			renderAppender: false,
 		}

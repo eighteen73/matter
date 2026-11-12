@@ -24,6 +24,7 @@
 		"@wordpress/env": "^12.1.0",
 		"@wordpress/prettier-config": "^4.49.0",
 		"@wordpress/scripts": "^32.5.0",
+		"globals": "^16.5.0",
 		"lefthook": "^2.1.9",
 		"postcss-preset-env": "^11.3.1"
 	},
@@ -44,6 +45,7 @@
 		"env:start": "wp-env start",
 		"env:stop": "wp-env stop",
 		"test:php": "wp-env run tests-cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit",
+		"test:unit": "wp-scripts test-unit-js",
 		"lint:md:docs": "wp-scripts lint-md-docs",
 		"lint:pkg-json": "wp-scripts lint-pkg-json",
 		"packages-update": "wp-scripts packages-update",

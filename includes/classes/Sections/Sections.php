@@ -38,9 +38,11 @@
  * `"align": "full"` under `supports.matter` makes the section a full-width band.
  *
  * Layout lives in render.php and CSS, so changing a section updates every
- * instance. Slot structure is locked (templateLock: all), so adding a slot to
- * block.json (append it, as matching is positional) is applied to existing
- * instances the next time they're edited; render.php must tolerate a missing slot.
+ * instance. Slots are matched by name, in the editor and here, so slots can be
+ * added, reordered or removed in block.json; render.php must tolerate an empty
+ * slot. A renamed slot lists its old names (`"previously": [ "media" ]`), so
+ * existing content follows it. Content in a slot that's no longer declared
+ * isn't output, and the editor shows it for the client to move or remove.
  *
  * @package Eighteen73\Matter
  */
@@ -151,6 +153,32 @@ class Sections {
 	}
 
 	/**
+	 * Old names of renamed slots (a slot's `previously`), mapped to its name.
+	 * An old name that is itself declared again is ignored.
+	 *
+	 * @param WP_Block_Type $block_type Section block type.
+	 * @return array<string, string> Old name => current name.
+	 */
+	public static function get_slot_aliases( WP_Block_Type $block_type ): array {
+		$slots   = $block_type->supports['matter']['slots'] ?? [];
+		$aliases = [];
+
+		if ( ! is_array( $slots ) ) {
+			return [];
+		}
+
+		foreach ( $slots as $name => $slot ) {
+			foreach ( (array) ( $slot['previously'] ?? [] ) as $old ) {
+				if ( ! array_key_exists( (string) $old, $slots ) ) {
+					$aliases[ (string) $old ] = (string) $name;
+				}
+			}
+		}
+
+		return $aliases;
+	}
+
+	/**
 	 * Give sections without a render.php the default renderer.
 	 *
 	 * @param array  $args       Block type args.
@@ -177,7 +205,7 @@ class Sections {
 		$block_type = $block->block_type;
 		$tag_name   = tag_escape( $block_type->supports['matter']['tagName'] ?? 'section' );
 		$base_class = wp_get_block_default_classname( $block->name );
-		$slots      = self::slots( $content, self::get_slot_names( $block_type ) );
+		$slots      = self::slots( $content, self::get_slot_names( $block_type ), self::get_slot_aliases( $block_type ) );
 		$html       = '';
 
 		foreach ( $slots as $name => $slot_html ) {
@@ -199,17 +227,38 @@ class Sections {
 	 * Slot blocks wrap their output in marker comments, so slots can be placed
 	 * anywhere in a section's markup without rendering anything twice.
 	 *
-	 * @param string   $content Section inner content.
-	 * @param string[] $names   Declared slot names; missing slots return ''.
+	 * With declared names, only those slots are returned: content saved under
+	 * an old name (an alias) fills its slot when that slot is missing or
+	 * empty, and slots that are no longer declared are left out. The first
+	 * slot with a name wins. Without names, every slot found is returned.
+	 *
+	 * @param string                $content Section inner content.
+	 * @param string[]              $names   Declared slot names; missing slots return ''.
+	 * @param array<string, string> $aliases Old slot name => current name.
 	 * @return array<string, string> Slot name => HTML.
 	 */
-	public static function slots( string $content, array $names = [] ): array {
+	public static function slots( string $content, array $names = [], array $aliases = [] ): array {
 		$slots = array_fill_keys( $names, '' );
+		$found = [];
 
 		preg_match_all( '/<!--matter-slot:([\w-]+)-->(.*?)<!--\/matter-slot:\1-->/s', $content, $matches, PREG_SET_ORDER );
 
 		foreach ( $matches as $match ) {
-			$slots[ $match[1] ] = $match[2];
+			$found[ $match[1] ] ??= $match[2];
+		}
+
+		if ( ! $names ) {
+			return $found;
+		}
+
+		foreach ( $names as $name ) {
+			$slots[ $name ] = $found[ $name ] ?? '';
+		}
+
+		foreach ( $aliases as $old => $name ) {
+			if ( isset( $found[ $old ], $slots[ $name ] ) && '' === trim( $slots[ $name ] ) ) {
+				$slots[ $name ] = $found[ $old ];
+			}
 		}
 
 		return $slots;

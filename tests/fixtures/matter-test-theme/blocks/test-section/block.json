@@ -12,13 +12,35 @@
 			"align": "full",
 			"slots": {
 				"content": {
-					"allowedBlocks": [ "core/heading", "core/paragraph" ],
-					"template": [ [ "core/heading", { "level": 2 } ], [ "core/paragraph" ] ]
+					"allowedBlocks": [
+						"core/heading",
+						"core/paragraph"
+					],
+					"template": [
+						[
+							"core/heading",
+							{
+								"level": 2
+							}
+						],
+						[
+							"core/paragraph"
+						]
+					]
 				},
 				"media": {
-					"allowedBlocks": [ "core/image" ],
-					"template": [ [ "core/image" ] ],
-					"templateLock": "contentOnly"
+					"allowedBlocks": [
+						"core/image"
+					],
+					"template": [
+						[
+							"core/image"
+						]
+					],
+					"templateLock": "contentOnly",
+					"previously": [
+						"image"
+					]
 				}
 			}
 		}

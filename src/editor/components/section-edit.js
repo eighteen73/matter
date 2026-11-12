@@ -3,30 +3,29 @@
  */
 import { getBlockDefaultClassName, getBlockType } from '@wordpress/blocks';
 import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
-import { useMemo } from '@wordpress/element';
+
+/**
+ * Internal dependencies
+ */
+import useSlots from './use-slots';
 
 /**
  * Shared editor for every section block.
  *
- * Renders one locked `matter/slot` per slot declared in the section's
- * `supports.matter.slots`. templateLock "all" means changes to the declared
- * slots are applied to existing instances when they're next edited.
+ * Holds one locked `matter/slot` per slot declared in the section's
+ * `supports.matter.slots`, kept in step by name (useSlots), so declared slots
+ * can be added, reordered, renamed (`previously`) or removed without losing
+ * content.
  *
  * @param {Object} props
- * @param {string} props.name Block name.
+ * @param {string} props.name     Block name.
+ * @param {string} props.clientId Block client ID.
  * @return {Element} Section editor.
  */
-export default function SectionEdit({ name }) {
-	const { slots, align } = getBlockType(name)?.supports?.matter ?? {};
+export default function SectionEdit({ name, clientId }) {
+	const { align } = getBlockType(name)?.supports?.matter ?? {};
 
-	const template = useMemo(
-		() =>
-			Object.keys(slots ?? {}).map((slot) => [
-				'matter/slot',
-				{ name: slot },
-			]),
-		[slots]
-	);
+	useSlots(clientId, name);
 
 	const blockProps = useBlockProps({
 		className: ['is-section', align === 'full' && 'alignfull']
@@ -34,12 +33,14 @@ export default function SectionEdit({ name }) {
 			.join(' '),
 	});
 
-	// Same structure as the front end: wrapper > __inner > slots.
+	// Same structure as the front end: wrapper > __inner > slots. No
+	// template: core's template sync matches by position, so useSlots
+	// manages the slots instead. templateLock stops them being moved or
+	// removed by hand.
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: `${getBlockDefaultClassName(name)}__inner` },
 		{
 			allowedBlocks: ['matter/slot'],
-			template,
 			templateLock: 'all',
 			renderAppender: false,
 		}

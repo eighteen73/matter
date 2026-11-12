@@ -34,6 +34,97 @@ class SectionsTest extends TestCase {
 	}
 
 	/**
+	 * Undeclared slots aren't returned when names are declared; the first slot
+	 * with a name wins.
+	 *
+	 * @return void
+	 */
+	public function test_undeclared_and_duplicate_slots(): void {
+		$content = Sections::mark_slot( 'media', '<p>First</p>' )
+			. Sections::mark_slot( 'media', '<p>Second</p>' )
+			. Sections::mark_slot( 'removed', '<p>Orphan</p>' );
+
+		$this->assertSame( [ 'media' => '<p>First</p>' ], Sections::slots( $content, [ 'media' ] ) );
+
+		// Without declared names, everything found (first wins).
+		$this->assertSame(
+			[
+				'media'   => '<p>First</p>',
+				'removed' => '<p>Orphan</p>',
+			],
+			Sections::slots( $content )
+		);
+	}
+
+	/**
+	 * Content saved under a slot's old name fills it when it's missing or
+	 * empty, but never replaces content saved under the new name.
+	 *
+	 * @return void
+	 */
+	public function test_slot_aliases(): void {
+		$aliases = [ 'media' => 'image' ];
+
+		$this->assertSame(
+			[ 'image' => '<img>' ],
+			Sections::slots( Sections::mark_slot( 'media', '<img>' ), [ 'image' ], $aliases )
+		);
+		$this->assertSame(
+			[ 'image' => '<img>' ],
+			Sections::slots( Sections::mark_slot( 'image', ' ' ) . Sections::mark_slot( 'media', '<img>' ), [ 'image' ], $aliases )
+		);
+		$this->assertSame(
+			[ 'image' => '<new>' ],
+			Sections::slots( Sections::mark_slot( 'media', '<old>' ) . Sections::mark_slot( 'image', '<new>' ), [ 'image' ], $aliases )
+		);
+	}
+
+	/**
+	 * Aliases come from each slot's `previously`, unless the old name is
+	 * declared again; the default renderer and slots() use them.
+	 *
+	 * @return void
+	 */
+	public function test_aliases_from_block_type_and_render(): void {
+		register_block_type(
+			'matter-test/renamed',
+			[
+				'supports' => [
+					'matter' => [
+						'slots' => [
+							'content' => [ 'previously' => [ 'body', 'content' ] ],
+							'image'   => [ 'previously' => [ 'media' ] ],
+						],
+					],
+				],
+			]
+		);
+
+		$block_type = \WP_Block_Type_Registry::get_instance()->get_registered( 'matter-test/renamed' );
+
+		$this->assertSame(
+			[
+				'body'  => 'content',
+				'media' => 'image',
+			],
+			Sections::get_slot_aliases( $block_type )
+		);
+
+		$html = do_blocks(
+			'<!-- wp:matter-test/renamed -->'
+			. '<!-- wp:matter/slot {"name":"body"} --><!-- wp:paragraph --><p>Body</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->'
+			. '<!-- wp:matter/slot {"name":"gone"} --><!-- wp:paragraph --><p>Gone</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->'
+			. '<!-- /wp:matter-test/renamed -->'
+		);
+
+		$this->assertStringContainsString( '<div class="wp-block-matter-slot wp-block-matter-test-renamed__content"><p class="wp-block-paragraph">Body</p></div>', $html );
+		$this->assertStringContainsString( '<div class="wp-block-matter-slot wp-block-matter-test-renamed__image"></div>', $html );
+		$this->assertStringNotContainsString( 'Gone', $html );
+
+		unregister_block_type( 'matter-test/renamed' );
+	}
+
+	/**
 	 * A slot name is reduced to word characters and hyphens in its marker.
 	 *
 	 * @return void

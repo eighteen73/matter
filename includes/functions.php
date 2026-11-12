@@ -113,7 +113,13 @@ function panel_toggle( string $id, array $args = [] ): void {
  * @return array<string, string> Slot name => HTML.
  */
 function slots( string $content, ?\WP_Block $block = null ): array {
-	$names = $block ? Sections\Sections::get_slot_names( $block->block_type ) : [];
+	if ( ! $block ) {
+		return Sections\Sections::slots( $content );
+	}
 
-	return Sections\Sections::slots( $content, $names );
+	return Sections\Sections::slots(
+		$content,
+		Sections\Sections::get_slot_names( $block->block_type ),
+		Sections\Sections::get_slot_aliases( $block->block_type )
+	);
 }

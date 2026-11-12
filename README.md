@@ -162,9 +162,14 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 - `align: "full"`: full-width band (`alignfull`).
 - `tagName`: element for the default renderer.
 - `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable. Without a heading, a visually hidden "Read more" link is added (`matter_link_label` filter). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
-- `slots`: per slot, `allowedBlocks`, `template` and `templateLock`.
+- `slots`: per slot, `allowedBlocks`, `template`, `templateLock` and `previously` (old names, for a renamed slot).
 
-**Updating sections.** Markup and CSS changes reach every instance immediately. Slot structure is locked, so a slot added to `block.json` appears in existing instances the next time they're edited. Matching is by position, so **append new slots**, and make `render.php` cope with an empty slot.
+**Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
+- **Add or reorder** slots anywhere in `block.json`. Existing instances get a new slot (filled from its `template`) the next time they're edited.
+- **Rename** a slot by listing its old name: `"image": { "previously": [ "media" ] }`. Content saved under the old name shows in the slot at once, and moves to the new name when the page is next edited and saved.
+- **Remove** a slot and its content stops showing on the site. The editor keeps the content, marked as no longer shown, so the client can move it into another slot or remove it.
+
+An unlocked slot is filled from its `template` when it's created; if the client empties it, it stays empty. A slot with `templateLock` keeps its template's blocks.
 
 ## Colour schemes
 
