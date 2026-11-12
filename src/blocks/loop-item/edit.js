@@ -6,7 +6,7 @@ import {
 	store as blockEditorStore,
 	useBlockProps,
 } from '@wordpress/block-editor';
-import { Placeholder, Spinner } from '@wordpress/components';
+import { Button, Placeholder, Spinner } from '@wordpress/components';
 import { store as coreStore } from '@wordpress/core-data';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useState } from '@wordpress/element';
@@ -17,6 +17,7 @@ import { addQueryArgs } from '@wordpress/url';
  * Internal dependencies
  */
 import { useInert } from '../../components/use-inert';
+import boundedMap from '../../components/bounded-map';
 
 // Most items in one request (LoopItem::MAX_PREVIEWS).
 const MAX_PER_REQUEST = 100;
@@ -25,7 +26,23 @@ const MAX_PER_REQUEST = 100;
 // the HTML, or null when the item can't be shown (e.g. the user can't read
 // it). Kept so a preview that remounts (e.g. when its loop is selected) shows
 // at once.
-const previews = new Map();
+const previews = boundedMap(500);
+
+// Items whose request failed (e.g. a network error): not cached, so they can
+// be tried again. Trying again retries every failed item (they failed
+// together), so mounted previews are told to reload.
+const failed = new Set();
+const reloaders = new Set();
+
+const retryFailed = () => {
+	failed.clear();
+	reloaders.forEach((reload) => reload());
+};
+
+// Accordions and tabs of posts show the server's rendering of the whole
+// query (preview-edit.js); the query's own items are hidden, so their loop
+// items load nothing.
+const HIDDEN_IN = ['accordion', 'tabs'];
 
 // Each loading item's request, and per block the batch still collecting.
 const pending = new Map();
@@ -45,29 +62,34 @@ async function fetchPreviews(block, ids) {
 	const requests = [];
 
 	for (let i = 0; i < ids.length; i += MAX_PER_REQUEST) {
+		const chunk = ids.slice(i, i + MAX_PER_REQUEST);
+
 		requests.push(
 			apiFetch({
 				path: addQueryArgs('/matter/v1/loop-items', {
-					ids: ids.slice(i, i + MAX_PER_REQUEST),
+					ids: chunk,
 					...(block && { block }),
 				}),
 			})
-				.then((items) =>
+				.then((items) => {
 					items.forEach(({ id, html }) =>
 						previews.set(keyOf(block, id), html)
-					)
+					);
+
+					// Not returned: the item can't be shown.
+					chunk.forEach(
+						(id) =>
+							previews.has(keyOf(block, id)) ||
+							previews.set(keyOf(block, id), null)
+					);
+				})
+				.catch(() =>
+					chunk.forEach((id) => failed.add(keyOf(block, id)))
 				)
-				.catch(() => {})
 		);
 	}
 
 	await Promise.all(requests);
-
-	ids.forEach(
-		(id) =>
-			previews.has(keyOf(block, id)) ||
-			previews.set(keyOf(block, id), null)
-	);
 }
 
 /**
@@ -109,19 +131,20 @@ function loadPreview(block, postId) {
 }
 
 /**
- * An item's preview: its HTML, null when it can't be shown, or undefined
- * while it loads.
+ * An item's preview: its HTML, null when it can't be shown, false when it
+ * failed to load (with a retry), or undefined while it loads.
  *
  * @param {string} block  The block its query is shown as (empty for none).
  * @param {number} postId Item ID.
- * @return {string|null|undefined} Preview.
+ * @return {{preview: string|null|false|undefined, retry: Function}} Preview.
  */
 function usePreview(block, postId) {
-	const [, setLoaded] = useState(0);
+	const [attempt, setLoaded] = useState(0);
 	const key = keyOf(block, postId);
+	const isHidden = HIDDEN_IN.includes(block);
 
 	useEffect(() => {
-		if (!postId || previews.has(key)) {
+		if (!postId || isHidden || previews.has(key) || failed.has(key)) {
 			return;
 		}
 
@@ -133,9 +156,23 @@ function usePreview(block, postId) {
 		return () => {
 			current = false;
 		};
-	}, [block, postId, key]);
+	}, [block, postId, key, isHidden, attempt]);
 
-	return postId ? previews.get(key) : undefined;
+	useEffect(() => {
+		const reload = () => setLoaded((n) => n + 1);
+
+		reloaders.add(reload);
+
+		return () => reloaders.delete(reload);
+	}, []);
+
+	const retry = retryFailed;
+
+	if (!postId || isHidden) {
+		return { preview: undefined, retry };
+	}
+
+	return { preview: failed.has(key) ? false : previews.get(key), retry };
 }
 
 /**
@@ -163,7 +200,7 @@ export default function Edit({
 
 	// The block its query is shown as, if any, from the query's context.
 	const block = display?.type ?? '';
-	const preview = usePreview(block, postId);
+	const { preview, retry } = usePreview(block, postId);
 	const hasPreview = typeof preview === 'string';
 	const blockProps = useBlockProps({
 		ref: useInert(),
@@ -174,10 +211,29 @@ export default function Edit({
 		return <div {...blockProps} />;
 	}
 
+	if (preview === false) {
+		return (
+			<div {...blockProps}>
+				<Placeholder
+					label={__('Loop item', 'matter')}
+					instructions={__(
+						"The preview couldn't be loaded.",
+						'matter'
+					)}
+				>
+					<Button variant="secondary" onClick={retry}>
+						{__('Try again', 'matter')}
+					</Button>
+				</Placeholder>
+			</div>
+		);
+	}
+
 	return (
 		<div {...blockProps}>
 			{postId ? (
-				preview === undefined && <Spinner />
+				preview === undefined &&
+				!HIDDEN_IN.includes(block) && <Spinner />
 			) : (
 				<Placeholder
 					label={__('Loop item', 'matter')}

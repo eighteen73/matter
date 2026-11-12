@@ -197,7 +197,11 @@ export default function GravityFormInspectorControls({
 							)}
 							value={tabindex}
 							onChange={(value) =>
-								setAttributes({ tabindex: value })
+								setAttributes({
+									// The control gives a string; the attribute
+									// is a number, and a string wouldn't load.
+									tabindex: Number.parseInt(value, 10) || 0,
+								})
 							}
 						/>
 					</ToolsPanelItem>

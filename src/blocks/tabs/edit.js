@@ -57,15 +57,17 @@ export default function Edit({
 	useStableId(clientId, 'anchor', 'tabs');
 	const [activeId, setActiveId] = useState(null);
 
-	const { tabs, isQuery, isEditing } = useSelect(
+	// getBlocks() keeps its result while the inner blocks are unchanged, so
+	// select it as is and derive the tabs outside: filtering inside the
+	// selector would make a new array, and a re-render, on every change in
+	// the editor.
+	const { blocks, isEditing } = useSelect(
 		(select) => {
 			const { getBlocks, isBlockSelected, hasSelectedInnerBlock } =
 				select(blockEditorStore);
-			const blocks = getBlocks(clientId);
 
 			return {
-				tabs: blocks.filter((block) => block.name === 'matter/tab'),
-				isQuery: blocks.some((block) => block.name === 'core/query'),
+				blocks: getBlocks(clientId),
 				// Editor-only controls show while the block is being edited.
 				isEditing:
 					isBlockSelected(clientId) ||
@@ -74,6 +76,11 @@ export default function Edit({
 		},
 		[clientId]
 	);
+	const tabs = useMemo(
+		() => blocks.filter((block) => block.name === 'matter/tab'),
+		[blocks]
+	);
+	const isQuery = blocks.some((block) => block.name === 'core/query');
 	const { insertBlock, removeBlock, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
 	const listRef = useRef();

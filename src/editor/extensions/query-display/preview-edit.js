@@ -17,9 +17,10 @@ import { ATTRIBUTE } from '../../../query-display/templates';
 import { useLockedQuery } from '../../../query-display/use-locked-query';
 import DisplayPanel from './panel';
 import { useStableId } from '../../../components/stable-id';
+import boundedMap from '../../../components/bounded-map';
 
 // Previews by request, for the editor session, and requests in flight.
-const previews = new Map();
+const previews = boundedMap(50);
 const requests = new Map();
 let rendered = 0;
 

@@ -31,6 +31,9 @@ import { VStack } from '../../components/compat';
 import { rememberTarget } from './targets';
 
 const META = '_matter_archive_target';
+
+// Wait for typing to pause before searching.
+const SEARCH_DELAY = 300;
 const CASCADE = '_matter_archive_cascade';
 
 const fetchTargets = (args) =>
@@ -51,35 +54,71 @@ function ShowsOn() {
 	const [options, setOptions] = useState([]);
 	const [search, setSearch] = useState('');
 
+	// The chosen archive, fetched once per choice (not per keystroke).
+	const [selectedOption, setSelectedOption] = useState([]);
+
+	useEffect(() => {
+		if (!isArchive || !target) {
+			setSelectedOption([]);
+			return;
+		}
+
+		let current = true;
+
+		fetchTargets({ include: target })
+			.then((selected) => {
+				if (current) {
+					selected.forEach(rememberTarget);
+					setSelectedOption(selected);
+				}
+			})
+			.catch(() => current && setSelectedOption([]));
+
+		return () => {
+			current = false;
+		};
+	}, [isArchive, target]);
+
+	// Archives matching the search, once typing pauses.
+	const [found, setFound] = useState([]);
+
 	useEffect(() => {
 		if (!isArchive) {
 			return;
 		}
 
 		let current = true;
+		const timer = setTimeout(
+			() =>
+				fetchTargets({ search })
+					.then((results) => {
+						if (current) {
+							results.forEach(rememberTarget);
+							setFound(results);
+						}
+					})
+					// Keep the last results: the list just doesn't update.
+					.catch(() => {}),
+			search ? SEARCH_DELAY : 0
+		);
 
-		Promise.all([
-			fetchTargets({ search }),
-			target ? fetchTargets({ include: target }) : [],
-		]).then(([found, selected]) => {
-			if (!current) {
-				return;
-			}
+		return () => {
+			current = false;
+			clearTimeout(timer);
+		};
+	}, [isArchive, search]);
 
-			[...found, ...selected].forEach(rememberTarget);
+	useEffect(
+		() =>
 			setOptions(
-				[...selected, ...found].filter(
+				[...selectedOption, ...found].filter(
 					(option, index, all) =>
 						all.findIndex(({ value }) => value === option.value) ===
 						index
 				)
-			);
-		});
-
-		return () => {
-			current = false;
-		};
-	}, [isArchive, search, target]);
+			),
+		[selectedOption, found]
+	);
 
 	if (!isArchive) {
 		return null;
