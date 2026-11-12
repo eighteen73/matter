@@ -7,6 +7,7 @@
  *   reference these registered module IDs rather than file paths.
  */
 const path = require('path');
+const DependencyExtractionWebpackPlugin = require('@wordpress/dependency-extraction-webpack-plugin');
 
 const [
 	scriptConfig,
@@ -32,6 +33,7 @@ const styleEntries = {
 };
 
 const moduleEntries = {
+	'focus-trap/index': src('focus-trap/index.js'),
 	'overlay/view': src('overlay/view.js'),
 	'menu/view': src('menu/view.js'),
 	'panel/view': src('panel/view.js'),
@@ -84,9 +86,44 @@ const withEntries = (config, entries, plugins = []) => ({
 	plugins: [...config.plugins, ...plugins],
 });
 
+/**
+ * Matter's own script modules that others import, by import name. They're
+ * external (loaded once, as registered modules) rather than bundled into
+ * each importer.
+ */
+const sharedModules = {
+	// `module …`: a static import, so the importing modules stay synchronous
+	// (as @wordpress/interactivity is) and register their stores before
+	// hydration. The default for modules is a dynamic import().
+	'@matter/focus-trap': 'module matter/focus-trap',
+};
+
+/**
+ * The module config's dependency extraction, also treating Matter's shared
+ * modules as external.
+ *
+ * @param {Array} plugins Module config plugins.
+ * @return {Array} Plugins.
+ */
+const withSharedModules = (plugins) =>
+	plugins.map((plugin) =>
+		plugin instanceof DependencyExtractionWebpackPlugin
+			? new DependencyExtractionWebpackPlugin({
+					...plugin.options,
+					requestToExternalModule: (request) =>
+						sharedModules[request] ?? undefined,
+				})
+			: plugin
+	);
+
+const moduleConfigWithEntries = withEntries(moduleConfig, moduleEntries);
+
 module.exports = [
 	withEntries(scriptConfig, { ...scriptEntries, ...styleEntries }, [
 		new RemoveStyleEntryScripts(Object.keys(styleEntries)),
 	]),
-	withEntries(moduleConfig, moduleEntries),
+	{
+		...moduleConfigWithEntries,
+		plugins: withSharedModules(moduleConfigWithEntries.plugins),
+	},
 ];

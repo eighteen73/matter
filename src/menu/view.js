@@ -20,7 +20,7 @@ import {
 /**
  * External dependencies
  */
-import { createFocusTrap } from 'focus-trap';
+import { createTrap as createFocusTrap } from '@matter/focus-trap';
 
 /**
  * Internal dependencies

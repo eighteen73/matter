@@ -22,7 +22,10 @@ import {
 /**
  * External dependencies
  */
-import { createFocusTrap } from 'focus-trap';
+import {
+	createTrap as createFocusTrap,
+	releaseTrapsWithin,
+} from '@matter/focus-trap';
 
 /**
  * Internal dependencies
@@ -119,6 +122,9 @@ const deactivate = (panel, id) => {
 		return;
 	}
 
+	// Traps inside (e.g. a drill-down menu's) let go first, without moving
+	// focus, so focus goes back to the toggle, not into the closing panel.
+	releaseTrapsWithin(panel);
 	traps.get(id).deactivate();
 	traps.delete(id);
 

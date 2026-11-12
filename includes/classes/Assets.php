@@ -34,9 +34,11 @@ class Assets {
 	 * Component script modules: module ID => build path (relative to build/).
 	 */
 	public const MODULES = [
-		'matter/menu'    => 'menu/view.js',
-		'matter/panel'   => 'panel/view.js',
-		'matter/overlay' => 'overlay/view.js',
+		// Shared by menus and panels (one copy, one trap stack).
+		'matter/focus-trap' => 'focus-trap/index.js',
+		'matter/menu'       => 'menu/view.js',
+		'matter/panel'      => 'panel/view.js',
+		'matter/overlay'    => 'overlay/view.js',
 	];
 
 	/**
