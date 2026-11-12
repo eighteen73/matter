@@ -23,6 +23,11 @@ class ButtonIcon {
 	use Singleton;
 
 	/**
+	 * The attribute on core/button. Prefixed, as core could add its own `icon`.
+	 */
+	public const ATTRIBUTE = 'matterIcon';
+
+	/**
 	 * Setup hooks.
 	 *
 	 * @return void
@@ -33,7 +38,7 @@ class ButtonIcon {
 	}
 
 	/**
-	 * Add the `icon` attribute to core/button.
+	 * Add the `matterIcon` attribute to core/button.
 	 *
 	 * @param array  $args       Block type args.
 	 * @param string $block_name Block name.
@@ -41,7 +46,7 @@ class ButtonIcon {
 	 */
 	public function register_attribute( array $args, string $block_name ): array {
 		if ( 'core/button' === $block_name ) {
-			$args['attributes']['icon'] = [ 'type' => 'string' ];
+			$args['attributes'][ self::ATTRIBUTE ] = [ 'type' => 'string' ];
 		}
 
 		return $args;
@@ -55,7 +60,7 @@ class ButtonIcon {
 	 * @return string
 	 */
 	public function render( string $block_content, array $block ): string {
-		$icon = Icons::render( (string) ( $block['attrs']['icon'] ?? '' ), 'wp-block-button__icon' );
+		$icon = Icons::render( (string) ( $block['attrs'][ self::ATTRIBUTE ] ?? '' ), 'wp-block-button__icon' );
 
 		if ( '' === $icon ) {
 			return $block_content;

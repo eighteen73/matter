@@ -6,9 +6,11 @@
  * which part stays in view:
  * - featured images: `_thumbnail_focal_point` post meta, applied wherever
  *   core/post-featured-image renders the post's image;
- * - image blocks: a `focalPoint` attribute on core/image.
+ * - image blocks: core/image's own `focalPoint` attribute. Core only offers
+ *   and saves it for images with a scale (object-fit) set; Matter offers it on
+ *   every image, as sections crop images in CSS.
  *
- * Both output `object-position` on the <img>.
+ * Both output `object-position` on the <img>, replacing any core saved.
  *
  * @package Eighteen73\Matter
  */
@@ -40,7 +42,6 @@ class FocalPoint {
 	 */
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register_meta' ], 20 );
-		add_filter( 'register_block_type_args', [ $this, 'register_attribute' ], 10, 2 );
 		add_filter( 'render_block_core/post-featured-image', [ $this, 'render_featured_image' ], 10, 3 );
 		add_filter( 'render_block_core/image', [ $this, 'render_image' ], 10, 2 );
 	}
@@ -76,21 +77,6 @@ class FocalPoint {
 				]
 			);
 		}
-	}
-
-	/**
-	 * Add the `focalPoint` attribute to core/image.
-	 *
-	 * @param array  $args       Block type args.
-	 * @param string $block_name Block name.
-	 * @return array
-	 */
-	public function register_attribute( array $args, string $block_name ): array {
-		if ( 'core/image' === $block_name ) {
-			$args['attributes']['focalPoint'] = [ 'type' => 'object' ];
-		}
-
-		return $args;
 	}
 
 	/**
@@ -156,8 +142,10 @@ class FocalPoint {
 			return $block_content;
 		}
 
-		$style = trim( (string) $processor->get_attribute( 'style' ) );
-		$style = ( '' !== $style ? rtrim( $style, ';' ) . ';' : '' ) . sprintf( 'object-position:%s%% %s%%', round( $point['x'] * 100, 2 ), round( $point['y'] * 100, 2 ) );
+		// Replace an object-position core saved (images with a scale set).
+		$style = (string) preg_replace( '/(?:^|;)\s*object-position\s*:[^;]*/i', '', (string) $processor->get_attribute( 'style' ) );
+		$style = trim( $style, " \t\n\r\0\x0B;" );
+		$style = ( '' !== $style ? $style . ';' : '' ) . sprintf( 'object-position:%s%% %s%%', round( $point['x'] * 100, 2 ), round( $point['y'] * 100, 2 ) );
 
 		$processor->set_attribute( 'style', $style );
 

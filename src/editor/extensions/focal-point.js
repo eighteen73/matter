@@ -1,6 +1,6 @@
 /**
- * Focal points for cropped images: core/image blocks (attribute) and
- * featured images (post meta). The front end sets object-position on the
+ * Focal points for cropped images: core/image blocks (core's own `focalPoint`
+ * attribute) and featured images (post meta). The front end sets object-position on the
  * <img>; the editor previews it via a CSS custom property (canvas.scss).
  */
 
@@ -35,7 +35,12 @@ addFilter(
 	'matter/focal-point/image-control',
 	createHigherOrderComponent(
 		(BlockEdit) => (props) => {
-			if (props.name !== 'core/image' || !props.attributes.url) {
+			// Core offers its own focal point for images with a scale set.
+			if (
+				props.name !== 'core/image' ||
+				!props.attributes.url ||
+				props.attributes.scale
+			) {
 				return <BlockEdit {...props} />;
 			}
 

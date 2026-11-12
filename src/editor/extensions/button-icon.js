@@ -33,8 +33,10 @@ addFilter(
 					<BlockEdit {...props} />
 					<BlockControls group="other">
 						<IconToolbar
-							value={props.attributes.icon}
-							onChange={(icon) => props.setAttributes({ icon })}
+							value={props.attributes.matterIcon}
+							onChange={(matterIcon) =>
+								props.setAttributes({ matterIcon })
+							}
 						/>
 					</BlockControls>
 				</>
@@ -50,7 +52,9 @@ addFilter(
 	createHigherOrderComponent(
 		(BlockListBlock) => (props) => {
 			const icon = useIcon(
-				props.name === 'core/button' ? props.attributes.icon : undefined
+				props.name === 'core/button'
+					? props.attributes.matterIcon
+					: undefined
 			);
 
 			if (!icon?.content) {
