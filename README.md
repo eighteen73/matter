@@ -49,20 +49,26 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 
 **Opening overlays.**
 - The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
-- Any link to `#id`, or element with `aria-controls="id"`, anywhere on the page also opens it. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup`.
+- Any link to `#id`, or element with `aria-controls="id"`, anywhere on the page also opens it. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup`. So does the address changing to `#id` after the page loads.
+- **Where it sits:** a modal or drawer inside an inactive tab, a closed accordion item, a closed collapsible or another closed dialog opens those first, then itself. If it still can't be seen (e.g. the theme hides its container), it isn't opened, and a console warning says why.
 - **Query Loops:** an overlay inside a post template gets one instance per post, with the ID `{id}-{postId}`. Modals in a Query Loop are grouped automatically.
 - **Groups:** modals with the same group get previous/next buttons and an "n / N" position, cycling in page order.
 - **URL parameters** open an overlay even after it was dismissed (they're asked for, e.g. a campaign link); dismissals stop the automatic opens on load and on scroll.
 - **Moving between grouped modals** keeps the backdrop: the current modal goes at once and the next fades in from the side it comes from.
-- **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate). A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
+- **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate): the dialog has `closedby="none"`, and reopens if the browser closes it anyway. A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
+- **Backdrop clicks** close a modal or drawer only when pressed on the backdrop, not when a drag (e.g. selecting text) ends there.
+- **Scroll lock:** while a modal or drawer is open, `<html>` has `has-overlay-open` and the page doesn't scroll.
 
 **In the editor**, the canvas shows what the front end shows.
 - **Closed:** only the trigger area shows (when "Trigger on the page" is on). An overlay without a trigger takes no space.
 - **Open:** an overlay opens while it, or anything in its content, is selected, and closes when the selection moves on (or its close button or backdrop is clicked). A modal or drawer opens as it does on the front end, with the same markup: the block is the `-host`, so its trigger area stays in the page, and the content sits in a dialog element (with the dialog's class and `open` attribute) shown as a popover in the top layer, so the theme's dialog styles, `::backdrop` and transitions all apply. Grouped modals show their previous/next buttons, which open the group's other modals. A collapsible opens in place, including while its trigger is selected.
-- **Overlays sidebar** (top bar): lists the modals and drawers being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end, where it sits doesn't matter). Collapsibles sit in the page, so aren't listed.
-- **Linking:** link search suggests the page's overlays by name. A button or link to one gets **Edit modal** / **Edit drawer** / **Edit collapsible** on its toolbar, as does a block in a modal's or drawer's trigger area.
+- **Overlays sidebar** (top bar): lists the modals and drawers being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end of the content, where it sits doesn't matter). Collapsibles sit in the page, so aren't listed.
+- **IDs:** a new overlay gets an ID; a copy (duplicated or pasted) gets a new one. The ID field applies when it loses focus, and refuses an empty ID or one another block has, so editing one overlay's ID never changes another's.
+- **Linking:** link search suggests the page's overlays by name. A button block (or other block with a link setting) linking to one gets **Edit modal** / **Edit drawer** / **Edit collapsible** on its toolbar, as does a block in a modal's or drawer's trigger area. Links within text don't.
 
 Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
+
+**Links to tabs and accordion items.** A tabs or accordion block gets an HTML anchor (e.g. `tabs-x7k2p`) when it's added, so its items keep their IDs: `#{anchor}-2` is the second. In posts tabs and accordions, an item is named after its post, `#{anchor}-post-{postId}`, so links survive new posts. A link to an item, or to anything inside one, opens it (and any tab or item it's nested in), on load and when the address's `#hash` changes. An untitled item shows its post's title only in a Query Loop.
 
 Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
 
@@ -101,7 +107,7 @@ A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, 
   - Products (carousels only): a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
   - A carousel is a live carousel around the query. An accordion or tabs is the server's rendering, as on the front end (`POST matter/v1/query-display`, with the styles it enqueued), refreshed as its settings change; items open and tabs switch when clicked, and links don't navigate.
 - **Inserting:** a carousel's picker offers posts and products, which replace the carousel block with the query. In the post editor the three posts variations and "Products carousel" replace the plain Query Loop and Product Collection (and WooCommerce's other collections) in the inserter; the Site Editor keeps those for templates.
-- Wherever the theme allows `matter/carousel`, `matter/accordion` or `matter/tabs`, Matter also allows the query blocks they use, so they can be inserted, duplicated, pasted and moved. The theme's list doesn't name them.
+- Wherever the theme allows `matter/carousel`, `matter/accordion` or `matter/tabs` (in its allowed blocks, or a section slot's `allowedBlocks`), Matter also allows the query blocks they use, so they can be inserted, duplicated, pasted and moved. The theme's lists don't name them.
 - If Matter's handling ever stops, the live site shows the query as a normal list. Saving the page in the editor then drops `matterDisplay`, and it stays a list.
 
 ## Sections
@@ -278,7 +284,9 @@ Tabs options: `dropdownBelow`, the breakpoint below which tabs set to "Show as a
 
 ## JavaScript API
 
-Every interactive block can be driven from theme scripts. `matter.{block}( target )` returns a block's instance, where `target` is an element ID (usually the block's HTML anchor, set under Advanced) or an element; it resolves to that block, or the first one of its type inside it. Instances exist once a block has started, so wait with `matter.ready()`:
+Every interactive block can be driven from theme scripts. `matter.{block}( target )` returns a block's instance, where `target` is an element ID (usually the block's HTML anchor, set under Advanced) or an element; it resolves to that block, or the first one of its type inside it. Instances exist once a block has started, so wait with `matter.ready( target )`, which resolves with the target block itself when it is one (not a block nested inside it), else the first block inside it.
+
+`window.matter` exists from the page's `<head>` (a small inline stub), so theme scripts can call `matter.ready()` before Matter's modules load, and `matter.carousel()` and the others return `null` rather than throwing on pages without the block.
 
 ```js
 matter.ready( 'faq' ).then( ( faq ) => faq.open( 0 ) );
@@ -293,16 +301,20 @@ document.addEventListener( 'matter-tabs-change', ( event ) => {
 
 | Block | `matter.…( target )` | Methods | Read-only state | Events (`matter-…`) |
 |---|---|---|---|---|
-| Carousel | `carousel` | `goTo( index, instant )`, `goToSlide( slide, instant )`, `next( instant )`, `prev( instant )`, `play()`, `pause()`, `reInit( options )` | `index`, `count` (scroll positions), `slides`, `selectedSlides`, `progress`, `isPlaying`, `canPrev`, `canNext`, `embla` (the Embla instance) | `carousel-select` (`index`, `count`, `slides`), `carousel-settle`, `carousel-play`, `carousel-pause` |
+| Carousel | `carousel` | `goTo( index, instant )`, `goToSlide( slide, instant )`, `next( instant )`, `prev( instant )`, `play()`, `pause()` (holds until `play()`), `reInit( options )` | `index`, `count` (scroll positions), `slides`, `selectedSlides`, `progress`, `isPlaying`, `canPrev`, `canNext`, `embla` (the Embla instance) | `carousel-select` (`index`, `count`, `slides`), `carousel-settle`, `carousel-play`, `carousel-pause` |
 | Tabs | `tabs` | `select( tab )` (index or panel ID), `next()`, `prev()` | `tabs` and `active` (`{ index, id, label }`) | `tabs-change` (`index`, `tabId`, `previous`) |
 | Accordion | `accordion` | `open( item )`, `close( item )`, `toggle( item )` (index or item ID), `openAll()`, `closeAll()`, `isOpen( item )` | `items` (`{ index, id, title, isOpen }`) | `accordion-open`, `accordion-close` (`itemId`, `index`) |
 | Gallery | `gallery` | `open( index )`, `close()`, `next()`, `prev()` (the lightbox) | `isOpen`, `index`, `count` | `gallery-open`, `gallery-change`, `gallery-close` (`index`) |
 | Modal, drawer, collapsible | `overlay` | `open()`, `close()`, `toggle()`, `next()`, `previous()` | `id`, `isOpen` | `overlay-open`, `overlay-close` |
-| Panel | `panel` | `open()`, `close()`, `toggle()` | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
+| Panel | `panel` | `open()`, `close()`, `toggle()` | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` (`instance`) |
 
 Every instance also has `element` and `id`, and every block dispatches `matter-{block}-ready` (with `detail.instance`) when it starts. Events bubble from the block, with `detail.id` (the block's ID, or `null`).
 
-Scripts built with the Interactivity API can use the stores instead: `store( 'matter/carousel' ).actions.goTo( 'hero', 2 )`, and likewise `matter/tabs` (`select`, `next`, `prev`), `matter/accordion` (`open`, `close`, `toggle`, `openAll`, `closeAll`), `matter/gallery` (`open`, `close`, `next`, `prev`) and `matter/overlay` (`open`, `close`, `toggle`, `next`, `previous`, `closeAll`), each taking the target first.
+Scripts built with the Interactivity API can use the stores instead: `store( 'matter/carousel' ).actions.goTo( 'hero', 2 )` (and `reInit( target, options )`), and likewise `matter/tabs` (`select`, `next`, `prev`), `matter/accordion` (`open`, `close`, `toggle`, `openAll`, `closeAll`), `matter/gallery` (`open`, `close`, `next`, `prev`) and `matter/overlay` (`open`, `close`, `toggle`, `next`, `previous`, `closeAll`), each taking the target (an ID or element) first.
+
+Blocks clean up when removed (e.g. by the Interactivity API's client-side navigation): carousels destroy their Embla instance, and listeners outside the block are removed.
+
+**Without JavaScript** (a script that fails or is blocked): a carousel's slides scroll natively, and accordions, tabs and overlays show their server-rendered state (closed). Menus and panels need their scripts: submenus stay closed, and a panel below its breakpoint can't open.
 
 ## Menus
 
@@ -318,13 +330,13 @@ Eighteen73\Matter\menu( [
 **Arguments:**
 - `location` or `menu`
 - `type`: `dropdown`, `accordion` or `drill-down`, or a mobile-first breakpoint map. Each range gets that type's CSS through generated media queries, so the right layout shows before JavaScript loads.
-- `opens_on`: `hover` or `click`
+- `opens_on`: `hover` or `click`. With `click`, a parent item's link is replaced by its toggle, and its submenu starts with a "View all" link to the parent page (always shown, whatever `view_all` says). With `hover`, a submenu closes 300ms after the pointer leaves; clicking the toggle of a submenu opened by hovering keeps it open.
 - `orientation`: `horizontal` or `vertical`
 - `depth`
 - `label`
 - `class`
 - `id`
-- `view_all`: show the drill-down "View all" link
+- `view_all`: show the drill-down "View all" link (click menus always show it)
 
 Also available: `get_menu()` returns the HTML rather than echoing it.
 
@@ -373,9 +385,10 @@ $phone = setting( 'contact.phone' );
 The panel sits in `.matter-menu__panel`; give it a width beside the columns, e.g. `@media (--lg) { .matter-menu__panel { flex: 0 0 18rem; } }`.
 
 **Accessibility:**
-- Arrow, Home and End keys move between items; Escape closes the innermost submenu.
+- Arrow, Home and End keys move between items (not inside a field, such as a search in a megamenu panel); Escape closes the innermost submenu, and closes open dropdowns wherever focus is.
 - Drill-down panels trap focus.
 - `aria-expanded` and `inert` are rendered on the server.
+- The default skin gives toggles, back buttons and links at least a 24px target (WCAG 2.5.8).
 
 Filters: `matter_menu_args`, `matter_menu_back_text`, `matter_menu_view_all_text`, `matter_megamenu_panels`.
 
@@ -390,9 +403,9 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 }, [ 'collapse_below' => 'lg' ] );
 ```
 
-- **Off-canvas:** a dialog with a focus trap, Escape to close, backdrop, scroll lock and a close button. It sits below the admin bar.
+- **Off-canvas:** a dialog with a focus trap, Escape to close, backdrop, scroll lock and a close button. It sits below the admin bar. Following a link inside it (except into a new tab), or a `#hash` change, closes it. When it closes, focus returns to its toggle, even with a drill-down submenu open.
 - **Inside a panel:** `.is-panel-only` and `.is-inline-only` show content in one mode only.
-- **Events:** `matter-panel-open` and `matter-panel-close`.
+- **Events:** `matter-panel-open` and `matter-panel-close`, with `detail.id` and `detail.instance`.
 
 ## Site settings
 
@@ -597,6 +610,8 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 - **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts or products carousel the slides are the items of the post or product template inside the track; in an accordion or tabs of posts the items are inside the post template's list), state classes (`is-*`, `has-*`), the `--scheme--*` roles and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 
+**Not in the contract: the default skin** (the colours, spacing, borders and sizes in `:where()`). It can change in a minor release, and every such change is listed under **Visual changes** in the changelog. A theme should style what it depends on rather than rely on the skin.
+
 ## Development
 
 ```bash
@@ -605,5 +620,16 @@ npm run start   # watch
 npm run build   # production build
 npm run lint:js && npm run lint:css && composer run lint
 ```
+
+**Tests** run against [wp-env](https://www.npmjs.com/package/@wordpress/env) (Docker): WordPress, WooCommerce, Matter as a must-use plugin and a small fixture theme (`tests/fixtures/matter-test-theme`). They use `build/`, so build first.
+
+```bash
+npm run env:start    # start wp-env (http://localhost:8888, tests on 8889)
+npm run test:unit    # JavaScript unit tests
+npm run test:php     # PHPUnit, including contract snapshots (UPDATE_SNAPSHOTS=1 to update)
+npm run test:e2e     # browser tests with Playwright and axe (npx playwright install chromium first)
+```
+
+CI runs the linters and all three suites on pushes to `next` and pull requests, and weekly against WordPress nightly and the latest WooCommerce (`.github/workflows/compatibility.yml`).
 
 Lefthook runs the linters on commit. Pushing to `main` builds and tags a release (see `.github/workflows/release.yml`). See [CHANGELOG.md](CHANGELOG.md).
