@@ -12,8 +12,6 @@ import {
 	TextControl,
 	ToolbarButton,
 	ToolbarGroup,
-	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
@@ -22,6 +20,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
+import { ToolsPanel, ToolsPanelItem } from '../../components/compat';
 import {
 	CarouselFrame,
 	carouselClasses,

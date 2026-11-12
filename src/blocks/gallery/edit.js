@@ -16,8 +16,6 @@ import {
 	ToggleControl,
 	ToolbarButton,
 	ToolbarGroup,
-	__experimentalToggleGroupControl as ToggleGroupControl, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Stable in practice since 6.2.
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useRef, useState } from '@wordpress/element';
@@ -27,6 +25,10 @@ import { gallery as icon } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
+import {
+	ToggleGroupControl,
+	ToggleGroupControlOption,
+} from '../../components/compat';
 import {
 	CarouselFrame,
 	carouselClasses,

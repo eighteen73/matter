@@ -13,7 +13,6 @@ import {
 	ComboboxControl,
 	ExternalLink,
 	ToggleControl,
-	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core's document panels use for spacing.
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import {
@@ -28,6 +27,7 @@ import { registerPlugin } from '@wordpress/plugins';
 /**
  * Internal dependencies
  */
+import { VStack } from '../../components/compat';
 import { rememberTarget } from './targets';
 
 const META = '_matter_archive_target';

@@ -1,12 +1,13 @@
 /**
  * WordPress dependencies
  */
-import {
-	SelectControl,
-	ToggleControl,
-	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-} from '@wordpress/components';
+import { SelectControl, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+
+/**
+ * Internal dependencies
+ */
+import { ToolsPanelItem } from '../../components/compat';
 
 const DEFAULT_LEVEL = 3;
 

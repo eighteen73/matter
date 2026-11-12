@@ -11,11 +11,7 @@ import {
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
 import { createBlock } from '@wordpress/blocks';
-import {
-	Button,
-	MenuItem,
-	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-} from '@wordpress/components';
+import { Button, MenuItem } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -25,6 +21,7 @@ import { plus } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
+import { ToolsPanel } from '../../components/compat';
 import { IconToolbar, useIcon } from '../../components/icon-picker';
 import { useLegacyQuery } from '../../query-display/use-legacy-query';
 import { ActiveTabContext } from './context';

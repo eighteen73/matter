@@ -6,14 +6,12 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import {
-	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
+import { ToolsPanel } from '../../components/compat';
 import { useLegacyQuery } from '../../query-display/use-legacy-query';
 import { ACCORDION_SETTINGS, AccordionSettings } from './settings';
 import { useStableId } from '../../components/stable-id';

@@ -1,14 +1,17 @@
 /**
  * WordPress dependencies
  */
-import {
-	TextControl,
-	ToggleControl,
-	__experimentalToggleGroupControl as ToggleGroupControl, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Stable in practice since 6.2.
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption, // eslint-disable-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-} from '@wordpress/components';
+import { TextControl, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+
+/**
+ * Internal dependencies
+ */
+import {
+	ToggleGroupControl,
+	ToggleGroupControlOption,
+	ToolsPanelItem,
+} from '../../components/compat';
 
 /**
  * The tabs' settings, as ToolsPanel items: used by the tabs block and by tabs

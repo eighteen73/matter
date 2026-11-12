@@ -8,7 +8,6 @@
  * WordPress dependencies
  */
 import {
-	__experimentalBlockVariationPicker as BlockVariationPicker, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- Used by core's Columns block.
 	MediaPlaceholder,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
@@ -25,6 +24,7 @@ import { gallery, postList } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
+import { BlockVariationPicker } from '../../components/compat';
 import {
 	POSTS,
 	PRODUCTS,

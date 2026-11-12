@@ -3,18 +3,14 @@
  */
 import { InspectorControls } from '@wordpress/block-editor';
 import { store as blocksStore } from '@wordpress/blocks';
-import {
-	Button,
-	TextControl,
-	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
-} from '@wordpress/components';
+import { Button, TextControl } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
+import { ToolsPanel, ToolsPanelItem } from '../../../components/compat';
 import {
 	ACCORDION_SETTINGS,
 	AccordionSettings,

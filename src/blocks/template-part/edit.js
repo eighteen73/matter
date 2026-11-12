@@ -3,13 +3,7 @@
  */
 import apiFetch from '@wordpress/api-fetch';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import {
-	Placeholder,
-	SelectControl,
-	Spinner,
-	__experimentalToolsPanel as ToolsPanel, // eslint-disable-line @wordpress/no-unsafe-wp-apis -- What core uses for block controls; experimental in name only.
-	__experimentalToolsPanelItem as ToolsPanelItem, // eslint-disable-line @wordpress/no-unsafe-wp-apis
-} from '@wordpress/components';
+import { Placeholder, SelectControl, Spinner } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
@@ -17,6 +11,7 @@ import { addQueryArgs } from '@wordpress/url';
 /**
  * Internal dependencies
  */
+import { ToolsPanel, ToolsPanelItem } from '../../components/compat';
 import { useInert } from '../../components/use-inert';
 
 // Previews by slug, for the editor session (a template shows the same
