@@ -24,5 +24,14 @@
 		},
 		[ 'collapse_below' => 'lg' ]
 	);
+
+	// A second menu that opens on hover, for hover behaviour.
+	Eighteen73\Matter\menu(
+		[
+			'location' => 'primary',
+			'id'       => 'hover-menu',
+			'type'     => 'dropdown',
+		]
+	);
 	?>
 </header>

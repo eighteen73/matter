@@ -301,10 +301,31 @@ const { actions } = store('matter/gallery', {
 				return;
 			}
 
-			ref.closest('.wp-block-matter-gallery')
-				.querySelectorAll('.wp-block-matter-gallery__items > [hidden]')
-				.forEach((figure) => figure.removeAttribute('hidden'));
+			const revealed = [
+				...ref
+					.closest('.wp-block-matter-gallery')
+					.querySelectorAll(
+						'.wp-block-matter-gallery__items > [hidden]'
+					),
+			];
+
+			revealed.forEach((figure) => figure.removeAttribute('hidden'));
 			ref.hidden = true;
+
+			// The button had focus and is gone: move it to the first image
+			// revealed (its link or button, else the image itself).
+			const first = revealed[0];
+			const target =
+				first?.querySelector('a[href], button:not([disabled])') ??
+				first;
+
+			if (target) {
+				if (target === first) {
+					first.tabIndex = -1;
+				}
+
+				target.focus();
+			}
 		},
 		close(target) {
 			if (!fromDirective(target)) {

@@ -152,7 +152,7 @@ class Menu {
 		self::register_state();
 
 		$html = sprintf(
-			'<nav id="%1$s" class="%2$s" aria-label="%3$s" data-wp-interactive="matter/menu" %4$s data-wp-init="callbacks.init" data-wp-on--keydown="actions.onKeydown" data-wp-on--focusout="actions.onFocusOut" data-wp-on-document--click="actions.onDocumentClick">%5$s</nav>',
+			'<nav id="%1$s" class="%2$s" aria-label="%3$s" data-wp-interactive="matter/menu" %4$s data-wp-init="callbacks.init" data-wp-on--keydown="actions.onKeydown" data-wp-on--focusout="actions.onFocusOut" data-wp-on-document--click="actions.onDocumentClick" data-wp-on-document--keydown="actions.onDocumentKeydown">%5$s</nav>',
 			esc_attr( $id ),
 			esc_attr( implode( ' ', array_filter( $classes ) ) ),
 			esc_attr( $args['label'] ?: $menu->name ),

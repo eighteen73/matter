@@ -45,6 +45,24 @@ const DROPDOWN = 'dropdown';
 const DRILL_DOWN = 'drill-down';
 const CLICK = 'click';
 const HOVER = 'hover';
+
+// How long a hover-opened submenu stays open after the pointer leaves, so a
+// pointer crossing a gap (or briefly overshooting) doesn't close it.
+const HOVER_CLOSE_DELAY = 300;
+
+// Pending hover closes: submenu ID => timer.
+const closeTimers = new Map();
+
+const cancelHoverClose = (submenuId) => {
+	window.clearTimeout(closeTimers.get(submenuId));
+	closeTimers.delete(submenuId);
+};
+
+// Typing in a field (e.g. a search in a megamenu panel) keeps its keys.
+const isEditable = (element) =>
+	!!element.closest?.(
+		'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+	);
 const NEXT_KEYS = ['ArrowDown', 'ArrowRight'];
 const PREV_KEYS = ['ArrowUp', 'ArrowLeft'];
 
@@ -244,6 +262,13 @@ const { state } = store(
 					return;
 				}
 
+				cancelHoverClose(context.submenuId);
+
+				// A submenu opened by a click stays a click submenu.
+				if (context.openSubmenus.includes(context.submenuId)) {
+					return;
+				}
+
 				const { ref } = getElement();
 
 				openSubmenu(context, context.submenuId, HOVER, ref);
@@ -259,11 +284,38 @@ const { state } = store(
 				}
 
 				const { ref } = getElement();
+				const { submenuId } = context;
 
-				closeSubmenu(context, context.submenuId, ref);
+				cancelHoverClose(submenuId);
+				closeTimers.set(
+					submenuId,
+					window.setTimeout(
+						withScope(() => {
+							closeTimers.delete(submenuId);
+
+							if (context.openModes[submenuId] === HOVER) {
+								closeSubmenu(context, submenuId, ref);
+							}
+						}),
+						HOVER_CLOSE_DELAY
+					)
+				);
 			},
 			toggleSubmenu() {
 				const context = getContext();
+
+				cancelHoverClose(context.submenuId);
+
+				// Opened by hovering: the click keeps it open (it no longer
+				// closes when the pointer leaves) rather than closing it.
+				if (
+					state.isSubmenuOpen &&
+					context.openModes[context.submenuId] === HOVER
+				) {
+					context.openModes[context.submenuId] = CLICK;
+					return;
+				}
+
 				const { ref } = getElement();
 				const item = ref.closest(SELECTORS.parent);
 
@@ -338,7 +390,10 @@ const { state } = store(
 				const isNext = NEXT_KEYS.includes(key);
 				const isPrev = PREV_KEYS.includes(key);
 
-				if (!isNext && !isPrev && key !== 'Home' && key !== 'End') {
+				if (
+					(!isNext && !isPrev && key !== 'Home' && key !== 'End') ||
+					isEditable(target)
+				) {
 					return;
 				}
 
@@ -379,6 +434,24 @@ const { state } = store(
 				const { ref } = getElement();
 
 				closeAll(context, ref, event.relatedTarget);
+			}),
+			// Escape closes open dropdowns even when focus is elsewhere (e.g.
+			// a submenu opened by hovering); inside the menu, onKeydown
+			// closes the innermost.
+			onDocumentKeydown: withSyncEvent((event) => {
+				const context = getContext();
+				const { ref } = getElement();
+
+				if (
+					event.key !== 'Escape' ||
+					context.menuType !== DROPDOWN ||
+					!context.openSubmenus.length ||
+					ref.contains(getTarget(event))
+				) {
+					return;
+				}
+
+				closeAll(context, ref);
 			}),
 			onDocumentClick: withSyncEvent((event) => {
 				const context = getContext();

@@ -66,6 +66,21 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const jump = (instant = false) => instant || reducedMotion.matches;
 
 /**
+ * Mark an element current or not. `aria-current="true"`: an empty value
+ * means false, so screen readers wouldn't announce it.
+ *
+ * @param {Element} element   Element.
+ * @param {boolean} isCurrent Current.
+ */
+const setCurrent = (element, isCurrent) => {
+	if (isCurrent) {
+		element.setAttribute('aria-current', 'true');
+	} else {
+		element.removeAttribute('aria-current');
+	}
+};
+
+/**
  * Minimal sprintf for translated labels: `%1$d`, `%2$d` and `%d`.
  *
  * @param {string}    template Label template.
@@ -156,7 +171,7 @@ const updateUi = (embla, root, context) => {
 		[...dots.children].forEach((dot, index) => {
 			const distance = Math.abs(index - current);
 
-			dot.toggleAttribute('aria-current', index === current);
+			setCurrent(dot, index === current);
 			dot.dataset.distance = String(
 				context.options.loop
 					? Math.min(distance, snaps.length - distance)
@@ -169,8 +184,8 @@ const updateUi = (embla, root, context) => {
 		const thumbnails = [...strip.children];
 
 		thumbnails.forEach((thumbnail) =>
-			thumbnail.toggleAttribute(
-				'aria-current',
+			setCurrent(
+				thumbnail,
 				selected.includes(Number(thumbnail.dataset.index))
 			)
 		);
