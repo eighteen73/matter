@@ -1,7 +1,7 @@
 /**
  * Queries shown as a carousel, accordion or tabs: a Query Loop (or, for
- * carousels, a Product Collection) that is itself the block (see
- * query-display/templates and Blocks\QueryDisplay for the front end).
+ * carousels, a Product Collection or Terms Query) that is itself the block
+ * (see query-display/templates and Blocks\QueryDisplay for the front end).
  *
  * - A `matterDisplay` attribute on the query block (`type`, `style`,
  *   `scheme` and the block's own settings) shows it as that block. Its
@@ -14,9 +14,12 @@
  * - Products (carousels only): a "Products carousel" collection, with
  *   WooCommerce's `hideControls` (its Layout and Width settings are hidden by
  *   the editor stylesheet instead). No "Choose collection" button.
- * - In the post editor these replace the plain Query Loop and Product
- *   Collection (and WooCommerce's other collections) in the inserter. The
- *   Site Editor keeps them all, for templates.
+ * - Terms (carousels only): a "Terms carousel" Terms Query variation, matched
+ *   by its display, with core's own controls (taxonomy, order, empty terms,
+ *   nesting, chosen terms). Its slides are the theme's term loop items.
+ * - In the post editor these replace the plain Query Loop, Product
+ *   Collection (and WooCommerce's other collections) and Terms Query in the
+ *   inserter. The Site Editor keeps them all, for templates.
  * - The query's items can't be selected, edited or added to.
  */
 
@@ -33,7 +36,7 @@ import { createHigherOrderComponent } from '@wordpress/compose';
 import domReady from '@wordpress/dom-ready';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
-import { postList, store as shop } from '@wordpress/icons';
+import { category, postList, store as shop } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -50,8 +53,11 @@ import {
 	PRODUCTS_HIDDEN_CONTROLS,
 	PRODUCTS_LAYOUT,
 	QUERY_BLOCKS,
+	TERMS,
+	TERMS_VARIATION,
 	displayOf,
 	postsTemplate,
+	termsAttributes,
 } from '../../../query-display/templates';
 import CarouselEdit from './carousel-edit';
 import PreviewEdit from './preview-edit';
@@ -142,12 +148,34 @@ domReady(() => {
 		innerBlocks: [['woocommerce/product-template', {}, ITEMS.carousel]],
 	});
 
+	if (getBlockType(TERMS)) {
+		registerBlockVariation(TERMS, {
+			name: TERMS_VARIATION,
+			title: __('Terms carousel', 'matter'),
+			description: __(
+				'Categories, tags or other terms shown as slides.',
+				'matter'
+			),
+			icon: getBlockType(DISPLAY_BLOCKS.carousel)?.icon?.src ?? category,
+			scope: isPostEditor() ? ['inserter'] : [],
+			isDefault: isPostEditor(),
+			attributes: termsAttributes(),
+			// A Terms Query has no `namespace`: its display marks it.
+			isActive: (attributes) => !!displayOf(TERMS, attributes),
+			innerBlocks: [['core/term-template', {}, ITEMS.carousel]],
+		});
+	}
+
 	if (!isPostEditor()) {
 		return;
 	}
 
 	// Clients get Matter's, not the plain blocks or other collections.
-	const ours = [...Object.values(NAMESPACES), PRODUCTS_COLLECTION];
+	const ours = [
+		...Object.values(NAMESPACES),
+		PRODUCTS_COLLECTION,
+		TERMS_VARIATION,
+	];
 
 	QUERY_BLOCKS.forEach((name) =>
 		(getBlockVariations(name) ?? []).forEach((variation) => {

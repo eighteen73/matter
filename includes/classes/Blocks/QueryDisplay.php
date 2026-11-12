@@ -1,7 +1,7 @@
 <?php
 /**
  * Queries shown as a carousel, accordion or tabs: a Query Loop (or, for
- * carousels, a Product Collection) that is itself the block.
+ * carousels, a Product Collection or Terms Query) that is itself the block.
  *
  * The query carries a `matterDisplay` attribute: `type` (carousel, accordion
  * or tabs), `style` (the block's variant), `scheme`, and the block's own
@@ -14,9 +14,11 @@
  * the post template's `matter/accordion-item` or `matter/tab`, recorded by
  * Instances as they render (the query counts as the container), so the tab
  * list and FAQ schema work too. Their content, and a carousel's slides, are
- * the theme's loop items for that block (Blocks\LoopItem). In the editor it's one block: "Posts
- * carousel", "Posts accordion" or "Posts tabs", with the block's settings and
- * the query's own filters (editor/extensions/query-display).
+ * the theme's loop items for that block (Blocks\LoopItem): a post's, or in a
+ * Terms Query a term's. In the editor it's one block: "Posts carousel",
+ * "Posts accordion", "Posts tabs", "Products carousel" or "Terms carousel",
+ * with the block's settings and the query's own filters
+ * (editor/extensions/query-display).
  *
  * @package Eighteen73\Matter
  */
@@ -45,15 +47,20 @@ final class QueryDisplay {
 	public const ATTRIBUTE = 'matterDisplay';
 
 	/**
+	 * The query block that lists terms (its items are terms, not posts).
+	 */
+	public const TERMS = 'core/terms-query';
+
+	/**
 	 * Query blocks that can be shown as a block.
 	 */
-	public const BLOCKS = [ 'core/query', 'woocommerce/product-collection' ];
+	public const BLOCKS = [ 'core/query', 'woocommerce/product-collection', self::TERMS ];
 
 	/**
 	 * Display types: the block each wraps the query in, the query blocks it
-	 * supports (products are carousels only), and whether its loop items can
-	 * fall back to the item's own design (a card). An accordion's or tabs'
-	 * can't: the post's title is already the heading or tab.
+	 * supports (products and terms are carousels only), and whether its loop
+	 * items can fall back to the item's own design (a card). An accordion's or
+	 * tabs' can't: the post's title is already the heading or tab.
 	 */
 	public const TYPES = [
 		'carousel'  => [
@@ -141,6 +148,17 @@ final class QueryDisplay {
 	}
 
 	/**
+	 * Whether a query block can be shown as a display type.
+	 *
+	 * @param string $type        Display type (carousel, accordion or tabs).
+	 * @param string $query_block Query block name.
+	 * @return bool
+	 */
+	public static function supports( string $type, string $query_block ): bool {
+		return isset( self::TYPES[ $type ] ) && in_array( $query_block, self::TYPES[ $type ]['queries'], true );
+	}
+
+	/**
 	 * A block's display, if it's a query shown as a block: the type, the
 	 * block it's shown as, and that block's attributes (validated against
 	 * its schema, with its defaults).
@@ -153,7 +171,7 @@ final class QueryDisplay {
 		$display = $attributes[ self::ATTRIBUTE ] ?? null;
 		$type    = is_array( $display ) ? (string) ( $display['type'] ?? '' ) : '';
 
-		if ( ! isset( self::TYPES[ $type ] ) || ! in_array( $name, self::TYPES[ $type ]['queries'], true ) ) {
+		if ( ! self::supports( $type, $name ) ) {
 			return null;
 		}
 

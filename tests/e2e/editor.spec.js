@@ -2,7 +2,7 @@
  * Block editor: content integrity fixed before 1.0.
  */
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
-const { createPage } = require('./fixtures');
+const { createCategories, createPage, termsCarousel } = require('./fixtures');
 
 const blocks = (page) =>
 	page.evaluate(() =>
@@ -96,6 +96,64 @@ test.describe('sections', () => {
 			window.wp.data.dispatch('core/editor').undo()
 		);
 		await expect.poll(async () => (await blocks(page)).length).toBe(0);
+	});
+});
+
+test.describe('terms carousel', () => {
+	test("previews each term's loop item, and opening it isn't an edit", async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		const names = ['Matter Editor Boots', 'Matter Editor Hats'];
+		const ids = await createCategories(requestUtils, names);
+		const saved = await createPage(
+			requestUtils,
+			'Terms carousel preview',
+			termsCarousel(ids, 'categories')
+		);
+
+		await admin.editPost(saved.id);
+
+		const canvas = page.frameLocator('iframe[name="editor-canvas"]');
+		const carousel = canvas.locator('.wp-block-matter-carousel.is-query');
+
+		// One each: core keeps a hidden preview of the term being edited.
+		for (const name of names) {
+			await expect(
+				carousel
+					.locator('.wp-block-matter-loop-item')
+					.filter({ hasText: name, visible: true })
+			).toHaveCount(1);
+		}
+
+		expect(await editorState(page)).toEqual({ dirty: false, undo: false });
+
+		// It's the "Terms carousel", which stands in for the plain Terms Query
+		// in the post editor's inserter.
+		expect(
+			await page.evaluate(() => {
+				const [query] = window.wp.data
+					.select('core/block-editor')
+					.getBlocks();
+				const items = window.wp.data
+					.select('core/block-editor')
+					.getInserterItems()
+					.filter(({ name }) => name === 'core/terms-query')
+					.map(({ id }) => id);
+
+				return {
+					active: window.wp.data
+						.select('core/blocks')
+						.getActiveBlockVariation(query.name, query.attributes)
+						?.name,
+					items,
+				};
+			})
+		).toEqual({
+			active: 'matter/carousel-terms',
+			items: ['core/terms-query/matter/carousel-terms'],
+		});
 	});
 });
 

@@ -5,16 +5,19 @@
 	"version": "1.0.0",
 	"title": "Loop item",
 	"category": "theme",
-	"description": "The theme's design for the current item in a loop. The design lives in the theme, so every loop and carousel shows the same thing.",
+	"description": "The theme's design for the current item in a loop (a post, or a term in a Terms Query). The design lives in the theme, so every loop and carousel shows the same thing.",
 	"keywords": [
 		"loop",
 		"item",
 		"post",
-		"product"
+		"product",
+		"term"
 	],
 	"usesContext": [
 		"postId",
 		"postType",
+		"termId",
+		"taxonomy",
 		"matter/display"
 	],
 	"attributes": {

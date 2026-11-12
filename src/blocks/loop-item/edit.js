@@ -22,10 +22,20 @@ import boundedMap from '../../components/bounded-map';
 // Most items in one request (LoopItem::MAX_PREVIEWS).
 const MAX_PER_REQUEST = 100;
 
-// Rendered items by block and post ID (`carousel:12`) for the editor session:
-// the HTML, or null when the item can't be shown (e.g. the user can't read
-// it). Kept so a preview that remounts (e.g. when its loop is selected) shows
-// at once.
+// Where each kind of item is rendered: posts, and a Terms Query's terms.
+const ROUTES = {
+	post: '/matter/v1/loop-items',
+	term: '/matter/v1/loop-items/terms',
+};
+
+// Loop templates whose items are posts. A loop item in one of these, even
+// inside a term's design, is a post.
+const POST_LOOPS = ['core/post-template', 'woocommerce/product-template'];
+
+// Rendered items by kind, block and ID (`post:carousel:12`) for the editor
+// session: the HTML, or null when the item can't be shown (e.g. the user
+// can't read it). Kept so a preview that remounts (e.g. when its loop is
+// selected) shows at once.
 const previews = boundedMap(500);
 
 // Items whose request failed (e.g. a network error): not cached, so they can
@@ -44,21 +54,23 @@ const retryFailed = () => {
 // items load nothing.
 const HIDDEN_IN = ['accordion', 'tabs'];
 
-// Each loading item's request, and per block the batch still collecting.
+// Each loading item's request, and per kind and block the batch still
+// collecting.
 const pending = new Map();
 const batches = new Map();
 
-const keyOf = (block, postId) => `${block}:${postId}`;
+const keyOf = (kind, block, id) => `${kind}:${block}:${id}`;
 
 /**
  * Fetch items' previews (in a displayed query's block), up to 100 per request, into `previews`.
  * Items that aren't returned (or fail) are stored as null.
  *
+ * @param {string}   kind  `post` or `term`.
  * @param {string}   block The block its query is shown as (empty for none).
  * @param {number[]} ids   Item IDs.
  * @return {Promise} Settles when every request has.
  */
-async function fetchPreviews(block, ids) {
+async function fetchPreviews(kind, block, ids) {
 	const requests = [];
 
 	for (let i = 0; i < ids.length; i += MAX_PER_REQUEST) {
@@ -66,25 +78,25 @@ async function fetchPreviews(block, ids) {
 
 		requests.push(
 			apiFetch({
-				path: addQueryArgs('/matter/v1/loop-items', {
+				path: addQueryArgs(ROUTES[kind], {
 					ids: chunk,
 					...(block && { block }),
 				}),
 			})
 				.then((items) => {
 					items.forEach(({ id, html }) =>
-						previews.set(keyOf(block, id), html)
+						previews.set(keyOf(kind, block, id), html)
 					);
 
 					// Not returned: the item can't be shown.
 					chunk.forEach(
 						(id) =>
-							previews.has(keyOf(block, id)) ||
-							previews.set(keyOf(block, id), null)
+							previews.has(keyOf(kind, block, id)) ||
+							previews.set(keyOf(kind, block, id), null)
 					);
 				})
 				.catch(() =>
-					chunk.forEach((id) => failed.add(keyOf(block, id)))
+					chunk.forEach((id) => failed.add(keyOf(kind, block, id)))
 				)
 		);
 	}
@@ -93,34 +105,36 @@ async function fetchPreviews(block, ids) {
 }
 
 /**
- * Load an item's preview. Items for the same block that start loading in the
- * same tick (a carousel's or an archive's) share one request.
+ * Load an item's preview. Items of a kind for the same block that start
+ * loading in the same tick (a carousel's or an archive's) share one request.
  *
- * @param {string} block  The block its query is shown as (empty for none).
- * @param {number} postId Item ID.
+ * @param {string} kind  `post` or `term`.
+ * @param {string} block The block its query is shown as (empty for none).
+ * @param {number} id    Item ID.
  * @return {Promise} Settles once the preview is in `previews`.
  */
-function loadPreview(block, postId) {
-	const key = keyOf(block, postId);
+function loadPreview(kind, block, id) {
+	const key = keyOf(kind, block, id);
+	const batchKey = `${kind}:${block}`;
 
 	if (!pending.has(key)) {
-		if (!batches.has(block)) {
+		if (!batches.has(batchKey)) {
 			const ids = new Set();
 
-			batches.set(block, {
+			batches.set(batchKey, {
 				ids,
 				request: new Promise((resolve) => setTimeout(resolve)).then(
 					() => {
-						batches.delete(block);
-						return fetchPreviews(block, [...ids]);
+						batches.delete(batchKey);
+						return fetchPreviews(kind, block, [...ids]);
 					}
 				),
 			});
 		}
 
-		const batch = batches.get(block);
+		const batch = batches.get(batchKey);
 
-		batch.ids.add(postId);
+		batch.ids.add(id);
 		pending.set(
 			key,
 			batch.request.finally(() => pending.delete(key))
@@ -134,29 +148,30 @@ function loadPreview(block, postId) {
  * An item's preview: its HTML, null when it can't be shown, false when it
  * failed to load (with a retry), or undefined while it loads.
  *
- * @param {string} block  The block its query is shown as (empty for none).
- * @param {number} postId Item ID.
+ * @param {string} kind  `post` or `term`.
+ * @param {string} block The block its query is shown as (empty for none).
+ * @param {number} id    Item ID.
  * @return {{preview: string|null|false|undefined, retry: Function}} Preview.
  */
-function usePreview(block, postId) {
+function usePreview(kind, block, id) {
 	const [attempt, setLoaded] = useState(0);
-	const key = keyOf(block, postId);
+	const key = keyOf(kind, block, id);
 	const isHidden = HIDDEN_IN.includes(block);
 
 	useEffect(() => {
-		if (!postId || isHidden || previews.has(key) || failed.has(key)) {
+		if (!id || isHidden || previews.has(key) || failed.has(key)) {
 			return;
 		}
 
 		let current = true;
-		loadPreview(block, postId).then(
+		loadPreview(kind, block, id).then(
 			() => current && setLoaded((n) => n + 1)
 		);
 
 		return () => {
 			current = false;
 		};
-	}, [block, postId, key, isHidden, attempt]);
+	}, [kind, block, id, key, isHidden, attempt]);
 
 	useEffect(() => {
 		const reload = () => setLoaded((n) => n + 1);
@@ -168,7 +183,7 @@ function usePreview(block, postId) {
 
 	const retry = retryFailed;
 
-	if (!postId || isHidden) {
+	if (!id || isHidden) {
 		return { preview: undefined, retry };
 	}
 
@@ -181,26 +196,58 @@ function usePreview(block, postId) {
  * design is the theme's. The preview is inert, so clicks fall through to the
  * loop or carousel around it.
  *
+ * In a Terms Query's term template the item is the term (`termId` wins over
+ * the page's `postId`), unless a Query Loop inside is the innermost loop.
+ *
  * @param {Object}   props
  * @param {Object}   props.attributes               Block attributes.
- * @param {string}   props.attributes.itemLabel     The post type's name, for List View.
+ * @param {string}   props.attributes.itemLabel     The post type's (or taxonomy's) name, for List View.
  * @param {Object}   props.context                  Block context.
  * @param {number}   props.context.postId           The loop item.
  * @param {string}   props.context.postType         The loop item's post type.
+ * @param {number}   props.context.termId           The loop item, in a Terms Query.
+ * @param {string}   props.context.taxonomy         The term's taxonomy.
  * @param {Object}   props.context.'matter/display' The query's display (carousel, accordion or tabs), if any.
+ * @param {string}   props.clientId                 Block client ID.
  * @param {Function} props.setAttributes            Attribute setter.
  * @return {Element} Loop item preview.
  */
 export default function Edit({
 	attributes: { itemLabel },
-	context: { postId, postType, 'matter/display': display },
+	context: { postId, postType, termId, taxonomy, 'matter/display': display },
+	clientId,
 	setAttributes,
 }) {
-	useItemLabel(postType, itemLabel, setAttributes);
+	const isInPostLoop = useSelect(
+		(select) => {
+			const { getBlockName, getBlockParentsByBlockName } =
+				select(blockEditorStore);
+			const [innermost] = getBlockParentsByBlockName(
+				clientId,
+				[...POST_LOOPS, 'core/term-template'],
+				true
+			);
+
+			return !!innermost && POST_LOOPS.includes(getBlockName(innermost));
+		},
+		[clientId]
+	);
+	const isTerm = !!termId && !isInPostLoop;
+
+	useItemLabel(
+		isTerm ? 'taxonomy' : 'postType',
+		isTerm ? taxonomy : postType,
+		itemLabel,
+		setAttributes
+	);
 
 	// The block its query is shown as, if any, from the query's context.
 	const block = display?.type ?? '';
-	const { preview, retry } = usePreview(block, postId);
+	const { preview, retry } = usePreview(
+		isTerm ? 'term' : 'post',
+		block,
+		isTerm ? termId : postId
+	);
 	const hasPreview = typeof preview === 'string';
 	const blockProps = useBlockProps({
 		ref: useInert(),
@@ -231,7 +278,7 @@ export default function Edit({
 
 	return (
 		<div {...blockProps}>
-			{postId ? (
+			{(isTerm ? termId : postId) ? (
 				preview === undefined &&
 				!HIDDEN_IN.includes(block) && <Spinner />
 			) : (
@@ -248,21 +295,24 @@ export default function Edit({
 }
 
 /**
- * Keeps the `itemLabel` attribute set to the post type's singular name, so
- * List View and the breadcrumb say "Product" or "Post" rather than "Loop
- * item". The attribute is local (never saved) and the change isn't an edit.
+ * Keeps the `itemLabel` attribute set to the post type's (or taxonomy's)
+ * singular name, so List View and the breadcrumb say "Product", "Post" or
+ * "Category" rather than "Loop item". The attribute is local (never saved)
+ * and the change isn't an edit.
  *
- * @param {string}   postType      Post type from context.
+ * @param {string}   kind          `postType` or `taxonomy`.
+ * @param {string}   name          Post type or taxonomy from context.
  * @param {string}   itemLabel     Current label.
  * @param {Function} setAttributes Attribute setter.
  */
-function useItemLabel(postType, itemLabel, setAttributes) {
+function useItemLabel(kind, name, itemLabel, setAttributes) {
 	const label = useSelect(
 		(select) =>
-			postType
-				? select(coreStore).getPostType(postType)?.labels?.singular_name
+			name
+				? select(coreStore).getEntityRecord('root', kind, name)?.labels
+						?.singular_name
 				: undefined,
-		[postType]
+		[kind, name]
 	);
 	const { __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch(blockEditorStore);

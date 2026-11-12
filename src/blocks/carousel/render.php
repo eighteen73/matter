@@ -1,9 +1,10 @@
 <?php
 /**
- * Carousel: each inner block is a slide, or the items of a Query Loop /
- * Product Collection. Behaviour comes from the chosen variant (block style);
- * slide widths and spacing come from theme CSS. When every slide is an image,
- * the images share one aspect ratio (a theme preset; the variant's by default).
+ * Carousel: each inner block is a slide, or the items of a Query Loop,
+ * Product Collection or Terms Query. Behaviour comes from the chosen variant
+ * (block style); slide widths and spacing come from theme CSS. When every
+ * slide is an image, the images share one aspect ratio (a theme preset; the
+ * variant's by default).
  *
  * @param array    $attributes Block attributes.
  * @param string   $content    Rendered slides.
@@ -34,7 +35,7 @@ if ( $matter_is_images ) {
 // A query shown as a carousel (Blocks\QueryDisplay) has no inner blocks: its
 // items are the slides. Marked here too (view.js marks it as well), so the
 // layout is right before the script starts.
-$matter_is_query = ! $block->inner_blocks && preg_match( '/\b(?:wp-block-post-template|wc-block-product-template|wp-block-woocommerce-product-template)\b/', $content );
+$matter_is_query = ! $block->inner_blocks && preg_match( '/\b(?:wp-block-post-template|wc-block-product-template|wp-block-woocommerce-product-template|wp-block-term-template)\b/', $content );
 $matter_classes  = array_filter(
 	[
 		$matter_style ? 'has-image-aspect-ratio' : '',

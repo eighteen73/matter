@@ -1,8 +1,8 @@
 /**
  * Carousel behaviour (store: matter/carousel), powered by Embla.
  *
- * Slides are the track's children, or the items of a Query Loop / Product
- * Collection inside it. Slide widths and gaps are set in theme CSS; options
+ * Slides are the track's children, or the items of a Query Loop, Product
+ * Collection or Terms Query inside it. Slide widths and gaps are set in theme CSS; options
  * (loop, align, slidesToScroll, autoplay, autoScroll) and the controls come
  * from the block's variant.
  *
@@ -47,7 +47,7 @@ import {
 
 const SELECTOR = '.wp-block-matter-carousel';
 const QUERY_LISTS =
-	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template';
+	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template';
 
 registerType('carousel', SELECTOR);
 

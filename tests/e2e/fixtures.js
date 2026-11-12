@@ -57,4 +57,69 @@ const createPage = (requestUtils, title, content) =>
 		content: content.endsWith('.html') ? read(content) : content,
 	});
 
-module.exports = { createMenu, createPage };
+/**
+ * Categories for a terms carousel, made afresh (any with these names are
+ * deleted first).
+ *
+ * @param {Object}   requestUtils WordPress request utils.
+ * @param {string[]} names        Category names.
+ * @return {Promise<number[]>} Their IDs.
+ */
+async function createCategories(requestUtils, names) {
+	const existing = await requestUtils.rest({
+		path: '/wp/v2/categories',
+		params: { per_page: 100, hide_empty: false },
+	});
+
+	await Promise.all(
+		existing
+			.filter(({ name }) => names.includes(name))
+			.map(({ id }) =>
+				requestUtils.rest({
+					path: `/wp/v2/categories/${id}`,
+					method: 'DELETE',
+					params: { force: true },
+				})
+			)
+	);
+
+	const ids = [];
+
+	for (const name of names) {
+		const { id } = await requestUtils.rest({
+			path: '/wp/v2/categories',
+			method: 'POST',
+			data: { name },
+		});
+
+		ids.push(id);
+	}
+
+	return ids;
+}
+
+/**
+ * A Terms Query of categories shown as a carousel ("Terms carousel"), as the
+ * editor saves it.
+ *
+ * @param {number[]} ids    Category IDs.
+ * @param {string}   anchor The carousel's ID.
+ * @return {string} Block markup.
+ */
+const termsCarousel = (ids, anchor) =>
+	`<!-- wp:terms-query ${JSON.stringify({
+		termQuery: {
+			perPage: 10,
+			taxonomy: 'category',
+			order: 'asc',
+			orderBy: 'name',
+			include: ids,
+			hideEmpty: false,
+			showNested: false,
+			inherit: false,
+		},
+		anchor,
+		matterDisplay: { type: 'carousel', label: 'Categories' },
+	})} --><div id="${anchor}" class="wp-block-terms-query"><!-- wp:term-template --><!-- wp:matter/loop-item /--><!-- /wp:term-template --></div><!-- /wp:terms-query -->`;
+
+module.exports = { createCategories, createMenu, createPage, termsCarousel };

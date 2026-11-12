@@ -20,7 +20,7 @@ import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 const QUERY_LISTS =
-	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template';
+	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template';
 
 /**
  * A block's variant options, as resolved on the server by Variants::get().

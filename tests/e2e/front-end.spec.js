@@ -3,7 +3,12 @@
  */
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
 const AxeBuilder = require('@axe-core/playwright').default;
-const { createMenu, createPage } = require('./fixtures');
+const {
+	createCategories,
+	createMenu,
+	createPage,
+	termsCarousel,
+} = require('./fixtures');
 
 const DESKTOP = { width: 1280, height: 900 };
 const MOBILE = { width: 390, height: 800 };
@@ -210,6 +215,46 @@ test.describe('carousel', () => {
 				'#highlights .wp-block-matter-carousel__dot[aria-current]'
 			)
 		).toHaveAttribute('aria-current', 'true');
+	});
+});
+
+test.describe('terms carousel', () => {
+	test.use({ viewport: DESKTOP });
+
+	test('a Terms Query shown as a carousel starts, its terms the slides', async ({
+		page,
+		requestUtils,
+	}) => {
+		const names = ['Matter Boots', 'Matter Hats', 'Matter Scarves'];
+		const ids = await createCategories(requestUtils, names);
+		const terms = await createPage(
+			requestUtils,
+			'Terms carousel',
+			termsCarousel(ids, 'categories')
+		);
+
+		await page.goto(terms.link);
+
+		const carousel = page.locator('#categories');
+
+		await expect(carousel).toHaveClass(/\bis-initialised\b/);
+		await expect(carousel).toHaveClass(/\bis-query\b/);
+
+		const slides = await page.evaluate(() =>
+			window.matter
+				.carousel('categories')
+				.slides.map((slide) => [
+					slide.tagName,
+					slide.classList.contains('wp-block-term'),
+					slide.textContent.trim(),
+				])
+		);
+
+		// The theme's term loop item (the fixture's links the term's name).
+		expect(slides).toEqual(names.map((name) => ['LI', true, name]));
+		await expect(
+			carousel.getByRole('link', { name: 'Matter Hats' })
+		).toBeVisible();
 	});
 });
 

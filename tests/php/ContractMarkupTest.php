@@ -126,6 +126,37 @@ class ContractMarkupTest extends TestCase {
 	}
 
 	/**
+	 * A Terms Query shown as a carousel: its term template's items are the
+	 * slides, each the term's loop item. Terms are carousels only.
+	 *
+	 * @return void
+	 */
+	public function test_terms_query_display(): void {
+		$terms = self::factory()->category->create_many( 2 );
+
+		$query = fn( string $display ) => '<!-- wp:terms-query {"termQuery":{"perPage":10,"taxonomy":"category","order":"asc","orderBy":"name","include":[' . implode( ',', $terms ) . '],"hideEmpty":false,"showNested":false,"inherit":false},"align":"wide","matterDisplay":' . $display . '} -->'
+			. '<div class="wp-block-terms-query alignwide"><!-- wp:term-template --><!-- wp:matter/loop-item /--><!-- /wp:term-template --></div>'
+			. '<!-- /wp:terms-query -->';
+
+		$carousel = $this->render( $query( '{"type":"carousel","style":"slides"}' ) );
+
+		preg_match( '/^<div class="([^"]*)"/', trim( $carousel ), $match );
+
+		foreach ( [ 'wp-block-matter-carousel', 'is-query', 'is-style-slides', 'alignwide' ] as $class ) {
+			$this->assertContains( $class, explode( ' ', $match[1] ?? '' ), "The carousel wrapper has {$class}" );
+		}
+
+		$this->assertStringContainsString( 'wp-block-matter-carousel__track"><div class="wp-block-terms-query', $carousel );
+		$this->assertMatchesRegularExpression( '/<ul class="[^"]*\bwp-block-term-template\b/', $carousel );
+		$this->assertSame( 2, preg_match_all( '/<li class="wp-block-term [^"]*"><div class="wp-block-matter-loop-item">/', $carousel ) );
+
+		$accordion = $this->render( $query( '{"type":"accordion"}' ) );
+
+		$this->assertStringNotContainsString( 'wp-block-matter-accordion', $accordion );
+		$this->assertStringStartsWith( '<div class="wp-block-terms-query', trim( $accordion ) );
+	}
+
+	/**
 	 * Only items in a loop are titled after their post; a hand-written item
 	 * on a page doesn't take the page's title.
 	 *

@@ -5,8 +5,8 @@
  * The query block itself is the carousel, accordion or tabs: a
  * `matterDisplay` attribute holds the type, the block's style and colour
  * scheme and its own settings. It's marked as Matter's (`namespace` on a
- * Query Loop, `collection` on a Product Collection) for its title and the
- * native controls it offers. Its items are fixed: the theme's loop item for
+ * Query Loop, `collection` on a Product Collection; a Terms Query by its
+ * `matterDisplay` alone) for its title and the native controls it offers. Its items are fixed: the theme's loop item for
  * a carousel's slides, or an accordion item or tab holding one. A loop item
  * picks the theme's pattern for the block it's in (Blocks\LoopItem), e.g.
  * `loop-item-faq-accordion`.
@@ -14,7 +14,8 @@
 
 export const POSTS = 'core/query';
 export const PRODUCTS = 'woocommerce/product-collection';
-export const QUERY_BLOCKS = [POSTS, PRODUCTS];
+export const TERMS = 'core/terms-query';
+export const QUERY_BLOCKS = [POSTS, PRODUCTS, TERMS];
 
 export const ATTRIBUTE = 'matterDisplay';
 
@@ -34,6 +35,9 @@ export const NAMESPACES = {
 
 export const POSTS_NAMESPACE = NAMESPACES.carousel;
 export const PRODUCTS_COLLECTION = 'matter/product-collection/carousel';
+
+// The "Terms carousel" Terms Query variation (matched by its display).
+export const TERMS_VARIATION = 'matter/carousel-terms';
 
 // What the post template holds, per type.
 export const ITEMS = {
@@ -88,7 +92,7 @@ export function displayOf(name, attributes) {
 		return null;
 	}
 
-	// Products are carousels only.
+	// Products and terms are carousels only.
 	return name === POSTS || display.type === 'carousel' ? display : null;
 }
 
@@ -124,6 +128,41 @@ export const postsTemplate = (type, postType, display = {}) => [
  */
 export const queryTemplate = (postType, style) =>
 	postsTemplate('carousel', postType, style ? { style } : {});
+
+/**
+ * A Terms Query's attributes as a carousel: the whole `termQuery`, as core
+ * replaces rather than merges it.
+ *
+ * @param {string} style    Carousel style (block style name), if any.
+ * @param {string} taxonomy Taxonomy.
+ * @return {Object} Block attributes.
+ */
+export const termsAttributes = (style, taxonomy = 'category') => ({
+	[ATTRIBUTE]: { type: 'carousel', ...(style && { style }) },
+	termQuery: {
+		perPage: 9,
+		taxonomy,
+		order: 'asc',
+		orderBy: 'name',
+		include: [],
+		hideEmpty: true,
+		showNested: false,
+		inherit: false,
+	},
+});
+
+/**
+ * A terms carousel: a Terms Query that is the carousel, its term template
+ * holding the theme's loop item.
+ *
+ * @param {string} style Carousel style (block style name), if any.
+ * @return {Array} Block template.
+ */
+export const termsTemplate = (style) => [
+	TERMS,
+	termsAttributes(style),
+	[['core/term-template', {}, ITEMS.carousel]],
+];
 
 /**
  * WooCommerce's stock statuses to show, as its own Product Collection

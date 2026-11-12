@@ -18,8 +18,9 @@
  * A Query Loop shown as an accordion or tabs (QueryDisplay) is that container
  * too, with its display settings standing in for the block's attributes.
  *
- * It also tracks whether a Query Loop's post template is rendering, so blocks
- * can tell a per-post render from the page's own post context.
+ * It also tracks the loop templates rendering (a Query Loop's post template,
+ * a Terms Query's term template), so blocks can tell a per-post render from
+ * the page's own post context, and a term's from a post's.
  *
  * @package Eighteen73\Matter
  */
@@ -43,16 +44,21 @@ class Instances {
 	private const CONTAINERS = [ 'matter/accordion', 'matter/tabs' ];
 
 	/**
-	 * Blocks that render their children once per post of a query.
+	 * Blocks that render their children once per item of a query, and what
+	 * the items are.
 	 */
-	private const LOOPS = [ 'core/post-template', 'woocommerce/product-template' ];
+	private const LOOPS = [
+		'core/post-template'           => 'post',
+		'woocommerce/product-template' => 'post',
+		'core/term-template'           => 'term',
+	];
 
 	/**
-	 * Depth of query loop templates currently rendering.
+	 * What the loop templates currently rendering list (innermost last).
 	 *
-	 * @var int
+	 * @var string[]
 	 */
-	private static int $loop_depth = 0;
+	private static array $loops = [];
 
 	/**
 	 * IDs of containers currently rendering, per block name (innermost last).
@@ -101,8 +107,8 @@ class Instances {
 	 * @return array
 	 */
 	public function start( array $parsed_block, array $source_block = [], ?\WP_Block $parent_block = null ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
-		if ( in_array( $parsed_block['blockName'] ?? '', self::LOOPS, true ) ) {
-			++self::$loop_depth;
+		if ( isset( self::LOOPS[ $parsed_block['blockName'] ?? '' ] ) ) {
+			self::$loops[] = self::LOOPS[ $parsed_block['blockName'] ];
 		}
 
 		if ( null === $parent_block ) {
@@ -143,8 +149,8 @@ class Instances {
 	 * @return string
 	 */
 	public function finish( string $block_content, array $parsed_block, ?\WP_Block $instance = null ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
-		if ( in_array( $parsed_block['blockName'] ?? '', self::LOOPS, true ) ) {
-			self::$loop_depth = max( 0, self::$loop_depth - 1 );
+		if ( isset( self::LOOPS[ $parsed_block['blockName'] ?? '' ] ) ) {
+			array_pop( self::$loops );
 		}
 
 		$key = null !== $instance ? spl_object_id( $instance ) : null;
@@ -196,7 +202,17 @@ class Instances {
 	 * @return bool
 	 */
 	public static function in_query_loop(): bool {
-		return self::$loop_depth > 0;
+		return in_array( 'post', self::$loops, true );
+	}
+
+	/**
+	 * What the innermost loop template rendering lists: a Query Loop's posts
+	 * or a Terms Query's terms.
+	 *
+	 * @return string `post`, `term`, or empty outside a loop.
+	 */
+	public static function loop(): string {
+		return (string) end( self::$loops );
 	}
 
 	/**

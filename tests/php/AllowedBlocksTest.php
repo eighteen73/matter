@@ -40,6 +40,7 @@ class AllowedBlocksTest extends TestCase {
 		$this->assertContains( 'core/paragraph', $page );
 		$this->assertContains( 'matter/accordion', $page );
 		$this->assertContains( 'core/query', $page, 'Posts accordions, tabs and carousels are queries' );
+		$this->assertContains( 'core/terms-query', $page, 'Terms carousels are Terms Queries' );
 		$this->assertNotContains( 'core/group', $page );
 		$this->assertNotContains( 'matter/archive-loop', $page );
 

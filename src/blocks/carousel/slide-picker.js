@@ -1,6 +1,7 @@
 /**
  * What a new carousel holds: images (from the media library), the theme's
- * slide types (e.g. cards; `matter_carousel_slides`), posts or products.
+ * slide types (e.g. cards; `matter_carousel_slides`), posts, products or
+ * terms (e.g. categories).
  * Each type can set the variant the carousel starts with.
  */
 
@@ -19,7 +20,7 @@ import {
 import { useDispatch } from '@wordpress/data';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { gallery, postList } from '@wordpress/icons';
+import { category, gallery, postList } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -28,8 +29,11 @@ import { BlockVariationPicker } from '../../components/compat';
 import {
 	POSTS,
 	PRODUCTS,
+	QUERY_BLOCKS,
+	TERMS,
 	productsTemplate,
 	queryTemplate,
+	termsTemplate,
 } from '../../query-display/templates';
 import { useSwapBlock } from '../../query-display/use-swap-block';
 
@@ -43,9 +47,16 @@ const SLIDE_COUNT = 3;
  */
 export const themeSlideTypes = () => window.matterEditor?.carouselSlides ?? {};
 
+// The query blocks that become the carousel.
+const TEMPLATES = {
+	[POSTS]: (variant) => queryTemplate('post', variant),
+	[PRODUCTS]: productsTemplate,
+	[TERMS]: termsTemplate,
+};
+
 /**
- * Picker options: images, the theme's types, posts, then products (with
- * WooCommerce).
+ * Picker options: images, the theme's types, posts, products (with
+ * WooCommerce), then terms.
  *
  * @return {Array} Variations for the picker.
  */
@@ -54,7 +65,7 @@ function slideOptions() {
 	const custom = Object.keys(theme)
 		.filter(
 			(name) =>
-				!['core/image', POSTS, PRODUCTS].includes(name) &&
+				!['core/image', ...QUERY_BLOCKS].includes(name) &&
 				getBlockType(name)
 		)
 		.map((name) => ({
@@ -82,6 +93,15 @@ function slideOptions() {
 			title: theme[PRODUCTS]?.label || __('Products', 'matter'),
 			description: __('One slide per product.', 'matter'),
 			icon: getBlockType(PRODUCTS).icon,
+		},
+		getBlockType(TERMS) && {
+			name: TERMS,
+			title: theme[TERMS]?.label || __('Terms', 'matter'),
+			description: __(
+				'One slide per category, tag or other term.',
+				'matter'
+			),
+			icon: category,
 		},
 	].filter(Boolean);
 }
@@ -121,13 +141,11 @@ export default function SlidePicker({ clientId, setAttributes, onImages }) {
 	const choose = ({ name }) => {
 		const variant = themeSlideTypes()[name]?.variant;
 
-		// Posts and products: the query block is the carousel, so it takes
-		// this block's place.
-		if (name === POSTS || name === PRODUCTS) {
+		// Posts, products and terms: the query block is the carousel, so it
+		// takes this block's place.
+		if (TEMPLATES[name]) {
 			const [block] = createBlocksFromInnerBlocksTemplate([
-				name === POSTS
-					? queryTemplate('post', variant)
-					: productsTemplate(variant),
+				TEMPLATES[name](variant),
 			]);
 
 			swapBlock(clientId, block);
