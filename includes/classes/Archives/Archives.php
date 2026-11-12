@@ -380,7 +380,7 @@ class Archives {
 			'used' => false,
 		];
 
-		$html = do_blocks( $content );
+		$html = self::render_content( $content );
 		$last = array_pop( $this->loops );
 
 		if ( ! $last['used'] && '' !== trim( $loop ) ) {
@@ -388,6 +388,30 @@ class Archives {
 		}
 
 		return $html;
+	}
+
+	/**
+	 * An entry's content as WordPress renders post content: embeds (an
+	 * embed block's URL becomes the embed), blocks, shortcodes, and image
+	 * attributes (srcset, lazy loading). Core's steps only, not the whole
+	 * `the_content` filter, which other plugins add to.
+	 *
+	 * @param string $content Block markup.
+	 * @return string
+	 */
+	public static function render_content( string $content ): string {
+		global $wp_embed;
+
+		if ( $wp_embed instanceof \WP_Embed ) {
+			$content = $wp_embed->run_shortcode( $content );
+			$content = $wp_embed->autoembed( $content );
+		}
+
+		$content = do_blocks( $content );
+		$content = shortcode_unautop( $content );
+		$content = do_shortcode( $content );
+
+		return wp_filter_content_tags( $content );
 	}
 
 	/**

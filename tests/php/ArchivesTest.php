@@ -130,6 +130,34 @@ class ArchivesTest extends TestCase {
 	}
 
 	/**
+	 * Entry content renders as post content does: embeds and shortcodes too.
+	 *
+	 * @return void
+	 */
+	public function test_render_content_embeds_and_shortcodes(): void {
+		// No network in tests: answer the oEmbed request.
+		add_filter(
+			'pre_oembed_result',
+			fn( $result, $url ) => str_contains( $url, 'youtube.com' ) ? '<iframe title="Video" src="https://www.youtube.com/embed/x"></iframe>' : $result,
+			10,
+			2
+		);
+		add_shortcode( 'matter_test', fn() => 'shortcode ran' );
+
+		$html = Archives::render_content(
+			'<!-- wp:embed {"url":"https://www.youtube.com/watch?v=x","type":"video","providerNameSlug":"youtube"} -->'
+			. "<figure class=\"wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube\"><div class=\"wp-block-embed__wrapper\">\nhttps://www.youtube.com/watch?v=x\n</div></figure>"
+			. '<!-- /wp:embed -->'
+			. '<!-- wp:shortcode -->[matter_test]<!-- /wp:shortcode -->'
+		);
+
+		$this->assertStringContainsString( '<iframe', $html );
+		$this->assertStringContainsString( 'shortcode ran', $html );
+
+		remove_shortcode( 'matter_test' );
+	}
+
+	/**
 	 * Stored targets round-trip, and invalid ones are rejected.
 	 *
 	 * @return void
