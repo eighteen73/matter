@@ -97,8 +97,10 @@ final class LoopItem {
 	}
 
 	/**
-	 * Render the requested items the user can read. Items they can't (or
-	 * that don't exist) are left out.
+	 * Render the requested items the user can read, of post types that are
+	 * viewable (have a front end). Others, and items that don't exist, are
+	 * left out: loops only list viewable post types, and anyone who can edit
+	 * posts mustn't be able to render, say, a coupon or a reusable block.
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return array<int, array{id: int, html: string}> Rendered items (without the block's wrapper).
@@ -108,7 +110,7 @@ final class LoopItem {
 		$block    = (string) $request['block'];
 
 		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
-			if ( current_user_can( 'read_post', $id ) ) {
+			if ( self::can_preview( $id ) ) {
 				$previews[] = [
 					'id'   => $id,
 					'html' => self::render( $id, '', $block ),
@@ -117,6 +119,19 @@ final class LoopItem {
 		}
 
 		return $previews;
+	}
+
+	/**
+	 * Whether the current user may preview an item: one they can read, of a
+	 * viewable post type.
+	 *
+	 * @param int $post_id Item ID.
+	 * @return bool
+	 */
+	public static function can_preview( int $post_id ): bool {
+		$type = get_post_type( $post_id );
+
+		return $type && is_post_type_viewable( $type ) && current_user_can( 'read_post', $post_id );
 	}
 
 	/**

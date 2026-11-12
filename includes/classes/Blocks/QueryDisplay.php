@@ -367,6 +367,13 @@ final class QueryDisplay {
 			return new \WP_Error( 'matter_query_display', __( 'Not an accordion or tabs query.', 'matter' ), [ 'status' => 400 ] );
 		}
 
+		// Only post types with a front end, as a Query Loop lists.
+		foreach ( (array) ( $attributes['query']['postType'] ?? 'post' ) as $post_type ) {
+			if ( ! is_string( $post_type ) || ! post_type_exists( $post_type ) || ! is_post_type_viewable( $post_type ) ) {
+				return new \WP_Error( 'matter_query_display', __( 'That post type can’t be shown.', 'matter' ), [ 'status' => 400 ] );
+			}
+		}
+
 		// The page being edited, e.g. for "exclude current".
 		$post_id = (int) $request['postId'];
 
