@@ -16,9 +16,18 @@ html.has-overlay-open {
 	scale: 0.95;
 	transition:
 		opacity 200ms,
-		scale 200ms,
-		overlay 200ms allow-discrete,
-		display 200ms allow-discrete;
+		scale 200ms;
+
+	// Exit transitions keep the dialog in the top layer while it fades
+	// (`overlay`); without that, it would show in the page as it closed,
+	// so browsers that lack it close at once.
+	@supports (overlay: auto) {
+		transition:
+			opacity 200ms,
+			scale 200ms,
+			overlay 200ms allow-discrete,
+			display 200ms allow-discrete;
+	}
 
 	&[open] {
 		display: flex;
@@ -34,10 +43,17 @@ html.has-overlay-open {
 
 	&::backdrop {
 		opacity: 0;
-		transition:
-			opacity 200ms,
-			overlay 200ms allow-discrete,
-			display 200ms allow-discrete;
+		transition: opacity 200ms;
+
+		// Exit transitions keep the dialog in the top layer while it fades
+		// (`overlay`); without that, it would show in the page as it closed,
+		// so browsers that lack it close at once.
+		@supports (overlay: auto) {
+			transition:
+				opacity 200ms,
+				overlay 200ms allow-discrete,
+				display 200ms allow-discrete;
+		}
 	}
 
 	&[open]::backdrop {
@@ -60,9 +76,18 @@ html.has-overlay-open {
 	&.is-switching-in {
 		transition:
 			opacity 200ms,
-			translate 200ms,
-			overlay 200ms allow-discrete,
-			display 200ms allow-discrete;
+			translate 200ms;
+
+		// Exit transitions keep the dialog in the top layer while it fades
+		// (`overlay`); without that, it would show in the page as it closed,
+		// so browsers that lack it close at once.
+		@supports (overlay: auto) {
+			transition:
+				opacity 200ms,
+				translate 200ms,
+				overlay 200ms allow-discrete,
+				display 200ms allow-discrete;
+		}
 	}
 
 	&.is-switching-in[open] {

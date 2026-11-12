@@ -112,10 +112,17 @@
 	max-width: 100vw;
 	opacity: 0;
 	padding: 0;
-	transition:
-		opacity 200ms,
-		overlay 200ms allow-discrete,
-		display 200ms allow-discrete;
+	transition: opacity 200ms;
+
+	// Exit transitions keep the dialog in the top layer while it fades
+	// (`overlay`); without that, it would show in the page as it closed,
+	// so browsers that lack it close at once.
+	@supports (overlay: auto) {
+		transition:
+			opacity 200ms,
+			overlay 200ms allow-discrete,
+			display 200ms allow-discrete;
+	}
 
 	.wp-block-matter-gallery__figure {
 		scale: 0.95;
@@ -142,10 +149,17 @@
 
 	&::backdrop {
 		opacity: 0;
-		transition:
-			opacity 200ms,
-			overlay 200ms allow-discrete,
-			display 200ms allow-discrete;
+		transition: opacity 200ms;
+
+		// Exit transitions keep the dialog in the top layer while it fades
+		// (`overlay`); without that, it would show in the page as it closed,
+		// so browsers that lack it close at once.
+		@supports (overlay: auto) {
+			transition:
+				opacity 200ms,
+				overlay 200ms allow-discrete,
+				display 200ms allow-discrete;
+		}
 	}
 
 	&[open]::backdrop {
