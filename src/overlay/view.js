@@ -32,6 +32,7 @@ import {
 	getContext,
 	getElement,
 	store,
+	withScope,
 	withSyncEvent,
 } from '@wordpress/interactivity';
 
@@ -39,6 +40,7 @@ import {
  * Internal dependencies
  */
 import { registerInstance, registerType } from '../interactivity/api';
+import { isBackdropClick } from '../interactivity/backdrop';
 
 const SELECTOR =
 	'[data-wp-interactive="matter/overlay"][data-wp-watch="callbacks.sync"]';
@@ -411,7 +413,17 @@ const { state, actions } = store('matter/overlay', {
 				});
 			});
 
-			// A matching hash always opens (deep links).
+			// A matching hash always opens (deep links), on load and when the
+			// address changes to it later (trigger links don't change it).
+			window.addEventListener(
+				'hashchange',
+				withScope(() => {
+					if (window.location.hash === `#${id}` && state.items[id]) {
+						state.items[id].isOpen = true;
+					}
+				})
+			);
+
 			if (window.location.hash === `#${id}`) {
 				item.isOpen = true;
 				return;
@@ -549,13 +561,14 @@ const { state, actions } = store('matter/overlay', {
 				event.preventDefault();
 			}
 		}),
-		// Clicking the ::backdrop targets the dialog itself.
+		// Clicking the ::backdrop targets the dialog itself (pressed there
+		// too, not dragged out from inside).
 		onBackdropClick: withSyncEvent((event) => {
 			const { ref } = getElement();
 			const { id } = getContext();
 
 			if (
-				event.target === ref &&
+				isBackdropClick(event, ref) &&
 				state.items[id]?.dismissible !== false
 			) {
 				actions.close(id);

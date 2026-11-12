@@ -38,12 +38,23 @@ $matter_ids      = [];
 $matter_captions = (string) ( ( $attributes['captions'] ?? '' ) ?: ( $matter_options['captions'] ?? '' ) );
 $matter_captions = in_array( $matter_captions, [ 'tooltip', 'overlay', 'hidden' ], true ) ? $matter_captions : 'tooltip';
 
-// Lightbox data from the images' attachments (captions, larger sizes).
+// Lightbox data from the images' attachments (captions, larger sizes), in
+// the order their figures render: an image block without an image renders
+// nothing, so it's skipped, or later images would open the wrong one.
 foreach ( $block->inner_blocks as $matter_inner ) {
 	if ( 'core/image' !== $matter_inner->name ) {
 		continue;
 	}
 
+	$matter_img = new WP_HTML_Tag_Processor( (string) $matter_inner->inner_html );
+
+	if ( ! $matter_img->next_tag( 'img' ) || '' === (string) $matter_img->get_attribute( 'src' ) ) {
+		continue;
+	}
+
+	// The block's own alt text, as on the page (the media library's is only
+	// the default when the image was added).
+	$matter_alt        = (string) $matter_img->get_attribute( 'alt' );
 	$matter_attachment = (int) ( $matter_inner->attributes['id'] ?? 0 );
 	$matter_ids[]      = $matter_attachment;
 	$matter_full       = $matter_attachment ? wp_get_attachment_image_src( $matter_attachment, 'full' ) : false;
@@ -55,7 +66,7 @@ foreach ( $block->inner_blocks as $matter_inner ) {
 	$matter_images[] = [
 		'src'     => $matter_full ? $matter_full[0] : '',
 		'srcset'  => $matter_attachment ? (string) wp_get_attachment_image_srcset( $matter_attachment, 'full' ) : '',
-		'alt'     => $matter_attachment ? (string) get_post_meta( $matter_attachment, '_wp_attachment_image_alt', true ) : '',
+		'alt'     => $matter_alt,
 		'caption' => 'hidden' === $matter_captions ? '' : $matter_caption,
 	];
 }

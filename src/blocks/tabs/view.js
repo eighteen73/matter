@@ -222,14 +222,27 @@ const { state, actions } = store('matter/tabs', {
 		init() {
 			const context = getContext();
 			const { ref } = getElement();
-			const hash = decodeURIComponent(window.location.hash.slice(1));
-			const panel = hash
-				? document.getElementById(hash)?.closest(PANEL)
-				: null;
+			// A link to a tab, or to anything in one (including a tab of tabs
+			// nested in it), selects this block's tab that holds it: on load,
+			// and when the address's #hash changes.
+			const selectFromHash = withScope(() => {
+				const hash = decodeURIComponent(window.location.hash.slice(1));
+				const target = hash ? document.getElementById(hash) : null;
+				const panel =
+					target &&
+					[...ref.querySelectorAll(PANEL)].find(
+						(element) =>
+							element.closest(SELECTOR) === ref &&
+							element.contains(target)
+					);
 
-			if (panel && panel.closest('.wp-block-matter-tabs') === ref) {
-				context.active = panel.id;
-			}
+				if (panel && context.active !== panel.id) {
+					context.active = panel.id;
+				}
+			});
+
+			selectFromHash();
+			window.addEventListener('hashchange', selectFromHash);
 
 			const choose = withScope((tab) => {
 				const tabs = tabsOf(ref);

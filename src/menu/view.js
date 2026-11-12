@@ -50,12 +50,12 @@ const HOVER = 'hover';
 // pointer crossing a gap (or briefly overshooting) doesn't close it.
 const HOVER_CLOSE_DELAY = 300;
 
-// Pending hover closes: submenu ID => timer.
+// Pending hover closes: the submenu's item => timer.
 const closeTimers = new Map();
 
-const cancelHoverClose = (submenuId) => {
-	window.clearTimeout(closeTimers.get(submenuId));
-	closeTimers.delete(submenuId);
+const cancelHoverClose = (item) => {
+	window.clearTimeout(closeTimers.get(item));
+	closeTimers.delete(item);
 };
 
 // Typing in a field (e.g. a search in a megamenu panel) keeps its keys.
@@ -142,9 +142,10 @@ const moveFocus = (elements, current, step) => {
 	return !!target;
 };
 
-const deactivateTrap = (submenuId) => {
-	traps.get(submenuId)?.deactivate();
-	traps.delete(submenuId);
+// Keyed by the submenu's item, not its number: numbers restart in each menu.
+const deactivateTrap = (item) => {
+	traps.get(item)?.deactivate();
+	traps.delete(item);
 };
 
 const openSubmenu = (context, submenuId, mode, item) => {
@@ -173,7 +174,7 @@ const closeSubmenu = (context, submenuId, item = null) => {
 		const id = getSubmenuId(element);
 
 		unwatchSubmenu(element);
-		deactivateTrap(id);
+		deactivateTrap(element);
 		context.openSubmenus = context.openSubmenus.filter(
 			(open) => open !== id
 		);
@@ -224,7 +225,7 @@ const trapDrillDown = (context, submenuId, item) => {
 			}),
 	});
 
-	traps.set(submenuId, trap);
+	traps.set(item, trap);
 	trap.activate();
 };
 
@@ -262,16 +263,14 @@ const { state } = store(
 					return;
 				}
 
-				cancelHoverClose(context.submenuId);
-
-				// A submenu opened by a click stays a click submenu.
-				if (context.openSubmenus.includes(context.submenuId)) {
-					return;
-				}
-
 				const { ref } = getElement();
 
-				openSubmenu(context, context.submenuId, HOVER, ref);
+				cancelHoverClose(ref);
+
+				// A submenu opened by a click stays a click submenu.
+				if (!context.openSubmenus.includes(context.submenuId)) {
+					openSubmenu(context, context.submenuId, HOVER, ref);
+				}
 			},
 			closeOnHover() {
 				const context = getContext();
@@ -286,12 +285,12 @@ const { state } = store(
 				const { ref } = getElement();
 				const { submenuId } = context;
 
-				cancelHoverClose(submenuId);
+				cancelHoverClose(ref);
 				closeTimers.set(
-					submenuId,
+					ref,
 					window.setTimeout(
 						withScope(() => {
-							closeTimers.delete(submenuId);
+							closeTimers.delete(ref);
 
 							if (context.openModes[submenuId] === HOVER) {
 								closeSubmenu(context, submenuId, ref);
@@ -304,7 +303,7 @@ const { state } = store(
 			toggleSubmenu() {
 				const context = getContext();
 
-				cancelHoverClose(context.submenuId);
+				cancelHoverClose(getElement().ref.closest(SELECTORS.parent));
 
 				// Opened by hovering: the click keeps it open (it no longer
 				// closes when the pointer leaves) rather than closing it.

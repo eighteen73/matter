@@ -140,22 +140,34 @@ const { state } = store('matter/accordion', {
 		init() {
 			const context = getContext();
 			const { ref } = getElement();
-			const hash = decodeURIComponent(window.location.hash.slice(1));
-			const target = hash ? document.getElementById(hash) : null;
-			const item = target?.closest(ITEM);
+			// A link to an item, or to anything in one (including an item of
+			// an accordion nested in it), opens this accordion's item that
+			// holds it: on load, and when the address's #hash changes.
+			const openFromHash = withScope(() => {
+				const hash = decodeURIComponent(window.location.hash.slice(1));
+				const target = hash ? document.getElementById(hash) : null;
+				const item =
+					target &&
+					[...ref.querySelectorAll(ITEM)].find(
+						(element) =>
+							element.closest(SELECTOR) === ref &&
+							element.contains(target)
+					);
 
-			if (
-				item &&
-				ref.contains(item) &&
-				!context.openItems.includes(item.id)
-			) {
+				if (!item || context.openItems.includes(item.id)) {
+					return;
+				}
+
 				context.openItems = context.autoclose
 					? [item.id]
 					: [...context.openItems, item.id];
 				window.requestAnimationFrame(() =>
 					target.scrollIntoView({ block: 'start' })
 				);
-			}
+			});
+
+			openFromHash();
+			window.addEventListener('hashchange', openFromHash);
 
 			const idOf = (key) =>
 				typeof key === 'number' ? itemsOf(ref)[key]?.id : key;

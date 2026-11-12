@@ -34,6 +34,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
+import { isBackdropClick } from '../../interactivity/backdrop';
 
 const SELECTOR = '.wp-block-matter-gallery';
 
@@ -370,8 +371,10 @@ const { actions } = store('matter/gallery', {
 			}
 		}),
 		onBackdropClick: withSyncEvent((event) => {
-			if (event.target === getElement().ref) {
-				event.target.close();
+			const { ref } = getElement();
+
+			if (isBackdropClick(event, ref)) {
+				ref.close();
 			}
 		}),
 		onClose() {

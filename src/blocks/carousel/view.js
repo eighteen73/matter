@@ -272,7 +272,13 @@ store('matter/carousel', {
 			const track = viewport.querySelector(
 				'.wp-block-matter-carousel__track'
 			);
-			const queryList = track.querySelector(QUERY_LISTS);
+			// The carousel's own query (the track's child), not one inside a
+			// slide.
+			const queryList = track.querySelector(
+				QUERY_LISTS.split(',')
+					.map((list) => `:scope > * > ${list.trim()}`)
+					.join(', ')
+			);
 			const canMove = !reducedMotion.matches;
 
 			ref.classList.toggle('is-query', !!queryList);
