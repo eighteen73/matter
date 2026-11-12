@@ -162,6 +162,23 @@ class ContractMarkupTest extends TestCase {
 	}
 
 	/**
+	 * An item with nothing to show isn't output; one with only an image is.
+	 *
+	 * @return void
+	 */
+	public function test_empty_accordion_items_are_skipped(): void {
+		$html = $this->render(
+			'<!-- wp:matter/accordion -->'
+			. '<!-- wp:matter/accordion-item {"title":"Empty"} --><!-- wp:group --><div class="wp-block-group"></div><!-- /wp:group --><!-- /wp:matter/accordion-item -->'
+			. '<!-- wp:matter/accordion-item {"title":"Image"} --><!-- wp:html --><img src="x.png" alt=""><!-- /wp:html --><!-- /wp:matter/accordion-item -->'
+			. '<!-- /wp:matter/accordion -->'
+		);
+
+		$this->assertStringNotContainsString( '>Empty<', $html );
+		$this->assertStringContainsString( '>Image<', $html );
+	}
+
+	/**
 	 * Posts accordions and tabs take the query's anchor as their ID (once,
 	 * not repeated on the query), and name each item after its post, so
 	 * links to an item survive new posts.

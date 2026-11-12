@@ -13,6 +13,16 @@
 
 use Eighteen73\Matter\Blocks\Instances;
 
+// An item with nothing to show isn't output: no text, media or form controls
+// in its content (e.g. a product's specifications when it has none, or blocks
+// that render nothing).
+if (
+	'' === trim( wp_strip_all_tags( $content ) )
+	&& ! preg_match( '/<(img|picture|video|audio|iframe|svg|canvas|object|embed|form|input|select|textarea|button)\b/i', $content )
+) {
+	return;
+}
+
 $matter_title = trim( (string) ( $attributes['title'] ?? '' ) );
 
 // Only in a loop: elsewhere, postId is the page's own post.

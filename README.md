@@ -69,7 +69,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 
 Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
 
-**Links to tabs and accordion items.** A tabs or accordion block gets an HTML anchor (e.g. `tabs-x7k2p`) when it's added, so its items keep their IDs: `#{anchor}-2` is the second. In posts tabs and accordions, an item is named after its post, `#{anchor}-post-{postId}`, so links survive new posts. A link to an item, or to anything inside one, opens it (and any tab or item it's nested in), on load and when the address's `#hash` changes. An untitled item shows its post's title only in a Query Loop.
+**Links to tabs and accordion items.** A tabs or accordion block gets an HTML anchor (e.g. `tabs-x7k2p`) when it's added, so its items keep their IDs: `#{anchor}-2` is the second. In posts tabs and accordions, an item is named after its post, `#{anchor}-post-{postId}`, so links survive new posts. A link to an item, or to anything inside one, opens it (and any tab or item it's nested in), on load and when the address's `#hash` changes. An untitled item shows its post's title only in a Query Loop. An accordion item whose content renders nothing to show (no text, media or form controls, e.g. a product's specifications when it has none) isn't output.
 
 Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
 
