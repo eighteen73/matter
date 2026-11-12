@@ -87,7 +87,7 @@ class ContractMarkupTest extends TestCase {
 
 		$this->assertMatchesSnapshot( 'modal', $this->render( '<!-- wp:matter/modal {"overlayId":"offer","label":"Offer","group":"deals"} -->' . $trigger . $content . '<!-- /wp:matter/modal -->' ) );
 		$this->assertMatchesSnapshot( 'modal-not-dismissible', $this->render( '<!-- wp:matter/modal {"overlayId":"age","dismissible":false} -->' . $content . '<!-- /wp:matter/modal -->' ) );
-		$this->assertMatchesSnapshot( 'drawer', $this->render( '<!-- wp:matter/drawer {"overlayId":"filters","position":"left"} -->' . $trigger . $content . '<!-- /wp:matter/drawer -->' ) );
+		$this->assertMatchesSnapshot( 'drawer', $this->render( '<!-- wp:matter/drawer {"overlayId":"filters","position":"start"} -->' . $trigger . $content . '<!-- /wp:matter/drawer -->' ) );
 		$this->assertMatchesSnapshot( 'collapsible', $this->render( '<!-- wp:matter/collapsible {"overlayId":"more"} -->' . $trigger . $content . '<!-- /wp:matter/collapsible -->' ) );
 	}
 

@@ -118,10 +118,29 @@ const withSharedModules = (plugins) =>
 
 const moduleConfigWithEntries = withEntries(moduleConfig, moduleEntries);
 
+/**
+ * Without the RTL stylesheets @wordpress/scripts generates (rtlcss flips
+ * physical properties into a `-rtl.css` copy, which WordPress swaps in on
+ * right-to-left sites). Matter's CSS is direction-aware itself: logical
+ * properties, and `:dir(rtl)` for icons and transforms, so it also works for
+ * right-to-left content on a left-to-right site.
+ *
+ * @param {Object} config Webpack config.
+ * @return {Object} Config.
+ */
+const withoutRtlCss = (config) => ({
+	...config,
+	plugins: config.plugins.filter(
+		(plugin) => plugin.constructor.name !== 'RtlCssPlugin'
+	),
+});
+
 module.exports = [
-	withEntries(scriptConfig, { ...scriptEntries, ...styleEntries }, [
-		new RemoveStyleEntryScripts(Object.keys(styleEntries)),
-	]),
+	withEntries(
+		withoutRtlCss(scriptConfig),
+		{ ...scriptEntries, ...styleEntries },
+		[new RemoveStyleEntryScripts(Object.keys(styleEntries))]
+	),
 	{
 		...moduleConfigWithEntries,
 		plugins: withSharedModules(moduleConfigWithEntries.plugins),

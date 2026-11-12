@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
+import { __, isRTL } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
@@ -25,13 +25,19 @@ export default function Edit(props) {
 				value={attributes.position}
 				onChange={(position) => setAttributes({ position })}
 			>
+				{/* Saved as logical sides (the start is the left in
+				left-to-right languages), labelled as the editor sees them. */}
 				<ToggleGroupControlOption
-					value="left"
-					label={__('Left', 'matter')}
+					value="start"
+					label={
+						isRTL() ? __('Right', 'matter') : __('Left', 'matter')
+					}
 				/>
 				<ToggleGroupControlOption
-					value="right"
-					label={__('Right', 'matter')}
+					value="end"
+					label={
+						isRTL() ? __('Left', 'matter') : __('Right', 'matter')
+					}
 				/>
 			</ToggleGroupControl>
 		</OverlayEdit>

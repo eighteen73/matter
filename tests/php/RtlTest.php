@@ -45,7 +45,8 @@ class RtlTest extends TestCase {
 	}
 
 	/**
-	 * Carousels scroll right to left, and CSS printed inline is the flipped build.
+	 * Carousels scroll right to left. Styles are the same stylesheets in either
+	 * direction (logical properties and `:dir(rtl)`), so no flipped build.
 	 *
 	 * @return void
 	 */
@@ -53,7 +54,7 @@ class RtlTest extends TestCase {
 		$html = $this->render( '<!-- wp:matter/carousel --><!-- wp:paragraph --><p>One</p><!-- /wp:paragraph --><!-- /wp:matter/carousel -->' );
 
 		$this->assertStringContainsString( '"direction":"rtl"', $html );
-		$this->assertStringEndsWith( 'build/menu/dropdown-rtl.css', Assets::style_path( 'menu/dropdown.css' ) );
-		$this->assertSame( 'replace', wp_styles()->get_data( 'matter-menu', 'rtl' ) );
+		$this->assertFalse( wp_styles()->get_data( 'matter-menu', 'rtl' ) );
+		$this->assertFileDoesNotExist( Assets::path( 'menu/dropdown-rtl.css' ) );
 	}
 }

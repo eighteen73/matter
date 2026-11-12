@@ -11,7 +11,8 @@
 
 use Eighteen73\Matter\Overlays\Overlay;
 
-$matter_position = 'left' === ( $attributes['position'] ?? '' ) ? 'left' : 'right';
+// Logical sides: the start is the left in left-to-right languages.
+$matter_position = 'start' === ( $attributes['position'] ?? '' ) ? 'start' : 'end';
 $matter_html     = Overlay::render( 'drawer', $attributes, $content, $block, [ 'class' => 'is-position-' . $matter_position ] );
 
 echo $matter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Overlay::render().

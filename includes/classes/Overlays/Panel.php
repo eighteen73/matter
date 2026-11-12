@@ -50,7 +50,7 @@ class Panel {
 	 * @param array           $args {
 	 *     @type string|null $collapse_below Breakpoint below which the panel is off-canvas.
 	 *                                       Empty for a panel that is always off-canvas.
-	 *     @type string      $position       Off-canvas edge: left|right|top.
+	 *     @type string      $position       Off-canvas edge: start|end|top (start is the left in left-to-right languages).
 	 *     @type string      $label          Accessible dialog label.
 	 *     @type string      $close_label    Close button label.
 	 *     @type string      $class          Extra classes.
@@ -62,7 +62,7 @@ class Panel {
 			$args,
 			[
 				'collapse_below' => '',
-				'position'       => 'right',
+				'position'       => 'end',
 				'label'          => __( 'Menu', 'matter' ),
 				'close_label'    => __( 'Close menu', 'matter' ),
 				'class'          => '',
@@ -71,7 +71,7 @@ class Panel {
 
 		$id       = sanitize_html_class( $id );
 		$settings = self::settings( $id, (string) $args['collapse_below'] );
-		$position = in_array( $args['position'], [ 'left', 'right', 'top' ], true ) ? $args['position'] : 'right';
+		$position = in_array( $args['position'], [ 'start', 'end', 'top' ], true ) ? $args['position'] : 'end';
 
 		self::enqueue( $settings );
 		self::register_state( $id );
@@ -140,11 +140,11 @@ class Panel {
 			return;
 		}
 
-		$css = Breakpoints::scope_stylesheet( Assets::style_path( 'panel/collapsed.css' ), 'is-collapsed', $settings['class'], $settings['query'] );
+		$css = Breakpoints::scope_stylesheet( Assets::path( 'panel/collapsed.css' ), 'is-collapsed', $settings['class'], $settings['query'] );
 
 		// A panel that is always off-canvas has no expanded mode.
 		if ( '' !== $settings['query'] ) {
-			$css .= Breakpoints::scope_stylesheet( Assets::style_path( 'panel/expanded.css' ), 'is-expanded', $settings['class'], $settings['expanded'] );
+			$css .= Breakpoints::scope_stylesheet( Assets::path( 'panel/expanded.css' ), 'is-expanded', $settings['class'], $settings['expanded'] );
 		}
 
 		wp_add_inline_style( 'matter-panel', $css );

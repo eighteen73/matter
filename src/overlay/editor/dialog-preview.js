@@ -64,7 +64,7 @@ function Dialog({ BlockListBlock, blockProps, overlayId, overlayName }) {
 				'matter-overlay-editor__dialog',
 				isShown && 'is-shown',
 				type === 'drawer' &&
-					`is-position-${position === 'left' ? 'left' : 'right'}`,
+					`is-position-${position === 'start' ? 'start' : 'end'}`,
 				scheme && `has-scheme has-scheme-${scheme}`,
 			]
 				.filter(Boolean)

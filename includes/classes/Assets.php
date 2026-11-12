@@ -87,9 +87,10 @@ class Assets {
 	 */
 	public function register(): void {
 		foreach ( self::STYLES as $handle => $file ) {
-			wp_register_style( $handle, MATTER_URL . 'build/' . $file, [], self::version( $file ) );
-			// The flipped `-rtl.css` build on right-to-left sites.
-			wp_style_add_data( $handle, 'rtl', 'replace' );
+			// Menu types come after the shared menu rules, which they build on.
+			$deps = str_starts_with( $handle, 'matter-menu-' ) ? [ 'matter-menu' ] : [];
+
+			wp_register_style( $handle, MATTER_URL . 'build/' . $file, $deps, self::version( $file ) );
 		}
 
 		foreach ( self::MODULES as $id => $file ) {
@@ -113,20 +114,6 @@ class Assets {
 	 */
 	public static function path( string $file ): string {
 		return MATTER_PATH . 'build/' . $file;
-	}
-
-	/**
-	 * Absolute path to a built stylesheet, its flipped `-rtl.css` version on
-	 * right-to-left sites (for CSS Matter prints inline, e.g. a responsive
-	 * menu's per-breakpoint rules).
-	 *
-	 * @param string $file Stylesheet path relative to build/, e.g. menu/dropdown.css.
-	 * @return string
-	 */
-	public static function style_path( string $file ): string {
-		$rtl = preg_replace( '/\.css$/', '-rtl.css', $file );
-
-		return is_rtl() && file_exists( self::path( $rtl ) ) ? self::path( $rtl ) : self::path( $file );
 	}
 
 	/**
