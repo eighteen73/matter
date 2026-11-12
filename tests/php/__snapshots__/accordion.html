@@ -1,0 +1,27 @@
+<div class="wp-block-matter-accordion" id="faq" data-wp-interactive="matter/accordion" data-wp-context='{"openItems":["faq-1"],"autoclose":false}' data-wp-init="callbacks.init" data-wp-watch="callbacks.announce" data-wp-on--keydown="actions.onKeydown">
+<div class="wp-block-matter-accordion-item is-open" id="faq-1" data-wp-context='{"itemId":"faq-1"}' data-wp-class--is-open="state.isItemOpen">
+<h3 class="wp-block-matter-accordion-item__heading">
+<button type="button" id="faq-1-button" class="wp-block-matter-accordion-item__toggle" aria-expanded="true" aria-controls="faq-1-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemOpen">
+<span class="wp-block-matter-accordion-item__title">Question one</span>
+</button>
+</h3>
+<div id="faq-1-panel" class="wp-block-matter-accordion-item__panel" role="region" aria-labelledby="faq-1-button" data-wp-bind--inert="!state.isItemOpen">
+<div class="wp-block-matter-accordion-item__content">
+<p class="wp-block-paragraph">Answer one</p>
+</div>
+</div>
+</div>
+<div class="wp-block-matter-accordion-item" id="faq-2" data-wp-context='{"itemId":"faq-2"}' data-wp-class--is-open="state.isItemOpen">
+<h3 class="wp-block-matter-accordion-item__heading">
+<button type="button" id="faq-2-button" class="wp-block-matter-accordion-item__toggle" aria-expanded="false" aria-controls="faq-2-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemOpen">
+<span class="wp-block-matter-accordion-item__title">Question two</span>
+</button>
+</h3>
+<div id="faq-2-panel" class="wp-block-matter-accordion-item__panel" role="region" aria-labelledby="faq-2-button" inert data-wp-bind--inert="!state.isItemOpen">
+<div class="wp-block-matter-accordion-item__content">
+<p class="wp-block-paragraph">Answer two</p>
+</div>
+</div>
+</div>
+</div>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Question one","acceptedAnswer":{"@type":"Answer","text":"Answer one"}},{"@type":"Question","name":"Question two","acceptedAnswer":{"@type":"Answer","text":"Answer two"}}]}</script>

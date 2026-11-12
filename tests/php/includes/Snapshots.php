@@ -24,10 +24,11 @@ trait Snapshots {
 	 * @return void
 	 */
 	protected function assertMatchesSnapshot( string $name, string $actual ): void {
-		$file   = __DIR__ . '/../__snapshots__/' . $name . '.html';
+		$file   = dirname( __DIR__ ) . '/__snapshots__/' . $name . '.html';
 		$actual = self::normalise( $actual );
 
 		if ( getenv( 'UPDATE_SNAPSHOTS' ) || ! file_exists( $file ) ) {
+			wp_mkdir_p( dirname( $file ) );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Test fixture.
 			file_put_contents( $file, $actual );
 			$this->addToAssertionCount( 1 );

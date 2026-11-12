@@ -1,0 +1,29 @@
+<div class="has-dropdown has-dropdown-below-md wp-block-matter-tabs" id="specs" data-wp-interactive="matter/tabs" data-wp-context='{"active":"specs-1","deepLink":false,"isMenuOpen":false}' data-wp-init="callbacks.init" data-wp-watch="callbacks.announce" data-wp-class--is-menu-open="context.isMenuOpen">
+<div class="wp-block-matter-tabs__nav" data-wp-on-document--click="actions.onDocumentClick">
+<button type="button" class="wp-block-matter-tabs__toggle" aria-expanded="false" aria-controls="specs-list" data-wp-bind--aria-expanded="context.isMenuOpen" data-wp-on--click="actions.toggleMenu" data-wp-on--keydown="actions.onToggleKeydown">
+<span class="screen-reader-text">Specifications: </span>
+<span class="wp-block-matter-tabs__current" data-wp-context='{"tabId":"specs-1"}' data-wp-bind--hidden="!state.isActive">
+<span class="wp-block-matter-tabs__label">Size</span>
+</span>
+<span hidden class="wp-block-matter-tabs__current" data-wp-context='{"tabId":"specs-2"}' data-wp-bind--hidden="!state.isActive">
+<span class="wp-block-matter-tabs__label">Colour</span>
+</span>
+</button>
+<div class="wp-block-matter-tabs__list" id="specs-list" role="tablist" aria-label="Specifications">
+<button aria-selected="true" tabindex="0" type="button" role="tab" id="specs-1-tab" class="wp-block-matter-tabs__tab" aria-controls="specs-1" data-wp-context='{"tabId":"specs-1"}' data-wp-bind--aria-selected="state.isActive" data-wp-bind--tabindex="state.tabIndex" data-wp-on--click="actions.select" data-wp-on--keydown="actions.onKeydown">
+<span class="wp-block-matter-tabs__label">Size</span>
+</button>
+<button aria-selected="false" tabindex="-1" type="button" role="tab" id="specs-2-tab" class="wp-block-matter-tabs__tab" aria-controls="specs-2" data-wp-context='{"tabId":"specs-2"}' data-wp-bind--aria-selected="state.isActive" data-wp-bind--tabindex="state.tabIndex" data-wp-on--click="actions.select" data-wp-on--keydown="actions.onKeydown">
+<span class="wp-block-matter-tabs__label">Colour</span>
+</button>
+</div>
+</div>
+<div class="wp-block-matter-tabs__panels">
+<div class="wp-block-matter-tab" id="specs-1" data-wp-context='{"tabId":"specs-1"}' role="tabpanel" aria-labelledby="specs-1-tab" tabindex="0" data-wp-bind--hidden="!state.isActive">
+<p class="wp-block-paragraph">Large</p>
+</div>
+<div hidden class="wp-block-matter-tab" id="specs-2" data-wp-context='{"tabId":"specs-2"}' role="tabpanel" aria-labelledby="specs-2-tab" tabindex="0" data-wp-bind--hidden="!state.isActive">
+<p class="wp-block-paragraph">Blue</p>
+</div>
+</div>
+</div>
