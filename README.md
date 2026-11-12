@@ -497,7 +497,7 @@ Matter also hides from the inserter the core blocks it replaces (gallery, accord
 Themes restyle Matter with plain class selectors and never need `!important`.
 
 **Specificity**
-- Functional rules (layout, visibility, the things a theme shouldn't change) use one class per selector.
+- Functional rules (layout, visibility, the things a theme shouldn't change) use one class per selector. One exception: modal and drawer margins use `:root dialog.wp-block-matter-modal` (and `-drawer`), to outrank core's layout margins on post content (`:root :where(.is-layout-*) > :last-child`, 0,2,0).
 - The default skin (colours, spacing, borders, type) is wrapped in `:where()`, so it has zero specificity and any theme class beats it.
 - No IDs, no `!important`, and no design values in inline styles.
 

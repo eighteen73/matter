@@ -11,17 +11,22 @@
  */
 export const suspendTransitions = (elements) => {
 	const list = [...elements].filter(Boolean);
-
-	list.forEach((element) =>
-		element.style.setProperty('transition', 'none', 'important')
+	// Any transition set inline before (by a theme script), to put back.
+	const previous = new Map(
+		list.map((element) => [element, element.style.transition])
 	);
+
+	// Inline, so it outranks stylesheet rules without !important.
+	list.forEach((element) => {
+		element.style.transition = 'none';
+	});
 
 	// Two frames: the new styles are applied, then painted, without transitions.
 	window.requestAnimationFrame(() =>
 		window.requestAnimationFrame(() =>
-			list.forEach((element) =>
-				element.style.removeProperty('transition')
-			)
+			list.forEach((element) => {
+				element.style.transition = previous.get(element);
+			})
 		)
 	);
 };

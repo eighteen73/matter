@@ -10,10 +10,15 @@
 }
 
 .wp-block-matter-gallery .wp-block-image img {
-	aspect-ratio: var(--image-aspect-ratio, auto);
 	height: auto;
 	object-fit: var(--image-object-fit, cover);
 	width: 100%;
+}
+
+// The crop itself is easy to override: a theme sets `aspect-ratio` on a
+// variant's images with one class (e.g. `.is-style-thumbnails img`).
+:where(.wp-block-matter-gallery .wp-block-image) img {
+	aspect-ratio: var(--image-aspect-ratio, auto);
 }
 
 @for $i from 1 through 6 {
@@ -62,11 +67,8 @@
 	}
 }
 
-// Light on dark, to read over any image.
 .wp-block-matter-gallery__caption-toggle {
 	align-items: center;
-	background: rgb(0 0 0 / 55%);
-	color: #fff;
 	cursor: pointer;
 	display: inline-flex;
 	height: var(--gallery-caption-toggle-size, 2.75rem);
@@ -279,10 +281,13 @@ dialog.wp-block-matter-gallery__lightbox {
 	text-align: center;
 }
 
+// Light on dark, to read over any image.
 :where(.wp-block-matter-gallery__caption-toggle) {
 	appearance: none;
+	background: rgb(0 0 0 / 55%);
 	border: 0;
 	border-radius: 50%;
+	color: #fff;
 	padding: 0;
 }
 

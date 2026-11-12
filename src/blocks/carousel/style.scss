@@ -52,10 +52,15 @@
 // Image slides share the chosen aspect ratio (`--image-aspect-ratio`, set
 // with `.has-image-aspect-ratio` when every slide is an image).
 .wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image img {
-	aspect-ratio: var(--image-aspect-ratio);
 	height: auto;
 	object-fit: var(--image-object-fit, cover);
 	width: 100%;
+}
+
+// The crop itself is easy to override: a theme sets `aspect-ratio` on a
+// variant's images with one class (e.g. `.is-style-cards img`).
+:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image) img {
+	aspect-ratio: var(--image-aspect-ratio);
 }
 
 // Before Embla starts, or if its script never runs, the slides scroll
@@ -179,8 +184,11 @@
 
 	&:disabled {
 		cursor: default;
-		opacity: 0.4;
 	}
+}
+
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand):disabled {
+	opacity: 0.4;
 }
 
 .wp-block-matter-carousel__next::before {
