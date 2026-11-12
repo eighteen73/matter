@@ -91,7 +91,15 @@
 
 :where(.matter-menu__link) {
 	color: inherit;
+	min-height: 24px;
 	text-decoration: none;
+}
+
+// At least 24px to tap or click (WCAG 2.5.8).
+:where(.matter-menu__toggle, .matter-menu__back) {
+	justify-content: center;
+	min-height: 24px;
+	min-width: 24px;
 }
 
 :where(.matter-menu__link.is-label) {

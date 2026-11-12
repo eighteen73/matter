@@ -6,6 +6,7 @@
 /node_modules export-ignore
 /src export-ignore
 /tests export-ignore
+/playwright.config.js export-ignore
 
 # Files
 /.* export-ignore

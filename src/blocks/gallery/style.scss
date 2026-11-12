@@ -95,6 +95,11 @@
 
 .wp-block-matter-gallery__more {
 	cursor: pointer;
+
+	// Hidden once the rest of the images are shown, whatever a theme's display.
+	&[hidden] {
+		display: none;
+	}
 }
 
 // The enlarge button covers its image.

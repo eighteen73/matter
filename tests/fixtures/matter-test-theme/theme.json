@@ -4,15 +4,35 @@
 	"settings": {
 		"color": {
 			"palette": [
-				{ "name": "Base", "slug": "base", "color": "#ffffff" },
-				{ "name": "Contrast", "slug": "contrast", "color": "#111111" },
-				{ "name": "Brand", "slug": "brand", "color": "#1d2b4f" }
+				{
+					"name": "Base",
+					"slug": "base",
+					"color": "#ffffff"
+				},
+				{
+					"name": "Contrast",
+					"slug": "contrast",
+					"color": "#111111"
+				},
+				{
+					"name": "Brand",
+					"slug": "brand",
+					"color": "#1d2b4f"
+				}
 			]
 		},
 		"dimensions": {
 			"aspectRatios": [
-				{ "name": "Square", "slug": "square", "ratio": "1" },
-				{ "name": "16:9", "slug": "16-9", "ratio": "16/9" }
+				{
+					"name": "Square",
+					"slug": "square",
+					"ratio": "1"
+				},
+				{
+					"name": "16:9",
+					"slug": "16-9",
+					"ratio": "16/9"
+				}
 			]
 		},
 		"custom": {
@@ -26,6 +46,15 @@
 					"background": "var:preset|color|brand",
 					"text": "var:preset|color|base",
 					"border": "var:preset|color|base"
+				}
+			}
+		}
+	},
+	"styles": {
+		"elements": {
+			"link": {
+				"color": {
+					"text": "var(--scheme--text)"
 				}
 			}
 		}

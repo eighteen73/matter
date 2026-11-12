@@ -58,3 +58,18 @@ jobs:
 
       - name: Run PHPUnit
         run: npm run test:php
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Keyboard, overlay, menu and editor behaviour, plus axe (WCAG 2.2 AA).
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - name: Keep browser test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-artifacts
+          path: artifacts/
+          retention-days: 7

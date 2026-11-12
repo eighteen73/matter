@@ -18,9 +18,12 @@
 		"url": "https://github.com/eighteen73/matter/issues"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.14.0",
 		"@eighteen73/eslint-config-wordpress": "^2.0.0",
 		"@eighteen73/stylelint-config-wordpress": "^1.2.3",
+		"@playwright/test": "^1.65.0",
 		"@wordpress/browserslist-config": "^6.49.0",
+		"@wordpress/e2e-test-utils-playwright": "^1.54.0",
 		"@wordpress/env": "^12.1.0",
 		"@wordpress/prettier-config": "^4.49.0",
 		"@wordpress/scripts": "^32.5.0",
@@ -46,6 +49,7 @@
 		"env:stop": "wp-env stop",
 		"test:php": "wp-env run tests-cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit",
 		"test:unit": "wp-scripts test-unit-js",
+		"test:e2e": "wp-scripts test-playwright",
 		"lint:md:docs": "wp-scripts lint-md-docs",
 		"lint:pkg-json": "wp-scripts lint-pkg-json",
 		"packages-update": "wp-scripts packages-update",
