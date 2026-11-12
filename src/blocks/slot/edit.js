@@ -84,9 +84,23 @@ export default function Edit({ attributes: { name }, clientId }) {
 
 	const isLocked = !!config.templateLock;
 
+	// "Posts carousel", "Posts accordion" and "Posts tabs" are query blocks,
+	// so a slot allowing the carousel, accordion or tabs allows those too.
+	const queryBlocks = window.matterEditor?.queryBlocks ?? {};
+	const allowedBlocks = Array.isArray(config.allowedBlocks)
+		? [
+				...new Set(
+					config.allowedBlocks.flatMap((block) => [
+						block,
+						...(queryBlocks[block] ?? []),
+					])
+				),
+			]
+		: config.allowedBlocks;
+
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
 		// Nothing new goes into an orphaned slot; its content can be moved out.
-		allowedBlocks: isOrphaned ? [] : config.allowedBlocks,
+		allowedBlocks: isOrphaned ? [] : allowedBlocks,
 		template: isLocked ? config.template : undefined,
 		templateLock: isOrphaned ? false : (config.templateLock ?? false),
 		renderAppender:

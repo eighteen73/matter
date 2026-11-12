@@ -9,6 +9,7 @@
 namespace Eighteen73\Matter;
 
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Blocks\QueryDisplay;
 use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Supports\Scheme;
@@ -81,6 +82,9 @@ class Editor {
 					'breakpoints'     => Breakpoints::all(),
 					'variants'        => Variants::all(),
 					'carouselSlides'  => Carousel::slide_types(),
+					// Allowing a carousel, accordion or tabs allows the query
+					// blocks behind their posts versions.
+					'queryBlocks'     => QueryDisplay::query_blocks(),
 					// Template parts are placed in templates, so only the Site
 					// Editor needs the list.
 					'templateParts'   => 'site-editor' === get_current_screen()?->id ? TemplatePart::all() : [],

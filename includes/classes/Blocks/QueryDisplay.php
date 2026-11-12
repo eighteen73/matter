@@ -124,6 +124,23 @@ final class QueryDisplay {
 	}
 
 	/**
+	 * The query blocks each block can be shown as, for the editor: allowing
+	 * a block (in a slot, say) allows these too.
+	 *
+	 * @return array<string, string[]> Block name => registered query blocks.
+	 */
+	public static function query_blocks(): array {
+		$registry = WP_Block_Type_Registry::get_instance();
+		$blocks   = [];
+
+		foreach ( self::TYPES as $type ) {
+			$blocks[ $type['block'] ] = array_values( array_filter( $type['queries'], [ $registry, 'is_registered' ] ) );
+		}
+
+		return $blocks;
+	}
+
+	/**
 	 * A block's display, if it's a query shown as a block: the type, the
 	 * block it's shown as, and that block's attributes (validated against
 	 * its schema, with its defaults).
