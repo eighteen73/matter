@@ -527,6 +527,7 @@ Themes restyle Matter with plain class selectors, wherever their stylesheet load
 - **The default skin** (everything else: colours, spacing, borders, sizes, icons, motion) is wrapped in `:where()` entirely, so it has zero specificity and any theme selector beats it. Motion is skin too: a theme restyling it sets the states it changes (`[open]`, `[open].is-closing`, `.is-open`), as the skin does.
 - **Exceptions**, where Matter must win over other code:
   - modal and drawer margins use `:root dialog.wp-block-matter-modal` (and `-drawer`), to outrank core's layout margins on post content (`:root :where(.is-layout-*) > :last-child`, 0,2,0);
+  - resets of element and layout styles stay at one class (or two, for core's layout): an accordion heading's margins, a posts accordion's list spacing, image sizing in galleries and carousels; their crops stay at zero;
   - hidden states outrank a theme's `display` (e.g. carousel controls when there's nothing to scroll, `[hidden]` parts, hidden captions, the panel toggle above its breakpoint);
   - a carousel's track and slides beat core's and WooCommerce's query layouts (`body .is-layout-grid`, `.is-flex-container`).
 - Matter shows and hides parts per mode (a parent's link in a drill-down menu, a submenu's header, a panel's close button): themes shouldn't set `display` on these.
