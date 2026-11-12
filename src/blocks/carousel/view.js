@@ -245,8 +245,8 @@ store('matter/carousel', {
 				instance?.play();
 			}
 		},
-		reInit(target) {
-			instanceFor(target)?.reInit();
+		reInit(target, options) {
+			instanceFor(target)?.reInit(options);
 		},
 	},
 	callbacks: {

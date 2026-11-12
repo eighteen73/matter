@@ -61,8 +61,30 @@ const isDialog = (id) => elements.get(id)?.tagName === 'DIALOG';
  * @param {string|Event} idOrEvent Overlay ID or event.
  * @return {string} Overlay ID.
  */
-const resolveId = (idOrEvent) =>
-	typeof idOrEvent === 'string' ? idOrEvent : getContext().id;
+/**
+ * The overlay an action targets: an ID, an element (the overlay, or anything
+ * in it), or, from a directive, the overlay in context.
+ *
+ * @param {*} target ID, element or directive event.
+ * @return {string|undefined} Overlay ID.
+ */
+const resolveId = (target) => {
+	if (typeof target === 'string') {
+		return target;
+	}
+
+	if (target instanceof window.Element) {
+		for (let el = target; el; el = el.parentElement) {
+			if (el.id && state.items[el.id]) {
+				return el.id;
+			}
+		}
+
+		return undefined;
+	}
+
+	return getContext().id;
+};
 
 const isDismissed = (id) => {
 	try {
@@ -289,6 +311,7 @@ const showDialog = (dialog, id) => {
 	}
 
 	dialog.showModal();
+	syncDocumentClass();
 };
 
 const { state, actions } = store('matter/overlay', {

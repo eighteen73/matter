@@ -1,5 +1,10 @@
 // Drawer: a native <dialog> pinned to the left or right edge.
 
+// The page doesn't scroll behind an open modal or drawer (as behind a panel).
+html.has-overlay-open {
+	overflow: hidden;
+}
+
 .wp-block-matter-drawer {
 	border: 0;
 	height: 100dvh;

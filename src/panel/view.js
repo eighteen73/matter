@@ -107,7 +107,10 @@ const activate = (panel, id) => {
 	// Wait a frame so the panel is visible before moving focus into it.
 	window.requestAnimationFrame(() => trap.activate());
 	panel.dispatchEvent(
-		new CustomEvent('matter-panel-open', { bubbles: true })
+		new CustomEvent('matter-panel-open', {
+			bubbles: true,
+			detail: { id, instance: window.matter?.panel?.(panel) ?? null },
+		})
 	);
 };
 
@@ -124,7 +127,10 @@ const deactivate = (panel, id) => {
 	}
 
 	panel.dispatchEvent(
-		new CustomEvent('matter-panel-close', { bubbles: true })
+		new CustomEvent('matter-panel-close', {
+			bubbles: true,
+			detail: { id, instance: window.matter?.panel?.(panel) ?? null },
+		})
 	);
 };
 
