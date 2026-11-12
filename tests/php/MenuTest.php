@@ -73,4 +73,31 @@ class MenuTest extends TestCase {
 			)
 		);
 	}
+
+	/**
+	 * Menus render outside the loop (as in classic themes), so a filter that
+	 * retitles the current page in the loop doesn't retitle a menu item, and
+	 * the loop carries on afterwards.
+	 *
+	 * @return void
+	 */
+	public function test_menus_render_outside_the_loop(): void {
+		global $wp_query;
+
+		$menu = $this->menu();
+
+		$retitle = static fn( $title ) => in_the_loop() ? 'Retitled' : $title;
+		add_filter( 'the_title', $retitle );
+
+		$wp_query->in_the_loop = true;
+		$html                  = \Eighteen73\Matter\get_menu( [ 'menu' => $menu ] );
+		$still_in_the_loop     = $wp_query->in_the_loop;
+		$wp_query->in_the_loop = false;
+
+		remove_filter( 'the_title', $retitle );
+
+		$this->assertStringContainsString( 'Services', $html );
+		$this->assertStringNotContainsString( 'Retitled', $html );
+		$this->assertTrue( $still_in_the_loop );
+	}
 }

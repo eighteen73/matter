@@ -109,16 +109,18 @@ class Menu {
 		// links are the only way to reach those pages.
 		$walker = new Walker( $id, (bool) $args['view_all'] || 'click' === $args['opens_on'] );
 
-		$items = wp_nav_menu(
-			[
-				'menu'        => $menu,
-				'container'   => false,
-				'items_wrap'  => '<ul class="matter-menu__items">%3$s</ul>',
-				'fallback_cb' => false,
-				'depth'       => (int) $args['depth'],
-				'walker'      => $walker,
-				'echo'        => false,
-			]
+		$items = self::outside_the_loop(
+			fn() => wp_nav_menu(
+				[
+					'menu'        => $menu,
+					'container'   => false,
+					'items_wrap'  => '<ul class="matter-menu__items">%3$s</ul>',
+					'fallback_cb' => false,
+					'depth'       => (int) $args['depth'],
+					'walker'      => $walker,
+					'echo'        => false,
+				]
+			)
 		);
 
 		if ( ! $items ) {
@@ -197,6 +199,32 @@ class Menu {
 		);
 
 		return $ranges ?: Breakpoints::ranges( MenuType::Dropdown->value );
+	}
+
+	/**
+	 * Run a callback outside the loop, as menus are in classic themes. Block
+	 * templates render their parts (a header's menu) inside the main query's
+	 * loop, and plugins that retitle the current page in the loop, once (e.g.
+	 * WooCommerce's account sections, through `the_title`), would retitle the
+	 * first menu item instead.
+	 *
+	 * @param callable $callback Callback.
+	 * @return mixed The callback's result.
+	 */
+	private static function outside_the_loop( callable $callback ): mixed {
+		global $wp_query;
+
+		if ( ! $wp_query instanceof \WP_Query || ! $wp_query->in_the_loop ) {
+			return $callback();
+		}
+
+		$wp_query->in_the_loop = false;
+
+		try {
+			return $callback();
+		} finally {
+			$wp_query->in_the_loop = true;
+		}
 	}
 
 	/**
