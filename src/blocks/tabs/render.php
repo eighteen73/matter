@@ -48,7 +48,7 @@ $matter_buttons = '';
 $matter_current = '';
 
 foreach ( $matter_tabs as $matter_index => $matter_tab ) {
-	$matter_tab_id    = $matter_id . '-' . ( $matter_index + 1 );
+	$matter_tab_id    = $matter_tab['id'] ?? $matter_id . '-' . ( $matter_index + 1 );
 	$matter_tab_label = '' !== $matter_tab['label'] ? $matter_tab['label'] : sprintf( /* translators: %d: tab number */ __( 'Tab %d', 'matter' ), $matter_index + 1 );
 
 	$matter_icon = Icons::render( (string) ( $matter_tab['icon'] ?? '' ), 'wp-block-matter-tabs__icon' );
@@ -138,7 +138,7 @@ printf(
 	),
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
-			'active'     => $matter_id . '-1',
+			'active'     => $matter_tabs[0]['id'] ?? $matter_id . '-1',
 			'deepLink'   => ! empty( $attributes['deepLink'] ),
 			'isMenuOpen' => false,
 		]

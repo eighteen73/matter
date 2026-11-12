@@ -16,6 +16,7 @@ import { __ } from '@wordpress/i18n';
 import { ATTRIBUTE } from '../../../query-display/templates';
 import { useLockedQuery } from '../../../query-display/use-locked-query';
 import DisplayPanel from './panel';
+import { useStableId } from '../../../components/stable-id';
 
 // Previews by request, for the editor session, and requests in flight.
 const previews = new Map();
@@ -233,6 +234,8 @@ export default function PreviewEdit({ BlockEdit, props }) {
 	const { selectBlock } = useDispatch(blockEditorStore);
 
 	useLockedQuery(clientId);
+	// A stable ID for links to its items (`#{id}-post-{postId}`).
+	useStableId(clientId, 'anchor', display.type);
 
 	const set = (changes) =>
 		setAttributes({ [ATTRIBUTE]: { ...display, ...changes } });

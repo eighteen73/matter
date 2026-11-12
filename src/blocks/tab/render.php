@@ -18,15 +18,21 @@ if ( '' === $matter_label && ! empty( $block->context['postId'] ) ) {
 	$matter_label = get_the_title( (int) $block->context['postId'] );
 }
 
-$matter_parent   = Instances::current( 'matter/tabs' ) ?? wp_unique_id( 'tabs-' );
+$matter_parent = Instances::current( 'matter/tabs' ) ?? wp_unique_id( 'tabs-' );
+// A post's tab is named after the post, so links to it survive new posts.
+$matter_post = Instances::in_query_loop() ? (int) ( $block->context['postId'] ?? 0 ) : 0;
+$matter_id   = $matter_post ? $matter_parent . '-post-' . $matter_post : null;
+
 $matter_position = Instances::add(
 	'matter/tabs',
 	[
 		'label' => $matter_label,
 		'icon'  => (string) ( $attributes['icon'] ?? '' ),
+		'id'    => $matter_id,
 	]
 );
-$matter_id       = $matter_parent . '-' . ( $matter_position ? $matter_position : wp_unique_id() );
+
+$matter_id ??= $matter_parent . '-' . ( $matter_position ? $matter_position : wp_unique_id() );
 
 printf(
 	'<div %1$s %2$s role="tabpanel" aria-labelledby="%3$s-tab" tabindex="0" data-wp-bind--hidden="!state.isActive">%4$s</div>',

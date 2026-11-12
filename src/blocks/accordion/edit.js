@@ -16,6 +16,7 @@ import { __ } from '@wordpress/i18n';
  */
 import { useLegacyQuery } from '../../query-display/use-legacy-query';
 import { ACCORDION_SETTINGS, AccordionSettings } from './settings';
+import { useStableId } from '../../components/stable-id';
 
 const ALLOWED_BLOCKS = ['matter/accordion-item'];
 
@@ -32,6 +33,8 @@ const ALLOWED_BLOCKS = ['matter/accordion-item'];
 export default function Edit({ attributes, setAttributes, clientId }) {
 	// An accordion holding a Query Loop (from before) becomes the query.
 	useLegacyQuery(clientId, 'accordion', attributes, ACCORDION_SETTINGS);
+	// A stable ID for links to its items (`#{id}-2`).
+	useStableId(clientId, 'anchor', 'accordion');
 
 	const blockProps = useBlockProps();
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {

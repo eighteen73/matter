@@ -20,7 +20,7 @@ $matter_open  = [];
 
 foreach ( $matter_items as $matter_index => $matter_item ) {
 	if ( ! empty( $matter_item['open'] ) || ( 0 === $matter_index && ! empty( $attributes['openFirst'] ) ) ) {
-		$matter_open[] = $matter_id . '-' . ( $matter_index + 1 );
+		$matter_open[] = $matter_item['id'] ?? $matter_id . '-' . ( $matter_index + 1 );
 	}
 }
 

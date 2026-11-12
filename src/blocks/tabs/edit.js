@@ -29,6 +29,7 @@ import { IconToolbar, useIcon } from '../../components/icon-picker';
 import { useLegacyQuery } from '../../query-display/use-legacy-query';
 import { ActiveTabContext } from './context';
 import { TABS_SETTINGS, TabsSettings } from './settings';
+import { useStableId } from '../../components/stable-id';
 
 function TabIcon({ name }) {
 	const icon = useIcon(name);
@@ -55,6 +56,8 @@ export default function Edit({
 
 	// Tabs holding a Query Loop (from before) become the query.
 	useLegacyQuery(clientId, 'tabs', attributes, TABS_SETTINGS);
+	// A stable ID for links to its tabs (`#{id}-2`).
+	useStableId(clientId, 'anchor', 'tabs');
 	const [activeId, setActiveId] = useState(null);
 
 	const { tabs, isQuery, isEditing } = useSelect(

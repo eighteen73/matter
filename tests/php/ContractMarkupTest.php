@@ -124,4 +124,32 @@ class ContractMarkupTest extends TestCase {
 		$this->assertMatchesRegularExpression( '/<ul\b(?=[^>]*\brole="presentation")(?=[^>]*\bwp-block-post-template\b)[^>]*>/', $accordion );
 		$this->assertSame( 2, substr_count( $accordion, '<h2 class="wp-block-matter-accordion-item__heading">' ) );
 	}
+
+	/**
+	 * Posts accordions and tabs take the query's anchor as their ID (once,
+	 * not repeated on the query), and name each item after its post, so
+	 * links to an item survive new posts.
+	 *
+	 * @return void
+	 */
+	public function test_query_display_ids(): void {
+		[ $newer, $older ] = [ self::factory()->post->create( [ 'post_date' => '2026-02-01 00:00:00' ] ), self::factory()->post->create( [ 'post_date' => '2026-01-01 00:00:00' ] ) ];
+
+		$query = fn( string $type, string $item ) => '<!-- wp:query {"queryId":8,"anchor":"news","query":{"perPage":2,"postType":"post","order":"desc","orderBy":"date","inherit":false},"matterDisplay":{"type":"' . $type . '"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template -->' . $item . '<!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->';
+
+		$accordion = $this->render( $query( 'accordion', '<!-- wp:matter/accordion-item {"open":true} --><!-- wp:matter/loop-item /--><!-- /wp:matter/accordion-item -->' ) );
+
+		$this->assertSame( 1, substr_count( $accordion, 'id="news"' ) );
+		$this->assertStringContainsString( "id=\"news-post-{$newer}\"", $accordion );
+		$this->assertStringContainsString( "\"openItems\":[\"news-post-{$newer}\",\"news-post-{$older}\"]", str_replace( '&quot;', '"', $accordion ) );
+
+		$tabs = $this->render( $query( 'tabs', '<!-- wp:matter/tab --><!-- wp:matter/loop-item /--><!-- /wp:matter/tab -->' ) );
+
+		$this->assertSame( 1, substr_count( $tabs, 'id="news"' ) );
+		$this->assertStringContainsString( "role=\"tab\" id=\"news-post-{$newer}-tab\"", $tabs );
+		$this->assertStringContainsString( "aria-controls=\"news-post-{$older}\"", $tabs );
+		$this->assertStringContainsString( "\"active\":\"news-post-{$newer}\"", str_replace( '&quot;', '"', $tabs ) );
+	}
 }

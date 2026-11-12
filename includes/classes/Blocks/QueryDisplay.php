@@ -262,13 +262,20 @@ final class QueryDisplay {
 		$settings = (array) ( $block['attrs'][ self::ATTRIBUTE ] ?? [] );
 		$style    = sanitize_key( (string) ( $settings['style'] ?? '' ) );
 		$align    = sanitize_key( (string) ( $block['attrs']['align'] ?? '' ) );
+		$anchor   = sanitize_html_class( (string) ( $block['attrs']['anchor'] ?? '' ) );
 		$attrs    = array_filter(
 			[
-				// The query's alignment applies to the block around it.
+				// The query's alignment and anchor apply to the block around it.
 				'className' => trim( ( $style ? 'is-style-' . $style : '' ) . ( $align ? ' align' . $align : '' ) ),
 				'scheme'    => sanitize_key( (string) ( $settings['scheme'] ?? '' ) ),
+				'anchor'    => $anchor,
 			]
 		) + $display['attributes'];
+
+		// The block has the ID now; the query mustn't repeat it.
+		if ( '' !== $anchor ) {
+			$content = self::without_id( $content, $anchor );
+		}
 
 		// The post template's list is only a wrapper for accordion items and
 		// tab panels, not a list readers need to hear about.
@@ -409,6 +416,23 @@ final class QueryDisplay {
 			'innerHTML'    => implode( '', array_filter( $inner_content, 'is_string' ) ),
 			'innerContent' => $inner_content,
 		];
+	}
+
+	/**
+	 * Remove an ID from the query's own element (its first tag).
+	 *
+	 * @param string $html Rendered query.
+	 * @param string $id   ID to remove.
+	 * @return string
+	 */
+	private static function without_id( string $html, string $id ): string {
+		$tags = new WP_HTML_Tag_Processor( $html );
+
+		if ( $tags->next_tag() && $id === $tags->get_attribute( 'id' ) ) {
+			$tags->remove_attribute( 'id' );
+		}
+
+		return $tags->get_updated_html();
 	}
 
 	/**
