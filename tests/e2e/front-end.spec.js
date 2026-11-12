@@ -349,6 +349,7 @@ test.describe('theme styles', () => {
 				.wp-block-matter-carousel__dot { width: 30px; }
 				.wp-block-matter-modal { width: 300px; }
 				.matter-menu__submenu { padding: 3px; }
+				h2, h3, h4 { margin-block: 2em; }
 			`;
 			document.head.prepend(style);
 		});
@@ -383,6 +384,10 @@ test.describe('theme styles', () => {
 		);
 		expect(await computed('#in-tab', 'width')).toBe('300px');
 		expect(await computed('.matter-menu__submenu', 'padding')).toBe('3px');
+		// Matter's resets still beat a theme's element styles.
+		expect(
+			await computed('.wp-block-matter-accordion-item__heading', 'margin')
+		).toBe('0px');
 	});
 });
 

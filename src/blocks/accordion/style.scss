@@ -4,6 +4,12 @@
 
 @use "../../styles/icon" as *;
 
+// Resets that must beat core's and a theme's element styles (heading
+// margins, a Query Loop's list and flow layout) are one class or more.
+.wp-block-matter-accordion-item__heading {
+	margin: 0;
+}
+
 .wp-block-matter-accordion-item__panel {
 	display: grid;
 	grid-template-rows: 0fr;
@@ -20,23 +26,19 @@
 	overflow: hidden;
 }
 
-// From posts: items sit in a Query Loop's list, whose layout would space them.
-:where(.wp-block-matter-accordion) .wp-block-post-template,
-:where(.wp-block-matter-accordion) .wc-block-product-template {
+// From posts: items sit in a Query Loop's list, whose layout would space them
+// (core's `:root :where(.is-layout-flow) > *` is 0,1,0, so two classes).
+.wp-block-matter-accordion :is(.wp-block-post-template, .wc-block-product-template) {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-:where(.wp-block-matter-accordion .wp-block-post-template, .wp-block-matter-accordion .wc-block-product-template) > * {
+.wp-block-matter-accordion :is(.wp-block-post-template, .wc-block-product-template) > * {
 	margin-block: 0;
 }
 
 // Default skin: an unstyled button with a caret that turns when open.
-:where(.wp-block-matter-accordion-item__heading) {
-	margin: 0;
-}
-
 :where(.wp-block-matter-accordion-item__toggle) {
 	align-items: center;
 	appearance: none;

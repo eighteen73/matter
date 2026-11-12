@@ -14,13 +14,17 @@
 	position: relative;
 }
 
-// To change a variant's crop, set `aspect-ratio` on its images with one class
-// (e.g. `.is-style-thumbnails img`).
-:where(.wp-block-matter-gallery .wp-block-image) img {
-	aspect-ratio: var(--image-aspect-ratio, auto);
+// Images fill their cell (one class and the element, over a theme's `img`
+// rules) and are cropped at zero specificity: to change a variant's crop, set
+// `aspect-ratio` on its images with one class (e.g. `.is-style-thumbnails img`).
+:where(.wp-block-matter-gallery) .wp-block-image img {
 	height: auto;
 	object-fit: var(--image-object-fit, cover);
 	width: 100%;
+}
+
+:where(.wp-block-matter-gallery .wp-block-image) img {
+	aspect-ratio: var(--image-aspect-ratio, auto);
 }
 
 // Columns: the client's choice, from the theme's options.

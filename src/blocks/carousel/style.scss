@@ -57,14 +57,17 @@
 }
 
 // Image slides share the chosen crop (`--image-aspect-ratio`, with
-// `.has-image-aspect-ratio` when every slide is an image). To change a
-// variant's crop, set `aspect-ratio` on its images with one class (e.g.
-// `.is-style-cards img`).
-:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image) img {
-	aspect-ratio: var(--image-aspect-ratio);
+// `.has-image-aspect-ratio` when every slide is an image). Sized at one class
+// and the element, over a theme's `img` rules; the crop itself is at zero, so
+// a variant's is set with one class (e.g. `.is-style-cards img`).
+:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track) > .wp-block-image img {
 	height: auto;
 	object-fit: var(--image-object-fit, cover);
 	width: 100%;
+}
+
+:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image) img {
+	aspect-ratio: var(--image-aspect-ratio);
 }
 
 // Before Embla starts, or if its script never runs, the slides scroll
@@ -284,7 +287,7 @@
 	border-color: currentcolor;
 }
 
-:where(.wp-block-matter-carousel__thumbnail) img {
+.wp-block-matter-carousel__thumbnail img {
 	display: block;
 	height: 100%;
 	object-fit: cover;
