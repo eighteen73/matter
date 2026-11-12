@@ -40,7 +40,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 | `matter/carousel` | Each inner block is a slide. A carousel of posts or products is a Query Loop or Product Collection shown as one ("Posts carousel", "Products carousel"). A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts or products. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on each slide's toolbar. Posts and products: see [Carousels of posts or products](#carousels-of-posts-or-products). | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
 | `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. Every image is cropped to one aspect ratio and uses the variant's image size (`imageSize`), so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`, and its toolbar keeps the "Edit images" button. | Layout (grid/carousel), columns (the theme's choices; fewer show where there's less room), images to show (in whole rows of the columns; at any width the grid shows full rows, and the rest open from "View all N images"), aspect ratio (theme.json presets, or the images' own), captions (behind an info button, over the image, or hidden; each image's own caption, else its media library caption, also shown in the lightbox), lightbox on/off, name. |
 | `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
-| `matter/drawer` | An optional trigger area plus content that slides in from the left or right. | ID, name, can be closed, open automatically, side. |
+| `matter/drawer` | An optional trigger area plus content that slides in from the start or end of the line (the left or right in left-to-right languages; `.is-position-start`, `.is-position-end`). | ID, name, can be closed, open automatically, side. |
 | `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
 | `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
 | `matter/slot` | A named content area inside a section (added automatically). | None. |
@@ -168,7 +168,7 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 - `scheme`: adds the colour scheme control.
 - `align: "full"`: full-width band (`alignfull`).
 - `tagName`: element for the default renderer.
-- `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable. Without a heading, a visually hidden "Read more" link is added (`matter_link_label` filter). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
+- `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable (they get `position: relative; z-index: 2` at zero specificity: a theme positioning its own, such as a wishlist button in a corner, keeps a `z-index` above 1). Without a heading, a visually hidden "Read more" link is added (`matter_link_label` filter). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
 - `slots`: per slot, `allowedBlocks`, `template`, `templateLock` and `previously` (old names, for a renamed slot).
 
 **Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
@@ -240,7 +240,18 @@ add_filter( 'matter_variants', fn( $variants ) => array_replace_recursive( $vari
 ] ) );
 ```
 
-Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds per slide, 0 = off), `autoScroll` (a continuous scroll speed, e.g. `1` for a ticker of logos; 0 = off), `controls` and `thumbnailSize` (the thumbnails' image size, default `thumbnail`). Slide widths and gaps belong in theme CSS.
+Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number or `auto`), `autoplay` (seconds per slide, 0 = off), `autoScroll` (a continuous scroll speed, e.g. `1` for a ticker of logos; 0 = off), `controls` and `thumbnailSize` (the thumbnails' image size, default `thumbnail`). Slides per view and the gap between slides are theme CSS settings (see [CSS variables](#carousel)):
+
+```scss
+.wp-block-matter-carousel.is-style-cards {
+	--carousel-gap: var(--wp--preset--spacing--lg);
+	--carousel-per-view: 1;
+
+	@media (--md) {
+		--carousel-per-view: 3;
+	}
+}
+```
 
 **Controls** are groups of parts by position: `before` the slides, over them on the `stage`, or `after` them. Matter renders each group as `.wp-block-matter-carousel__controls.is-{position}` with its parts in order, and wires up their behaviour and accessibility; the theme's CSS places the group and each part (`.wp-block-matter-carousel__{part}`).
 
@@ -279,7 +290,7 @@ add_filter( 'matter_carousel_slides', fn() => [
 
 Carousels of only images also take `aspectRatio`: the default crop, a slug from theme.json's `settings.dimensions.aspectRatios`, or `auto` for the images' own shape (default `auto`). Editors can choose another preset.
 
-Gallery options: `imageSize` (a registered image size), `columns` (column counts editors can choose, default `[ 2, 3, 4 ]`; `[]` hides the control so theme CSS sets the columns), `defaultColumns` (default `3`) and `aspectRatio` (as above, default `square`). The grid shows the chosen columns where there's room and fewer where images would be narrower than `--gallery-min-width` (default `10rem`); `--gallery-gap` sets the gap. Images are cropped with `--image-aspect-ratio`. The gallery's carousel layout reads its `matter/gallery` variant's options (falling back to the carousel defaults).
+Gallery options: `imageSize` (a registered image size), `columns` (column counts editors can choose, default `[ 2, 3, 4 ]`; `[]` hides the control so theme CSS sets the columns), `defaultColumns` (default `3`) and `aspectRatio` (as above, default `square`). The grid shows the chosen columns where there's room and fewer where images would be narrower than `--gallery-min-width` (default `10rem`); `--gallery-gap` sets the gap. Images are cropped with `--image-aspect-ratio`. The gallery's carousel layout reads its `matter/gallery` variant's options (falling back to the carousel defaults). It uses the carousel's markup and Matter's carousel stylesheet, but isn't a `matter/carousel` block, so a theme's own carousel stylesheet loaded per block (`wp_enqueue_block_style( 'matter/carousel', … )`) doesn't load with it: make the theme's gallery stylesheet depend on it.
 
 Tabs options: `dropdownBelow`, the breakpoint below which tabs set to "Show as a dropdown on smaller screens" switch to the dropdown (default `md`). Set it to `false` to do the switch in theme CSS instead: below your breakpoint, `.wp-block-matter-tabs.has-dropdown` shows its `__toggle` button and turns `__nav > __list` into a menu, open when the block has `.is-menu-open`. `Eighteen73\Matter\Blocks\Tabs::dropdown_css( $scope, $media )` returns the rules Matter uses, to output for your own scope and media query.
 
@@ -404,6 +415,7 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 }, [ 'collapse_below' => 'lg' ] );
 ```
 
+- **Arguments** (both functions): `collapse_below` (a breakpoint; empty for always off-canvas); for `panel()`, `position` (`end`, the default, `start` or `top`: where it comes in from; start and end are the left and right in left-to-right languages), `label`, `close_label` and `class`.
 - **Off-canvas:** a dialog with a focus trap, Escape to close, backdrop, scroll lock and a close button. It sits below the admin bar. Following a link inside it (except into a new tab), or a `#hash` change, closes it. When it closes, focus returns to its toggle, even with a drill-down submenu open.
 - **Inside a panel:** `.is-panel-only` and `.is-inline-only` show content in one mode only.
 - **Events:** `matter-panel-open` and `matter-panel-close`, with `detail.id` and `detail.instance`.
@@ -508,19 +520,38 @@ Matter also hides from the inserter the core blocks it replaces (gallery, accord
 
 ## CSS conventions
 
-Themes restyle Matter with plain class selectors and never need `!important`.
+Themes restyle Matter with plain class selectors, wherever their stylesheet loads, and never need `!important`.
 
 **Specificity**
-- Functional rules (layout, visibility, the things a theme shouldn't change) use one class per selector. One exception: modal and drawer margins use `:root dialog.wp-block-matter-modal` (and `-drawer`), to outrank core's layout margins on post content (`:root :where(.is-layout-*) > :last-child`, 0,2,0).
-- The default skin (colours, spacing, borders, type) is wrapped in `:where()`, so it has zero specificity and any theme class beats it.
-- No IDs, no `!important`, and no design values in inline styles.
+- **Functional rules** (what makes a block work: display, visibility, positioning, overflow, grid and flex mechanics) are one class per selector, plus the element's own state (`[open]`, `[hidden]`, `.is-*`, `:dir()`, a pseudo-element). Context, such as an ancestor's state or a menu's type, is in `:where()`: `:where(.wp-block-matter-accordion-item.is-open) > .wp-block-matter-accordion-item__panel` is 0,1,0.
+- **The default skin** (everything else: colours, spacing, borders, sizes, icons, motion) is wrapped in `:where()` entirely, so it has zero specificity and any theme selector beats it. Motion is skin too: a theme restyling it sets the states it changes (`[open]`, `[open].is-closing`, `.is-open`), as the skin does.
+- **Exceptions**, where Matter must win over other code:
+  - modal and drawer margins use `:root dialog.wp-block-matter-modal` (and `-drawer`), to outrank core's layout margins on post content (`:root :where(.is-layout-*) > :last-child`, 0,2,0);
+  - hidden states outrank a theme's `display` (e.g. carousel controls when there's nothing to scroll, `[hidden]` parts, hidden captions, the panel toggle above its breakpoint);
+  - a carousel's track and slides beat core's and WooCommerce's query layouts (`body .is-layout-grid`, `.is-flex-container`).
+- Matter shows and hides parts per mode (a parent's link in a drill-down menu, a submenu's header, a panel's close button): themes shouldn't set `display` on these.
+- Stylelint enforces it: front-end selectors are at most 0,2,1 (with each exception marked), no IDs, no `!important`.
+
+**Selectors**
+- Every class is written out in full: no `&__` or `&-` concatenation, so any class can be found by searching for it.
+- Nesting is only for the same element: `&:hover`, `&::before`, `&[aria-expanded]`, `&.is-open`, and at-rules (`@media`, `@supports`, `@starting-style`).
 
 **Class names**
 - `.wp-block-matter-{block}` and `__{element}` for its parts.
 - `.is-style-{variant}` for variants, `.has-{option}` for options (`.has-columns-3`, `.has-captions-overlay`), `.is-{state}` for states set by JavaScript or PHP (`.is-open`, `.is-collapsed`), `.has-scheme-{slug}` for schemes.
 
+**Direction**
+- Logical properties throughout, and `:dir(rtl)` for icons and movement, in one stylesheet: right-to-left content works on any site, including a right-to-left section on a left-to-right site. There are no `-rtl.css` files.
+- Sides are named `start` and `end` (drawer `position`, panel `position`), not left and right.
+
+**Accessibility**
+- Reduced motion turns off the skin's transitions (rules at the end of each stylesheet, so they win over the skin's own).
+- Icons are masks painted in the text colour with `forced-color-adjust: none`, so they stay visible in forced colours (Windows high contrast). So are the carousel's dots, progress and timer, and the panel toggle's bars.
+- Buttons in the skin are at least 24px to tap or click (WCAG 2.5.8).
+
 **CSS variables**
-- Colours come from the scheme (`--scheme--{role}`) and other values from theme.json (`--wp--preset--…`, `--wp--custom--…`).
+- Colours come from the scheme (`--scheme--{role}`) and other values from theme.json (`--wp--preset--…`, `--wp--custom--…`). The skin's colours fall back to system colours (`Canvas`, `CanvasText`), so Matter works on a theme without schemes.
+- `--{block}-*` names are Matter's: a theme's own variables use its own prefix (or `--_` for private ones), so a later Matter variable can't collide with them.
 - A block's own variables are named `--{block}-{setting}`, with no `matter-` prefix and single hyphens, and exist only for:
   - **theme settings**: Matter only reads them, with a fallback (`var(--gallery-gap, 1rem)`), and never declares them, so a theme can set them on `:root` or on the block's class;
   - **runtime values**: set inline by JavaScript or PHP for one instance (submenu offsets, carousel progress, the crop a client picked).
@@ -531,23 +562,14 @@ Themes restyle Matter with plain class selectors and never need `!important`.
 
 ### Menu
 
-Theme settings can go anywhere, such as `:root`. Runtime values are set on `.matter-menu`'s submenus.
+Runtime values, set on `.matter-menu`'s submenus.
 
 | Variable | Default | |
 |---|---|---|
-| `--menu-duration` | `0.3s` | Theme setting: open and close transitions. Reduced motion always wins. |
 | `--menu-offset-x`, `--menu-offset-y` | `0` | Runtime, on dropdown submenus: nudges them inside the viewport. |
 | `--menu-max-height` | `none` | Runtime, on dropdown submenus: the room below, so long menus scroll. |
 | `--menu-max-width` | `100vw` | Runtime, on megamenus: the room available. |
 | `--menu-megamenu-width` | `100vw` | Runtime, on full-width megamenus: the viewport's width. |
-
-### Panel
-
-Set anywhere, such as `:root`.
-
-| Variable | Default | |
-|---|---|---|
-| `--panel-duration` | `0.3s` | Theme setting: off-canvas transitions. Reduced motion always wins. |
 
 ### Gallery
 
@@ -557,14 +579,16 @@ On `:root` or `.wp-block-matter-gallery` (or one of its variants).
 |---|---|---|
 | `--gallery-gap` | `1rem` | Theme setting: the grid's gap. |
 | `--gallery-min-width` | `10rem` | Theme setting: images never get narrower; the grid drops columns instead. |
-| `--gallery-caption-toggle-size` | `2.75rem` | Theme setting: the caption info button. |
+| `--gallery-counter-width` | (from the count) | Runtime, on the lightbox's counter: room for the widest count ("12 / 12"), so the arrows stay put. |
 
 ### Carousel
 
-On `.wp-block-matter-carousel`.
+On `.wp-block-matter-carousel` (or a variant's class).
 
 | Variable | Default | |
 |---|---|---|
+| `--carousel-per-view` | `1` | Theme setting: slides in view (the slide width). A theme's own slide widths win too. |
+| `--carousel-gap` | `0` | Theme setting: the gap between slides. |
 | `--carousel-progress` | `0` | Runtime: how far through the carousel (0–1). |
 | `--carousel-autoplay` | `5000ms` | Runtime: each slide's autoplay time. |
 
@@ -611,7 +635,9 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 - **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts or products carousel the slides are the items of the post or product template inside the track; in an accordion or tabs of posts the items are inside the post template's list), state classes (`is-*`, `has-*`), the `--scheme--*` roles and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 
-**Not in the contract: the default skin** (the colours, spacing, borders and sizes in `:where()`). It can change in a minor release, and every such change is listed under **Visual changes** in the changelog. A theme should style what it depends on rather than rely on the skin.
+**The default skin** (everything in `:where()`) is minimal: what a block needs to be usable and accessible on a theme with no styles for it (unstyled buttons, icons, the scheme's background and text colours, a backdrop, spacing, motion). It isn't a design: no radii, shadows, font weights or decorative borders. Themes are expected to style every Matter block they use (Pulsar ships base styles for each), and not to rely on the skin.
+
+The skin changes only in a major version, except to fix a bug or an accessibility failure. Every change, in any release, is listed under **Visual changes** in the changelog.
 
 ## Development
 

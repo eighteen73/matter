@@ -37,7 +37,9 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 - **Modal, drawer and collapsible:** single blocks with an optional trigger area and a content area, also opened by any link to `#id`. Modal and drawer use native `<dialog>` and can be made non-closable (e.g. an age gate). Per-post overlays in Query Loops, and grouped modals with previous/next, which keep the backdrop while switching. URL parameters open an overlay even after a dismissal. There's a new `matter/overlay` store. In the editor, the canvas shows only what the front end shows: closed overlays show just their trigger (if any), and an overlay opens as it does on the front end (theme styles, backdrop, transitions, group previous/next) while it's selected. An Overlays sidebar lists and adds modals and drawers, link search suggests overlays by name, and buttons that open one get "Edit modal" (or drawer, collapsible).
 - **Dialog exits:** modals, drawers and gallery lightboxes animate out in every browser: a closing dialog stays open with `is-closing` until its transitions finish (CSS alone could only animate the exit where `overlay` can be transitioned, i.e. Chromium).
 - **Shared focus trap:** focus-trap is one script module (`matter/focus-trap`) shared by menus and panels, so it loads once and their traps share a stack.
-- **CSS:** functional rules plus `:where()` defaults. No custom-property fallback chains and no inline styles from attributes. Block variables are named `--{block}-{setting}` (e.g. `--menu-duration`, `--gallery-gap`); colour schemes set 11 roles (`background`, `background-surface`, `background-fill`, `text`, `text-subtle`, `text-heading`, `text-link`, `text-fill`, `border`, `border-strong`, `highlight`) as `--scheme--{role}`.
+- **CSS:** functional rules at one class (context in `:where()`) plus a minimal default skin entirely in `:where()`, motion and icons included, so one theme class overrides any of it wherever the theme's stylesheet loads (see the README's CSS conventions). Selectors are written out in full, with nesting only for the same element, enforced by stylelint. No custom-property fallback chains and no inline styles from attributes. Block variables are named `--{block}-{setting}` (e.g. `--gallery-gap`, `--carousel-per-view`); colour schemes set 11 roles (`background`, `background-surface`, `background-fill`, `text`, `text-subtle`, `text-heading`, `text-link`, `text-fill`, `border`, `border-strong`, `highlight`) as `--scheme--{role}`.
+- **Direction:** one stylesheet per component, with logical properties and `:dir(rtl)`, instead of flipped `-rtl.css` copies, so right-to-left content works on any site. Drawer and panel sides are `start` and `end` (drawer `position`, `.is-position-start`; panel `position`, `.is-from-start`), not left and right.
+- **Carousel settings:** `--carousel-per-view` and `--carousel-gap` set slide widths and gaps.
 - **Core blocks Matter replaces:** hidden with `supports.inserter` instead of rewriting the allowed-blocks list.
 - **Requirements:** WordPress 7.1 and PHP 8.3.
 - **Dependencies:** pinned; unused packages removed.
@@ -53,7 +55,11 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 
 ### Visual changes
 
-Changes to the default skin (in `:where()`), which themes may rely on without restyling. Listed here from 1.0 on; see the theme contract in the README.
+Changes to the default skin (in `:where()`). From 1.0 the skin changes only in a major version, or to fix a bug or an accessibility failure; see the theme contract in the README.
 
-- Carousel dots are sized in `rem` (0.625rem) and spaced with their centres 24px apart; menu toggles, back buttons and links are at least 24px, for WCAG 2.5.8's target size.
-- Image crops in galleries and image carousels, the caption toggle's colours and disabled controls' opacity are skin, so one theme class overrides them.
+- The skin is minimal: no radii (modal, dropdown, tooltip, caption and carousel buttons), shadows, font weights (toggles, tabs, labels), decorative borders (accordion items, the tab list, drill-down rows and header, carousel arrows) or opacity effects (thumbnails, menu descriptions).
+- Dropdown submenus and the tabs dropdown have a border instead of a shadow; the selected tab is underlined (both orientations) instead of a border on its side.
+- Surfaces fall back to the system colours `Canvas` and `CanvasText` without a scheme, and tints (progress and timer tracks, borders) are mixed from the text colour, so they show on dark schemes.
+- Icons, dots, progress bars and the panel toggle's bars stay visible in forced colours.
+- Carousel dots are sized in `rem` (0.625rem) and spaced with their centres 24px apart; menu toggles, back buttons and links, and overlay close buttons, are at least 24px, for WCAG 2.5.8's target size.
+- Reduced motion also stops the transition between grouped modals.
