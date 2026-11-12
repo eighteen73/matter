@@ -582,7 +582,9 @@ add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'l
 
 ## Theme contract
 
-What a theme's files and saved content depend on. Each project's theme is its own copy and isn't updated with Matter, so these change only in a major version, with a changelog entry and a migration for saved content. Everything else (editor internals, PHP classes, JavaScript modules) can change in any release.
+What a theme's files and saved content depend on. Each project's theme is its own copy and isn't updated with Matter, so these change only in a major version, with a changelog entry. When a change affects saved content, the release that makes it adds a `wp matter migrate` WP-CLI command (with `--dry-run`) to convert existing content. No such change has been made yet, so the command doesn't exist yet. Everything else (editor internals, PHP classes, JavaScript modules) can change in any release.
+
+The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); a change to a snapshot is a contract change.
 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries, the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
 - **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{theme}/loop-item-{post_type}`, `{theme}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, in the order under [Loop items](#loop-items)).
