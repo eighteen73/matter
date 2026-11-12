@@ -1,74 +1,71 @@
 // Accordion. Panels expand by animating grid rows; closed panels are inert.
-// Functional rules use plain classes; presentational defaults are in :where().
+// Functional rules first, at one class (plus the element's own state, with
+// any context in :where()); then the default skin, all in :where().
 
-.wp-block-matter-accordion-item__heading {
-	margin: 0;
-}
-
-.wp-block-matter-accordion-item__toggle {
-	align-items: center;
-	cursor: pointer;
-	display: flex;
-	gap: 1em;
-	justify-content: space-between;
-	text-align: start;
-	width: 100%;
-
-	&::after {
-		background-color: currentcolor;
-		content: "";
-		flex: none;
-		height: 0.75em;
-		mask: url("../../../assets/svg/caret-down.svg") center / contain no-repeat;
-		transition: rotate 300ms;
-		width: 0.75em;
-	}
-}
-
-.wp-block-matter-accordion-item.is-open > .wp-block-matter-accordion-item__heading > .wp-block-matter-accordion-item__toggle::after {
-	rotate: 180deg;
-}
+@use "../../styles/icon" as *;
 
 .wp-block-matter-accordion-item__panel {
 	display: grid;
 	grid-template-rows: 0fr;
-	transition:
-		grid-template-rows 300ms,
-		visibility 300ms;
 	visibility: hidden;
-
-	> .wp-block-matter-accordion-item__content {
-		min-height: 0;
-		overflow: hidden;
-	}
 }
 
-.wp-block-matter-accordion-item.is-open > .wp-block-matter-accordion-item__panel {
+:where(.wp-block-matter-accordion-item.is-open) > .wp-block-matter-accordion-item__panel {
 	grid-template-rows: 1fr;
 	visibility: visible;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.wp-block-matter-accordion-item__panel,
-	.wp-block-matter-accordion-item__toggle::after {
-		transition: none;
-	}
+.wp-block-matter-accordion-item__content {
+	min-height: 0;
+	overflow: hidden;
 }
 
-// Presentational defaults (including the button reset, so themes can set
-// padding, borders and backgrounds with plain class selectors).
-:where(.wp-block-matter-accordion-item) {
-	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 15%));
+// From posts: items sit in a Query Loop's list, whose layout would space them.
+:where(.wp-block-matter-accordion) .wp-block-post-template,
+:where(.wp-block-matter-accordion) .wc-block-product-template {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-accordion .wp-block-post-template, .wp-block-matter-accordion .wc-block-product-template) > * {
+	margin-block: 0;
+}
+
+// Default skin: an unstyled button with a caret that turns when open.
+:where(.wp-block-matter-accordion-item__heading) {
+	margin: 0;
 }
 
 :where(.wp-block-matter-accordion-item__toggle) {
+	align-items: center;
 	appearance: none;
 	background: none;
 	border: 0;
 	color: inherit;
+	cursor: pointer;
+	display: flex;
 	font: inherit;
-	font-weight: 600;
+	gap: 1em;
+	justify-content: space-between;
 	padding: 1em 0;
+	text-align: start;
+	width: 100%;
+}
+
+:where(.wp-block-matter-accordion-item__toggle)::after {
+	@include icon(caret-down, 0.75em);
+	transition: rotate 300ms;
+}
+
+:where(.wp-block-matter-accordion-item__toggle[aria-expanded="true"])::after {
+	rotate: 180deg;
+}
+
+:where(.wp-block-matter-accordion-item__panel) {
+	transition:
+		grid-template-rows 300ms,
+		visibility 300ms;
 }
 
 :where(.wp-block-matter-accordion-item__content) > :first-child {
@@ -79,13 +76,10 @@
 	padding-block-end: 1em;
 }
 
-// From posts: items sit in a Query Loop's list, whose layout would space them.
-.wp-block-matter-accordion :is(.wp-block-post-template, .wc-block-product-template) {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-
-	> * {
-		margin-block: 0;
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.wp-block-matter-accordion-item__panel),
+	:where(.wp-block-matter-accordion-item__toggle)::after {
+		transition: none;
 	}
 }

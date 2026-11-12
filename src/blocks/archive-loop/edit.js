@@ -37,13 +37,13 @@ export default function Edit() {
 
 	return (
 		<div {...blockProps}>
-			<span className="wp-block-matter-archive-list__label">
+			<span className="wp-block-matter-archive-loop__label">
 				{__('Archive list · set by the theme', 'matter')}
 			</span>
 			{content && (
 				<Disabled>
 					<div
-						className="wp-block-matter-archive-list__preview"
+						className="wp-block-matter-archive-loop__preview"
 						dangerouslySetInnerHTML={{ __html: content }}
 					/>
 				</Disabled>

@@ -123,9 +123,11 @@ class Link {
 		wp_add_inline_style(
 			self::HANDLE,
 			'.has-link{position:relative}'
-			. '.has-link .matter-link::after{content:"";inset:0;position:absolute;z-index:1}'
-			// Other links and controls inside stay clickable.
-			. '.has-link :is(a,button,input,select,textarea,summary,label):not(.matter-link){position:relative;z-index:2}'
+			. ':where(.has-link) .matter-link::after{content:"";inset:0;position:absolute;z-index:1}'
+			// Other links and controls inside stay clickable: above the stretched
+			// link, at zero specificity, so a theme can still position its own
+			// (e.g. a wishlist button in a corner).
+			. ':where(.has-link :is(a,button,input,select,textarea,summary,label):not(.matter-link)){position:relative;z-index:2}'
 			. ':where(.has-link .matter-link){color:inherit;text-decoration:none}'
 			. ':where(.has-link:has(.matter-link:focus-visible)){outline:2px solid currentcolor;outline-offset:2px}'
 			. ':where(.has-link .matter-link:focus-visible){outline:none}'

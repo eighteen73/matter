@@ -9,7 +9,6 @@ import { InnerBlocks } from '@wordpress/block-editor';
  */
 import Edit from './edit';
 import metadata from './block.json';
-import '../../overlay/editor/editor.scss';
 import './style.scss';
 
 registerBlockType(metadata.name, {

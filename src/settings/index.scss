@@ -1,11 +1,11 @@
 .matter-settings {
 	margin-block-start: 16px;
 	max-width: 760px;
+}
 
-	.components-snackbar-list {
-		bottom: 24px;
-		position: fixed;
-	}
+.matter-settings .components-snackbar-list {
+	bottom: 24px;
+	position: fixed;
 }
 
 .matter-settings__sections,

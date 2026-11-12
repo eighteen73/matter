@@ -1,121 +1,25 @@
 // Modal: a centred native <dialog>.
-// Functional rules use plain classes; presentational defaults are in :where()
-// so themes restyle with plain selectors (e.g. size variants as block styles).
+// Functional rules first, at one class (plus the element's own state); then
+// the default skin, all in :where() so any theme selector beats it. The skin
+// includes the motion: a theme restyling it sets the open and closed states
+// it changes (`[open]`, `[open].is-closing`), as the rules below do.
+
+@use "../../styles/icon" as *;
 
 // The page doesn't scroll behind an open modal or drawer (as behind a panel).
 html.has-overlay-open {
 	overflow: hidden;
 }
 
-.wp-block-matter-modal {
-	border: 0;
-	max-height: calc(100dvh - 2rem);
-	max-width: calc(100vw - 2rem);
-	opacity: 0;
-	padding: 0;
-	scale: 0.95;
-	transition:
-		opacity 200ms,
-		scale 200ms;
-
-	&[open] {
-		display: flex;
-		flex-direction: column;
-		opacity: 1;
-		scale: 1;
-
-		@starting-style {
-			opacity: 0;
-			scale: 0.95;
-		}
-	}
-
-	&::backdrop {
-		opacity: 0;
-		transition: opacity 200ms;
-
-	}
-
-	&[open]::backdrop {
-		opacity: 1;
-
-		@starting-style {
-			opacity: 0;
-		}
-	}
-
-	// Closing: the dialog stays open while these transitions run, then
-	// closes (interactivity/dialog.js), so the exit animates in every
-	// browser. Style a theme's exit here.
-	&[open].is-closing {
-		opacity: 0;
-		scale: 0.95;
-	}
-
-	&[open].is-closing::backdrop {
-		opacity: 0;
-	}
-
-	// Moving between grouped modals: the backdrop stays, the current modal
-	// goes at once and the next fades in from the side it comes from
-	// (`--modal-switch`: 1 for next, -1 for previous).
-	&.is-switching-out,
-	&.is-switching-out::backdrop,
-	&.is-switching-in::backdrop {
-		transition: none;
-	}
-
-	&.is-switching-in {
-		transition:
-			opacity 200ms,
-			translate 200ms;
-
-	}
-
-	&.is-switching-in[open] {
-		@starting-style {
-			opacity: 0;
-			scale: 1;
-			translate: calc(var(--modal-switch, 1) * 2rem) 0;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		transition: none;
-
-		&::backdrop {
-			transition: none;
-		}
-	}
+.wp-block-matter-modal[open] {
+	display: flex;
+	flex-direction: column;
 }
 
 .wp-block-matter-modal__content {
 	flex: 1 1 auto;
 	overflow-y: auto;
 	overscroll-behavior: contain;
-}
-
-.wp-block-matter-modal__close {
-	align-items: center;
-	appearance: none;
-	background: none;
-	border: 0;
-	color: inherit;
-	cursor: pointer;
-	display: inline-flex;
-	inset-block-start: 0.75rem;
-	inset-inline-end: 0.75rem;
-	padding: 0.25rem;
-	position: absolute;
-	z-index: 1;
-
-	&::before {
-		background-color: currentcolor;
-		content: "";
-		height: 1.25rem;
-		mask: url("../../../assets/svg/x.svg") center / contain no-repeat;
-		width: 1.25rem;
-	}
 }
 
 // Core layout rules set margins on post content children, including
@@ -125,68 +29,157 @@ html.has-overlay-open {
 	margin: auto;
 }
 
-// Presentational defaults.
+// Default skin. The modal fades in and scales up from 95%.
 :where(.wp-block-matter-modal) {
-	background: var(--scheme--background, #fff);
-	border-radius: 8px;
-	color: var(--scheme--text, inherit);
-	width: min(calc(100vw - 2rem), 40rem);
+	background: var(--scheme--background, Canvas);
+	border: 0;
+	color: var(--scheme--text, CanvasText);
+	max-height: calc(100dvh - 2rem);
+	max-width: calc(100vw - 2rem);
+	opacity: 0;
+	padding: 0;
+	scale: 0.95;
+	transition:
+		opacity 200ms,
+		scale 200ms;
+	width: 40rem;
+}
+
+:where(.wp-block-matter-modal[open]) {
+	opacity: 1;
+	scale: 1;
+
+	@starting-style {
+		opacity: 0;
+		scale: 0.95;
+	}
 }
 
 :where(.wp-block-matter-modal)::backdrop {
 	background: rgb(0 0 0 / 50%);
+	opacity: 0;
+	transition: opacity 200ms;
+}
+
+:where(.wp-block-matter-modal[open])::backdrop {
+	opacity: 1;
+
+	@starting-style {
+		opacity: 0;
+	}
+}
+
+// Closing: the dialog stays open while these transitions run, then closes
+// (interactivity/dialog.js), so the exit animates in every browser.
+:where(.wp-block-matter-modal[open].is-closing) {
+	opacity: 0;
+	scale: 0.95;
+}
+
+:where(.wp-block-matter-modal[open].is-closing)::backdrop {
+	opacity: 0;
+}
+
+// Moving between grouped modals: the backdrop stays, the current modal goes at
+// once and the next fades in from the side it comes from (`--modal-switch`: 1
+// for next, -1 for previous).
+:where(.wp-block-matter-modal.is-switching-out),
+:where(.wp-block-matter-modal.is-switching-out, .wp-block-matter-modal.is-switching-in)::backdrop {
+	transition: none;
+}
+
+:where(.wp-block-matter-modal.is-switching-in) {
+	transition:
+		opacity 200ms,
+		translate 200ms;
+}
+
+:where(.wp-block-matter-modal.is-switching-in[open]) {
+	@starting-style {
+		opacity: 0;
+		scale: 1;
+		translate: calc(var(--modal-switch, 1) * 2rem) 0;
+	}
+}
+
+:where(.wp-block-matter-modal.is-switching-in[open]:dir(rtl)) {
+	@starting-style {
+		translate: calc(var(--modal-switch, 1) * -2rem) 0;
+	}
 }
 
 :where(.wp-block-matter-modal__content) {
 	padding: 3rem 2rem 2rem;
 }
 
-// Trigger area: its first link or button opens the modal; without one the
-// whole area is the button.
-.wp-block-matter-modal__trigger[role="button"] {
-	cursor: pointer;
-}
-
-// Previous/next for grouped modals.
-.wp-block-matter-modal__group-nav {
+:where(.wp-block-matter-modal__close) {
 	align-items: center;
-	display: flex;
-	gap: 0.5rem;
-	justify-content: center;
-}
-
-.wp-block-matter-modal__previous,
-.wp-block-matter-modal__next {
-	align-items: center;
-	cursor: pointer;
-	display: inline-flex;
-
-	&::before {
-		background-color: currentcolor;
-		content: "";
-		height: 1.25rem;
-		mask: url("../../../assets/svg/caret-left.svg") center / contain no-repeat;
-		width: 1.25rem;
-	}
-}
-
-.wp-block-matter-modal__next::before {
-	mask-image: url("../../../assets/svg/caret-right.svg");
-}
-
-:where(.wp-block-matter-modal__previous, .wp-block-matter-modal__next) {
 	appearance: none;
 	background: none;
 	border: 0;
 	color: inherit;
-	padding: 0.5rem;
+	cursor: pointer;
+	display: inline-flex;
+	inset-block-start: 0.75rem;
+	inset-inline-end: 0.75rem;
+	justify-content: center;
+	min-height: 24px;
+	min-width: 24px;
+	padding: 0.25rem;
+	position: absolute;
+	z-index: 1;
 }
 
+:where(.wp-block-matter-modal__close)::before {
+	@include icon(x, 1.25rem);
+}
+
+// The trigger area: its first link or button opens the modal; without one the
+// whole area is the button.
+:where(.wp-block-matter-modal__trigger[role="button"]) {
+	cursor: pointer;
+}
+
+// Previous and next, for grouped modals.
 :where(.wp-block-matter-modal__group-nav) {
+	align-items: center;
+	display: flex;
+	gap: 0.5rem;
+	justify-content: center;
 	margin-block-start: 2rem;
 }
 
+:where(.wp-block-matter-modal__previous, .wp-block-matter-modal__next) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	padding: 0.5rem;
+}
+
+:where(.wp-block-matter-modal__previous)::before {
+	@include icon(caret-left, 1.25rem);
+}
+
+:where(.wp-block-matter-modal__next)::before {
+	@include icon(caret-right, 1.25rem);
+}
+
+:where(.wp-block-matter-modal__previous:dir(rtl), .wp-block-matter-modal__next:dir(rtl))::before {
+	scale: -1 1;
+}
+
 :where(.wp-block-matter-modal__position) {
-	font-size: 0.875em;
 	font-variant-numeric: tabular-nums;
+}
+
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.wp-block-matter-modal),
+	:where(.wp-block-matter-modal)::backdrop {
+		transition: none;
+	}
 }

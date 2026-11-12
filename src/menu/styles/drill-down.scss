@@ -1,6 +1,9 @@
 // Menu type: drill-down.
-// Authored against `.is-type-drill-down`; see dropdown.scss for how responsive
-// menus re-scope these rules.
+// Authored against `.is-type-drill-down`, in :where(); see dropdown.scss for
+// how responsive menus re-scope these rules.
+// Functional rules first, then the default skin, all in :where().
+
+@use "../../styles/icon" as *;
 
 .is-type-drill-down {
 	min-height: 100%;
@@ -8,108 +11,117 @@
 	// Safari scroll it sideways to reveal a submenu focused while it slides in.
 	overflow: clip;
 	position: relative;
+}
 
-	.matter-menu__items {
-		display: flex;
-		flex-direction: column;
-	}
+:where(.is-type-drill-down) .matter-menu__items {
+	display: flex;
+	flex-direction: column;
+}
 
-	// Items are static so every submenu panel covers the whole menu.
-	.matter-menu__item {
-		display: flex;
-		position: static;
-	}
+// Items are static so every submenu panel covers the whole menu.
+:where(.is-type-drill-down) .matter-menu__item {
+	display: flex;
+	position: static;
+}
 
-	.matter-menu__link {
-		flex: 1 1 auto;
-	}
+// Parents open their panel; the parent page is linked from its header.
+:where(.is-type-drill-down .has-submenu:not(.is-column)) > .matter-menu__link {
+	display: none;
+}
 
-	// Parents open their panel; the parent page is linked from its header.
-	.has-submenu:not(.is-column) > .matter-menu__link {
-		display: none;
-	}
+:where(.is-type-drill-down) .matter-menu__toggle-text {
+	display: inline;
+}
 
-	.matter-menu__toggle {
-		flex: 1 1 auto;
-		justify-content: space-between;
-	}
+// Submenus slide over the menu from the inline end.
+:where(.is-type-drill-down) .matter-menu__submenu {
+	display: flex;
+	flex-direction: column;
+	inset: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	position: absolute;
+	translate: 100% 0;
+	z-index: 1;
 
-	.matter-menu__toggle::after {
-		mask-image: url("../../../assets/svg/caret-right.svg");
+	// No more specific than the open state below.
+	&:where(:dir(rtl)) {
+		translate: -100% 0;
 	}
+}
 
-	.matter-menu__toggle-text {
-		display: inline;
-	}
+:where(.is-type-drill-down .matter-menu__item.is-open) > .matter-menu__submenu {
+	translate: none;
+}
 
-	// Submenus slide over the menu.
-	.matter-menu__submenu {
-		display: flex;
-		flex-direction: column;
-		inset: 0;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		position: absolute;
-		transform: translateX(100%);
-		transition:
-			transform var(--_menu-duration),
-			visibility var(--_menu-duration);
-		z-index: 1;
-	}
+// Back stays in reach while a long submenu scrolls.
+:where(.is-type-drill-down) .matter-menu__submenu-header {
+	align-items: center;
+	display: flex;
+	inset-block-start: 0;
+	position: sticky;
+	z-index: 1;
+}
 
-	.matter-menu__item.is-open > .matter-menu__submenu {
-		transform: none;
-	}
-
-	// Back stays in reach while a long submenu scrolls.
-	.matter-menu__submenu-header {
-		align-items: center;
-		display: flex;
-		inset-block-start: 0;
-		position: sticky;
-		z-index: 1;
-	}
-
-	.matter-menu__view-all {
-		margin-inline-start: auto;
-	}
-
-	.matter-menu__submenu-items,
-	.matter-menu__columns {
-		display: flex;
-		flex-direction: column;
-	}
+:where(.is-type-drill-down) .matter-menu__submenu-items,
+:where(.is-type-drill-down) .matter-menu__columns {
+	display: flex;
+	flex-direction: column;
 }
 
 // In an off-canvas panel, fill the space under the panel's close button
 // rather than the panel's full height, so submenus end inside the screen.
-.matter-panel__content > .is-type-drill-down {
+:where(.matter-panel__content) > .is-type-drill-down {
 	flex: 1 0 auto;
 	min-height: 0;
 }
 
-// Presentational defaults.
-:where(.is-type-drill-down .matter-menu__submenu) {
-	background: var(--scheme--background, #fff);
-	color: var(--scheme--text, inherit);
+// Default skin.
+:where(.is-type-drill-down .matter-menu__link, .is-type-drill-down .matter-menu__toggle) {
+	flex: 1 1 auto;
+}
+
+:where(.is-type-drill-down .matter-menu__toggle) {
+	justify-content: space-between;
+}
+
+:where(.is-type-drill-down .matter-menu__toggle)::after {
+	@include icon-image(caret-right);
+}
+
+:where(.is-type-drill-down .matter-menu__toggle:dir(rtl))::after {
+	scale: -1 1;
 }
 
 :where(.is-type-drill-down .matter-menu__item) {
-	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 10%));
 	padding-block: 0.75em;
 }
 
 :where(.is-type-drill-down .matter-menu__item.is-column) {
-	border: 0;
+	padding-block: 0;
+}
+
+:where(.is-type-drill-down .matter-menu__submenu) {
+	background: var(--scheme--background, Canvas);
+	color: var(--scheme--text, CanvasText);
+	transition:
+		translate 300ms,
+		visibility 300ms;
 }
 
 :where(.is-type-drill-down .matter-menu__submenu-header) {
 	background: inherit;
-	border-block-end: 1px solid var(--scheme--border, rgb(0 0 0 / 10%));
 	gap: 1em;
 	padding-block: 0.75em;
 }
 
-:where(.is-type-drill-down .matter-menu__parent-label) {
-	font-weight: 600;
+:where(.is-type-drill-down .matter-menu__view-all) {
+	margin-inline-start: auto;
+}
+
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.is-type-drill-down .matter-menu__submenu) {
+		transition: none;
+	}
 }

@@ -33,6 +33,36 @@ const transitionsOf = (dialog) =>
 		);
 
 /**
+ * Wait for the transitions running on a dialog (and in it), at most MAX_WAIT.
+ *
+ * @param {Animation[]} transitions Transitions.
+ * @return {Promise<void>} Settles when they have finished.
+ */
+const settled = (transitions) =>
+	Promise.race([
+		Promise.all(
+			transitions.map((transition) => transition.finished.catch(() => {}))
+		),
+		new Promise((resolve) => window.setTimeout(resolve, MAX_WAIT)),
+	]);
+
+/**
+ * Run a callback once the transitions a dialog has just started (e.g. opening)
+ * have finished: it waits two frames for them to start, so call it in the
+ * same task as the change that starts them.
+ *
+ * @param {HTMLDialogElement} dialog   Dialog.
+ * @param {Function}          callback Callback.
+ */
+export function afterTransitions(dialog, callback) {
+	window.requestAnimationFrame(() =>
+		window.requestAnimationFrame(() =>
+			settled(dialog ? transitionsOf(dialog) : []).then(callback)
+		)
+	);
+}
+
+/**
  * Close a dialog after its closing transition.
  *
  * @param {HTMLDialogElement} dialog Dialog.
@@ -68,12 +98,7 @@ export function closeDialog(dialog) {
 		return;
 	}
 
-	Promise.race([
-		Promise.all(
-			transitions.map((transition) => transition.finished.catch(() => {}))
-		),
-		new Promise((resolve) => window.setTimeout(resolve, MAX_WAIT)),
-	]).then(finish);
+	settled(transitions).then(finish);
 }
 
 /**

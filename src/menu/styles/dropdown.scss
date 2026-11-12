@@ -1,172 +1,169 @@
 // Menu type: dropdown.
-// Authored against `.is-type-dropdown`. For responsive menus Matter swaps
-// that class for the menu's instance class and wraps these rules in a media
-// query, so keep every rule scoped to `.is-type-dropdown`.
+// Authored against `.is-type-dropdown`. For responsive menus Matter swaps that
+// class for the menu's instance class and wraps these rules in a media query,
+// so every rule is scoped to `.is-type-dropdown`, in :where() so the scope
+// adds no specificity.
+// Functional rules first, then the default skin, all in :where().
+
+@use "../../styles/icon" as *;
 
 .is-type-dropdown {
 	position: relative;
-
-	.matter-menu__items {
-		align-items: center;
-		display: flex;
-		flex-wrap: wrap;
-	}
-
-	&.is-vertical .matter-menu__items {
-		align-items: stretch;
-		flex-direction: column;
-	}
-
-	.matter-menu__item {
-		align-items: center;
-		display: flex;
-	}
-
-	&.is-vertical .matter-menu__item {
-		justify-content: space-between;
-	}
-
-	// Submenus: positioned panels. JS adds .is-positioned once measured so a
-	// panel never flashes in the wrong place, plus offsets to keep it on screen.
-	// Closed submenus aren't displayed, so they never widen the page; display
-	// switches after the fade-out (and is shown while JS measures).
-	.matter-menu__submenu {
-		display: none;
-		inset-block-start: 100%;
-		inset-inline-start: 0;
-		max-height: var(--menu-max-height, none);
-		opacity: 0;
-		position: absolute;
-		transform: translate(var(--menu-offset-x, 0), var(--menu-offset-y, 0));
-		transition:
-			opacity var(--_menu-duration),
-			visibility var(--_menu-duration),
-			display var(--_menu-duration) allow-discrete;
-		width: max-content;
-		z-index: 100;
-	}
-
-	.matter-menu__item.is-open > .matter-menu__submenu,
-	.matter-menu__submenu.is-measuring {
-		display: block;
-	}
-
-	.matter-menu__item.is-open > .matter-menu__submenu.is-positioned {
-		opacity: 1;
-
-		@starting-style {
-			opacity: 0;
-		}
-	}
-
-	.matter-menu__submenu.is-flipped {
-		inset-inline-end: 0;
-		inset-inline-start: auto;
-	}
-
-	.matter-menu__submenu.is-scrollable {
-		overflow-y: auto;
-		overscroll-behavior: contain;
-	}
-
-	// Nested submenus and vertical menus fly out to the side.
-	.matter-menu__submenu .matter-menu__submenu,
-	&.is-vertical .matter-menu__submenu {
-		inset-block-start: 0;
-		inset-inline-start: 100%;
-
-		&.is-flipped {
-			inset-inline-end: 100%;
-			inset-inline-start: auto;
-		}
-	}
-
-	.matter-menu__submenu .matter-menu__toggle::after,
-	&.is-vertical .matter-menu__toggle::after {
-		mask-image: url("../../../assets/svg/caret-right.svg");
-	}
-
-	&.is-horizontal .matter-menu__items > .is-open > .matter-menu__toggle::after {
-		rotate: 180deg;
-	}
-
-	.matter-menu__submenu-items {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.matter-menu__item.is-column {
-		align-items: flex-start;
-	}
-
-	// Megamenus: wide panels anchored to the menu, centred by JS.
-	.matter-menu__item.is-megamenu:not(.is-megamenu-content) {
-		position: static;
-	}
-
-	.is-megamenu.is-open > .matter-menu__submenu,
-	.is-megamenu > .matter-menu__submenu.is-measuring {
-		display: flex;
-	}
-
-	.is-megamenu > .matter-menu__submenu {
-		max-width: var(--menu-max-width, 100vw);
-	}
-
-	.is-megamenu-content > .matter-menu__submenu {
-		width: min(var(--wp--style--global--content-size, 48rem), 100vw);
-	}
-
-	.is-megamenu-wide > .matter-menu__submenu {
-		width: min(var(--wp--style--global--wide-size, 80rem), 100vw);
-	}
-
-	.is-megamenu-full > .matter-menu__submenu {
-		width: var(--menu-megamenu-width, 100vw);
-	}
-
-	.matter-menu__columns {
-		display: grid;
-		flex: 1 1 auto;
-		grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
-	}
-
-	// Click to open: the toggle replaces the parent link…
-	&.opens-on-click .has-submenu:not(.is-column) > .matter-menu__link {
-		display: none;
-	}
-
-	// …so the submenu leads with a "View all" link to the parent page (the
-	// drill-down header, without its back button and label).
-	&.opens-on-click .matter-menu__submenu-header {
-		display: block;
-	}
-
-	&.opens-on-click .matter-menu__back,
-	&.opens-on-click .matter-menu__parent-label {
-		display: none;
-	}
-
-	&.opens-on-click .matter-menu__toggle-text {
-		display: inline;
-	}
 }
 
-// Presentational defaults.
+:where(.is-type-dropdown) .matter-menu__items {
+	display: flex;
+}
+
+:where(.is-type-dropdown.is-vertical) .matter-menu__items {
+	flex-direction: column;
+}
+
+:where(.is-type-dropdown) .matter-menu__item {
+	display: flex;
+}
+
+// Submenus: positioned panels. JS adds .is-positioned once measured (so a
+// panel never shows in the wrong place) and offsets to keep it on screen.
+// Closed submenus aren't displayed, so they never widen the page; display
+// switches after the fade-out (and is on while JS measures).
+:where(.is-type-dropdown) .matter-menu__submenu {
+	display: none;
+	inset-block-start: 100%;
+	inset-inline-start: 0;
+	max-height: var(--menu-max-height, none);
+	opacity: 0;
+	position: absolute;
+	translate: var(--menu-offset-x, 0) var(--menu-offset-y, 0);
+}
+
+:where(.is-type-dropdown .matter-menu__item.is-open) > .matter-menu__submenu,
+:where(.is-type-dropdown) .matter-menu__submenu.is-measuring {
+	display: block;
+}
+
+:where(.is-type-dropdown .matter-menu__item.is-open) > .matter-menu__submenu.is-positioned {
+	opacity: 1;
+}
+
+:where(.is-type-dropdown) .matter-menu__submenu.is-flipped {
+	inset-inline: auto 0;
+}
+
+:where(.is-type-dropdown) .matter-menu__submenu.is-scrollable {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+// Nested submenus and vertical menus fly out to the side.
+:where(.is-type-dropdown .matter-menu__submenu, .is-type-dropdown.is-vertical) .matter-menu__submenu {
+	inset-block-start: 0;
+	inset-inline-start: 100%;
+}
+
+:where(.is-type-dropdown .matter-menu__submenu, .is-type-dropdown.is-vertical) .matter-menu__submenu.is-flipped {
+	inset-inline: auto 100%;
+}
+
+:where(.is-type-dropdown) .matter-menu__submenu-items {
+	display: flex;
+	flex-direction: column;
+}
+
+// Megamenus: wide panels anchored to the menu, centred by JS.
+:where(.is-type-dropdown) .is-megamenu:where(:not(.is-megamenu-content)) {
+	position: static;
+}
+
+:where(.is-type-dropdown .is-megamenu.is-open) > .matter-menu__submenu,
+:where(.is-type-dropdown .is-megamenu) > .matter-menu__submenu.is-measuring {
+	display: flex;
+}
+
+:where(.is-type-dropdown .is-megamenu) > .matter-menu__submenu {
+	max-width: var(--menu-max-width, 100vw);
+}
+
+:where(.is-type-dropdown .is-megamenu-content) > .matter-menu__submenu {
+	width: min(var(--wp--style--global--content-size, 48rem), 100vw);
+}
+
+:where(.is-type-dropdown .is-megamenu-wide) > .matter-menu__submenu {
+	width: min(var(--wp--style--global--wide-size, 80rem), 100vw);
+}
+
+:where(.is-type-dropdown .is-megamenu-full) > .matter-menu__submenu {
+	width: var(--menu-megamenu-width, 100vw);
+}
+
+:where(.is-type-dropdown) .matter-menu__columns {
+	display: grid;
+	flex: 1 1 auto;
+	grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+// Click to open: the toggle replaces the parent link…
+:where(.is-type-dropdown.opens-on-click .has-submenu:not(.is-column)) > .matter-menu__link {
+	display: none;
+}
+
+:where(.is-type-dropdown.opens-on-click) .matter-menu__toggle-text {
+	display: inline;
+}
+
+// …so the submenu leads with a "View all" link to the parent page (the
+// drill-down header, without its back button and label).
+:where(.is-type-dropdown.opens-on-click) .matter-menu__submenu-header {
+	display: block;
+}
+
+:where(.is-type-dropdown.opens-on-click) .matter-menu__back,
+:where(.is-type-dropdown.opens-on-click) .matter-menu__parent-label {
+	display: none;
+}
+
+// Default skin. Submenus are panels in the scheme's background, with a border;
+// they fade in and out.
 :where(.is-type-dropdown .matter-menu__items) {
+	align-items: center;
+	flex-wrap: wrap;
 	gap: 0.5em 1.5em;
 }
 
+:where(.is-type-dropdown.is-vertical .matter-menu__items) {
+	align-items: stretch;
+}
+
 :where(.is-type-dropdown .matter-menu__item) {
+	align-items: center;
 	gap: 0.25em;
 }
 
+:where(.is-type-dropdown.is-vertical .matter-menu__item) {
+	justify-content: space-between;
+}
+
+:where(.is-type-dropdown .matter-menu__item.is-column) {
+	align-items: flex-start;
+}
+
 :where(.is-type-dropdown .matter-menu__submenu) {
-	background: var(--scheme--background, #fff);
-	border-radius: 4px;
-	box-shadow: 0 0.5em 1.5em rgb(0 0 0 / 12%);
-	color: var(--scheme--text, inherit);
+	background: var(--scheme--background, Canvas);
+	border: 1px solid var(--scheme--border, color-mix(in srgb, currentcolor 20%, transparent));
+	color: var(--scheme--text, CanvasText);
 	padding: 0.75em 0;
+	transition:
+		opacity 300ms,
+		visibility 300ms,
+		display 300ms allow-discrete;
+	width: max-content;
+	z-index: 100;
+}
+
+:where(.is-type-dropdown .matter-menu__item.is-open > .matter-menu__submenu.is-positioned) {
+	@starting-style {
+		opacity: 0;
+	}
 }
 
 // Items span the panel (it has no side padding), so a nested submenu opens
@@ -186,4 +183,25 @@
 
 :where(.is-type-dropdown .matter-menu__columns) {
 	gap: 1.5em 2em;
+}
+
+// Toggles: a caret that turns over while a top-level submenu is open, and
+// points to the side for nested and vertical submenus.
+:where(.is-type-dropdown.is-horizontal .matter-menu__items > .matter-menu__item > .matter-menu__toggle[aria-expanded="true"])::after {
+	rotate: 180deg;
+}
+
+:where(.is-type-dropdown .matter-menu__submenu .matter-menu__toggle, .is-type-dropdown.is-vertical .matter-menu__toggle)::after {
+	@include icon-image(caret-right);
+}
+
+:where(.is-type-dropdown .matter-menu__submenu .matter-menu__toggle:dir(rtl), .is-type-dropdown.is-vertical .matter-menu__toggle:dir(rtl))::after {
+	scale: -1 1;
+}
+
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.is-type-dropdown .matter-menu__submenu) {
+		transition: none;
+	}
 }

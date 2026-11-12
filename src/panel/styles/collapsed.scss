@@ -1,89 +1,109 @@
 // Panel: off-canvas mode.
-// Authored against `.is-collapsed`. Matter swaps it for the panel's instance
-// class and wraps these rules in the panel's "below breakpoint" media query.
+// Authored against `.is-collapsed`, in :where(). Matter swaps it for the
+// panel's instance class and wraps these rules in the panel's "below
+// breakpoint" media query.
+// Functional rules first, then the default skin, all in :where(). The panel
+// comes in from the inline end (`.is-from-end`, the right in left-to-right
+// languages), the start (`.is-from-start`) or the top (`.is-from-top`).
 
-.matter-panel.is-collapsed {
-	// Themes set --panel-duration anywhere (e.g. :root); Matter only reads it.
-	--_panel-duration: var(--panel-duration, 0.3s);
-
-	@media (prefers-reduced-motion: reduce) {
-		--_panel-duration: 0s;
-	}
-
-	.matter-panel__content {
-		display: flex;
-		flex-direction: column;
-		inset-block: var(--wp-admin--admin-bar--height, 0) 0;
-		inset-inline-end: 0;
-		max-width: 100vw;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		position: fixed;
-		transform: translateX(100%);
-		transition:
-			transform var(--_panel-duration),
-			visibility var(--_panel-duration);
-		visibility: hidden;
-		z-index: 1000;
-	}
-
-	&.is-from-left .matter-panel__content {
-		inset-inline: 0 auto;
-		transform: translateX(-100%);
-	}
-
-	&.is-from-top .matter-panel__content {
-		inset-block: var(--wp-admin--admin-bar--height, 0) auto;
-		inset-inline: 0;
-		max-height: 100dvh;
-		transform: translateY(-100%);
-	}
-
-	&.is-open .matter-panel__content {
-		transform: none;
-		visibility: visible;
-	}
-
-	.matter-panel__backdrop {
-		display: block;
-		inset: 0;
-		opacity: 0;
-		position: fixed;
-		transition:
-			opacity var(--_panel-duration),
-			visibility var(--_panel-duration);
-		visibility: hidden;
-		z-index: 999;
-	}
-
-	&.is-open .matter-panel__backdrop {
-		opacity: 1;
-		visibility: visible;
-	}
-
-	.matter-panel__close {
-		align-self: flex-end;
-		display: inline-flex;
-	}
-
-	.is-inline-only {
-		display: none;
-	}
+:where(.matter-panel.is-collapsed) .matter-panel__content {
+	display: flex;
+	flex-direction: column;
+	inset-block: var(--wp-admin--admin-bar--height, 0) 0;
+	inset-inline: auto 0;
+	max-width: 100vw;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	position: fixed;
+	visibility: hidden;
 }
 
-// Presentational defaults.
+:where(.matter-panel.is-collapsed.is-from-start) .matter-panel__content {
+	inset-inline: 0 auto;
+}
+
+:where(.matter-panel.is-collapsed.is-from-top) .matter-panel__content {
+	inset-block: var(--wp-admin--admin-bar--height, 0) auto;
+	inset-inline: 0;
+	max-height: 100dvh;
+}
+
+:where(.matter-panel.is-collapsed.is-open) .matter-panel__content {
+	visibility: visible;
+}
+
+:where(.matter-panel.is-collapsed) .matter-panel__backdrop {
+	display: block;
+	inset: 0;
+	position: fixed;
+	visibility: hidden;
+}
+
+:where(.matter-panel.is-collapsed.is-open) .matter-panel__backdrop {
+	visibility: visible;
+}
+
+:where(.matter-panel.is-collapsed) .matter-panel__close {
+	display: inline-flex;
+}
+
+:where(.matter-panel.is-collapsed) .is-inline-only {
+	display: none;
+}
+
+// Default skin. The panel slides in (`--_panel-from`: how far off screen) and
+// the backdrop fades.
 :where(.matter-panel.is-collapsed .matter-panel__content) {
-	background: var(--scheme--background, #fff);
-	color: var(--scheme--text, inherit);
+	--_panel-from: 100% 0;
+	background: var(--scheme--background, Canvas);
+	color: var(--scheme--text, CanvasText);
 	gap: 1.5em;
 	padding: 1.5em;
-	width: min(100vw, 26rem);
+	transition:
+		translate 300ms,
+		visibility 300ms;
+	translate: var(--_panel-from);
+	width: 26rem;
+	z-index: 1000;
+}
+
+:where(.matter-panel.is-collapsed.is-from-start .matter-panel__content, .matter-panel.is-collapsed .matter-panel__content:dir(rtl)) {
+	--_panel-from: -100% 0;
+}
+
+:where(.matter-panel.is-collapsed.is-from-start .matter-panel__content:dir(rtl)) {
+	--_panel-from: 100% 0;
 }
 
 :where(.matter-panel.is-collapsed.is-from-top .matter-panel__content) {
+	--_panel-from: 0 -100%;
 	width: 100%;
+}
+
+:where(.matter-panel.is-collapsed.is-open .matter-panel__content) {
+	translate: none;
 }
 
 :where(.matter-panel.is-collapsed .matter-panel__backdrop) {
 	background: rgb(0 0 0 / 50%);
+	opacity: 0;
+	transition:
+		opacity 300ms,
+		visibility 300ms;
+	z-index: 999;
+}
+
+:where(.matter-panel.is-collapsed.is-open .matter-panel__backdrop) {
+	opacity: 1;
+}
+
+:where(.matter-panel.is-collapsed .matter-panel__close) {
+	align-self: flex-end;
+}
+
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.matter-panel.is-collapsed .matter-panel__content, .matter-panel.is-collapsed .matter-panel__backdrop) {
+		transition: none;
+	}
 }

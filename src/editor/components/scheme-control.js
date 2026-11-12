@@ -117,17 +117,17 @@ export default function SchemeControl({ value, onChange }) {
 								onChange(isSelected ? undefined : slug)
 							}
 							style={{
-								'--swatch-background': resolveColor(
+								'--_swatch-background': resolveColor(
 									tokens.background,
 									palette,
 									custom
 								),
-								'--swatch-text': resolveColor(
+								'--_swatch-text': resolveColor(
 									tokens['text-heading'] ?? tokens.text,
 									palette,
 									custom
 								),
-								'--swatch-accent': resolveColor(
+								'--_swatch-accent': resolveColor(
 									tokens['background-fill'] ??
 										tokens['text-link'],
 									palette,

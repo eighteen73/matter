@@ -328,3 +328,100 @@ test.describe('deep links', () => {
 		await expect(page.locator('#faq-2')).toHaveClass(/\bis-open\b/);
 	});
 });
+
+test.describe('theme styles', () => {
+	test.use({ viewport: DESKTOP });
+
+	test("one class beats Matter's default skin, wherever it loads", async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.locator('#highlights.is-initialised').waitFor();
+
+		// A theme's rules, loaded before Matter's: only specificity can win.
+		await page.evaluate(() => {
+			const style = document.createElement('style');
+
+			style.textContent = `
+				.wp-block-matter-accordion-item__toggle { padding: 3px; }
+				.wp-block-matter-accordion-item__toggle::after { rotate: 90deg; }
+				.wp-block-matter-tabs__tab { padding: 3px; }
+				.wp-block-matter-carousel__dot { width: 30px; }
+				.wp-block-matter-modal { width: 300px; }
+				.matter-menu__submenu { padding: 3px; }
+			`;
+			document.head.prepend(style);
+		});
+		await page.evaluate(() => (window.location.hash = '#faq-2'));
+		await expect(page.locator('#faq-2')).toHaveClass(/\bis-open\b/);
+
+		const computed = (selector, property, pseudo = null) =>
+			page.evaluate(
+				([s, p, e]) =>
+					window
+						.getComputedStyle(document.querySelector(s), e)
+						.getPropertyValue(p),
+				[selector, property, pseudo]
+			);
+
+		expect(
+			await computed('.wp-block-matter-accordion-item__toggle', 'padding')
+		).toBe('3px');
+		// Open, too: the open state's turn is skin as well.
+		expect(
+			await computed(
+				'#faq-2 .wp-block-matter-accordion-item__toggle',
+				'rotate',
+				'::after'
+			)
+		).toBe('90deg');
+		expect(await computed('.wp-block-matter-tabs__tab', 'padding')).toBe(
+			'3px'
+		);
+		expect(await computed('.wp-block-matter-carousel__dot', 'width')).toBe(
+			'30px'
+		);
+		expect(await computed('#in-tab', 'width')).toBe('300px');
+		expect(await computed('.matter-menu__submenu', 'padding')).toBe('3px');
+	});
+});
+
+test.describe('right to left', () => {
+	test.use({ viewport: DESKTOP });
+
+	test('a drawer at the start opens on the right, in right-to-left content', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.evaluate(() => (document.documentElement.dir = 'rtl'));
+		await page.getByRole('link', { name: 'Filters' }).click();
+
+		const drawer = page.locator('#filters');
+
+		await expect(drawer).toHaveAttribute('open', '');
+
+		const box = await drawer.boundingBox();
+
+		expect(Math.round(box.x + box.width)).toBe(DESKTOP.width);
+	});
+});
+
+test.describe('reduced motion', () => {
+	test.use({ viewport: DESKTOP });
+
+	test('grouped modals switch without a transition', async ({ page }) => {
+		await page.goto(kitchenSink.link);
+
+		const duration = await page.evaluate(() => {
+			const modal = document.getElementById('in-tab');
+
+			modal.classList.add('is-switching-in');
+
+			return window.getComputedStyle(modal).transitionDuration;
+		});
+
+		expect(duration.split(', ').every((value) => value === '0s')).toBe(
+			true
+		);
+	});
+});

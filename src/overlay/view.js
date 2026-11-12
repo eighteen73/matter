@@ -41,7 +41,12 @@ import {
  */
 import { registerInstance, registerType } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
-import { cancelClose, closeDialog, isClosing } from '../interactivity/dialog';
+import {
+	afterTransitions,
+	cancelClose,
+	closeDialog,
+	isClosing,
+} from '../interactivity/dialog';
 
 const SELECTOR =
 	'[data-wp-interactive="matter/overlay"][data-wp-watch="callbacks.sync"]';
@@ -225,14 +230,22 @@ const stepGroup = (id, offset) => {
 	to?.classList.add('is-switching-in');
 	to?.style.setProperty('--modal-switch', String(Math.sign(offset)));
 
-	window.setTimeout(() => {
+	state.items[id].isOpen = false;
+	state.items[target].isOpen = true;
+
+	// Once the next modal is open (the store opens it) and its transitions
+	// (the theme's, however long) are done.
+	const cleanUp = () => {
 		from?.classList.remove('is-switching-out');
 		to?.classList.remove('is-switching-in');
 		to?.style.removeProperty('--modal-switch');
-	}, 400);
+	};
+	const whenOpen = (frames) =>
+		to?.open || frames <= 0
+			? afterTransitions(to, cleanUp)
+			: window.requestAnimationFrame(() => whenOpen(frames - 1));
 
-	state.items[id].isOpen = false;
-	state.items[target].isOpen = true;
+	whenOpen(10);
 };
 
 /**

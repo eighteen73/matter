@@ -1,11 +1,13 @@
-// Carousel. Functional rules use plain classes; presentational defaults are in
-// :where() so themes restyle freely. Themes set slide widths and gaps, e.g.
-//     .wp-block-matter-carousel.is-style-cards .wp-block-matter-carousel__track > * {
-//         flex-basis: calc((100% - 2 * var(--gap)) / 3);
-//     }
-// Slides are the track's children, or a Query Loop's / Product Collection's items.
-// Controls are groups by position (.wp-block-matter-carousel__controls.is-before,
-// .is-stage over the slides, .is-after) of parts placed by the theme's CSS.
+// Carousel. Slides are the track's children, or a Query Loop's / Product
+// Collection's items. Controls are groups by position
+// (`.wp-block-matter-carousel__controls.is-before`, `.is-stage` over the slides,
+// `.is-after`) of parts the theme places.
+// Theme settings: `--carousel-per-view` (slides in view, default 1) and
+// `--carousel-gap` (between slides, default 0), on the carousel or a variant.
+// Functional rules first, at one class (plus the element's own state, with any
+// context in :where()); then the default skin, all in :where().
+
+@use "../../styles/icon" as *;
 
 // The slides and anything laid over them.
 .wp-block-matter-carousel__stage {
@@ -16,70 +18,67 @@
 	overflow: hidden;
 }
 
+// The track, and in query mode the query's list. The list's own layout rules
+// (core's `body .is-layout-grid`, WooCommerce's `.is-flex-container` ones) are
+// up to 0,2,1, so the query's list needs the carousel's classes to win.
+// stylelint-disable selector-max-specificity -- See above.
 .wp-block-matter-carousel__track,
 .wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) {
 	display: flex;
 	flex-wrap: nowrap;
+	gap: var(--carousel-gap, 0);
 	margin: 0;
 	padding: 0;
 	touch-action: pan-y pinch-zoom;
 }
 
-// One slide per view by default, at zero specificity so a theme's slide widths
-// win whichever stylesheet loads last.
-:where(.wp-block-matter-carousel__track) > *,
-:where(.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template)) > * {
-	flex: 0 0 100%;
-	min-width: 0;
-}
-
 // Slides sit in a row, so the vertical spacing of a flow layout (core's
 // `:root :where(.is-layout-flow) > *`, on the post template) would push every
-// slide but the first down. Gaps between slides come from the theme's `gap`.
-// The track's own child gets none either, e.g. WooCommerce's 30px below a
-// Product Collection (a single class, so this needs two).
+// slide but the first down, and WooCommerce gives a Product Collection 30px
+// below (one class). Two classes win over both.
 .wp-block-matter-carousel .wp-block-matter-carousel__track > *,
 .wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) > * {
 	margin-block: 0;
 }
+// stylelint-enable selector-max-specificity
+
+// Slide widths, from the theme's settings, at zero specificity so a theme's
+// own widths win whichever stylesheet loads last.
+:where(.wp-block-matter-carousel__track) > *,
+:where(.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template)) > * {
+	flex: 0 0 calc((100% - (var(--carousel-per-view, 1) - 1) * var(--carousel-gap, 0px)) / var(--carousel-per-view, 1));
+	min-width: 0;
+}
 
 // In query mode the track holds the query block: it spans the viewport and its
 // items are the slides.
-.wp-block-matter-carousel.is-query .wp-block-matter-carousel__track > * {
+:where(.wp-block-matter-carousel.is-query .wp-block-matter-carousel__track) > * {
 	flex: 0 0 100%;
 }
 
-// Image slides share the chosen aspect ratio (`--image-aspect-ratio`, set
-// with `.has-image-aspect-ratio` when every slide is an image).
-.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image img {
+// Image slides share the chosen crop (`--image-aspect-ratio`, with
+// `.has-image-aspect-ratio` when every slide is an image). To change a
+// variant's crop, set `aspect-ratio` on its images with one class (e.g.
+// `.is-style-cards img`).
+:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image) img {
+	aspect-ratio: var(--image-aspect-ratio);
 	height: auto;
 	object-fit: var(--image-object-fit, cover);
 	width: 100%;
 }
 
-// The crop itself is easy to override: a theme sets `aspect-ratio` on a
-// variant's images with one class (e.g. `.is-style-cards img`).
-:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image) img {
-	aspect-ratio: var(--image-aspect-ratio);
-}
-
 // Before Embla starts, or if its script never runs, the slides scroll
 // natively (swipe, trackpad, keyboard), so every slide stays reachable.
-.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__viewport {
+:where(.wp-block-matter-carousel:not(.is-initialised)) .wp-block-matter-carousel__viewport {
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	scroll-snap-type: x mandatory;
 	scrollbar-width: none;
 }
 
-.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track > *,
-.wp-block-matter-carousel:not(.is-initialised).is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template) > * {
+:where(.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track) > *,
+:where(.wp-block-matter-carousel:not(.is-initialised).is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template)) > * {
 	scroll-snap-align: start;
-}
-
-.wp-block-matter-carousel__controls {
-	align-items: center;
-	display: flex;
 }
 
 // Over the slides: the group covers them, its parts stay clickable.
@@ -88,20 +87,19 @@
 	pointer-events: none;
 	position: absolute;
 	z-index: 1;
-
-	> * {
-		pointer-events: auto;
-	}
 }
 
-// Nothing to scroll to: no controls.
-.wp-block-matter-carousel.is-initialised:not(.is-scrollable) .wp-block-matter-carousel__controls {
+:where(.wp-block-matter-carousel__controls.is-stage) > * {
+	pointer-events: auto;
+}
+
+// Hidden, whatever display a theme gives them: controls when there's nothing
+// to scroll to, and parts the script hides (e.g. play, when nothing moves by
+// itself).
+// stylelint-disable-next-line selector-max-specificity -- A hidden state outranks a theme's display.
+.wp-block-matter-carousel.is-initialised:not(.is-scrollable) .wp-block-matter-carousel__controls,
+.wp-block-matter-carousel__controls [hidden] {
 	display: none;
-}
-
-.wp-block-matter-carousel__dots {
-	display: flex;
-	flex-wrap: wrap;
 }
 
 // Progress (how far through) and timer (the current slide's autoplay
@@ -116,19 +114,19 @@
 	display: block;
 	height: 100%;
 	transform: scaleX(0);
-	// Fills from the start: the RTL stylesheet (rtlcss) flips this.
 	transform-origin: 0 50%;
+
+	&:dir(rtl) {
+		transform-origin: 100% 50%;
+	}
 }
 
 .wp-block-matter-carousel__progress-bar {
 	transform: scaleX(var(--carousel-progress, 0));
 }
 
-.wp-block-matter-carousel.is-timing.is-playing .wp-block-matter-carousel__timer-bar {
-	animation-duration: var(--carousel-autoplay, 5000ms);
-	animation-fill-mode: forwards;
-	animation-name: matter-carousel-timer;
-	animation-timing-function: linear;
+:where(.wp-block-matter-carousel.is-timing.is-playing) .wp-block-matter-carousel__timer-bar {
+	animation: matter-carousel-timer var(--carousel-autoplay, 5000ms) linear forwards;
 }
 
 @keyframes matter-carousel-timer {
@@ -138,86 +136,14 @@
 }
 
 .wp-block-matter-carousel__thumbnails {
-	display: flex;
 	overflow-x: auto;
 	scrollbar-width: none;
 }
 
-.wp-block-matter-carousel__thumbnail {
-	cursor: pointer;
-	flex: none;
-
-	img {
-		display: block;
-		height: 100%;
-		object-fit: cover;
-		width: 100%;
-	}
-}
-
-.wp-block-matter-carousel__prev,
-.wp-block-matter-carousel__next,
-.wp-block-matter-carousel__play,
-.wp-block-matter-carousel__expand,
-.wp-block-matter-carousel__dot {
-	cursor: pointer;
-}
-
-// Controls the script hides (e.g. play, when nothing moves by itself), over
-// any display a control has.
-.wp-block-matter-carousel__controls [hidden] {
-	display: none;
-}
-
-.wp-block-matter-carousel__prev,
-.wp-block-matter-carousel__next,
-.wp-block-matter-carousel__play,
-.wp-block-matter-carousel__expand {
-	align-items: center;
-	display: inline-flex;
-	justify-content: center;
-
-	&::before {
-		background-color: currentcolor;
-		content: "";
-		height: 1em;
-		mask: url("../../../assets/svg/arrow-left.svg") center / contain no-repeat;
-		width: 1em;
-	}
-
-	&:disabled {
-		cursor: default;
-	}
-}
-
-:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand):disabled {
-	opacity: 0.4;
-}
-
-.wp-block-matter-carousel__next::before {
-	mask-image: url("../../../assets/svg/arrow-right.svg");
-}
-
-.wp-block-matter-carousel__expand::before {
-	mask-image: url("../../../assets/svg/corners-out.svg");
-}
-
-// Pause icon (two bars); a play triangle while paused.
-.wp-block-matter-carousel__play::before {
-	background:
-		linear-gradient(currentcolor, currentcolor) left / 35% 100% no-repeat,
-		linear-gradient(currentcolor, currentcolor) right / 35% 100% no-repeat;
-	mask-image: none;
-	width: 0.875em;
-}
-
-.wp-block-matter-carousel__play[aria-pressed="true"]::before {
-	background: currentcolor;
-	clip-path: polygon(0 0, 100% 50%, 0 100%);
-}
-
-// Presentational defaults.
+// Default skin.
 :where(.wp-block-matter-carousel__controls) {
+	align-items: center;
+	display: flex;
 	gap: 0.75em;
 	justify-content: center;
 }
@@ -240,9 +166,92 @@
 	align-self: flex-end;
 }
 
+// Buttons: an icon in a 40px target.
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	height: 2.5rem;
+	justify-content: center;
+	padding: 0;
+	width: 2.5rem;
+}
+
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand):disabled {
+	cursor: default;
+	opacity: 0.4;
+}
+
+:where(.wp-block-matter-carousel__prev)::before {
+	@include icon(arrow-left, 1.25rem);
+}
+
+:where(.wp-block-matter-carousel__next)::before {
+	@include icon(arrow-right, 1.25rem);
+}
+
+:where(.wp-block-matter-carousel__prev:dir(rtl), .wp-block-matter-carousel__next:dir(rtl))::before {
+	scale: -1 1;
+}
+
+:where(.wp-block-matter-carousel__expand)::before {
+	@include icon(corners-out, 1.25rem);
+}
+
+// Pause icon (two bars); a play triangle while paused.
+:where(.wp-block-matter-carousel__play)::before {
+	background:
+		linear-gradient(currentcolor, currentcolor) left / 35% 100% no-repeat,
+		linear-gradient(currentcolor, currentcolor) right / 35% 100% no-repeat;
+	content: "";
+	forced-color-adjust: none;
+	height: 1rem;
+	width: 0.875rem;
+}
+
+:where(.wp-block-matter-carousel__play[aria-pressed="true"])::before {
+	background: currentcolor;
+	clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+:where(.wp-block-matter-carousel__play[aria-pressed="true"]:dir(rtl))::before {
+	clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+// Dots are smaller than a 24px target (WCAG 2.5.8), so they're spaced with
+// their centres 24px apart instead. In rem, like the dots: buttons don't
+// inherit the font size, so em would differ between the two.
+:where(.wp-block-matter-carousel__dots) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(24px - 0.625rem);
+}
+
+:where(.wp-block-matter-carousel__dot) {
+	appearance: none;
+	background: currentcolor;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+	forced-color-adjust: none;
+	height: 0.625rem;
+	opacity: 0.3;
+	padding: 0;
+	width: 0.625rem;
+}
+
+:where(.wp-block-matter-carousel__dot[aria-current]) {
+	opacity: 1;
+}
+
 :where(.wp-block-matter-carousel__progress, .wp-block-matter-carousel__timer) {
-	background: rgb(0 0 0 / 15%);
+	background: color-mix(in srgb, currentcolor 20%, transparent);
 	flex: 1;
+	forced-color-adjust: none;
 	height: 2px;
 	min-width: 4em;
 }
@@ -256,6 +265,7 @@
 }
 
 :where(.wp-block-matter-carousel__thumbnails) {
+	display: flex;
 	gap: 0.5em;
 }
 
@@ -263,44 +273,20 @@
 	appearance: none;
 	background: none;
 	border: 2px solid transparent;
+	cursor: pointer;
+	flex: none;
 	height: 4em;
-	opacity: 0.6;
 	padding: 0;
 	width: 6em;
 }
 
 :where(.wp-block-matter-carousel__thumbnail[aria-current]) {
 	border-color: currentcolor;
-	opacity: 1;
 }
 
-:where(.wp-block-matter-carousel__dots) {
-	// Dots are smaller than a 24px target (WCAG 2.5.8), so they're spaced
-	// with their centres 24px apart instead. In rem, like the dots: buttons
-	// don't inherit the font size, so em would differ between the two.
-	gap: calc(24px - 0.625rem);
-}
-
-:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand) {
-	background: none;
-	border: 1px solid currentcolor;
-	border-radius: 50%;
-	color: inherit;
-	height: 2.5em;
-	padding: 0;
-	width: 2.5em;
-}
-
-:where(.wp-block-matter-carousel__dot) {
-	background: currentcolor;
-	border: 0;
-	border-radius: 50%;
-	height: 0.625rem;
-	opacity: 0.3;
-	padding: 0;
-	width: 0.625rem;
-}
-
-:where(.wp-block-matter-carousel__dot[aria-current]) {
-	opacity: 1;
+:where(.wp-block-matter-carousel__thumbnail) img {
+	display: block;
+	height: 100%;
+	object-fit: cover;
+	width: 100%;
 }

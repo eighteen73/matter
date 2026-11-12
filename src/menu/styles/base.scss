@@ -1,16 +1,11 @@
-// Menu: rules shared by every menu type.
-// Functional rules use single classes. Presentational defaults are wrapped in
-// :where() (zero specificity) so themes can restyle with plain class selectors.
-// Type-specific layout lives in dropdown/accordion/drill-down.scss.
+// Menu: rules shared by every menu type. Type layouts are in dropdown,
+// accordion and drill-down.scss.
+// Functional rules first, at one class (plus the element's own state, with any
+// context in :where()); then the default skin, all in :where(). Matter shows
+// and hides parts per type (e.g. a parent's link in a drill-down): themes
+// shouldn't set `display` on the toggle text, submenus or their headers.
 
-.matter-menu {
-	// Themes set --menu-duration anywhere (e.g. :root); Matter only reads it.
-	--_menu-duration: var(--menu-duration, 0.3s);
-
-	@media (prefers-reduced-motion: reduce) {
-		--_menu-duration: 0s;
-	}
-}
+@use "../../styles/icon" as *;
 
 .matter-menu__items,
 .matter-menu__submenu-items,
@@ -24,43 +19,7 @@
 	position: relative;
 }
 
-.matter-menu__link {
-	align-items: center;
-	display: inline-flex;
-	gap: 0.5em;
-}
-
-.matter-menu__toggle,
-.matter-menu__back {
-	align-items: center;
-	appearance: none;
-	background: none;
-	border: 0;
-	color: inherit;
-	cursor: pointer;
-	display: inline-flex;
-	font: inherit;
-	gap: 0.5em;
-	padding: 0;
-	text-align: inherit;
-}
-
-.matter-menu__toggle::after,
-.matter-menu__back::before {
-	background-color: currentcolor;
-	content: "";
-	flex: none;
-	height: 0.75em;
-	mask: url("../../../assets/svg/caret-down.svg") center / contain no-repeat;
-	transition: rotate var(--_menu-duration);
-	width: 0.75em;
-}
-
-.matter-menu__back::before {
-	mask-image: url("../../../assets/svg/caret-left.svg");
-}
-
-// The toggle's text stands in for the parent link only in some modes.
+// The toggle's text stands in for the parent link only in some types.
 .matter-menu__toggle-text {
 	display: none;
 }
@@ -70,11 +29,12 @@
 	visibility: hidden;
 }
 
-.matter-menu__item.is-open > .matter-menu__submenu {
+:where(.matter-menu__item.is-open) > .matter-menu__submenu {
 	visibility: visible;
 }
 
-// The drill-down header is only shown by the drill-down type.
+// The submenu header (back button, label, "View all") is shown by the
+// drill-down type, and by click menus for "View all".
 .matter-menu__submenu-header {
 	display: none;
 }
@@ -85,25 +45,45 @@
 	flex-direction: column;
 }
 
-.matter-menu__description {
-	display: block;
-}
-
+// Default skin.
 :where(.matter-menu__link) {
+	align-items: center;
 	color: inherit;
+	display: inline-flex;
+	gap: 0.5em;
 	min-height: 24px;
 	text-decoration: none;
 }
 
-// At least 24px to tap or click (WCAG 2.5.8).
+// Buttons: unstyled, at least 24px to tap or click (WCAG 2.5.8).
 :where(.matter-menu__toggle, .matter-menu__back) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.5em;
 	justify-content: center;
 	min-height: 24px;
 	min-width: 24px;
+	padding: 0;
+	text-align: inherit;
 }
 
-:where(.matter-menu__link.is-label) {
-	font-weight: 600;
+:where(.matter-menu__toggle)::after {
+	@include icon(caret-down, 0.75em);
+	transition: rotate 300ms;
+}
+
+:where(.matter-menu__back)::before {
+	@include icon(caret-left, 0.75em);
+}
+
+:where(.matter-menu__back:dir(rtl))::before {
+	scale: -1 1;
 }
 
 :where(.matter-menu__item.is-column) {
@@ -117,6 +97,12 @@
 }
 
 :where(.matter-menu__description) {
-	font-size: 0.875em;
-	opacity: 0.75;
+	display: block;
+}
+
+// Last, so it wins over every transition above (and the types').
+@media (prefers-reduced-motion: reduce) {
+	:where(.matter-menu__toggle)::after {
+		transition: none;
+	}
 }

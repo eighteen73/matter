@@ -16,8 +16,9 @@ class Tabs {
 
 	/**
 	 * CSS for tabs shown as a dropdown: the button shows, and the tab list
-	 * becomes a menu below it, open with `.is-menu-open`. Functional rules,
-	 * then defaults in :where() for themes to restyle.
+	 * becomes a menu below it, open with `.is-menu-open`. Functional rules at
+	 * one class (the scope is in :where()), then the default skin, all in
+	 * :where(), for themes to restyle.
 	 *
 	 * Themes doing the switch in their own CSS (`dropdownBelow` false) can
 	 * output this for their own scope, e.g. `.wp-block-matter-tabs.has-dropdown`
@@ -29,15 +30,15 @@ class Tabs {
 	 */
 	public static function dropdown_css( string $scope, string $media = '' ): string {
 		$css = strtr(
+			// The block itself (two classes: it wins over `.is-vertical`'s grid).
 			'{s}{display:block}'
-			. '{nav}{display:block;position:relative}'
-			. '{nav}>.wp-block-matter-tabs__toggle{display:flex}'
-			. '{list}{display:none;flex-direction:column;flex-wrap:nowrap;inset-inline:0;position:absolute;top:100%;z-index:10}'
-			. '{s}.is-menu-open{list}{display:flex}'
+			. ':where({s})>.wp-block-matter-tabs__nav{display:block;position:relative}'
+			. ':where({nav})>.wp-block-matter-tabs__toggle{display:flex}'
+			. ':where({nav})>.wp-block-matter-tabs__list{display:none;flex-direction:column;flex-wrap:nowrap;inset-block-start:100%;inset-inline:0;position:absolute;z-index:10}'
+			. ':where({s}.is-menu-open>.wp-block-matter-tabs__nav)>.wp-block-matter-tabs__list{display:flex}'
 			. ':where({nav}){margin-block-end:1.5em}'
-			. ':where({list}){background:var(--scheme--background,#fff);border:1px solid var(--scheme--border,rgb(0 0 0 / 15%));box-shadow:0 0.5em 1.5em rgb(0 0 0 / 10%);gap:0;margin:0;padding:0}'
-			. ':where({list}>.wp-block-matter-tabs__tab){border:0;justify-content:flex-start;margin:0;padding:0.75em 1em;text-align:start;width:100%}'
-			. ':where({list}>.wp-block-matter-tabs__tab[aria-selected="true"]){background:rgb(0 0 0 / 5%)}',
+			. ':where({list}){background:var(--scheme--background,Canvas);border:1px solid var(--scheme--border,color-mix(in srgb,currentcolor 20%,transparent));gap:0;margin:0;padding:0}'
+			. ':where({list}>.wp-block-matter-tabs__tab){justify-content:flex-start;padding:0.75em 1em;width:100%}',
 			[
 				'{s}'    => $scope,
 				'{nav}'  => $scope . '>.wp-block-matter-tabs__nav',

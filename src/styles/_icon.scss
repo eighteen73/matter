@@ -1,0 +1,29 @@
+// Icons: an SVG from assets/svg as a mask, painted in the text colour.
+// Declarations only; the caller writes the selector (a ::before or ::after,
+// in the default skin's :where()).
+// URLs resolve from the stylesheet being built, and every entry using this
+// sits three folders below the plugin (src/blocks/{block}/, src/menu/styles/,
+// src/panel/styles/).
+
+/// An icon.
+///
+/// @param {String} $name - File name in assets/svg, without `.svg`.
+/// @param {Number} $size - Width and height.
+@mixin icon($name, $size: 1em) {
+	background-color: currentcolor;
+	content: "";
+	flex: none;
+	// In forced colours (high contrast), backgrounds are replaced, which would
+	// hide the icon; it keeps the text colour, which is the forced one.
+	forced-color-adjust: none;
+	height: $size;
+	mask: url("../../../assets/svg/#{$name}.svg") center / contain no-repeat;
+	width: $size;
+}
+
+/// Another icon, on an element already using `icon()`.
+///
+/// @param {String} $name - File name in assets/svg, without `.svg`.
+@mixin icon-image($name) {
+	mask-image: url("../../../assets/svg/#{$name}.svg");
+}

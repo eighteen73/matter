@@ -1,16 +1,8 @@
 // Editor: tab buttons are clickable labels; the active label is editable.
-.wp-block-matter-tabs .wp-block-matter-tabs__list {
-	align-items: center;
-
-	[role="tab"] {
-		cursor: pointer;
-	}
+:where(.wp-block-matter-tabs__list) [role="tab"] {
+	cursor: pointer;
 }
 
 .wp-block-matter-tab.is-inactive-tab {
 	display: none;
-}
-
-.wp-block-matter-tabs.is-vertical .wp-block-matter-tabs__list {
-	align-items: stretch;
 }

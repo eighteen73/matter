@@ -169,7 +169,7 @@ if ( $matter_lightbox && $matter_images ) {
 			</figure>
 			<div class="wp-block-matter-gallery__nav">
 				<button type="button" class="wp-block-matter-gallery__prev" data-wp-on--click="actions.prev"><span class="screen-reader-text">%3$s</span></button>
-				<span class="wp-block-matter-gallery__counter" style="min-inline-size:%5$s" data-wp-text="state.counter"></span>
+				<span class="wp-block-matter-gallery__counter" style="--gallery-counter-width:%5$s" data-wp-text="state.counter"></span>
 				<button type="button" class="wp-block-matter-gallery__next" data-wp-on--click="actions.next"><span class="screen-reader-text">%4$s</span></button>
 			</div>
 		</dialog>',

@@ -1,6 +1,11 @@
 // Editor: the carousel layout is a live carousel (src/carousel/editor); in the
 // grid, images beyond "Images to show" are hidden, as on the front end (rule
 // written by edit.js); manage them with "Edit images".
-.wp-block-matter-gallery .wp-block-matter-gallery__more {
+:where(.wp-block-matter-gallery) .wp-block-matter-gallery__more {
 	cursor: default;
+}
+
+// Hidden captions stay below the images, to edit.
+.wp-block-matter-gallery.has-captions-hidden.block-editor-block-list__block figcaption {
+	display: block;
 }

@@ -1,7 +1,9 @@
 // Editor canvas (iframe) styles for Matter's core block extensions.
 
-// Button icon preview.
-.wp-block-button.has-icon > .wp-block-button__link::after {
+// Button icon preview: on the front end the icon is `.wp-block-button__icon`
+// inside the link; here (core's link can't hold it) it's the link's ::after,
+// at zero specificity for a theme's editor styles to size.
+:where(.wp-block-button.has-icon > .wp-block-button__link)::after {
 	background-color: currentcolor;
 	content: "";
 	display: inline-block;
@@ -50,17 +52,15 @@
 // An accordion or tabs of posts shows the server's rendering; the query's own
 // items (fixed, and shown by the preview) are hidden, leaving its element as
 // the block's anchor for selection and the toolbar.
-.matter-query-display:is(.is-accordion, .is-tabs) {
-	> .wp-block-query {
-		margin: 0;
+.matter-query-display:is(.is-accordion, .is-tabs) > .wp-block-query {
+	margin: 0;
+}
 
-		> * {
-			display: none;
-		}
-	}
+.matter-query-display:is(.is-accordion, .is-tabs) > .wp-block-query > * {
+	display: none;
+}
 
-	> .components-spinner {
-		display: block;
-		margin: 1rem auto;
-	}
+.matter-query-display:is(.is-accordion, .is-tabs) > .components-spinner {
+	display: block;
+	margin: 1rem auto;
 }
