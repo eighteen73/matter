@@ -80,6 +80,14 @@ class Settings {
 	private ?array $sections = null;
 
 	/**
+	 * Values merged over defaults, cached per request (cleared when the
+	 * option changes).
+	 *
+	 * @var array|null
+	 */
+	private ?array $values = null;
+
+	/**
 	 * The settings page's hook suffix, once registered.
 	 *
 	 * @var string
@@ -96,6 +104,19 @@ class Settings {
 		add_action( 'admin_menu', [ $this, 'register_page' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_page_assets' ] );
 		add_action( 'init', [ $this, 'register_bindings_source' ] );
+
+		foreach ( [ 'add_option_', 'update_option_', 'delete_option_' ] as $hook ) {
+			add_action( $hook . self::OPTION, [ $this, 'flush' ] );
+		}
+	}
+
+	/**
+	 * Forget cached values, after the option changes.
+	 *
+	 * @return void
+	 */
+	public function flush(): void {
+		$this->values = null;
 	}
 
 	/**
@@ -156,6 +177,10 @@ class Settings {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public function get_values(): array {
+		if ( null !== $this->values ) {
+			return $this->values;
+		}
+
 		$stored = get_option( self::OPTION, [] );
 		$stored = is_array( $stored ) ? $stored : [];
 		$values = [];
@@ -165,6 +190,8 @@ class Settings {
 				$values[ $section_key ][ $field_key ] = $stored[ $section_key ][ $field_key ] ?? $field['default'];
 			}
 		}
+
+		$this->values = $values;
 
 		return $values;
 	}
@@ -201,7 +228,10 @@ class Settings {
 			}
 		}
 
-		update_option( self::OPTION, $clean, false );
+		// Autoloaded: the header and footer read settings on every page.
+		update_option( self::OPTION, $clean, true );
+		wp_set_option_autoload( self::OPTION, true );
+		$this->flush();
 
 		/**
 		 * Fires after site settings are saved.

@@ -65,6 +65,7 @@ class SettingsTest extends TestCase {
 	 */
 	private static function reset(): void {
 		( new ReflectionProperty( Settings::class, 'sections' ) )->setValue( Settings::instance(), null );
+		Settings::instance()->flush();
 	}
 
 	/**
@@ -109,6 +110,23 @@ class SettingsTest extends TestCase {
 			],
 			$saved
 		);
+	}
+
+	/**
+	 * Settings are autoloaded, as every page reads them, and a change made
+	 * outside Matter (e.g. WP-CLI) is seen at once.
+	 *
+	 * @return void
+	 */
+	public function test_autoload_and_cache(): void {
+		Settings::instance()->save( [ 'contact' => [ 'phone' => '0113' ] ] );
+
+		$this->assertArrayHasKey( Settings::OPTION, wp_load_alloptions() );
+		$this->assertSame( '0113', \Eighteen73\Matter\setting( 'contact.phone' ) );
+
+		update_option( Settings::OPTION, [ 'contact' => [ 'phone' => '0114' ] ] );
+
+		$this->assertSame( '0114', \Eighteen73\Matter\setting( 'contact.phone' ) );
 	}
 
 	/**
