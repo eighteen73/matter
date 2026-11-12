@@ -2,8 +2,8 @@
 /**
  * Loop items: the theme's design for one item in a loop.
  *
- * A theme registers a pattern per post type, `{theme}/loop-item-{post_type}`
- * (e.g. `pulsar/loop-item-product`), with `{theme}/loop-item` as the fallback
+ * A theme registers a pattern per post type, `{namespace}/loop-item-{post_type}`
+ * (e.g. `pulsar/loop-item-product`), with `{namespace}/loop-item` as the fallback
  * for any other post type. The `matter/loop-item` block renders that pattern
  * with the item's block context, so loops in templates and carousels in
  * content all show the same, theme-owned design.
@@ -198,7 +198,8 @@ final class LoopItem {
 
 	/**
 	 * The loop item pattern for a post type, in a block if any (see the
-	 * hierarchy above). Child theme first at each step.
+	 * hierarchy above), in the theme's namespace (`matter_theme_namespace`),
+	 * most specific first at each step.
 	 *
 	 * @param string $post_type Post type.
 	 * @param string $block     The block the item's query is shown as; empty for none.
@@ -206,7 +207,7 @@ final class LoopItem {
 	 */
 	public static function pattern( string $post_type, string $block = '' ): ?string {
 		$registry = WP_Block_Patterns_Registry::get_instance();
-		$themes   = array_unique( [ get_stylesheet(), get_template() ] );
+		$themes   = \Eighteen73\Matter\theme_namespaces();
 		$names    = [ "loop-item-{$post_type}", 'loop-item' ];
 
 		if ( isset( QueryDisplay::TYPES[ $block ] ) ) {

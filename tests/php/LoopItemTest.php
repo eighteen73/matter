@@ -51,6 +51,28 @@ class LoopItemTest extends TestCase {
 	}
 
 	/**
+	 * Patterns are looked up in the theme's namespace, not its folder name.
+	 *
+	 * @return void
+	 */
+	public function test_theme_namespace(): void {
+		register_block_pattern(
+			'acme/loop-item',
+			[
+				'title'   => 'Acme',
+				'content' => '<!-- wp:post-date /-->',
+			]
+		);
+		add_filter( 'matter_theme_namespace', fn() => 'acme' );
+
+		$this->assertSame( [ 'acme' ], \Eighteen73\Matter\theme_namespaces() );
+		$this->assertSame( 'acme/loop-item', LoopItem::pattern( 'post' ) );
+		$this->assertNull( LoopItem::pattern( 'post', 'accordion' ), 'The folder name is no longer used' );
+
+		unregister_block_pattern( 'acme/loop-item' );
+	}
+
+	/**
 	 * Without an accordion or tabs pattern, the item's excerpt shows.
 	 *
 	 * @return void

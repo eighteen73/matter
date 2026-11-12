@@ -60,7 +60,8 @@ class Icons {
 		$args = (array) apply_filters(
 			'matter_theme_icons',
 			[
-				'collection'  => sanitize_key( get_template() ),
+				// The theme's namespace (its parent's, for a child theme).
+				'collection'  => (string) ( array_slice( theme_namespaces(), -1 )[0] ?? sanitize_key( get_template() ) ),
 				'label'       => get_bloginfo( 'name' ) ?: __( 'Theme', 'matter' ),
 				'directories' => $directories,
 			]

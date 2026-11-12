@@ -70,7 +70,8 @@ Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' 
 
 Every loop shows the same design for a post type: the shop, a category, related products and a carousel of products all use one loop item, and changing it changes them all, including carousels already placed in content.
 
-- The theme registers a pattern per post type, `{theme}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{theme}/loop-item` for any other post type. Give the patterns `Inserter: false` so they stay out of the Patterns panel.
+- The theme registers a pattern per post type, `{namespace}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{namespace}/loop-item` for any other post type. Give the patterns `Inserter: false` so they stay out of the Patterns panel.
+- `{namespace}` is the theme's folder name (a child theme's, then its parent's), unless the theme names it, so renaming the folder doesn't break anything: `add_filter( 'matter_theme_namespace', fn() => 'pulsar' );`. It's also the theme's icon collection.
 - **In a carousel, accordion or tabs of posts** ([below](#posts-as-carousels-accordions-or-tabs)) the block can have its own patterns, named after it. The first that exists is used, most specific first, like WordPress's template hierarchy (child theme first at each step):
 
   | In | Patterns, in order |
@@ -477,10 +478,10 @@ add_filter( 'matter_allowed_blocks', fn( $blocks ) => [ ...$blocks, 'core/headin
 
 ## Theme icons
 
-The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's folder; icon names are saved in content (`pulsar/arrow-right`), so name it explicitly if the folder may change:
+The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's namespace (`matter_theme_namespace`, see [Loop items](#loop-items)); icon names are saved in content (`pulsar/arrow-right`), so a theme whose folder may change should name its namespace. The label, and the collection itself, can be set too:
 
 ```php
-add_filter( 'matter_theme_icons', fn( $icons ) => [ ...$icons, 'collection' => 'pulsar', 'label' => 'Theme icons' ] );
+add_filter( 'matter_theme_icons', fn( $icons ) => [ ...$icons, 'label' => 'Theme icons' ] );
 ```
 
 `directories` changes the folders.
@@ -592,8 +593,8 @@ What a theme's files and saved content depend on. Each project's theme is its ow
 The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); a change to a snapshot is a contract change.
 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries, the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
-- **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{theme}/loop-item-{post_type}`, `{theme}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, in the order under [Loop items](#loop-items)).
-- **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()` and `slots()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
+- **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{namespace}/loop-item-{post_type}`, `{namespace}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, in the order under [Loop items](#loop-items)).
+- **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
 - **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts or products carousel the slides are the items of the post or product template inside the track; in an accordion or tabs of posts the items are inside the post template's list), state classes (`is-*`, `has-*`), the `--scheme--*` roles and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 
