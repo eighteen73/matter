@@ -665,7 +665,8 @@ npm run lint:js && npm run lint:css && composer run lint
 ```bash
 npm run env:start    # start wp-env (http://localhost:8888, tests on 8889)
 npm run test:unit    # JavaScript unit tests
-npm run test:php     # PHPUnit, including contract snapshots (UPDATE_SNAPSHOTS=1 to update)
+npm run test:php     # PHPUnit, including contract snapshots (or composer test)
+npm run test:php:update   # PHPUnit, writing the contract snapshots afresh
 npm run test:e2e     # browser tests with Playwright and axe (npx playwright install chromium first)
 ```
 

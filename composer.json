@@ -26,7 +26,7 @@
 	"scripts": {
 		"lint": "./vendor/bin/phpcs",
 		"format": "./vendor/bin/phpcbf",
-		"test": "./vendor/bin/phpunit"
+		"test": "npx wp-env run tests-cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit"
 	},
 	"config": {
 		"allow-plugins": {

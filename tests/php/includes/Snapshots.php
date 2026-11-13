@@ -27,7 +27,13 @@ trait Snapshots {
 		$file   = dirname( __DIR__ ) . '/__snapshots__/' . $name . '.html';
 		$actual = self::normalise( $actual );
 
-		if ( getenv( 'UPDATE_SNAPSHOTS' ) || ! file_exists( $file ) ) {
+		// A missing snapshot fails: written only when asked
+		// (`npm run test:php:update`), so a lost one can't hide a change.
+		if ( ! getenv( 'UPDATE_SNAPSHOTS' ) && ! file_exists( $file ) ) {
+			$this->fail( "No snapshot of the theme contract's {$name} markup. Write it with `npm run test:php:update`." );
+		}
+
+		if ( getenv( 'UPDATE_SNAPSHOTS' ) ) {
 			wp_mkdir_p( dirname( $file ) );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Test fixture.
 			file_put_contents( $file, $actual );
