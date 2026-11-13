@@ -216,6 +216,64 @@ test.describe('overlay IDs', () => {
 		]);
 	});
 
+	test('a copy pasted above the original gets a new ID; the original keeps its own', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'matter/modal',
+			attributes: { overlayId: 'offer' },
+		});
+
+		// As a paste above it does: a copy, inserted first.
+		await page.evaluate(() => {
+			const [original] = window.wp.data
+				.select('core/block-editor')
+				.getBlocks();
+
+			window.wp.data
+				.dispatch('core/block-editor')
+				.insertBlocks([window.wp.blocks.cloneBlock(original)], 0);
+		});
+
+		await expect
+			.poll(async () => (await blocks(page)).map(({ id }) => id))
+			.toEqual([expect.stringMatching(/^modal-/), 'offer']);
+	});
+
+	test("a tabs block's anchor, cleared to retype, isn't filled in again", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter/tabs' });
+
+		const anchor = () =>
+			page.evaluate(
+				() =>
+					window.wp.data.select('core/block-editor').getBlocks()[0]
+						.attributes.anchor ?? ''
+			);
+
+		await expect.poll(anchor).toMatch(/^tabs-/);
+
+		for (const value of ['', 'f', 'faq']) {
+			await page.evaluate((next) => {
+				const [tabs] = window.wp.data
+					.select('core/block-editor')
+					.getBlocks();
+
+				window.wp.data
+					.dispatch('core/block-editor')
+					.updateBlockAttributes(tabs.clientId, { anchor: next });
+			}, value);
+			await expect.poll(anchor).toBe(value);
+		}
+	});
+
 	test('a new modal gets an ID without an undo step', async ({
 		admin,
 		editor,

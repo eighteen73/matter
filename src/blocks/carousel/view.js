@@ -325,9 +325,19 @@ store('matter/carousel', {
 			// Slides may have been scrolled natively before Embla started.
 			viewport.scrollLeft = 0;
 
+			// The direction it's shown in (a right-to-left section on a
+			// left-to-right site, or the other way round), not only the site's.
+			const direction =
+				window.getComputedStyle(viewport).direction === 'rtl'
+					? 'rtl'
+					: 'ltr';
 			const embla = EmblaCarousel(
 				viewport,
-				{ ...context.options, container: queryList || track },
+				{
+					...context.options,
+					direction,
+					container: queryList || track,
+				},
 				plugins
 			);
 			const motion = () =>

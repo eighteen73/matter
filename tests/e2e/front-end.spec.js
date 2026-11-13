@@ -315,6 +315,28 @@ test.describe('menus', () => {
 		await page.waitForTimeout(500);
 		await expect(item).toHaveClass(/\bis-open\b/);
 	});
+
+	test('Escape closes a hover submenu while another item has focus', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		const item = page.locator('#hover-menu .has-submenu').first();
+
+		await item.hover();
+		await expect(item).toHaveClass(/\bis-open\b/);
+
+		// Another top-level link, the pointer still over the submenu's item.
+		await page.evaluate(() => {
+			const open = document.querySelector('#hover-menu .has-submenu');
+
+			[...document.querySelectorAll('#hover-menu .matter-menu__link')]
+				.find((link) => !open.contains(link))
+				.focus();
+		});
+		await page.keyboard.press('Escape');
+		await expect(item).not.toHaveClass(/\bis-open\b/);
+	});
 });
 
 test.describe('panel', () => {
@@ -463,6 +485,43 @@ test.describe('right to left', () => {
 		const box = await drawer.boundingBox();
 
 		expect(Math.round(box.x + box.width)).toBe(DESKTOP.width);
+	});
+
+	test('a carousel in a right-to-left section of a left-to-right site scrolls its way', async ({
+		page,
+	}) => {
+		// The carousel's section is right to left before its script starts.
+		await page.addInitScript(() => {
+			new window.MutationObserver((records, observer) => {
+				const carousel = document.getElementById('highlights');
+
+				if (carousel) {
+					carousel.parentElement.dir = 'rtl';
+					observer.disconnect();
+				}
+			}).observe(document, { childList: true, subtree: true });
+		});
+		await page.goto(kitchenSink.link);
+
+		const carousel = page.locator('#highlights');
+
+		await expect(carousel).toHaveClass(/\bis-initialised\b/);
+		await page.evaluate(() => {
+			const instance = window.matter.carousel('highlights');
+
+			instance.pause();
+			instance.goTo(1, true);
+		});
+
+		const viewport = await carousel
+			.locator('.wp-block-matter-carousel__viewport')
+			.boundingBox();
+		const slide = await carousel.getByText('Slide two').boundingBox();
+
+		expect(slide.x).toBeGreaterThanOrEqual(viewport.x - 1);
+		expect(slide.x + slide.width).toBeLessThanOrEqual(
+			viewport.x + viewport.width + 1
+		);
 	});
 });
 

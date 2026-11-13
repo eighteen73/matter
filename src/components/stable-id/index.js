@@ -2,11 +2,13 @@
  * IDs that links point at (an overlay's `#id`, a tab's or accordion's deep
  * link), kept stable and unique among the page's blocks.
  *
- * - A block gets an ID when it has none (inserted, or added before IDs were
- *   saved), and a new one only when it's shown with an ID an earlier block
- *   already has (duplicated or pasted). That check runs when the block is
- *   shown, never as an ID is edited, so editing one block's ID can't rename
- *   another's and break its links.
+ * - A block gets an ID when it's first shown without one (inserted, or added
+ *   before IDs were saved), and a new one only when it's first shown with an
+ *   ID another block already has (duplicated or pasted, above or below the
+ *   original): the block that was there first keeps it. Neither happens as an
+ *   ID is edited, so editing one block's ID can't rename another's and break
+ *   its links, and an ID cleared in a field (core's HTML anchor, for tabs and
+ *   accordions) isn't filled again as it's retyped.
  * - Assigning an ID isn't an undo step: undoing an insert removes the block.
  * - IdControl edits an ID: it's applied when the field loses focus, and an
  *   empty ID, or one another block has, is refused.
@@ -44,23 +46,47 @@ export const sanitizeId = (value) =>
 /**
  * Whether another block on the page uses an ID in the attribute.
  *
- * @param {Object}  select    Block editor selectors.
- * @param {string}  clientId  The block.
- * @param {string}  attribute Attribute name.
- * @param {string}  id        ID.
- * @param {boolean} before    Only count blocks earlier on the page.
+ * @param {Object} select    Block editor selectors.
+ * @param {string} clientId  The block.
+ * @param {string} attribute Attribute name.
+ * @param {string} id        ID.
  * @return {boolean} Taken.
  */
-export const isIdTaken = (select, clientId, attribute, id, before = false) => {
-	const { getClientIdsWithDescendants, getBlockAttributes } = select;
-	const ids = getClientIdsWithDescendants();
+export const isIdTaken = (select, clientId, attribute, id) =>
+	select
+		.getClientIdsWithDescendants()
+		.some(
+			(other) =>
+				other !== clientId &&
+				select.getBlockAttributes(other)?.[attribute] === id
+		);
+
+/**
+ * The blocks already shown (by client ID), so a pasted or duplicated block
+ * gives way to the one it was copied from wherever it lands. (When a page
+ * loads, its blocks are all new: the earlier on the page keeps an ID.)
+ */
+const shown = new Set();
+
+/**
+ * Whether the ID belongs to another block that keeps it: one shown before
+ * this block, or earlier on the page.
+ *
+ * @param {Object} select    Block editor selectors.
+ * @param {string} clientId  The block.
+ * @param {string} attribute Attribute name.
+ * @param {string} id        ID.
+ * @return {boolean} Duplicate.
+ */
+const isDuplicate = (select, clientId, attribute, id) => {
+	const ids = select.getClientIdsWithDescendants();
 	const position = ids.indexOf(clientId);
 
 	return ids.some(
 		(other, index) =>
 			other !== clientId &&
-			(!before || index < position) &&
-			getBlockAttributes(other)?.[attribute] === id
+			(shown.has(other) || index < position) &&
+			select.getBlockAttributes(other)?.[attribute] === id
 	);
 };
 
@@ -83,16 +109,19 @@ export function useStableId(clientId, attribute, prefix) {
 	);
 
 	useEffect(() => {
-		const select = registry.select(blockEditorStore);
-		// Duplicates are only checked when the block is first shown.
-		const isDuplicate =
-			!checked.current &&
-			!!id &&
-			isIdTaken(select, clientId, attribute, id, true);
+		// Only when the block is first shown.
+		if (checked.current) {
+			return;
+		}
 
 		checked.current = true;
 
-		if (id && !isDuplicate) {
+		const select = registry.select(blockEditorStore);
+		const needsId = !id || isDuplicate(select, clientId, attribute, id);
+
+		shown.add(clientId);
+
+		if (!needsId) {
 			return;
 		}
 
