@@ -381,6 +381,14 @@ const { state } = store(
 						item.querySelector(
 							`:scope > ${SELECTORS.toggle}`
 						)?.focus();
+					} else if (
+						context.menuType === DROPDOWN &&
+						context.openSubmenus.length
+					) {
+						// Focus is elsewhere in the menu (another top-level
+						// item) while a dropdown is open, e.g. by hovering.
+						event.preventDefault();
+						closeAll(context, menu);
 					}
 
 					return;
