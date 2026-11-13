@@ -137,6 +137,14 @@ const updateUi = (embla, root, context) => {
 	const current = embla.selectedScrollSnap();
 	const selected = selectedSlides(embla);
 
+	// Slides that are a list's items (a query's, a product collection's): the
+	// list is presentational, as items that are groups don't make a list.
+	const list = slides[0]?.parentElement;
+
+	if (list && ['UL', 'OL'].includes(list.tagName)) {
+		list.setAttribute('role', 'none');
+	}
+
 	slides.forEach((slide, index) => {
 		slide.setAttribute('role', 'group');
 		slide.setAttribute('aria-roledescription', 'slide');

@@ -255,6 +255,16 @@ test.describe('terms carousel', () => {
 		await expect(
 			carousel.getByRole('link', { name: 'Matter Hats' })
 		).toBeVisible();
+
+		// Its slides are groups, so their list is presentational (axe: list).
+		await expect(carousel.locator('ul').first()).toHaveAttribute(
+			'role',
+			'none'
+		);
+		await expect(carousel.getByRole('group').first()).toHaveAttribute(
+			'aria-roledescription',
+			'slide'
+		);
 	});
 });
 
