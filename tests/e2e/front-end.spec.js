@@ -4,9 +4,11 @@
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
 const AxeBuilder = require('@axe-core/playwright').default;
 const {
+	collections,
 	createCategories,
 	createMenu,
 	createPage,
+	createPosts,
 	termsCarousel,
 } = require('./fixtures');
 
@@ -127,6 +129,71 @@ test.describe('overlays', () => {
 		await expect(
 			page.getByRole('dialog', { name: 'Modal in a collapsible' })
 		).toBeVisible();
+	});
+
+	test('a modal in a closed accordion item opens it first', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page
+			.getByRole('link', { name: 'Open the modal in the accordion' })
+			.click();
+
+		await expect(
+			page.getByRole('dialog', { name: 'Modal in an accordion' })
+		).toBeVisible();
+		await expect(
+			page.getByRole('button', { name: 'Second question' })
+		).toHaveAttribute('aria-expanded', 'true');
+	});
+
+	test("a modal that still can't be shown warns instead of opening", async ({
+		page,
+	}) => {
+		const warnings = [];
+
+		page.on('console', (message) => {
+			if (message.type() === 'warning') {
+				warnings.push(message.text());
+			}
+		});
+		await page.goto(kitchenSink.link);
+		// Hidden by the theme, which Matter can't reveal.
+		await page.evaluate(() => {
+			document.getElementById('specs').style.display = 'none';
+		});
+		await page
+			.getByRole('link', { name: 'Open the modal in tab two' })
+			.click();
+
+		await expect.poll(() => warnings.length).toBeGreaterThan(0);
+		await expect(page.locator('#in-tab')).not.toHaveAttribute('open', '');
+	});
+
+	test('a modal opened from the keyboard takes focus, and gives it back on Escape', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		const link = page.getByRole('link', {
+			name: 'Open the modal in the collapsible',
+		});
+		const dialog = page.getByRole('dialog', {
+			name: 'Modal in a collapsible',
+		});
+
+		await link.focus();
+		await page.keyboard.press('Enter');
+		await expect(dialog).toBeVisible();
+		expect(
+			await dialog.evaluate((element) =>
+				element.contains(element.ownerDocument.activeElement)
+			)
+		).toBe(true);
+
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(link).toBeFocused();
 	});
 
 	test('a drag ending on the backdrop leaves a modal open', async ({
@@ -282,6 +349,123 @@ test.describe('carousel, reduced motion', () => {
 			page.locator('#highlights .wp-block-matter-carousel__play')
 		).toBeHidden();
 	});
+
+	test('the next slide is there at once, without scrolling to it', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#highlights.is-initialised')).toBeVisible();
+		await page.getByRole('button', { name: 'Next slide' }).first().click();
+
+		// Read straight away: a smooth scroll would still be on its way.
+		const [slide, viewport] = await page.evaluate(() => {
+			const carousel = document.getElementById('highlights');
+			const box = (element) => element.getBoundingClientRect().toJSON();
+
+			return [
+				box(
+					[...carousel.querySelectorAll('p')].find(
+						(p) => p.textContent === 'Slide two'
+					)
+				),
+				box(
+					carousel.querySelector(
+						'.wp-block-matter-carousel__viewport'
+					)
+				),
+			];
+		});
+
+		expect(Math.abs(slide.left - viewport.left)).toBeLessThan(2);
+	});
+});
+
+test.describe('keyboard', () => {
+	test.use({ viewport: DESKTOP });
+
+	test('tabs: the arrow keys, Home and End move between tabs and select them', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		const size = page.getByRole('tab', { name: 'Size' });
+		const colour = page.getByRole('tab', { name: 'Colour' });
+
+		await size.focus();
+		await page.keyboard.press('ArrowRight');
+		await expect(colour).toBeFocused();
+		await expect(colour).toHaveAttribute('aria-selected', 'true');
+		await page.keyboard.press('Home');
+		await expect(size).toBeFocused();
+		await expect(size).toHaveAttribute('aria-selected', 'true');
+		await page.keyboard.press('End');
+		await expect(colour).toBeFocused();
+	});
+
+	test('accordion: the arrow keys, Home and End move between headings', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		const first = page.getByRole('button', { name: 'First question' });
+		const second = page.getByRole('button', { name: 'Second question' });
+
+		await first.focus();
+		await page.keyboard.press('ArrowDown');
+		await expect(second).toBeFocused();
+		await page.keyboard.press('Home');
+		await expect(first).toBeFocused();
+		await page.keyboard.press('End');
+		await expect(second).toBeFocused();
+		await page.keyboard.press('ArrowDown');
+		await expect(first).toBeFocused();
+	});
+
+	test('dropdown menu: the arrow keys move along the menu, and within an open submenu', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		const menu = page.locator('nav.matter-menu--primary.opens-on-click');
+		const toggle = menu.getByRole('button', { name: /Services/ });
+
+		await toggle.focus();
+		await page.keyboard.press('ArrowRight');
+		await expect(menu.getByRole('link', { name: 'Contact' })).toBeFocused();
+		await page.keyboard.press('Home');
+		await expect(toggle).toBeFocused();
+
+		await page.keyboard.press('Enter');
+		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		await page.keyboard.press('Tab');
+		await expect(
+			menu.getByRole('link', { name: 'View all Services' })
+		).toBeFocused();
+		await page.keyboard.press('ArrowDown');
+		await expect(menu.getByRole('link', { name: 'Design' })).toBeFocused();
+		await page.keyboard.press('Escape');
+		await expect(toggle).toBeFocused();
+		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+	});
+
+	test('carousel: its buttons move it from the keyboard', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#highlights.is-initialised')).toBeVisible();
+
+		const index = () =>
+			page.evaluate(() => window.matter.carousel('highlights').index);
+
+		await page
+			.locator('#highlights')
+			.getByRole('button', { name: 'Next slide' })
+			.focus();
+		await page.keyboard.press('Enter');
+		await expect.poll(index).toBe(1);
+		await page.keyboard.press('Space');
+		await expect.poll(index).toBe(2);
+	});
 });
 
 test.describe('menus', () => {
@@ -356,6 +540,55 @@ test.describe('panel', () => {
 		await expect(page.locator('html')).not.toHaveClass(
 			/\bhas-panel-open\b/
 		);
+	});
+
+	test('a drill-down submenu keeps focus while it is open', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+
+		// The panel moves focus in, to its first control, as it opens.
+		await expect(
+			panel.locator('.matter-menu__toggle').first()
+		).toBeFocused();
+		await page.keyboard.press('Enter');
+
+		const submenu = panel.locator(
+			'.has-submenu.is-open .matter-menu__submenu'
+		);
+
+		await expect(submenu).toBeVisible();
+		// Focus moves in once it has slid open.
+		const focusIn = () =>
+			submenu.evaluate((element) => {
+				const active = element.ownerDocument.activeElement;
+
+				return element.contains(active)
+					? 'in'
+					: `${active.tagName}.${active.className}`;
+			});
+
+		await expect.poll(focusIn).toBe('in');
+
+		for (let i = 0; i < 6; i++) {
+			await page.keyboard.press('Tab');
+			expect(await focusIn(), `Tab ${i + 1}`).toBe('in');
+		}
+	});
+
+	test('a change of hash closes the panel', async ({ page }) => {
+		await page.goto(kitchenSink.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		// As a link elsewhere on the page, or a script, does.
+		await page.evaluate(() => (window.location.hash = 'contact'));
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
 	});
 
 	test('closing with a submenu open returns focus to the toggle', async ({
@@ -544,5 +777,104 @@ test.describe('reduced motion', () => {
 		expect(duration.split(', ').every((value) => value === '0s')).toBe(
 			true
 		);
+	});
+});
+
+test.describe('collections: galleries, vertical tabs and posts displays', () => {
+	test.use({ viewport: DESKTOP });
+
+	let collectionsPage;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		const ids = await createPosts(requestUtils, [
+			'Matter post one',
+			'Matter post two',
+			'Matter post three',
+		]);
+
+		collectionsPage = await createPage(
+			requestUtils,
+			'Collections',
+			collections(ids)
+		);
+	});
+
+	test('they have no axe violations', async ({ page }) => {
+		await page.goto(collectionsPage.link);
+		await expect(
+			page.locator('.wp-block-matter-carousel:not(.is-initialised)')
+		).toHaveCount(0);
+		await expect(page.locator('#posts-accordion')).toContainText(
+			'Matter post one'
+		);
+
+		expect(await violations(page)).toEqual([]);
+	});
+
+	test('the lightbox opens from an image, moves with the arrow keys, and gives focus back', async ({
+		page,
+	}) => {
+		await page.goto(collectionsPage.link);
+
+		const opener = page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 1 of 3' });
+		const lightbox = page.locator('#photos + dialog, #photos dialog');
+		const image = lightbox.locator('.wp-block-matter-gallery__figure img');
+
+		await opener.focus();
+		await page.keyboard.press('Enter');
+		await expect(lightbox).toHaveAttribute('open', '');
+		await expect(image).toHaveAttribute('alt', 'Photo one');
+		expect(await violations(page)).toEqual([]);
+
+		await page.keyboard.press('ArrowRight');
+		await expect(image).toHaveAttribute('alt', 'Photo two');
+		await page.keyboard.press('ArrowLeft');
+		await expect(image).toHaveAttribute('alt', 'Photo one');
+
+		await page.keyboard.press('Escape');
+		await expect(lightbox).not.toHaveAttribute('open', '');
+		await expect(opener).toBeFocused();
+	});
+
+	test('"View all" without a lightbox shows the rest and moves focus to them', async ({
+		page,
+	}) => {
+		await page.goto(collectionsPage.link);
+
+		const gallery = page.locator('#more-photos');
+
+		await expect(gallery.getByAltText('Hidden photo')).toBeHidden();
+		await gallery.getByRole('button', { name: /View all/ }).focus();
+		await page.keyboard.press('Enter');
+		await expect(gallery.getByAltText('Hidden photo')).toBeVisible();
+		expect(
+			await gallery.evaluate((element) => {
+				const figure = element
+					.querySelector('img[alt="Hidden photo"]')
+					.closest('figure');
+
+				return figure.contains(element.ownerDocument.activeElement);
+			})
+		).toBe(true);
+	});
+
+	test('vertical tabs move with the up and down arrows; posts tabs with left and right', async ({
+		page,
+	}) => {
+		await page.goto(collectionsPage.link);
+
+		await page.getByRole('tab', { name: 'Plan' }).focus();
+		await page.keyboard.press('ArrowDown');
+		await expect(page.getByRole('tab', { name: 'Build' })).toBeFocused();
+
+		const posts = page.locator('#posts-tabs').getByRole('tab');
+
+		await expect(posts).toHaveCount(3);
+		await posts.first().focus();
+		await page.keyboard.press('ArrowRight');
+		await expect(posts.nth(1)).toBeFocused();
+		await expect(posts.nth(1)).toHaveAttribute('aria-selected', 'true');
 	});
 });

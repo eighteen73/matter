@@ -1,7 +1,7 @@
 <!-- wp:matter-test/section {"scheme":"brand"} -->
 <!-- wp:matter/slot {"name":"content"} -->
 <!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Kitchen sink</h1><!-- /wp:heading -->
-<!-- wp:paragraph --><p><a href="#in-tab">Open the modal in tab two</a> · <a href="#in-collapsible">Open the modal in the collapsible</a></p><!-- /wp:paragraph -->
+<!-- wp:paragraph --><p><a href="#in-tab">Open the modal in tab two</a> · <a href="#in-collapsible">Open the modal in the collapsible</a> · <a href="#in-accordion">Open the modal in the accordion</a></p><!-- /wp:paragraph -->
 <!-- /wp:matter/slot -->
 <!-- wp:matter/slot {"name":"media"} --><!-- wp:image --><figure class="wp-block-image"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Placeholder"/></figure><!-- /wp:image --><!-- /wp:matter/slot -->
 <!-- /wp:matter-test/section -->
@@ -24,7 +24,12 @@
 
 <!-- wp:matter/accordion {"anchor":"faq","faqSchema":true} -->
 <!-- wp:matter/accordion-item {"title":"First question"} --><!-- wp:paragraph --><p>First answer</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item -->
-<!-- wp:matter/accordion-item {"title":"Second question"} --><!-- wp:paragraph --><p>Second answer</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item -->
+<!-- wp:matter/accordion-item {"title":"Second question"} --><!-- wp:paragraph --><p>Second answer</p><!-- /wp:paragraph -->
+<!-- wp:matter/modal {"overlayId":"in-accordion","label":"Modal in an accordion"} -->
+<!-- wp:matter/slot {"name":"trigger"} /-->
+<!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Inside the accordion's modal</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->
+<!-- /wp:matter/modal -->
+<!-- /wp:matter/accordion-item -->
 <!-- /wp:matter/accordion -->
 
 <!-- wp:matter/collapsible {"overlayId":"more"} -->
