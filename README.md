@@ -27,6 +27,8 @@ composer require eighteen73/matter:^1.0
 
 A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-autoloader.php`) loads it.
 
+**Unreleased versions.** The `release` branch is built (`build/` and `vendor/` are committed), so `composer require eighteen73/matter:dev-release` installs the latest built code before it's tagged. Other branches, `next` included, aren't built: a clone or `dev-next` needs `npm install && npm run build` (Node 26) before WordPress can use it.
+
 ### Upgrading from 0.x
 
 1.0 is not compatible with 0.x content: blocks were merged, renamed or removed. Keep existing sites on 0.x (`"eighteen73/matter": "^0.7"` does not resolve to 1.0).
@@ -119,6 +121,16 @@ A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, 
 - **Inserting:** a carousel's picker offers posts, products and terms, which replace the carousel block with the query. In the post editor the three posts variations, "Products carousel" and "Terms carousel" replace the plain Query Loop, Product Collection (and WooCommerce's other collections) and Terms Query in the inserter; the Site Editor keeps those for templates.
 - Wherever the theme allows `matter/carousel`, `matter/accordion` or `matter/tabs` (in its allowed blocks, or a section slot's `allowedBlocks`), Matter also allows the query blocks they use (for a carousel, `core/query`, `woocommerce/product-collection` and `core/terms-query`), so they can be inserted, duplicated, pasted and moved. The theme's lists don't name them.
 - If Matter's handling ever stops, the live site shows the query as a normal list. Saving the page in the editor then drops `matterDisplay`, and it stays a list.
+
+**Writing one by hand** (a pattern, a template or test content): this is a products carousel as the editor saves it. WooCommerce replaces a Product Collection's whole `query` with what's saved, so keep every key; change `perPage`, the order, `taxQuery` or `woocommerceHandPickedProducts` to choose the products, and `matterDisplay` for the variant (`style`), `scheme` and `label`.
+
+```html
+<!-- wp:woocommerce/product-collection {"query":{"perPage":9,"pages":0,"offset":0,"postType":"product","order":"desc","orderBy":"date","search":"","exclude":[],"inherit":false,"taxQuery":{},"isProductCollectionBlock":true,"featured":false,"woocommerceOnSale":false,"woocommerceAttributes":[],"woocommerceHandPickedProducts":[],"filterable":false,"relatedBy":{"categories":true,"tags":true}},"tagName":"div","collection":"matter/product-collection/carousel","hideControls":["inherit","filterable","offset","max-pages-to-show","default-order","related-by"],"displayLayout":{"type":"list"},"dimensions":{"widthType":"fill"},"queryContextIncludes":["collection"],"forcePageReload":false,"matterDisplay":{"type":"carousel","style":"cards","label":"Our favourites"}} -->
+<div class="wp-block-woocommerce-product-collection"><!-- wp:woocommerce/product-template --><!-- wp:matter/loop-item /--><!-- /wp:woocommerce/product-template --></div>
+<!-- /wp:woocommerce/product-collection -->
+```
+
+A posts carousel, accordion or tabs is a `core/query` with the variation's `namespace`, its `matterDisplay`, and a `core/post-template` holding what [`ITEMS`](src/query-display/templates.js) lists for that type (a carousel: `matter/loop-item`; an accordion: `matter/accordion-item` around one; tabs: `matter/tab` around one).
 
 ## Sections
 
@@ -226,9 +238,13 @@ Define schemes in the theme's `theme.json`. Every scheme sets the same roles, us
 | `border-strong` | Input borders and anything that must be seen (3:1 contrast). |
 | `highlight` | Small accents: eyebrows, icons, active indicators. |
 
+Slugs and the number of schemes are the theme's choice. The default is `default` if there is one, otherwise the first (`matter_default_scheme`); editors see each slug title-cased unless `matter_scheme_labels` names it.
+
 Matter outputs:
 - `:root` with the default scheme;
-- `.has-scheme-{slug}` rules mapping each role to `--scheme--{role}` (e.g. `--scheme--text-heading`).
+- `.has-scheme-{slug}` rules mapping each role to `--scheme--{role}` (e.g. `--scheme--text-heading`), each read from WordPress's variable for it, `--wp--custom--scheme--{slug}--{role}`.
+
+A class can't change with the screen width, so for a wrapper whose scheme does (a header bar that's one scheme on phones and another from `lg`), set each `--scheme--{role}` variable from `--wp--custom--scheme--{slug}--{role}` in the theme's CSS inside a media query, as `.has-scheme-{slug}` does. Both names are part of the [theme contract](#theme-contract). (Pulsar has a `scheme()` mixin for this.)
 
 Matter's own default styles use only `--scheme--background`, `--scheme--text` and `--scheme--border`, each with a fallback, so Matter works on a theme without schemes.
 
@@ -642,7 +658,7 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries (Query Loop, Product Collection, and `core/terms-query` as a carousel), the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
 - **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{namespace}/loop-item-{post_type}`, `{namespace}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones; for terms `{namespace}/loop-item-term-{taxonomy}`, `{namespace}/loop-item-term` and their `-carousel` ones; in the order under [Loop items](#loop-items)).
 - **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
-- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track (`.wp-block-term-template > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list), state classes (`is-*`, `has-*`), the `--scheme--*` roles and the variables under [CSS variables](#css-variables).
+- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track (`.wp-block-term-template > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list), state classes (`is-*`, `has-*`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 
 **The default skin** (everything in `:where()`) is minimal: what a block needs to be usable and accessible on a theme with no styles for it (unstyled buttons, icons, the scheme's background and text colours, a backdrop, spacing, motion). It isn't a design: no radii, shadows, font weights or decorative borders. Themes are expected to style every Matter block they use (Pulsar ships base styles for each), and not to rely on the skin.
@@ -656,7 +672,7 @@ Node 26 (the LTS, in `.nvmrc`) and npm 11.
 ```bash
 npm install
 npm run start   # watch
-npm run build   # production build
+npm run build   # production build (empties build/ first)
 npm run lint:js && npm run lint:css && composer run lint
 ```
 

@@ -38,6 +38,7 @@
 	"scripts": {
 		"postinstall": "composer install -o",
 		"start": "wp-scripts start --webpack-copy-php --blocks-manifest --experimental-modules",
+		"prebuild": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
 		"build": "wp-scripts build --webpack-copy-php --blocks-manifest --experimental-modules",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
