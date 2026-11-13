@@ -184,7 +184,7 @@
 	width: 2.5rem;
 }
 
-:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand):disabled {
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand):where(:disabled) {
 	cursor: default;
 	opacity: 0.4;
 }

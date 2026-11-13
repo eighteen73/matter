@@ -63,13 +63,6 @@ const lastStates = new Map();
 const isDialog = (id) => elements.get(id)?.tagName === 'DIALOG';
 
 /**
- * Resolve an overlay ID from an action argument or the current context.
- * Directive-bound actions receive an event; programmatic calls pass an ID.
- *
- * @param {string|Event} idOrEvent Overlay ID or event.
- * @return {string} Overlay ID.
- */
-/**
  * The overlay an action targets: an ID, an element (the overlay, or anything
  * in it), or, from a directive, the overlay in context.
  *

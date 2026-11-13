@@ -13,6 +13,21 @@ const {
 const DESKTOP = { width: 1280, height: 900 };
 const MOBILE = { width: 390, height: 800 };
 
+/**
+ * The page's axe violations (WCAG 2.2 AA), with the elements involved.
+ *
+ * @param {Object} page Page.
+ * @return {Promise<string[]>} Violations.
+ */
+const violations = async (page) =>
+	(
+		await new AxeBuilder({ page })
+			.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+			.analyze()
+	).violations.map(
+		({ id, nodes }) => `${id}: ${nodes.map((n) => n.target).join(' | ')}`
+	);
+
 let kitchenSink;
 let ageGate;
 
@@ -44,16 +59,7 @@ test.describe('accessibility', () => {
 			.locator('.wp-block-matter-carousel.is-initialised')
 			.waitFor();
 
-		const results = await new AxeBuilder({ page })
-			.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-			.analyze();
-
-		expect(
-			results.violations.map(
-				({ id, nodes }) =>
-					`${id}: ${nodes.map((n) => n.target).join(' | ')}`
-			)
-		).toEqual([]);
+		expect(await violations(page)).toEqual([]);
 	});
 
 	test('opening a dialog keeps axe happy', async ({ page }) => {
@@ -65,11 +71,7 @@ test.describe('accessibility', () => {
 			page.getByRole('dialog', { name: 'Modal in a tab' })
 		).toBeVisible();
 
-		const results = await new AxeBuilder({ page })
-			.withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-			.analyze();
-
-		expect(results.violations.map(({ id }) => id)).toEqual([]);
+		expect(await violations(page)).toEqual([]);
 	});
 });
 

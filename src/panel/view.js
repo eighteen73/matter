@@ -179,6 +179,10 @@ const { state, actions } = store(
 			init() {
 				const { id, query, label } = getContext();
 				const { ref } = getElement();
+				// Listeners removed with the block (e.g. by client-side
+				// navigation).
+				const listeners = new window.AbortController();
+				const { signal } = listeners;
 
 				if (query) {
 					const mediaQuery = window.matchMedia(query);
@@ -198,7 +202,8 @@ const { state, actions } = store(
 							if (!mediaQuery.matches) {
 								state.panels[id].isOpen = false;
 							}
-						})
+						}),
+						{ signal }
 					);
 				}
 
@@ -220,20 +225,26 @@ const { state, actions } = store(
 					}
 				});
 
-				ref.addEventListener('click', (event) => {
-					const link = event.target.closest?.('a[href]');
-					const newTab =
-						event.metaKey ||
-						event.ctrlKey ||
-						event.shiftKey ||
-						link?.target === '_blank';
+				ref.addEventListener(
+					'click',
+					(event) => {
+						const link = event.target.closest?.('a[href]');
+						const newTab =
+							event.metaKey ||
+							event.ctrlKey ||
+							event.shiftKey ||
+							link?.target === '_blank';
 
-					if (link && ref.contains(link) && !newTab) {
-						closeOnNavigate();
-					}
+						if (link && ref.contains(link) && !newTab) {
+							closeOnNavigate();
+						}
+					},
+					{ signal }
+				);
+
+				window.addEventListener('hashchange', closeOnNavigate, {
+					signal,
 				});
-
-				window.addEventListener('hashchange', closeOnNavigate);
 
 				registerInstance('panel', ref, {
 					element: ref,
@@ -249,6 +260,11 @@ const { state, actions } = store(
 					close: () => setOpen(false),
 					toggle: () => setOpen(!state.panels[id]?.isOpen),
 				});
+
+				return () => {
+					listeners.abort();
+					queries.delete(id);
+				};
 			},
 			sync() {
 				const { id } = getContext();
