@@ -99,6 +99,41 @@ test.describe('sections', () => {
 	});
 });
 
+test.describe('slot labels', () => {
+	test('the list view names a slot from its name, in sentence case', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		const labels = await page.evaluate(() => {
+			const type = window.wp.blocks.getBlockType('matter/slot');
+
+			return ['content', 'media-end', 'side_note', ''].map((name) =>
+				window.wp.blocks.__experimentalGetBlockLabel(type, { name })
+			);
+		});
+
+		expect(labels).toEqual(['Content', 'Media end', 'Side note', 'Slot']);
+
+		// The breadcrumbs use the same label as the list view.
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [section] = select('core/block-editor').getBlocks();
+
+			dispatch('core/block-editor').selectBlock(
+				section.innerBlocks[0].clientId
+			);
+		});
+
+		await expect(
+			page.getByRole('list', { name: 'Block breadcrumb' })
+		).toContainText('Content');
+	});
+});
+
 test.describe('slot alignments', () => {
 	test("a block in a slot offers the slot's alignments", async ({
 		admin,

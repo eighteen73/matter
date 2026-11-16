@@ -7,7 +7,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 ### Added
 
 - **Sections:** layout blocks declared in `block.json` (`supports.matter.slots`), with locked `matter/slot` content areas, a shared editor, a default renderer and `Matter\slots()` for custom `render.php`. Whole-block links (`supports.matter.link`), e.g. for cards, replace pulsar-extensions' group link.
-  - Slots are matched by name, so they can be added, reordered or removed in `block.json`; a renamed slot lists its old names (`previously`). Content in a slot that's no longer declared isn't output, and the editor keeps it, marked, for the client to move or remove.
+  - Slots are matched by name, so they can be added, reordered or removed in `block.json`; a renamed slot lists its old names (`previously`). Content in a slot that's no longer declared isn't output, and the editor keeps it, marked, for the client to move or remove. The list view and breadcrumbs name a slot in sentence case (`media-end` is "Media end"), with its own icon.
   - A slot's `alignments` are offered to the blocks in it (e.g. wide and full, for a carousel wider than the text around it). Carousels, galleries, tabs and accordions can be aligned wide or full.
 - **Colour schemes:** `supports.matter.scheme`, a swatch control, and CSS generated from the theme's `custom.scheme`.
 - **Variants:** theme-defined block presets via `matter_variants`, shown as block styles.
