@@ -19,7 +19,8 @@
 					"allowedBlocks": [
 						"core/heading",
 						"core/paragraph",
-						"core/image"
+						"core/image",
+						"matter/carousel"
 					],
 					"template": [
 						[

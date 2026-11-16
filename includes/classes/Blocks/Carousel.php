@@ -218,20 +218,23 @@ class Carousel {
 	/**
 	 * Slide types offered when a carousel is added, beyond the built-in
 	 * images, posts and products. Each may set the variant (block style) the
-	 * carousel starts with; built-in types can be given one too.
+	 * carousel starts with; built-in types can be given one too. A type with
+	 * `within` (block names) is only offered in, and allowed in, carousels
+	 * inside one of those blocks.
 	 *
 	 *     add_filter( 'matter_carousel_slides', fn() => [
-	 *         'pulsar/card' => [ 'label' => 'Cards', 'variant' => 'cards' ],
-	 *         'core/image'  => [ 'variant' => 'slides' ],
+	 *         'pulsar/card'    => [ 'label' => 'Cards', 'variant' => 'cards' ],
+	 *         'pulsar/feature' => [ 'label' => 'Features', 'within' => [ 'pulsar/hero' ] ],
+	 *         'core/image'     => [ 'variant' => 'slides' ],
 	 *     ] );
 	 *
-	 * @return array<string, array{label: string, variant: string}> Keyed by block name.
+	 * @return array<string, array{label: string, variant: string, within: string[]}> Keyed by block name.
 	 */
 	public static function slide_types(): array {
 		/**
 		 * Filters the carousel's slide types.
 		 *
-		 * @param array $types Block name => label, or [ 'label' => …, 'variant' => … ].
+		 * @param array $types Block name => label, or [ 'label' => …, 'variant' => …, 'within' => [ … ] ].
 		 */
 		$types = (array) apply_filters( 'matter_carousel_slides', [] );
 		$clean = [];
@@ -241,6 +244,7 @@ class Carousel {
 			$clean[ $name ] = [
 				'label'   => (string) ( $type['label'] ?? '' ),
 				'variant' => (string) ( $type['variant'] ?? '' ),
+				'within'  => array_values( array_filter( array_map( 'strval', (array) ( $type['within'] ?? [] ) ) ) ),
 			];
 		}
 

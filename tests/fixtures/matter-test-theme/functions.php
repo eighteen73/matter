@@ -29,3 +29,31 @@ add_filter(
 		]
 	)
 );
+
+// A slide type limited to carousels in the test section, switched on by the
+// browser test that checks it (an option, so other tests' carousels keep no
+// slide types).
+add_action(
+	'init',
+	fn() => register_setting(
+		'general',
+		'matter_test_scoped_slides',
+		[
+			'type'         => 'boolean',
+			'default'      => false,
+			'show_in_rest' => true,
+		]
+	)
+);
+
+add_filter(
+	'matter_carousel_slides',
+	fn( $types ) => get_option( 'matter_test_scoped_slides' )
+		? $types + [
+			'core/paragraph' => [
+				'label'  => 'Notes',
+				'within' => [ 'matter-test/section' ],
+			],
+		]
+		: $types
+);

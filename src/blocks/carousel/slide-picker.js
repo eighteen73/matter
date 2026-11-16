@@ -41,11 +41,27 @@ import { useSwapBlock } from '../../query-display/use-swap-block';
 const SLIDE_COUNT = 3;
 
 /**
- * The theme's slide types (block name => { label, variant }).
+ * The theme's slide types (block name => { label, variant, within }).
  *
  * @return {Object} Slide types.
  */
 export const themeSlideTypes = () => window.matterEditor?.carouselSlides ?? {};
+
+/**
+ * The slide types for one carousel: those without `within`, and those whose
+ * `within` names a block the carousel is inside.
+ *
+ * @param {string[]} ancestors Names of the blocks the carousel is inside.
+ * @return {Object} Slide types.
+ */
+export const slideTypesFor = (ancestors = []) =>
+	Object.fromEntries(
+		Object.entries(themeSlideTypes()).filter(
+			([, type]) =>
+				!type.within?.length ||
+				type.within.some((name) => ancestors.includes(name))
+		)
+	);
 
 // The query blocks that become the carousel.
 const TEMPLATES = {
@@ -58,10 +74,10 @@ const TEMPLATES = {
  * Picker options: images, the theme's types, posts, products (with
  * WooCommerce), then terms.
  *
+ * @param {Object} theme The carousel's slide types (slideTypesFor()).
  * @return {Array} Variations for the picker.
  */
-function slideOptions() {
-	const theme = themeSlideTypes();
+function slideOptions(theme) {
 	const custom = Object.keys(theme)
 		.filter(
 			(name) =>
@@ -109,11 +125,17 @@ function slideOptions() {
 /**
  * @param {Object}   props
  * @param {string}   props.clientId      Carousel client ID.
+ * @param {Object}   props.types         The carousel's slide types.
  * @param {Function} props.setAttributes Carousel attribute setter.
  * @param {Function} props.onImages      Called with chosen images.
  * @return {Element} Picker.
  */
-export default function SlidePicker({ clientId, setAttributes, onImages }) {
+export default function SlidePicker({
+	clientId,
+	types,
+	setAttributes,
+	onImages,
+}) {
 	const [isChoosingImages, setIsChoosingImages] = useState(false);
 	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
 	const swapBlock = useSwapBlock();
@@ -139,7 +161,7 @@ export default function SlidePicker({ clientId, setAttributes, onImages }) {
 	}
 
 	const choose = ({ name }) => {
-		const variant = themeSlideTypes()[name]?.variant;
+		const variant = types[name]?.variant;
 
 		// Posts, products and terms: the query block is the carousel, so it
 		// takes this block's place.
@@ -171,7 +193,7 @@ export default function SlidePicker({ clientId, setAttributes, onImages }) {
 			icon="slides"
 			label={__('Carousel', 'matter')}
 			instructions={__('What will the slides be?', 'matter')}
-			variations={slideOptions()}
+			variations={slideOptions(types)}
 			onSelect={choose}
 		/>
 	);

@@ -38,17 +38,25 @@ import {
 	GalleryMediaUpload,
 	useGalleryMedia,
 } from '../../components/gallery-media';
-import SlidePicker, { themeSlideTypes } from './slide-picker';
+import SlidePicker, { slideTypesFor, themeSlideTypes } from './slide-picker';
 import { QUERY_BLOCKS } from '../../query-display/templates';
 
-// With theme slide types, slides are limited to them and images. Posts and
-// products carousels are query blocks of their own.
-const allowedSlides = () => {
-	const types = Object.keys(themeSlideTypes()).filter(
-		(name) => !QUERY_BLOCKS.includes(name)
-	);
+// With theme slide types, slides are limited to images and the types this
+// carousel has (slideTypesFor(): a type with `within` only inside those
+// blocks). Posts and products carousels are query blocks of their own.
+const allowedSlides = (types) => {
+	if (!Object.keys(themeSlideTypes()).length) {
+		return undefined;
+	}
 
-	return types.length ? [...new Set(['core/image', ...types])] : undefined;
+	return [
+		...new Set([
+			'core/image',
+			...Object.keys(types).filter(
+				(name) => !QUERY_BLOCKS.includes(name)
+			),
+		]),
+	];
 };
 
 /**
@@ -102,7 +110,20 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			.join(' '),
 		style: ratioStyle,
 	});
-	const allowedBlocks = useMemo(allowedSlides, []);
+	// The blocks it's inside, for slide types limited to some (`within`).
+	const ancestors = useSelect(
+		(select) => {
+			const { getBlockParents, getBlockName } = select(blockEditorStore);
+
+			return getBlockParents(clientId).map(getBlockName).join(',');
+		},
+		[clientId]
+	);
+	const types = useMemo(
+		() => slideTypesFor(ancestors ? ancestors.split(',') : []),
+		[ancestors]
+	);
+	const allowedBlocks = useMemo(() => allowedSlides(types), [types]);
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-carousel__track' },
 		{
@@ -118,6 +139,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			<div {...blockProps}>
 				<SlidePicker
 					clientId={clientId}
+					types={types}
 					setAttributes={setAttributes}
 					onImages={media.update}
 				/>

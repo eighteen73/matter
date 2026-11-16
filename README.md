@@ -306,11 +306,14 @@ State for theme CSS, on the carousel: `--carousel-progress` (0–1), `--carousel
 
 Carousel slide types: a new carousel offers images, posts and products (with WooCommerce). `matter_carousel_slides` adds the theme's own slide blocks, and sets the variant each type starts as. With slide types set, a carousel's slides are limited to them, images and queries. A slide block needs `matter/carousel` in its block.json `parent` if it has one.
 
+A type meant for one section's carousel (a hero's features, say) lists that section in `within`: it's offered in, and allowed in, only carousels inside those blocks, so other carousels don't offer it.
+
 ```php
 add_filter( 'matter_carousel_slides', fn() => [
-	'pulsar/card' => [ 'label' => 'Cards', 'variant' => 'cards' ],
-	'core/image'  => [ 'variant' => 'slides' ],
-	'core/query'  => [ 'variant' => 'cards' ],
+	'pulsar/card'    => [ 'label' => 'Cards', 'variant' => 'cards' ],
+	'pulsar/feature' => [ 'label' => 'Features', 'within' => [ 'pulsar/hero' ] ],
+	'core/image'     => [ 'variant' => 'slides' ],
+	'core/query'     => [ 'variant' => 'cards' ],
 ] );
 ```
 

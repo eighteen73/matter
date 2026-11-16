@@ -146,6 +146,103 @@ test.describe('slot alignments', () => {
 	});
 });
 
+test.describe('carousel slide types', () => {
+	test.beforeAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({
+			matter_test_scoped_slides: true,
+		});
+	});
+
+	test.afterAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({
+			matter_test_scoped_slides: false,
+		});
+	});
+
+	test('a slide type limited to a section is only offered in carousels inside it', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		// One carousel in the section's content slot, one outside it.
+		await page.evaluate(() => {
+			const { createBlock } = window.wp.blocks;
+			const { select, dispatch } = window.wp.data;
+			const [section] = select('core/block-editor').getBlocks();
+			const content = section.innerBlocks.find(
+				(slot) => slot.attributes.name === 'content'
+			);
+
+			dispatch('core/block-editor').insertBlock(
+				createBlock('matter/carousel'),
+				undefined,
+				content.clientId
+			);
+			dispatch('core/block-editor').insertBlock(
+				createBlock('matter/carousel')
+			);
+		});
+
+		const pickers = editor.canvas.locator(
+			'.wp-block-matter-carousel .block-editor-block-variation-picker'
+		);
+
+		await expect(pickers).toHaveCount(2);
+		await expect(pickers.first()).toContainText('Notes');
+		await expect(pickers.last()).not.toContainText('Notes');
+
+		// Slides allowed, in carousels that have a slide (an empty one shows
+		// the picker, and its slides' rules apply once it has slides).
+		await page.evaluate(() => {
+			const { createBlock } = window.wp.blocks;
+			const { select, dispatch } = window.wp.data;
+			const [section] = select('core/block-editor').getBlocks();
+			const content = section.innerBlocks.find(
+				(slot) => slot.attributes.name === 'content'
+			);
+			const carousel = () =>
+				createBlock('matter/carousel', { className: 'has-slide' }, [
+					createBlock('core/image', {
+						url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=',
+						alt: 'Slide',
+					}),
+				]);
+
+			dispatch('core/block-editor').insertBlock(
+				carousel(),
+				undefined,
+				content.clientId
+			);
+			dispatch('core/block-editor').insertBlock(carousel());
+		});
+
+		const allowed = () =>
+			page.evaluate(() => {
+				const editorStore = window.wp.data.select('core/block-editor');
+
+				return editorStore
+					.getClientIdsWithDescendants()
+					.filter(
+						(id) =>
+							editorStore.getBlockAttributes(id)?.className ===
+							'has-slide'
+					)
+					.map((id) => [
+						editorStore.canInsertBlockType('core/paragraph', id),
+						editorStore.canInsertBlockType('core/image', id),
+					]);
+			});
+
+		await expect.poll(allowed).toEqual([
+			[true, true],
+			[false, true],
+		]);
+	});
+});
+
 test.describe('terms carousel', () => {
 	test("previews each term's loop item, and opening it isn't an edit", async ({
 		admin,
