@@ -55,8 +55,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Start wp-env
-        run: npm run env:start
+      - name: Start wp-env's test site
+        run: npm run env:start:tests
 
       - name: Run PHPUnit
         run: npm run test:php

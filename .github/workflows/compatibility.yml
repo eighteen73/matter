@@ -36,23 +36,23 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Merged over .wp-env.json for this run only.
+      # Merged over the test site's .wp-env.tests.json for this run only.
       - name: Use WordPress nightly and the latest WooCommerce
         run: |
-          cat > .wp-env.override.json <<'JSON'
+          cat > .wp-env.tests.override.json <<'JSON'
           {
             "core": "https://wordpress.org/nightly-builds/wordpress-latest.zip",
             "plugins": [ "https://downloads.wordpress.org/plugin/woocommerce.zip" ]
           }
           JSON
 
-      - name: Start wp-env
-        run: npm run env:start
+      - name: Start wp-env's test site
+        run: npm run env:start:tests
 
       - name: Versions
         run: |
-          npx wp-env run cli wp core version
-          npx wp-env run cli wp plugin get woocommerce --field=version
+          npx wp-env --config=.wp-env.tests.json run cli wp core version
+          npx wp-env --config=.wp-env.tests.json run cli wp plugin get woocommerce --field=version
 
       - name: Run PHPUnit
         run: npm run test:php

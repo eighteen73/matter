@@ -190,7 +190,8 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 - `align: "full"`: full-width band (`alignfull`).
 - `tagName`: element for the default renderer.
 - `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable (they get `position: relative; z-index: 2` at zero specificity: a theme positioning its own, such as a wishlist button in a corner, keeps a `z-index` above 1). Without a heading, a visually hidden "Read more" link is added (`matter_link_label` filter). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
-- `slots`: per slot, `allowedBlocks`, `template`, `templateLock` and `previously` (old names, for a renamed slot).
+- `slots`: per slot, `allowedBlocks`, `template`, `templateLock`, `previously` (old names, for a renamed slot) and `alignments`.
+  - `alignments` lists the alignments blocks in the slot offer on their toolbar, for blocks that support them, e.g. `[ "wide", "full" ]` (a carousel, gallery, image or video wider than the text around it). Without it they offer left, centre and right. The theme styles them in the slot (`.wp-block-{section}__{slot} > .alignwide`); a slot isn't a WordPress layout, so core's alignment styles don't apply.
 
 **Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
 - **Add or reorder** slots anywhere in `block.json`. Existing instances get a new slot (filled from its `template`) the next time they're edited.
@@ -678,8 +679,12 @@ npm run lint:js && npm run lint:css && composer run lint
 
 **Tests** run against [wp-env](https://www.npmjs.com/package/@wordpress/env) (Docker): WordPress, WooCommerce, Matter as a must-use plugin and a small fixture theme (`tests/fixtures/matter-test-theme`). They use `build/`, so build first.
 
+There are two sites, each with its own containers and database: a development site to look around (`.wp-env.json`, http://localhost:8888) and a test site (`.wp-env.tests.json`, http://localhost:8889) that PHPUnit reinstalls and the browser tests fill. Keep the two configs alike apart from their ports. To change the test site for a run (another WordPress, say), put the changes in `.wp-env.tests.override.json` (git-ignored).
+
 ```bash
-npm run env:start    # start wp-env (http://localhost:8888, tests on 8889)
+npm run env:start          # the development site
+npm run env:start:tests    # the test site (the browser tests start it if it isn't running)
+npm run env:stop           # both
 npm run test:unit    # JavaScript unit tests
 npm run test:php     # PHPUnit, including contract snapshots (or composer test)
 npm run test:php:update   # PHPUnit, writing the contract snapshots afresh

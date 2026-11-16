@@ -12,9 +12,14 @@
 			"align": "full",
 			"slots": {
 				"content": {
+					"alignments": [
+						"wide",
+						"full"
+					],
 					"allowedBlocks": [
 						"core/heading",
-						"core/paragraph"
+						"core/paragraph",
+						"core/image"
 					],
 					"template": [
 						[

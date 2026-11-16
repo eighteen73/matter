@@ -99,6 +99,53 @@ test.describe('sections', () => {
 	});
 });
 
+test.describe('slot alignments', () => {
+	test("a block in a slot offers the slot's alignments", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		const imageId = await page.evaluate(() => {
+			const { createBlock } = window.wp.blocks;
+			const { select, dispatch } = window.wp.data;
+			const editorStore = select('core/block-editor');
+			const [section] = editorStore.getBlocks();
+			const content = section.innerBlocks.find(
+				(slot) => slot.attributes.name === 'content'
+			);
+			const image = createBlock('core/image', {
+				url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=',
+				alt: 'Aligned',
+			});
+
+			dispatch('core/block-editor').insertBlock(
+				image,
+				undefined,
+				content.clientId
+			);
+
+			return image.clientId;
+		});
+
+		await page.evaluate(
+			(id) =>
+				window.wp.data.dispatch('core/block-editor').selectBlock(id),
+			imageId
+		);
+		await page
+			.getByRole('toolbar', { name: 'Block tools' })
+			.getByRole('button', { name: 'Align' })
+			.click();
+
+		const options = page.getByRole('menuitemradio');
+
+		await expect(options).toHaveText([/None/, /Wide width/, /Full width/]);
+	});
+});
+
 test.describe('terms carousel', () => {
 	test("previews each term's loop item, and opening it isn't an edit", async ({
 		admin,

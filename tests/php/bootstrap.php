@@ -1,6 +1,7 @@
 <?php
 /**
- * PHPUnit bootstrap, run inside wp-env's tests container:
+ * PHPUnit bootstrap, run in the cli container of wp-env's test site
+ * (.wp-env.tests.json, its own database, which the test suite reinstalls):
  *
  *     npm run test:php
  *

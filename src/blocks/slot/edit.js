@@ -11,6 +11,7 @@ import {
 } from '@wordpress/block-editor';
 import { Button } from '@wordpress/components';
 import { useDispatch, useRegistry, useSelect } from '@wordpress/data';
+import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -21,6 +22,10 @@ import { __ } from '@wordpress/i18n';
  * Only locked slots (`templateLock`) keep their template in step: an
  * unlocked slot is filled from its template when it's created (useSlots), and
  * stays empty if the client empties it.
+ *
+ * A slot's `alignments` (e.g. [ "wide", "full" ]) are the alignments its
+ * blocks offer in the toolbar, for blocks that support them; the theme styles
+ * them in the slot. Without it, blocks in a slot offer left, centre and right.
  *
  * A slot that's no longer declared (or a second one with the same name) is
  * orphaned: the front end doesn't output it, and the editor says so, so the
@@ -98,7 +103,23 @@ export default function Edit({ attributes: { name }, clientId }) {
 			]
 		: config.allowedBlocks;
 
+	// A copy: the editor adds "none" to the list it's given.
+	const alignments = Array.isArray(config.alignments)
+		? config.alignments.join(',')
+		: null;
+	const layout = useMemo(
+		() =>
+			alignments === null
+				? undefined
+				: {
+						type: 'default',
+						alignments: alignments ? alignments.split(',') : [],
+					},
+		[alignments]
+	);
+
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
+		layout,
 		// Nothing new goes into an orphaned slot; its content can be moved out.
 		allowedBlocks: isOrphaned ? [] : allowedBlocks,
 		template: isLocked ? config.template : undefined,

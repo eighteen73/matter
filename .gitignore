@@ -40,6 +40,7 @@ tsconfig.tsbuildinfo
 
 # wp-env config
 .wp-env.override.json
+.wp-env.tests.override.json
 
 # Unit tests
 tmp/
