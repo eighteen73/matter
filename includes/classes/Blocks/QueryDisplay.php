@@ -81,10 +81,10 @@ final class QueryDisplay {
 	];
 
 	/**
-	 * Types of the displayed queries currently rendering, by block object ID
-	 * (innermost last).
+	 * The displayed queries currently rendering, by block object ID
+	 * (innermost last): their type and variant.
 	 *
-	 * @var array<int, string>
+	 * @var array<int, array{type: string, style: string}>
 	 */
 	private static array $rendering = [];
 
@@ -222,8 +222,8 @@ final class QueryDisplay {
 	}
 
 	/**
-	 * A displayed query's first child is about to render: note its type, so
-	 * loop items inside know which block they're in. Keyed on the query's
+	 * A displayed query's first child is about to render: note its type and
+	 * variant, so loop items inside know which block they're in. Keyed on the query's
 	 * block object (like Instances), so it holds however the query renders.
 	 *
 	 * @param array         $parsed_block Parsed block about to render.
@@ -239,7 +239,10 @@ final class QueryDisplay {
 		$display = self::of( $parent_block->name, $parent_block->attributes );
 
 		if ( null !== $display ) {
-			self::$rendering[ spl_object_id( $parent_block ) ] = $display['type'];
+			self::$rendering[ spl_object_id( $parent_block ) ] = [
+				'type'  => $display['type'],
+				'style' => sanitize_key( (string) ( $parent_block->attributes[ self::ATTRIBUTE ]['style'] ?? '' ) ),
+			];
 		}
 
 		return $parsed_block;
@@ -251,12 +254,22 @@ final class QueryDisplay {
 	 * @return string Type (carousel, accordion or tabs), or empty outside one.
 	 */
 	public static function current(): string {
-		return self::$rendering ? (string) end( self::$rendering ) : '';
+		return self::$rendering ? end( self::$rendering )['type'] : '';
 	}
 
 	/**
-	 * Loop items get the type of the displayed query they're in, which picks
-	 * their pattern (Blocks\LoopItem).
+	 * The variant of the block the innermost displayed query rendering is
+	 * shown as.
+	 *
+	 * @return string Variant, or empty for the default or outside one.
+	 */
+	public static function current_style(): string {
+		return self::$rendering ? end( self::$rendering )['style'] : '';
+	}
+
+	/**
+	 * Loop items get the type and variant of the displayed query they're in,
+	 * which pick their pattern (Blocks\LoopItem).
 	 *
 	 * @param array $context      Block context.
 	 * @param array $parsed_block Parsed block.
@@ -264,8 +277,14 @@ final class QueryDisplay {
 	 */
 	public function loop_item_context( array $context, array $parsed_block ): array {
 		if ( 'matter/loop-item' === ( $parsed_block['blockName'] ?? '' ) && '' !== self::current() ) {
-			// As the editor's context: the query's display (here, its type).
-			$context['matter/display'] = [ 'type' => self::current() ];
+			// As the editor's context: the query's display (here, its type
+			// and variant).
+			$context['matter/display'] = array_filter(
+				[
+					'type'  => self::current(),
+					'style' => self::current_style(),
+				]
+			);
 		}
 
 		return $context;

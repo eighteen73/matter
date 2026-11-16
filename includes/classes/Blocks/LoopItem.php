@@ -18,6 +18,11 @@
  *   excerpt. Not the item's own design: the post's title is already the
  *   heading or tab.
  *
+ * In a block in a variant other than its default, a pattern for that variant
+ * comes before each block pattern: `loop-item-{post_type}-carousel-{variant}`
+ * before `loop-item-{post_type}-carousel`, `loop-item-carousel-{variant}`
+ * before `loop-item-carousel`.
+ *
  * Terms (in a Terms Query's term template) have their own patterns,
  * `{namespace}/loop-item-term-{taxonomy}` (e.g. `pulsar/loop-item-term-product_cat`),
  * then `{namespace}/loop-item-term`, and in a carousel the `-carousel` ones
@@ -80,10 +85,10 @@ final class LoopItem {
 	}
 
 	/**
-	 * `GET matter/v1/loop-items?ids[]=…&block=…`: rendered items by ID (in a
-	 * query shown as that block, if any), for the editor's previews; and
-	 * `GET matter/v1/loop-items/terms?ids[]=…&block=…` for terms (in a Terms
-	 * Query shown as a carousel, if any).
+	 * `GET matter/v1/loop-items?ids[]=…&block=…&variant=…`: rendered items by
+	 * ID (in a query shown as that block, in that variant, if any), for the
+	 * editor's previews; and `GET matter/v1/loop-items/terms?ids[]=…&block=…`
+	 * (and `variant`) for terms (in a Terms Query shown as a carousel, if any).
 	 *
 	 * @return void
 	 */
@@ -98,6 +103,12 @@ final class LoopItem {
 			'required' => true,
 		];
 
+		$variant = [
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_key',
+		];
+
 		register_rest_route(
 			'matter/v1',
 			'/loop-items',
@@ -106,12 +117,13 @@ final class LoopItem {
 				'callback'            => [ $this, 'previews' ],
 				'permission_callback' => fn() => current_user_can( 'edit_posts' ),
 				'args'                => [
-					'ids'   => $ids,
-					'block' => [
+					'ids'     => $ids,
+					'block'   => [
 						'type'    => 'string',
 						'default' => '',
 						'enum'    => array_merge( [ '' ], array_keys( QueryDisplay::TYPES ) ),
 					],
+					'variant' => $variant,
 				],
 			]
 		);
@@ -124,12 +136,13 @@ final class LoopItem {
 				'callback'            => [ $this, 'term_previews' ],
 				'permission_callback' => fn() => current_user_can( 'edit_posts' ),
 				'args'                => [
-					'ids'   => $ids,
-					'block' => [
+					'ids'     => $ids,
+					'block'   => [
 						'type'    => 'string',
 						'default' => '',
 						'enum'    => array_merge( [ '' ], self::term_blocks() ),
 					],
+					'variant' => $variant,
 				],
 			]
 		);
@@ -161,12 +174,13 @@ final class LoopItem {
 	public function previews( WP_REST_Request $request ): array {
 		$previews = [];
 		$block    = (string) $request['block'];
+		$variant  = (string) $request['variant'];
 
 		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
 			if ( self::can_preview( $id ) ) {
 				$previews[] = [
 					'id'   => $id,
-					'html' => self::render( $id, '', $block ),
+					'html' => self::render( $id, '', $block, $variant ),
 				];
 			}
 		}
@@ -184,12 +198,13 @@ final class LoopItem {
 	public function term_previews( WP_REST_Request $request ): array {
 		$previews = [];
 		$block    = (string) $request['block'];
+		$variant  = (string) $request['variant'];
 
 		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
 			if ( self::can_preview_term( $id ) ) {
 				$previews[] = [
 					'id'   => $id,
-					'html' => self::render_term( $id, '', $block ),
+					'html' => self::render_term( $id, '', $block, $variant ),
 				];
 			}
 		}
@@ -241,9 +256,10 @@ final class LoopItem {
 	 * @param string $post_type Item post type (looked up when empty).
 	 * @param string $block     The block the item's query is shown as
 	 *                          (carousel, accordion or tabs); empty for none.
+	 * @param string $variant   That block's variant; empty for its default.
 	 * @return string Empty when there's no item.
 	 */
-	public static function render( int $post_id, string $post_type = '', string $block = '' ): string {
+	public static function render( int $post_id, string $post_type = '', string $block = '', string $variant = '' ): string {
 		$post = get_post( $post_id );
 
 		if ( ! $post ) {
@@ -252,7 +268,7 @@ final class LoopItem {
 
 		$post_type = $post_type ?: $post->post_type;
 		$block     = isset( QueryDisplay::TYPES[ $block ] ) ? $block : '';
-		$slug      = self::pattern( $post_type, $block );
+		$slug      = self::pattern( $post_type, $block, $variant );
 
 		if ( null === $slug && '' !== $block && ! QueryDisplay::TYPES[ $block ]['cards'] ) {
 			// No accordion or tabs pattern in the theme: the item's excerpt.
@@ -305,9 +321,10 @@ final class LoopItem {
 	 * @param string $taxonomy Its taxonomy (looked up when empty).
 	 * @param string $block    The block the Terms Query is shown as
 	 *                         (carousel); empty for none.
+	 * @param string $variant  That block's variant; empty for its default.
 	 * @return string Empty when there's no such term, or its taxonomy isn't viewable.
 	 */
-	public static function render_term( int $term_id, string $taxonomy = '', string $block = '' ): string {
+	public static function render_term( int $term_id, string $taxonomy = '', string $block = '', string $variant = '' ): string {
 		$term = self::term( $term_id, $taxonomy );
 
 		if ( null === $term ) {
@@ -315,7 +332,7 @@ final class LoopItem {
 		}
 
 		$block = QueryDisplay::supports( $block, QueryDisplay::TERMS ) ? $block : '';
-		$slug  = self::term_pattern( $term->taxonomy, $block );
+		$slug  = self::term_pattern( $term->taxonomy, $block, $variant );
 
 		if ( null === $slug ) {
 			// No pattern in the theme: a plain link, so the list still works.
@@ -371,19 +388,22 @@ final class LoopItem {
 	 *
 	 * @param string $post_type Post type.
 	 * @param string $block     The block the item's query is shown as; empty for none.
+	 * @param string $variant   That block's variant; empty for its default.
 	 * @return string|null Pattern slug, or null when the theme has none.
 	 */
-	public static function pattern( string $post_type, string $block = '' ): ?string {
+	public static function pattern( string $post_type, string $block = '', string $variant = '' ): ?string {
 		$registry = WP_Block_Patterns_Registry::get_instance();
 		$names    = [ "loop-item-{$post_type}", 'loop-item' ];
+		$block    = isset( QueryDisplay::TYPES[ $block ] ) ? $block : '';
+		$variant  = '' !== $block ? self::variant( $variant ) : '';
 
-		if ( isset( QueryDisplay::TYPES[ $block ] ) ) {
+		if ( '' !== $block ) {
 			$names = QueryDisplay::TYPES[ $block ]['cards']
 				? [ "loop-item-{$post_type}-{$block}", "loop-item-{$post_type}", "loop-item-{$block}", 'loop-item' ]
 				: [ "loop-item-{$post_type}-{$block}", "loop-item-{$block}" ];
 		}
 
-		$slug = self::first_registered( $names );
+		$slug = self::first_registered( self::with_variant( $names, $block, $variant ) );
 
 		/**
 		 * Filters the pattern used as the loop item for a post type.
@@ -392,8 +412,9 @@ final class LoopItem {
 		 * @param string      $post_type Post type.
 		 * @param string      $block     The block the item's query is shown as
 		 *                               (carousel, accordion or tabs); empty for none.
+		 * @param string      $variant   That block's variant; empty for its default.
 		 */
-		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type, $block );
+		$slug = apply_filters( 'matter_loop_item_pattern', $slug, $post_type, $block, $variant );
 
 		return is_string( $slug ) && $registry->is_registered( $slug ) ? $slug : null;
 	}
@@ -402,15 +423,17 @@ final class LoopItem {
 	 * The loop item pattern for a taxonomy's terms, in a block if any
 	 * (carousel), in the theme's namespace, most specific first at each step:
 	 * `loop-item-term-{taxonomy}`, `loop-item-term`, and in a carousel the
-	 * `-carousel` one before each, as for posts.
+	 * `-carousel` one before each (and its variant's before that), as for posts.
 	 *
 	 * @param string $taxonomy Taxonomy.
 	 * @param string $block    The block the Terms Query is shown as; empty for none.
+	 * @param string $variant  That block's variant; empty for its default.
 	 * @return string|null Pattern slug, or null when the theme has none.
 	 */
-	public static function term_pattern( string $taxonomy, string $block = '' ): ?string {
-		$block = QueryDisplay::supports( $block, QueryDisplay::TERMS ) ? $block : '';
-		$names = '' !== $block
+	public static function term_pattern( string $taxonomy, string $block = '', string $variant = '' ): ?string {
+		$block   = QueryDisplay::supports( $block, QueryDisplay::TERMS ) ? $block : '';
+		$variant = '' !== $block ? self::variant( $variant ) : '';
+		$names   = '' !== $block
 			? [ "loop-item-term-{$taxonomy}-{$block}", "loop-item-term-{$taxonomy}", "loop-item-term-{$block}", 'loop-item-term' ]
 			: [ "loop-item-term-{$taxonomy}", 'loop-item-term' ];
 
@@ -421,10 +444,50 @@ final class LoopItem {
 		 * @param string      $taxonomy Taxonomy.
 		 * @param string      $block    The block the Terms Query is shown as
 		 *                              (carousel); empty for none.
+		 * @param string      $variant  That block's variant; empty for its default.
 		 */
-		$slug = apply_filters( 'matter_loop_item_term_pattern', self::first_registered( $names ), $taxonomy, $block );
+		$slug = apply_filters( 'matter_loop_item_term_pattern', self::first_registered( self::with_variant( $names, $block, $variant ) ), $taxonomy, $block, $variant );
 
 		return is_string( $slug ) && WP_Block_Patterns_Registry::get_instance()->is_registered( $slug ) ? $slug : null;
+	}
+
+	/**
+	 * A block's variant as it names patterns: empty for the default.
+	 *
+	 * @param string $variant Variant slug.
+	 * @return string
+	 */
+	private static function variant( string $variant ): string {
+		$variant = sanitize_key( $variant );
+
+		return 'default' === $variant ? '' : $variant;
+	}
+
+	/**
+	 * Pattern names with the variant's before each of the block's
+	 * (`loop-item-carousel-cards` before `loop-item-carousel`).
+	 *
+	 * @param string[] $names   Pattern names, most specific first.
+	 * @param string   $block   The block; empty for none.
+	 * @param string   $variant Its variant; empty for the default.
+	 * @return string[]
+	 */
+	private static function with_variant( array $names, string $block, string $variant ): array {
+		if ( '' === $block || '' === $variant ) {
+			return $names;
+		}
+
+		$expanded = [];
+
+		foreach ( $names as $name ) {
+			if ( str_ends_with( $name, "-{$block}" ) ) {
+				$expanded[] = "{$name}-{$variant}";
+			}
+
+			$expanded[] = $name;
+		}
+
+		return $expanded;
 	}
 
 	/**

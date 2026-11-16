@@ -59,18 +59,19 @@ const HIDDEN_IN = ['accordion', 'tabs'];
 const pending = new Map();
 const batches = new Map();
 
-const keyOf = (kind, block, id) => `${kind}:${block}:${id}`;
+const keyOf = (kind, block, variant, id) => `${kind}:${block}:${variant}:${id}`;
 
 /**
  * Fetch items' previews (in a displayed query's block), up to 100 per request, into `previews`.
  * Items that aren't returned (or fail) are stored as null.
  *
- * @param {string}   kind  `post` or `term`.
- * @param {string}   block The block its query is shown as (empty for none).
- * @param {number[]} ids   Item IDs.
+ * @param {string}   kind    `post` or `term`.
+ * @param {string}   block   The block its query is shown as (empty for none).
+ * @param {string}   variant That block's variant (empty for its default).
+ * @param {number[]} ids     Item IDs.
  * @return {Promise} Settles when every request has.
  */
-async function fetchPreviews(kind, block, ids) {
+async function fetchPreviews(kind, block, variant, ids) {
 	const requests = [];
 
 	for (let i = 0; i < ids.length; i += MAX_PER_REQUEST) {
@@ -81,22 +82,25 @@ async function fetchPreviews(kind, block, ids) {
 				path: addQueryArgs(ROUTES[kind], {
 					ids: chunk,
 					...(block && { block }),
+					...(block && variant && { variant }),
 				}),
 			})
 				.then((items) => {
 					items.forEach(({ id, html }) =>
-						previews.set(keyOf(kind, block, id), html)
+						previews.set(keyOf(kind, block, variant, id), html)
 					);
 
 					// Not returned: the item can't be shown.
 					chunk.forEach(
 						(id) =>
-							previews.has(keyOf(kind, block, id)) ||
-							previews.set(keyOf(kind, block, id), null)
+							previews.has(keyOf(kind, block, variant, id)) ||
+							previews.set(keyOf(kind, block, variant, id), null)
 					);
 				})
 				.catch(() =>
-					chunk.forEach((id) => failed.add(keyOf(kind, block, id)))
+					chunk.forEach((id) =>
+						failed.add(keyOf(kind, block, variant, id))
+					)
 				)
 		);
 	}
@@ -105,17 +109,19 @@ async function fetchPreviews(kind, block, ids) {
 }
 
 /**
- * Load an item's preview. Items of a kind for the same block that start
- * loading in the same tick (a carousel's or an archive's) share one request.
+ * Load an item's preview. Items of a kind for the same block and variant that
+ * start loading in the same tick (a carousel's or an archive's) share one
+ * request.
  *
- * @param {string} kind  `post` or `term`.
- * @param {string} block The block its query is shown as (empty for none).
- * @param {number} id    Item ID.
+ * @param {string} kind    `post` or `term`.
+ * @param {string} block   The block its query is shown as (empty for none).
+ * @param {string} variant That block's variant (empty for its default).
+ * @param {number} id      Item ID.
  * @return {Promise} Settles once the preview is in `previews`.
  */
-function loadPreview(kind, block, id) {
-	const key = keyOf(kind, block, id);
-	const batchKey = `${kind}:${block}`;
+function loadPreview(kind, block, variant, id) {
+	const key = keyOf(kind, block, variant, id);
+	const batchKey = `${kind}:${block}:${variant}`;
 
 	if (!pending.has(key)) {
 		if (!batches.has(batchKey)) {
@@ -126,7 +132,7 @@ function loadPreview(kind, block, id) {
 				request: new Promise((resolve) => setTimeout(resolve)).then(
 					() => {
 						batches.delete(batchKey);
-						return fetchPreviews(kind, block, [...ids]);
+						return fetchPreviews(kind, block, variant, [...ids]);
 					}
 				),
 			});
@@ -148,14 +154,15 @@ function loadPreview(kind, block, id) {
  * An item's preview: its HTML, null when it can't be shown, false when it
  * failed to load (with a retry), or undefined while it loads.
  *
- * @param {string} kind  `post` or `term`.
- * @param {string} block The block its query is shown as (empty for none).
- * @param {number} id    Item ID.
+ * @param {string} kind    `post` or `term`.
+ * @param {string} block   The block its query is shown as (empty for none).
+ * @param {string} variant That block's variant (empty for its default).
+ * @param {number} id      Item ID.
  * @return {{preview: string|null|false|undefined, retry: Function}} Preview.
  */
-function usePreview(kind, block, id) {
+function usePreview(kind, block, variant, id) {
 	const [attempt, setLoaded] = useState(0);
-	const key = keyOf(kind, block, id);
+	const key = keyOf(kind, block, variant, id);
 	const isHidden = HIDDEN_IN.includes(block);
 
 	useEffect(() => {
@@ -164,14 +171,14 @@ function usePreview(kind, block, id) {
 		}
 
 		let current = true;
-		loadPreview(kind, block, id).then(
+		loadPreview(kind, block, variant, id).then(
 			() => current && setLoaded((n) => n + 1)
 		);
 
 		return () => {
 			current = false;
 		};
-	}, [kind, block, id, key, isHidden, attempt]);
+	}, [kind, block, variant, id, key, isHidden, attempt]);
 
 	useEffect(() => {
 		const reload = () => setLoaded((n) => n + 1);
@@ -241,11 +248,14 @@ export default function Edit({
 		setAttributes
 	);
 
-	// The block its query is shown as, if any, from the query's context.
+	// The block its query is shown as, if any, and its variant, from the
+	// query's context.
 	const block = display?.type ?? '';
+	const variant = display?.style ?? '';
 	const { preview, retry } = usePreview(
 		isTerm ? 'term' : 'post',
 		block,
+		variant,
 		isTerm ? termId : postId
 	);
 	const hasPreview = typeof preview === 'string';

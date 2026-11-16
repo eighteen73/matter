@@ -74,6 +74,83 @@ class LoopItemTest extends TestCase {
 	}
 
 	/**
+	 * In a block's variant, the variant's pattern comes before each of the
+	 * block's; the default variant and no block have none.
+	 *
+	 * @return void
+	 */
+	public function test_variant_patterns(): void {
+		$this->pattern( 'matter-test-theme/loop-item-carousel-reel' );
+
+		$this->assertSame( 'matter-test-theme/loop-item-carousel-reel', LoopItem::pattern( 'post', 'carousel', 'reel' ) );
+		$this->assertSame( 'matter-test-theme/loop-item-carousel', LoopItem::pattern( 'post', 'carousel' ) );
+		$this->assertSame( 'matter-test-theme/loop-item-carousel', LoopItem::pattern( 'post', 'carousel', 'default' ) );
+		$this->assertSame( 'matter-test-theme/loop-item-carousel', LoopItem::pattern( 'post', 'carousel', 'cards' ) );
+		$this->assertSame( 'matter-test-theme/loop-item', LoopItem::pattern( 'post', '', 'reel' ) );
+
+		// The post type's design still comes first, as for the block's own
+		// pattern; its variant's before that.
+		$this->pattern( 'matter-test-theme/loop-item-post-carousel' );
+		$this->assertSame( 'matter-test-theme/loop-item-post-carousel', LoopItem::pattern( 'post', 'carousel', 'reel' ) );
+		$this->pattern( 'matter-test-theme/loop-item-post-carousel-reel' );
+		$this->assertSame( 'matter-test-theme/loop-item-post-carousel-reel', LoopItem::pattern( 'post', 'carousel', 'reel' ) );
+
+		// The filter is told the variant.
+		$seen = null;
+		$spy  = function ( $slug, $post_type, $block, $variant ) use ( &$seen ) {
+			$seen = $variant;
+			return $slug;
+		};
+		add_filter( 'matter_loop_item_pattern', $spy, 10, 4 );
+		LoopItem::pattern( 'post', 'carousel', 'reel' );
+		remove_filter( 'matter_loop_item_pattern', $spy, 10 );
+		$this->assertSame( 'reel', $seen );
+
+		// Terms too.
+		$this->pattern( 'matter-test-theme/loop-item-term-carousel-reel' );
+		$this->assertSame( 'matter-test-theme/loop-item-term-carousel-reel', LoopItem::term_pattern( 'category', 'carousel', 'reel' ) );
+		$this->assertSame( 'matter-test-theme/loop-item-term', LoopItem::term_pattern( 'category', 'carousel' ) );
+
+		foreach ( [ 'carousel-reel', 'post-carousel', 'post-carousel-reel', 'term-carousel-reel' ] as $name ) {
+			unregister_block_pattern( "matter-test-theme/loop-item-{$name}" );
+		}
+	}
+
+	/**
+	 * A posts carousel's slides use its variant's pattern.
+	 *
+	 * @return void
+	 */
+	public function test_query_display_uses_variant_pattern(): void {
+		$post = self::factory()->post->create();
+
+		$this->pattern( 'matter-test-theme/loop-item-carousel-reel', '<!-- wp:paragraph --><p>Reel slide</p><!-- /wp:paragraph -->' );
+
+		$query = fn( string $display ) => $this->render(
+			'<!-- wp:query {"queryId":3,"query":{"perPage":1,"postType":"post","include":[' . $post . '],"inherit":false},"matterDisplay":' . $display . '} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/loop-item /--><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->'
+		);
+
+		$this->assertStringContainsString( 'Reel slide', $query( '{"type":"carousel","style":"reel"}' ) );
+		$this->assertStringNotContainsString( 'Reel slide', $query( '{"type":"carousel"}' ) );
+
+		// The editor's previews, through the route.
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'editor' ] ) );
+		$request = new \WP_REST_Request( 'GET', '/matter/v1/loop-items' );
+		$request->set_query_params(
+			[
+				'ids'     => [ $post ],
+				'block'   => 'carousel',
+				'variant' => 'reel',
+			]
+		);
+		$this->assertStringContainsString( 'Reel slide', rest_do_request( $request )->get_data()[0]['html'] );
+
+		unregister_block_pattern( 'matter-test-theme/loop-item-carousel-reel' );
+	}
+
+	/**
 	 * Without an accordion or tabs pattern, the item's excerpt shows.
 	 *
 	 * @return void

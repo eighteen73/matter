@@ -18,8 +18,9 @@
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\LoopItem;
 
-// The block its query is shown as, if any (Blocks\QueryDisplay).
+// The block its query is shown as, if any, and its variant (Blocks\QueryDisplay).
 $matter_display = (string) ( $block->context['matter/display']['type'] ?? '' );
+$matter_variant = (string) ( $block->context['matter/display']['style'] ?? '' );
 
 // A term, in a Terms Query's term template. Its `termId` wins over `postId`
 // (the page's there), unless a Query Loop inside the term's pattern is the
@@ -27,11 +28,12 @@ $matter_display = (string) ( $block->context['matter/display']['type'] ?? '' );
 $matter_term_id = 'post' !== Instances::loop() ? (int) ( $block->context['termId'] ?? 0 ) : 0;
 
 $matter_loop_item = $matter_term_id
-	? LoopItem::render_term( $matter_term_id, (string) ( $block->context['taxonomy'] ?? '' ), $matter_display )
+	? LoopItem::render_term( $matter_term_id, (string) ( $block->context['taxonomy'] ?? '' ), $matter_display, $matter_variant )
 	: LoopItem::render(
 		(int) ( $block->context['postId'] ?? get_the_ID() ),
 		(string) ( $block->context['postType'] ?? '' ),
-		$matter_display
+		$matter_display,
+		$matter_variant
 	);
 
 if ( '' === $matter_loop_item ) {
