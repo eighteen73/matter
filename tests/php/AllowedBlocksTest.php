@@ -48,6 +48,28 @@ class AllowedBlocksTest extends TestCase {
 	}
 
 	/**
+	 * A block a section's slot allows but the list doesn't is allowed, for
+	 * those sections only (the editor limits it to them).
+	 *
+	 * @return void
+	 */
+	public function test_slot_only_blocks(): void {
+		add_filter( 'matter_allowed_blocks', fn() => [ 'core/heading', 'core/paragraph', 'core/image', 'matter/*', 'matter-test/*' ] );
+
+		$this->assertContains( 'core/verse', $this->allowed( 'page' ) );
+		$slot_only = \Eighteen73\Matter\AllowedBlocks::slot_only( [ 'core/heading', 'core/paragraph', 'core/image', 'matter/carousel' ] );
+
+		$this->assertSame( [ 'matter-test/section' ], $slot_only['core/verse'] ?? null );
+		$this->assertArrayNotHasKey( 'core/paragraph', $slot_only, 'Blocks on the list are allowed everywhere' );
+
+		// Code that restricted the list earlier still wins.
+		$restrict = fn() => [ 'core/paragraph' ];
+		add_filter( 'allowed_block_types_all', $restrict, 5 );
+		$this->assertNotContains( 'core/verse', $this->allowed( 'page' ) );
+		remove_filter( 'allowed_block_types_all', $restrict, 5 );
+	}
+
+	/**
 	 * Without a theme list, everything but the archive list outside entries.
 	 *
 	 * @return void

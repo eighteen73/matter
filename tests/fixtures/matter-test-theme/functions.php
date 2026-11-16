@@ -57,3 +57,25 @@ add_filter(
 		]
 		: $types
 );
+
+// A theme list of allowed blocks, switched on by the browser test that checks
+// slot-only blocks (`core/verse` is only in the test section's content slot).
+add_action(
+	'init',
+	fn() => register_setting(
+		'general',
+		'matter_test_allowed_blocks',
+		[
+			'type'         => 'boolean',
+			'default'      => false,
+			'show_in_rest' => true,
+		]
+	)
+);
+
+add_filter(
+	'matter_allowed_blocks',
+	fn( $blocks ) => get_option( 'matter_test_allowed_blocks' )
+		? [ ...$blocks, 'core/heading', 'core/paragraph', 'core/image', 'matter/*', 'matter-test/*' ]
+		: $blocks
+);

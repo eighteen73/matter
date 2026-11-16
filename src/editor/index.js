@@ -28,6 +28,7 @@ import './extensions/button-icon';
 import './extensions/query-display';
 import './extensions/focal-point';
 import './extensions/parent-toolbar';
+import './extensions/slot-only';
 import './overlays/link-suggestions';
 import './overlays/sidebar';
 import './overlays/toolbar';

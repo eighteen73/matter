@@ -7,11 +7,16 @@
  * every registered block in that namespace. It applies to the post editor
  * only: templates are developer-owned and the Site Editor keeps every block.
  *
+ * A block a section's slot allows (`allowedBlocks`) that isn't on the list is
+ * allowed only in those sections: the editor gives it their names as its
+ * `ancestor`, so the inserter offers it there and not at the top level.
+ *
  * @package Eighteen73\Matter
  */
 
 namespace Eighteen73\Matter;
 
+use Eighteen73\Matter\Sections\Sections;
 use WP_Block_Editor_Context;
 use WP_Block_Type_Registry;
 
@@ -45,6 +50,33 @@ final class AllowedBlocks {
 			return $allowed_blocks;
 		}
 
+		$allowed = self::theme_list( $editor_context );
+
+		if ( null === $allowed ) {
+			return $allowed_blocks;
+		}
+
+		// Keep restrictions applied earlier by other code.
+		if ( is_array( $allowed_blocks ) ) {
+			$allowed = array_intersect( $allowed, $allowed_blocks );
+		}
+
+		$slot_only = array_keys( self::slot_only( $allowed ) );
+
+		if ( is_array( $allowed_blocks ) ) {
+			$slot_only = array_intersect( $slot_only, $allowed_blocks );
+		}
+
+		return array_values( array_unique( array_merge( $allowed, $slot_only ) ) );
+	}
+
+	/**
+	 * The theme's list for an editor, expanded.
+	 *
+	 * @param WP_Block_Editor_Context $editor_context Editor context.
+	 * @return string[]|null Block names, or null when the theme sets none.
+	 */
+	public static function theme_list( WP_Block_Editor_Context $editor_context ): ?array {
 		/**
 		 * Filters the blocks content editors can add. Entries ending in `/*`
 		 * allow a whole namespace. Empty leaves the editor unrestricted.
@@ -54,18 +86,53 @@ final class AllowedBlocks {
 		 */
 		$entries = (array) apply_filters( 'matter_allowed_blocks', [], $editor_context );
 
-		if ( ! $entries ) {
-			return $allowed_blocks;
+		return $entries ? self::expand( $entries ) : null;
+	}
+
+	/**
+	 * Blocks that sections' slots allow but the list doesn't, with the
+	 * sections that allow them.
+	 *
+	 * @param string[] $allowed The blocks allowed everywhere.
+	 * @return array<string, string[]> Block name => section names.
+	 */
+	public static function slot_only( array $allowed ): array {
+		$registry  = WP_Block_Type_Registry::get_instance();
+		$slot_only = [];
+
+		foreach ( Sections::names() as $section ) {
+			foreach ( (array) ( $registry->get_registered( $section )?->supports['matter']['slots'] ?? [] ) as $slot ) {
+				if ( ! isset( $slot['allowedBlocks'] ) || ! is_array( $slot['allowedBlocks'] ) ) {
+					continue;
+				}
+
+				foreach ( self::expand( $slot['allowedBlocks'] ) as $name ) {
+					if ( ! in_array( $name, $allowed, true ) && $registry->is_registered( $name ) ) {
+						$slot_only[ $name ][] = $section;
+					}
+				}
+			}
 		}
 
-		$allowed = self::expand( $entries );
+		return array_map( fn( $sections ) => array_values( array_unique( $sections ) ), $slot_only );
+	}
 
-		// Keep restrictions applied earlier by other code.
-		if ( is_array( $allowed_blocks ) ) {
-			$allowed = array_intersect( $allowed, $allowed_blocks );
+	/**
+	 * Slot-only blocks for the post being edited, for the editor (empty in
+	 * the Site Editor, or without a theme list).
+	 *
+	 * @return array<string, string[]> Block name => section names.
+	 */
+	public static function editor_slot_only(): array {
+		$post = get_post();
+
+		if ( ! $post || 'site-editor' === get_current_screen()?->id ) {
+			return [];
 		}
 
-		return array_values( $allowed );
+		$allowed = self::theme_list( new WP_Block_Editor_Context( [ 'post' => $post ] ) );
+
+		return null === $allowed ? [] : self::slot_only( $allowed );
 	}
 
 	/**

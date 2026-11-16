@@ -85,6 +85,9 @@ class Editor {
 					// Allowing a carousel, accordion or tabs allows the query
 					// blocks behind their posts versions.
 					'queryBlocks'     => QueryDisplay::query_blocks(),
+					// Blocks only sections' slots allow: offered only in those
+					// sections (their `ancestor`), not at the top level.
+					'slotOnlyBlocks'  => AllowedBlocks::editor_slot_only(),
 					// Template parts are placed in templates, so only the Site
 					// Editor needs the list.
 					'templateParts'   => 'site-editor' === get_current_screen()?->id ? TemplatePart::all() : [],

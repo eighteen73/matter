@@ -132,6 +132,48 @@ test.describe('section markup in the editor', () => {
 	});
 });
 
+test.describe('slot-only blocks', () => {
+	test.beforeAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({
+			matter_test_allowed_blocks: true,
+		});
+	});
+
+	test.afterAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({
+			matter_test_allowed_blocks: false,
+		});
+	});
+
+	test("a block only a slot allows is offered in that slot, not at the page's top level", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		const [atRoot, inSlot, inOtherSlot] = await page.evaluate(() => {
+			const { select } = window.wp.data;
+			const { canInsertBlockType, getBlocks } =
+				select('core/block-editor');
+			const [section] = getBlocks();
+			const slot = (name) =>
+				section.innerBlocks.find(
+					(block) => block.attributes.name === name
+				).clientId;
+
+			return [
+				canInsertBlockType('core/verse'),
+				canInsertBlockType('core/verse', slot('content')),
+				canInsertBlockType('core/verse', slot('media')),
+			];
+		});
+
+		expect([atRoot, inSlot, inOtherSlot]).toEqual([false, true, false]);
+	});
+});
+
 test.describe('section variants', () => {
 	test("a section in its default variant has the variant's class; a chosen one replaces it", async ({
 		admin,

@@ -20,6 +20,7 @@
 						"core/heading",
 						"core/paragraph",
 						"core/image",
+						"core/verse",
 						"matter/carousel"
 					],
 					"template": [

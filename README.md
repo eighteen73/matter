@@ -550,6 +550,8 @@ The theme lists the blocks content editors can add, and Matter enforces the list
 add_filter( 'matter_allowed_blocks', fn( $blocks ) => [ ...$blocks, 'core/heading', 'core/paragraph', 'pulsar/*', 'matter/*' ] );
 ```
 
+A block a section's slot allows (`allowedBlocks`) doesn't need to be on the list. If it isn't, it's allowed only in the sections that name it: the editor sets those sections as its `ancestor`, so the inserter offers it inside them (in the slots that allow it) and not at the top level of a page. E.g. core's Icon block for card icons, without offering icons anywhere else.
+
 ## Theme icons
 
 The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's namespace (`matter_theme_namespace`, see [Loop items](#loop-items)); icon names are saved in content (`pulsar/arrow-right`), so a theme whose folder may change should name its namespace. The label, and the collection itself, can be set too:
