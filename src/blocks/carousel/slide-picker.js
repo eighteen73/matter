@@ -2,7 +2,8 @@
  * What a new carousel holds: images (from the media library), the theme's
  * slide types (e.g. cards; `matter_carousel_slides`), posts, products or
  * terms (e.g. categories).
- * Each type can set the variant the carousel starts with.
+ * Each type can set the variant the carousel starts with, unless the carousel
+ * already has one (e.g. from a section's template): that one is kept.
  */
 
 /**
@@ -123,8 +124,21 @@ function slideOptions(theme) {
 }
 
 /**
+ * The carousel's own variant, if it has one other than the default.
+ *
+ * @param {string} className The carousel's classes.
+ * @return {string|undefined} Variant slug.
+ */
+export const currentVariant = (className = '') => {
+	const variant = /(?:^|\s)is-style-([\w-]+)/.exec(className ?? '')?.[1];
+
+	return variant === 'default' ? undefined : variant;
+};
+
+/**
  * @param {Object}   props
  * @param {string}   props.clientId      Carousel client ID.
+ * @param {string}   props.className     The carousel's classes.
  * @param {Object}   props.types         The carousel's slide types.
  * @param {Function} props.setAttributes Carousel attribute setter.
  * @param {Function} props.onImages      Called with chosen images.
@@ -132,6 +146,7 @@ function slideOptions(theme) {
  */
 export default function SlidePicker({
 	clientId,
+	className,
 	types,
 	setAttributes,
 	onImages,
@@ -161,7 +176,8 @@ export default function SlidePicker({
 	}
 
 	const choose = ({ name }) => {
-		const variant = types[name]?.variant;
+		const kept = currentVariant(className);
+		const variant = kept ?? types[name]?.variant;
 
 		// Posts, products and terms: the query block is the carousel, so it
 		// takes this block's place.
@@ -174,8 +190,12 @@ export default function SlidePicker({
 			return;
 		}
 
-		if (variant) {
-			setAttributes({ className: `is-style-${variant}` });
+		if (variant && !kept) {
+			setAttributes({
+				className: [className, `is-style-${variant}`]
+					.filter(Boolean)
+					.join(' '),
+			});
 		}
 
 		if (name === 'core/image') {

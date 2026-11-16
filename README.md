@@ -317,7 +317,7 @@ The stage group covers the slides (`position: absolute; inset: 0`) with clickabl
 
 State for theme CSS, on the carousel: `--carousel-progress` (0–1), `--carousel-autoplay`, and the classes `is-playing`, `is-start`, `is-end`, `is-scrollable` and `is-timing`. Slides get `is-selected` (at the current position) and `is-in-view`.
 
-Carousel slide types: a new carousel offers images, posts and products (with WooCommerce). `matter_carousel_slides` adds the theme's own slide blocks, and sets the variant each type starts as. With slide types set, a carousel's slides are limited to them, images and queries. A slide block needs `matter/carousel` in its block.json `parent` if it has one.
+Carousel slide types: a new carousel offers images, posts and products (with WooCommerce). `matter_carousel_slides` adds the theme's own slide blocks, and sets the variant each type starts as, unless the carousel already has a variant: a section's slot template can start its carousel in one (`[ "matter/carousel", { "className": "is-style-reel" } ]`), and choosing posts or slides keeps it. With slide types set, a carousel's slides are limited to them, images and queries. A slide block needs `matter/carousel` in its block.json `parent` if it has one.
 
 A type meant for one section's carousel (a hero's features, say) lists that section in `within`: it's offered in, and allowed in, only carousels inside those blocks, so other carousels don't offer it.
 

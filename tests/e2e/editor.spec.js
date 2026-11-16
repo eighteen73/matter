@@ -241,6 +241,37 @@ test.describe('slot alignments', () => {
 	});
 });
 
+test.describe('carousel picker', () => {
+	test('choosing posts keeps the variant the carousel already has', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'matter/carousel',
+			attributes: { className: 'is-style-slides' },
+		});
+
+		await editor.canvas
+			.locator('.block-editor-block-variation-picker')
+			.getByRole('button', { name: 'One slide per post.' })
+			.click();
+
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const [block] = window.wp.data
+						.select('core/block-editor')
+						.getBlocks();
+
+					return [block.name, block.attributes.matterDisplay?.style];
+				})
+			)
+			.toEqual(['core/query', 'slides']);
+	});
+});
+
 test.describe('carousel slide types', () => {
 	test.beforeAll(async ({ requestUtils }) => {
 		await requestUtils.updateSiteSettings({

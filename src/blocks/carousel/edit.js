@@ -139,6 +139,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			<div {...blockProps}>
 				<SlidePicker
 					clientId={clientId}
+					className={attributes.className}
 					types={types}
 					setAttributes={setAttributes}
 					onImages={media.update}
