@@ -1,6 +1,7 @@
 # Directories
 /.git export-ignore
 /.github export-ignore
+/bin export-ignore
 /.husky export-ignore
 /.vscode export-ignore
 /node_modules export-ignore

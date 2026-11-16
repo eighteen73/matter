@@ -257,4 +257,17 @@ class Instances {
 
 		return null !== $id ? ( self::$items[ $id ] ?? [] ) : [];
 	}
+
+	/**
+	 * Whether an item's rendered content has nothing to show: no text, media
+	 * or form controls (e.g. a product's specifications when it has none, or
+	 * blocks that render nothing). Such accordion items and tabs aren't output.
+	 *
+	 * @param string $content Rendered inner blocks.
+	 * @return bool
+	 */
+	public static function is_empty( string $content ): bool {
+		return '' === trim( wp_strip_all_tags( $content ) )
+			&& ! preg_match( '/<(img|picture|video|audio|iframe|svg|canvas|object|embed|form|input|select|textarea|button)\b/i', $content );
+	}
 }

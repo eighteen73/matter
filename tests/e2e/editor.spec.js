@@ -144,6 +144,24 @@ test.describe('slot alignments', () => {
 
 		await expect(options).toHaveText([/None/, /Wide width/, /Full width/]);
 	});
+
+	test('carousels, galleries, tabs and accordions can be wide or full', async ({
+		admin,
+		page,
+	}) => {
+		await admin.createNewPost();
+
+		const supports = await page.evaluate(() =>
+			[
+				'matter/carousel',
+				'matter/gallery',
+				'matter/tabs',
+				'matter/accordion',
+			].map((name) => window.wp.blocks.getBlockSupport(name, 'align'))
+		);
+
+		expect(supports).toEqual(Array(4).fill(['wide', 'full']));
+	});
 });
 
 test.describe('carousel slide types', () => {

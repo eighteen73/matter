@@ -12,6 +12,12 @@
 
 use Eighteen73\Matter\Blocks\Instances;
 
+// A tab with nothing to show isn't output (it isn't recorded, so the tab list
+// leaves it out too).
+if ( Instances::is_empty( $content ) ) {
+	return;
+}
+
 $matter_label = trim( (string) ( $attributes['label'] ?? '' ) );
 
 // Only in a loop: elsewhere, postId is the page's own post.

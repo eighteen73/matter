@@ -210,6 +210,28 @@ class ContractMarkupTest extends TestCase {
 	}
 
 	/**
+	 * A tab with nothing to show isn't output, and the tab list leaves it out:
+	 * the next tab takes its place.
+	 *
+	 * @return void
+	 */
+	public function test_empty_tabs_are_skipped(): void {
+		$html = $this->render(
+			'<!-- wp:matter/tabs {"anchor":"details"} -->'
+			. '<!-- wp:matter/tab {"label":"Description"} --><!-- wp:paragraph --><p>Text</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->'
+			. '<!-- wp:matter/tab {"label":"Empty"} --><!-- wp:group --><div class="wp-block-group"></div><!-- /wp:group --><!-- /wp:matter/tab -->'
+			. '<!-- wp:matter/tab {"label":"Reviews"} --><!-- wp:paragraph --><p>More</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->'
+			. '<!-- /wp:matter/tabs -->'
+		);
+
+		$this->assertStringNotContainsString( '>Empty<', $html );
+		$this->assertSame( 2, substr_count( $html, 'role="tab"' ) );
+		$this->assertSame( 2, substr_count( $html, 'role="tabpanel"' ) );
+		$this->assertStringContainsString( 'id="details-2-tab" class="wp-block-matter-tabs__tab" aria-controls="details-2"', $html );
+		$this->assertMatchesRegularExpression( '/id="details-2"[^>]*role="tabpanel"[^>]*>.*More/s', $html );
+	}
+
+	/**
 	 * Posts accordions and tabs take the query's anchor as their ID (once,
 	 * not repeated on the query), and name each item after its post, so
 	 * links to an item survive new posts.
