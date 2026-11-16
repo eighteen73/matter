@@ -102,7 +102,10 @@ class Sections {
 	 * gets them from get_block_wrapper_attributes():
 	 *
 	 * - `is-section` on every section, for theme targeting;
-	 * - `alignfull` when `supports.matter.align` is "full" (full-width bands).
+	 * - `alignfull` when `supports.matter.align` is "full" (full-width bands);
+	 * - the default variant's class (`is-style-default`) when no variant is
+	 *   chosen, so the default can be styled like any other variant. Core
+	 *   saves no class for it.
 	 *
 	 * @return void
 	 */
@@ -110,7 +113,7 @@ class Sections {
 		\WP_Block_Supports::get_instance()->register(
 			'matter-section',
 			[
-				'apply' => function ( WP_Block_Type $block_type ): array {
+				'apply' => function ( WP_Block_Type $block_type, array $attributes = [] ): array {
 					if ( ! self::is_section( $block_type ) ) {
 						return [];
 					}
@@ -121,10 +124,40 @@ class Sections {
 						$classes[] = 'alignfull';
 					}
 
+					$default = self::default_variant( $block_type );
+
+					if ( null !== $default && ! preg_match( '/(?:^|\s)is-style-/', (string) ( $attributes['className'] ?? '' ) ) ) {
+						$classes[] = 'is-style-' . $default;
+					}
+
 					return [ 'class' => implode( ' ', $classes ) ];
 				},
 			]
 		);
+	}
+
+	/**
+	 * A block's default variant: the block style marked as the default, in
+	 * `block.json` (`isDefault`) or registered (`is_default`).
+	 *
+	 * @param WP_Block_Type $block_type Block type.
+	 * @return string|null Style name, or null when it has none.
+	 */
+	public static function default_variant( WP_Block_Type $block_type ): ?string {
+		$styles = array_merge(
+			(array) $block_type->styles,
+			array_values( \WP_Block_Styles_Registry::get_instance()->get_registered_styles_for_block( $block_type->name ) )
+		);
+
+		foreach ( $styles as $style ) {
+			if ( ! empty( $style['isDefault'] ) || ! empty( $style['is_default'] ) ) {
+				$name = sanitize_html_class( (string) ( $style['name'] ?? '' ) );
+
+				return '' !== $name ? $name : null;
+			}
+		}
+
+		return null;
 	}
 
 	/**

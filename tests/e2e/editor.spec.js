@@ -99,6 +99,48 @@ test.describe('sections', () => {
 	});
 });
 
+test.describe('section variants', () => {
+	test("a section in its default variant has the variant's class; a chosen one replaces it", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await page.evaluate(() =>
+			['default', 'wide'].forEach((name) =>
+				window.wp.blocks.registerBlockStyle('matter-test/section', {
+					name,
+					label: name,
+					isDefault: name === 'default',
+				})
+			)
+		);
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		const section = editor.canvas.locator('.wp-block-matter-test-section');
+
+		await expect(section).toHaveClass(/(^|\s)is-style-default(\s|$)/);
+
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [block] = select('core/block-editor').getBlocks();
+
+			dispatch('core/block-editor').updateBlockAttributes(
+				block.clientId,
+				{ className: 'is-style-wide' }
+			);
+		});
+
+		await expect(section).toHaveClass(/(^|\s)is-style-wide(\s|$)/);
+		await expect(section).not.toHaveClass(/is-style-default/);
+
+		// Only shown, not saved.
+		expect(await editor.getEditedPostContent()).not.toContain(
+			'is-style-default'
+		);
+	});
+});
+
 test.describe('slot labels', () => {
 	test('the list view names a slot from its name, in sentence case', async ({
 		admin,

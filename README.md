@@ -193,6 +193,17 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 - `slots`: per slot, `allowedBlocks`, `template`, `templateLock`, `previously` (old names, for a renamed slot) and `alignments`.
   - `alignments` lists the alignments blocks in the slot offer on their toolbar, for blocks that support them, e.g. `[ "wide", "full" ]` (a carousel, gallery, tabs, accordion, image or video wider than the text around it). Without it they offer left, centre and right. The theme styles them in the slot (`.wp-block-{section}__{slot} > .alignwide`); a slot isn't a WordPress layout, so core's alignment styles don't apply.
 
+**Variants.** A section's variants are block styles, `styles` in its `block.json`, styled as `.is-style-{name}`:
+
+```json
+"styles": [
+	{ "name": "default", "label": "Image first", "isDefault": true },
+	{ "name": "image-last", "label": "Image last" }
+]
+```
+
+The default (`isDefault`) gets its class too, `is-style-default`, on the front end and in the editor, though core saves no class for it, so the default's own styles don't have to exclude every other variant. A variant changes CSS only: every variant has the same slots, with the same templates and locks. A layout that needs different slots (two images where the others have one) is a separate section.
+
 **Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
 - **Add or reorder** slots anywhere in `block.json`. Existing instances get a new slot (filled from its `template`) the next time they're edited.
 - **Rename** a slot by listing its old name: `"image": { "previously": [ "media" ] }`. Content saved under the old name shows in the slot at once, and moves to the new name when the page is next edited and saved.

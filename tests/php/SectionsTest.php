@@ -145,4 +145,39 @@ class SectionsTest extends TestCase {
 		$this->assertContains( 'matter-test/section', Sections::names() );
 		$this->assertNotContains( 'matter/modal', Sections::names() );
 	}
+
+	/**
+	 * A section in its default variant gets the variant's class; a chosen
+	 * variant replaces it; a section without variants gets none.
+	 *
+	 * @return void
+	 */
+	public function test_default_variant_class(): void {
+		register_block_type(
+			'matter-test/variants',
+			[
+				'styles'   => [
+					[
+						'name'      => 'default',
+						'label'     => 'Default',
+						'isDefault' => true,
+					],
+					[
+						'name'  => 'wide',
+						'label' => 'Wide',
+					],
+				],
+				'supports' => [ 'matter' => [ 'slots' => [ 'content' => [] ] ] ],
+			]
+		);
+
+		$section = fn( string $attrs ) => do_blocks( "<!-- wp:matter-test/variants {$attrs} --><!-- wp:matter/slot {\"name\":\"content\"} --><!-- /wp:matter/slot --><!-- /wp:matter-test/variants -->" );
+
+		$this->assertMatchesRegularExpression( '/class="wp-block-matter-test-variants is-section is-style-default"/', $section( '' ) );
+		$this->assertStringNotContainsString( 'is-style-default', $section( '{"className":"is-style-wide"}' ) );
+		$this->assertStringContainsString( 'is-style-wide', $section( '{"className":"is-style-wide"}' ) );
+		$this->assertStringNotContainsString( 'is-style-', $this->render( '<!-- wp:matter-test/section --><!-- /wp:matter-test/section -->' ) );
+
+		unregister_block_type( 'matter-test/variants' );
+	}
 }
