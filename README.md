@@ -175,6 +175,13 @@ A section is a dynamic block whose `block.json` declares slots. Matter registers
 </section>
 ```
 
+A slot that renders nothing is still output, with `is-empty`, so a layout can rely on it; in the editor, a slot with no blocks has it.
+
+**In the editor** the classes are the same, but the editor adds its own wrappers and styles to them. Write section CSS that works in both:
+- **Positioning.** The inner wrapper is also the editor's block list, which core positions; Matter resets that, so something placed against the section (an image behind the content) lines up as on the site. Every slot, and every block in it, is an editor block with `position: relative` (0,2,0): to place something against the section, position the slot itself (a section's slot rule, with two classes, wins), not a block inside it.
+- **Outlines.** The editor draws a block's selected, highlighted and multi-selected outline on the block's own `::after` (`inset: 0`, 0,3,1), so decoration on a section's or card's `::after` jumps to cover the block while it's highlighted. Decorate `::before`, or the inner wrapper's or a slot's pseudo-elements.
+- **Things behind the content.** A slot behind the content (`z-index: -1`) is under the content's slot in the editor too, so clicks never reach it, and an empty one's placeholder or appender can't be used. Give the slots in front `pointer-events: none` and their blocks `auto`, and keep an empty slot (`.is-empty`, or `:not(:has(img))` for an image slot whose image isn't chosen yet) in the flow, where the client can fill it.
+
 **Custom `render.php`.** Use one only when the markup needs to differ (e.g. conditional slots), and keep the same classes:
 
 ```php

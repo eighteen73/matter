@@ -99,6 +99,39 @@ test.describe('sections', () => {
 	});
 });
 
+test.describe('section markup in the editor', () => {
+	test("the inner wrapper isn't positioned, and an empty slot is marked", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		const inner = editor.canvas.locator(
+			'.wp-block-matter-test-section__inner'
+		);
+		const content = editor.canvas.locator(
+			'.wp-block-matter-test-section__content'
+		);
+
+		await expect(inner).toHaveCSS('position', 'static');
+		await expect(content).not.toHaveClass(/(^|\s)is-empty(\s|$)/);
+
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [section] = select('core/block-editor').getBlocks();
+			const slot = section.innerBlocks.find(
+				(block) => block.attributes.name === 'content'
+			);
+
+			dispatch('core/block-editor').replaceInnerBlocks(slot.clientId, []);
+		});
+
+		await expect(content).toHaveClass(/(^|\s)is-empty(\s|$)/);
+	});
+});
+
 test.describe('section variants', () => {
 	test("a section in its default variant has the variant's class; a chosen one replaces it", async ({
 		admin,

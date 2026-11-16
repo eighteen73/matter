@@ -31,6 +31,16 @@
 	text-transform: uppercase;
 }
 
+// A section's inner wrapper is also the editor's block list, which core
+// positions (`.block-editor-block-list__layout`, 0,1,0); on the front end it
+// isn't, so something a theme places against the section (an image behind
+// the content) would be placed against the wrapper. Reset at the same
+// specificity: this loads after core's styles and before the theme's, so a
+// theme's own rule for the wrapper still wins, as on the front end.
+:where(.is-section) > .block-editor-block-list__layout {
+	position: static;
+}
+
 // Keep an empty slot's appender below its label (core positions it absolutely
 // when it isn't the only child).
 .wp-block-matter-slot > .block-list-appender {

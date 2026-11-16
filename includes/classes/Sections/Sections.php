@@ -242,7 +242,9 @@ class Sections {
 		$html       = '';
 
 		foreach ( $slots as $name => $slot_html ) {
-			$html .= sprintf( '<div class="wp-block-matter-slot %1$s">%2$s</div>', esc_attr( $base_class . '__' . $name ), $slot_html );
+			// An empty slot is still output, marked, so layouts can rely on it.
+			$classes = 'wp-block-matter-slot ' . $base_class . '__' . $name . ( '' === trim( $slot_html ) ? ' is-empty' : '' );
+			$html   .= sprintf( '<div class="%1$s">%2$s</div>', esc_attr( $classes ), $slot_html );
 		}
 
 		return sprintf(

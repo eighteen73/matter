@@ -118,7 +118,7 @@ class SectionsTest extends TestCase {
 		);
 
 		$this->assertStringContainsString( '<div class="wp-block-matter-slot wp-block-matter-test-renamed__content"><p class="wp-block-paragraph">Body</p></div>', $html );
-		$this->assertStringContainsString( '<div class="wp-block-matter-slot wp-block-matter-test-renamed__image"></div>', $html );
+		$this->assertStringContainsString( '<div class="wp-block-matter-slot wp-block-matter-test-renamed__image is-empty"></div>', $html );
 		$this->assertStringNotContainsString( 'Gone', $html );
 
 		unregister_block_type( 'matter-test/renamed' );

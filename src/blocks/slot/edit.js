@@ -27,6 +27,9 @@ import { __ } from '@wordpress/i18n';
  * blocks offer in the toolbar, for blocks that support them; the theme styles
  * them in the slot. Without it, blocks in a slot offer left, centre and right.
  *
+ * A slot with no blocks has `is-empty`, as one that renders nothing does on
+ * the front end (Sections::render_default()).
+ *
  * A slot that's no longer declared (or a second one with the same name) is
  * orphaned: the front end doesn't output it, and the editor says so, so the
  * client can move its content into another slot or remove it.
@@ -82,6 +85,8 @@ export default function Edit({ attributes: { name }, clientId }) {
 		className: [
 			baseClass && `${baseClass}__${name}`,
 			isOrphaned && 'is-orphaned',
+			// As on the front end, where an empty slot renders nothing.
+			!hasInnerBlocks && 'is-empty',
 		]
 			.filter(Boolean)
 			.join(' '),
