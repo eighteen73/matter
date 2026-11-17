@@ -10,7 +10,7 @@
  *             "tagName": "section",
  *             "slots": {
  *                 "content": { "allowedBlocks": [ "core/heading", "core/paragraph" ], "template": [ … ] },
- *                 "media":   { "allowedBlocks": [ "core/image" ], "templateLock": "contentOnly" }
+ *                 "media":   { "allowedBlocks": [ "core/image" ], "templateLock": "all" }
  *             }
  *         }
  *     }

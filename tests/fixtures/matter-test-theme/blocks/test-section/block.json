@@ -44,7 +44,7 @@
 							"core/image"
 						]
 					],
-					"templateLock": "contentOnly",
+					"templateLock": "all",
 					"previously": [
 						"image"
 					]

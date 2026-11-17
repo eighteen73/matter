@@ -130,6 +130,36 @@ test.describe('section markup in the editor', () => {
 
 		await expect(content).toHaveClass(/(^|\s)is-empty(\s|$)/);
 	});
+
+	test("a locked slot's blocks can't be removed, but keep their settings", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+
+		const image = await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const store = select('core/block-editor');
+			const slot = store
+				.getBlocks()[0]
+				.innerBlocks.find((block) => block.attributes.name === 'media');
+			const { clientId } = slot.innerBlocks[0];
+
+			dispatch('core/block-editor').selectBlock(clientId);
+
+			return {
+				mode: store.getBlockEditingMode(clientId),
+				removable: store.canRemoveBlock(clientId),
+			};
+		});
+
+		expect(image).toEqual({ mode: 'default', removable: false });
+		await expect(
+			page.getByRole('button', { name: 'Edit pattern' })
+		).toHaveCount(0);
+	});
 });
 
 test.describe('slot-only blocks', () => {

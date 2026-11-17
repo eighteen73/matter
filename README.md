@@ -156,7 +156,7 @@ A section is a dynamic block whose `block.json` declares slots. Matter registers
 				"media": {
 					"allowedBlocks": [ "core/image" ],
 					"template": [ [ "core/image" ] ],
-					"templateLock": "contentOnly"
+					"templateLock": "all"
 				}
 			}
 		}
@@ -219,6 +219,8 @@ The default (`isDefault`) gets its class too, `is-style-default`, on the front e
 - **Remove** a slot and its content stops showing on the site. The editor keeps the content, marked as no longer shown, so the client can move it into another slot or remove it.
 
 An unlocked slot is filled from its `template` when it's created; if the client empties it, it stays empty. A slot with `templateLock` keeps its template's blocks.
+
+**Locking a slot.** Use `"all"` to fix a slot's blocks (exactly one image, say) or `"insert"` to fix their number but allow reordering. Both leave the blocks' own settings in place. Avoid `"contentOnly"`: core then hides the blocks' settings (an image's focal point, its menu) behind an "Edit pattern" button that clients don't find, and the slot's `allowedBlocks` already limits what goes in.
 
 ## Colour schemes
 
