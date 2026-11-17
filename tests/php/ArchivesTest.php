@@ -200,4 +200,16 @@ class ArchivesTest extends TestCase {
 		$this->assertNotEmpty( $posts->missing_page() );
 		$this->assertSame( add_query_arg( 'post_type', 'post', home_url( '/' ) ), $posts->preview_url() );
 	}
+
+	/**
+	 * Archive content lays out what editors add as page content does: text
+	 * at the content width, bands (the list, sections) full width.
+	 *
+	 * @return void
+	 */
+	public function test_archive_content_layout(): void {
+		$html = do_blocks( '<!-- wp:matter/archive-content --><p>List</p><!-- /wp:matter/archive-content -->' );
+
+		$this->assertMatchesRegularExpression( '/class="wp-block-matter-archive-content [^"]*is-layout-constrained/', $html );
+	}
 }

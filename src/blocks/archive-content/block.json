@@ -12,7 +12,15 @@
 		"inserter": false,
 		"reusable": false,
 		"customClassName": false,
-		"renaming": false
+		"renaming": false,
+		"layout": {
+			"default": {
+				"type": "constrained"
+			},
+			"allowSwitching": false,
+			"allowInheriting": false,
+			"allowEditing": false
+		}
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
