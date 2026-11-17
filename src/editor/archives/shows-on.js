@@ -12,6 +12,7 @@ import apiFetch from '@wordpress/api-fetch';
 import {
 	ComboboxControl,
 	ExternalLink,
+	Notice,
 	ToggleControl,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -151,6 +152,11 @@ function ShowsOn() {
 						<ExternalLink href={selected.url}>
 							{__('View archive', 'matter')}
 						</ExternalLink>
+					)}
+					{selected?.noPage && (
+						<Notice status="warning" isDismissible={false}>
+							{selected.noPage}
+						</Notice>
 					)}
 				</VStack>
 				{selected?.cascade && (

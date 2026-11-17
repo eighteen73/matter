@@ -171,4 +171,33 @@ class ArchivesTest extends TestCase {
 		$this->assertNull( Target::from_string( 'term:category:999999' ) );
 		$this->assertNull( Target::from_string( 'anything' ) );
 	}
+
+	/**
+	 * Posts are listed on the posts page, or the front page showing posts.
+	 * With a static front page and no posts page, nothing lists them: no
+	 * address (not the front page's), a reason for editors, and previews
+	 * use WordPress's posts list.
+	 *
+	 * @return void
+	 */
+	public function test_posts_url(): void {
+		$posts  = new Target( 'post_type', 'post' );
+		$front  = self::factory()->post->create( [ 'post_type' => 'page' ] );
+		$listed = self::factory()->post->create( [ 'post_type' => 'page' ] );
+
+		update_option( 'show_on_front', 'posts' );
+		$this->assertSame( home_url( '/' ), $posts->url() );
+		$this->assertNull( $posts->missing_page() );
+
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_on_front', $front );
+		update_option( 'page_for_posts', $listed );
+		$this->assertSame( get_permalink( $listed ), $posts->url() );
+		$this->assertNull( $posts->missing_page() );
+
+		update_option( 'page_for_posts', 0 );
+		$this->assertNull( $posts->url() );
+		$this->assertNotEmpty( $posts->missing_page() );
+		$this->assertSame( add_query_arg( 'post_type', 'post', home_url( '/' ) ), $posts->preview_url() );
+	}
 }

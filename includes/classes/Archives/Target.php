@@ -275,7 +275,13 @@ final readonly class Target {
 			if ( 'post' === $this->name ) {
 				$page = (int) get_option( 'page_for_posts' );
 
-				return $page ? (string) get_permalink( $page ) : home_url( '/' );
+				if ( $page ) {
+					return (string) get_permalink( $page );
+				}
+
+				// With a static front page and no posts page, nothing lists
+				// the posts (WordPress's link would be the front page).
+				return 'page' === get_option( 'show_on_front' ) ? null : home_url( '/' );
 			}
 
 			return get_post_type_archive_link( $this->name ) ?: null;
@@ -293,6 +299,30 @@ final readonly class Target {
 			'404'    => home_url( '/page-not-found-preview/' ),
 			default  => null,
 		};
+	}
+
+	/**
+	 * Why the archive has no address, for editors, if that's something a
+	 * person can change: posts without a posts page.
+	 *
+	 * @return string|null
+	 */
+	public function missing_page(): ?string {
+		if ( 'post_type' !== $this->type || 'post' !== $this->name || null !== $this->url() ) {
+			return null;
+		}
+
+		return __( 'No page lists the posts yet, so there’s nothing to link to or view. An administrator can choose one in Settings › Reading, as the “Posts page”.', 'matter' );
+	}
+
+	/**
+	 * Where the archive can be seen, for previews: its address, or for posts
+	 * without a page of their own, WordPress's posts list by its query.
+	 *
+	 * @return string|null
+	 */
+	public function preview_url(): ?string {
+		return $this->url() ?? ( $this->missing_page() ? add_query_arg( 'post_type', 'post', home_url( '/' ) ) : null );
 	}
 
 	/**

@@ -663,7 +663,7 @@ class Archives {
 	 * @return string
 	 */
 	public function permalink( string $link, WP_Post $post ): string {
-		return self::POST_TYPE === $post->post_type ? ( self::target_of( $post )?->url() ?? home_url( '/' ) ) : $link;
+		return self::POST_TYPE === $post->post_type ? ( self::target_of( $post )?->preview_url() ?? home_url( '/' ) ) : $link;
 	}
 
 	/**
@@ -686,7 +686,7 @@ class Archives {
 				'preview_id'    => $post->ID,
 				'preview_nonce' => $args['preview_nonce'] ?? wp_create_nonce( 'post_preview_' . $post->ID ),
 			],
-			self::target_of( $post )?->url() ?? home_url( '/' )
+			self::target_of( $post )?->preview_url() ?? home_url( '/' )
 		);
 	}
 
@@ -701,7 +701,7 @@ class Archives {
 			return;
 		}
 
-		wp_safe_redirect( self::target_of( (int) get_queried_object_id() )?->url() ?? home_url( '/' ) );
+		wp_safe_redirect( self::target_of( (int) get_queried_object_id() )?->preview_url() ?? home_url( '/' ) );
 		exit;
 	}
 }

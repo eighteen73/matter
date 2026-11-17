@@ -408,6 +408,9 @@ class Admin {
 					<a class="button" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'View archive', 'matter' ); ?></a>
 				<?php endif; ?>
 			</p>
+			<?php if ( $target->missing_page() ) : ?>
+				<div class="notice notice-warning inline"><p><?php echo esc_html( (string) $target->missing_page() ); ?></p></div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -926,6 +929,7 @@ class Admin {
 			'value'   => $target->key(),
 			'label'   => $target->label(),
 			'url'     => $target->url(),
+			'noPage'  => $target->missing_page(),
 			'cascade' => $target->cascade_label(),
 			'values'  => [
 				'title'       => wp_specialchars_decode( (string) Archives::value( $target, 'title' ) ),
