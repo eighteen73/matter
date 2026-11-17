@@ -166,7 +166,7 @@ A section is a dynamic block whose `block.json` declares slots. Matter registers
 }
 ```
 
-**In the inserter** a section is previewed from its slots' templates, unless its `block.json` has its own `example`: placeholders become the text ("Page heading"), images a grey picture, and a section in a template (a card in Cards) is filled from its own slots. Write placeholders that read as a preview.
+**In the inserter** a section is previewed from its slots' templates, unless its `block.json` has its own `example`: placeholders become the text ("Page heading"), images a grey picture, and a section in a template (a card in Cards) is filled from its own slots. Write placeholders that read as a preview. Modals, drawers and collapsibles are previewed the same way, shown open; Matter's other blocks have sample content, and posts, products and terms displays preview a few items.
 
 **In List View** a section is named after its first heading ("Showcase: The perfect backdrop…"), unless the client has renamed it, and its slots after their names (`media-end` is "Media end").
 

@@ -134,10 +134,47 @@ addFilter(
 		QUERY_BLOCKS.includes(name) ? withDisplay(settings) : settings
 );
 
+// Items in an inserter preview: enough to show the display, not every post.
+const PREVIEW_ITEMS = 3;
+
+/**
+ * A block template (`[ name, attributes, inner ]`) as an inserter example's
+ * blocks.
+ *
+ * @param {Array} template Block template.
+ * @return {Object[]} Example blocks.
+ */
+const exampleBlocks = (template = []) =>
+	template.map(([name, attributes = {}, inner = []]) => ({
+		name,
+		attributes,
+		innerBlocks: exampleBlocks(inner),
+	}));
+
+/**
+ * An inserter preview for a query display: its own attributes and blocks,
+ * listing a few items (a product collection applies its own query, so all
+ * of them). Carousels are shown at a laptop's width, several slides across.
+ *
+ * @param {Object} attributes Display attributes.
+ * @param {Array}  template   Inner block template.
+ * @param {string} queryKey   `query` or `termQuery`.
+ * @return {Object} Block example.
+ */
+const queryExample = (attributes, template, queryKey = 'query') => ({
+	...('carousel' === attributes[ATTRIBUTE]?.type && { viewportWidth: 1200 }),
+	attributes: {
+		...attributes,
+		[queryKey]: { ...attributes[queryKey], perPage: PREVIEW_ITEMS },
+	},
+	innerBlocks: exampleBlocks(template),
+});
+
 // After the blocks register (their icons) and WooCommerce's registry loads.
 domReady(() => {
 	Object.entries(POSTS_VARIATIONS).forEach(([type, variation]) => {
 		const [, attributes] = postsTemplate(type, 'post');
+		const innerBlocks = [['core/post-template', {}, ITEMS[type]]];
 
 		registerBlockVariation(POSTS, {
 			...variation,
@@ -150,9 +187,20 @@ domReady(() => {
 			attributes,
 			isActive: ['namespace'],
 			allowedControls: POSTS_CONTROLS,
-			innerBlocks: [['core/post-template', {}, ITEMS[type]]],
+			innerBlocks,
+			example: queryExample(attributes, innerBlocks),
 		});
 	});
+
+	const productsAttributes = {
+		[ATTRIBUTE]: { type: 'carousel' },
+		hideControls: PRODUCTS_HIDDEN_CONTROLS,
+		displayLayout: PRODUCTS_LAYOUT,
+		query: { perPage: 9 },
+	};
+	const productsBlocks = [
+		['woocommerce/product-template', {}, ITEMS.carousel],
+	];
 
 	window.wc?.wcBlocksRegistry?.__experimentalRegisterProductCollection?.({
 		name: PRODUCTS_COLLECTION,
@@ -160,13 +208,12 @@ domReady(() => {
 		description: __('Products shown as slides.', 'matter'),
 		icon: shop,
 		scope: isPostEditor() ? ['inserter'] : [],
-		attributes: {
-			[ATTRIBUTE]: { type: 'carousel' },
-			hideControls: PRODUCTS_HIDDEN_CONTROLS,
-			displayLayout: PRODUCTS_LAYOUT,
-			query: { perPage: 9 },
-		},
-		innerBlocks: [['woocommerce/product-template', {}, ITEMS.carousel]],
+		attributes: productsAttributes,
+		innerBlocks: productsBlocks,
+		example: queryExample(
+			{ ...productsAttributes, collection: PRODUCTS_COLLECTION },
+			productsBlocks
+		),
 	});
 
 	if (getBlockType(TERMS)) {
@@ -184,6 +231,11 @@ domReady(() => {
 			// A Terms Query has no `namespace`: its display marks it.
 			isActive: (attributes) => !!displayOf(TERMS, attributes),
 			innerBlocks: [['core/term-template', {}, ITEMS.carousel]],
+			example: queryExample(
+				termsAttributes(),
+				[['core/term-template', {}, ITEMS.carousel]],
+				'termQuery'
+			),
 		});
 	}
 

@@ -936,3 +936,36 @@ test.describe('accordion', () => {
 			.toBe(2);
 	});
 });
+
+test.describe('inserter previews', () => {
+	test("Matter's blocks have previews, and posts displays preview a few items", async ({
+		admin,
+		page,
+	}) => {
+		await admin.createNewPost();
+
+		const previews = await page.evaluate(() => {
+			const { getBlockType, getBlockVariations } = window.wp.blocks;
+			const names = [
+				'matter/accordion',
+				'matter/carousel',
+				'matter/collapsible',
+				'matter/drawer',
+				'matter/gallery',
+				'matter/modal',
+				'matter/tabs',
+				'matter-test/section',
+			];
+
+			return {
+				missing: names.filter((name) => !getBlockType(name)?.example),
+				posts: getBlockVariations('core/query')
+					.filter(({ name }) => name.startsWith('matter/'))
+					.map(({ example }) => example?.attributes?.query?.perPage),
+			};
+		});
+
+		expect(previews.missing).toEqual([]);
+		expect(previews.posts).toEqual([3, 3, 3]);
+	});
+});

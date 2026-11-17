@@ -47,13 +47,37 @@ function Dialog({ BlockListBlock, blockProps, overlayId, overlayName }) {
 		},
 		[overlayId, blockProps.clientId]
 	);
+	const isPreview = useSelect(
+		(select) => !!select(blockEditorStore).getSettings().isPreviewMode,
+		[]
+	);
 	const { clearSelectedBlock } = useDispatch(blockEditorStore);
 	const close = useCallback(() => clearSelectedBlock(), [clearSelectedBlock]);
-	const isShown = useDialogPreview(ref, isOpen, close);
+	const isShown = useDialogPreview(ref, isOpen && !isPreview, close);
 
 	const type = overlayName.split('/')[1];
 	const blockClass = `wp-block-matter-${type}`;
 	const { scheme, dismissible = true, group, position } = attributes;
+	const schemeClass = scheme && `has-scheme has-scheme-${scheme}`;
+
+	// The inserter's preview can't show the top layer: the dialog is drawn in
+	// place, as a box.
+	if (isPreview) {
+		return (
+			<div
+				className={[
+					blockClass,
+					'matter-overlay-editor__dialog',
+					'is-preview',
+					schemeClass,
+				]
+					.filter(Boolean)
+					.join(' ')}
+			>
+				<BlockListBlock {...blockProps} />
+			</div>
+		);
+	}
 
 	return (
 		<div
@@ -65,7 +89,7 @@ function Dialog({ BlockListBlock, blockProps, overlayId, overlayName }) {
 				isShown && 'is-shown',
 				type === 'drawer' &&
 					`is-position-${position === 'start' ? 'start' : 'end'}`,
-				scheme && `has-scheme has-scheme-${scheme}`,
+				schemeClass,
 			]
 				.filter(Boolean)
 				.join(' ')}

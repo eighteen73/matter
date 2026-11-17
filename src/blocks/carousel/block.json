@@ -26,6 +26,39 @@
 	"providesContext": {
 		"allowResize": "allowResize"
 	},
+	"example": {
+		"viewportWidth": 1200,
+		"innerBlocks": [
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			},
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			},
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			},
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			}
+		]
+	},
 	"supports": {
 		"html": false,
 		"anchor": true,

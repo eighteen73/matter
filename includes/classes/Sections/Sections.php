@@ -236,14 +236,22 @@ class Sections {
 	}
 
 	/**
-	 * Inserter previews for sections without their own `example`.
+	 * Inserter previews for sections, and other blocks with slots (modals,
+	 * drawers, collapsibles), without their own `example`.
 	 *
 	 * @return void
 	 */
 	public function add_examples(): void {
 		foreach ( WP_Block_Type_Registry::get_instance()->get_all_registered() as $block_type ) {
-			if ( self::is_section( $block_type ) && empty( $block_type->example ) ) {
+			$slots = $block_type->supports['matter']['slots'] ?? null;
+
+			if ( is_array( $slots ) && $slots && empty( $block_type->example ) ) {
 				$block_type->example = self::example( (array) $block_type->supports['matter']['slots'] );
+
+				// A modal or drawer isn't page-wide: shown larger.
+				if ( ! self::is_section( $block_type ) ) {
+					$block_type->example['viewportWidth'] = 640;
+				}
 			}
 		}
 	}

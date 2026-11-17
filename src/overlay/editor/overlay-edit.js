@@ -68,6 +68,7 @@ export default function OverlayEdit({
 		(select) => {
 			const {
 				getBlocks,
+				getSettings,
 				isBlockSelected,
 				hasSelectedInnerBlock,
 				getBlockCount,
@@ -90,7 +91,8 @@ export default function OverlayEdit({
 					: hasSelectedInnerBlock(clientId, true));
 
 			return {
-				isOpen: isSelected,
+				// Open in the inserter's preview, to show what it holds.
+				isOpen: isSelected || !!getSettings().isPreviewMode,
 				triggerId: trigger?.clientId,
 				hasTrigger: !!trigger && getBlockCount(trigger.clientId) > 0,
 			};

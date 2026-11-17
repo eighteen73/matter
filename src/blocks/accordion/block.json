@@ -39,6 +39,55 @@
 		"matter/autoclose": "autoclose",
 		"matter/openFirst": "openFirst"
 	},
+	"example": {
+		"attributes": {
+			"openFirst": true
+		},
+		"innerBlocks": [
+			{
+				"name": "matter/accordion-item",
+				"attributes": {
+					"title": "What's included?"
+				},
+				"innerBlocks": [
+					{
+						"name": "core/paragraph",
+						"attributes": {
+							"content": "Everything you need to get started, delivered together."
+						}
+					}
+				]
+			},
+			{
+				"name": "matter/accordion-item",
+				"attributes": {
+					"title": "How long does it take?"
+				},
+				"innerBlocks": [
+					{
+						"name": "core/paragraph",
+						"attributes": {
+							"content": "Most orders arrive within a week."
+						}
+					}
+				]
+			},
+			{
+				"name": "matter/accordion-item",
+				"attributes": {
+					"title": "Can I change my order?"
+				},
+				"innerBlocks": [
+					{
+						"name": "core/paragraph",
+						"attributes": {
+							"content": "Yes, until it's dispatched."
+						}
+					}
+				]
+			}
+		]
+	},
 	"supports": {
 		"html": false,
 		"anchor": true,

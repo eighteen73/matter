@@ -36,3 +36,16 @@ $trigger: "> :is(.wp-block-matter-modal__trigger, .wp-block-matter-drawer__trigg
 		margin: 0;
 	}
 }
+
+// In the inserter's preview, in place rather than over the page.
+.matter-overlay-editor__dialog.is-preview {
+	block-size: auto;
+	inset: auto;
+	margin-block: 0;
+	margin-inline: auto;
+	opacity: 1;
+	position: static;
+	transform: none;
+	translate: none;
+	visibility: visible;
+}

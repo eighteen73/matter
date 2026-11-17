@@ -1,4 +1,8 @@
-import { useBlockProps } from '@wordpress/block-editor';
+import {
+	store as blockEditorStore,
+	useBlockProps,
+} from '@wordpress/block-editor';
+import { useSelect } from '@wordpress/data';
 import { Disabled, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { GravityForm as GravityFormIcon } from '../../components/icons/gravity-form';
@@ -36,6 +40,55 @@ function getFormOptions(forms) {
 }
 
 /**
+ * A sample form for the inserter's preview, in Gravity Forms' markup so the
+ * theme's form styles apply.
+ *
+ * @return {Element} Sample form.
+ */
+function ExampleForm() {
+	const fields = [
+		[__('Name', 'matter'), 'input'],
+		[__('Email', 'matter'), 'input'],
+		[__('Message', 'matter'), 'textarea'],
+	];
+
+	return (
+		<Disabled>
+			<div className="gform_wrapper gravity-theme">
+				<form>
+					<div className="gform_body">
+						<div className="gform_fields">
+							{fields.map(([label, Field], index) => (
+								<div className="gfield" key={label}>
+									<label
+										className="gfield_label"
+										htmlFor={`matter-example-field-${index}`}
+									>
+										{label}
+									</label>
+									<div className="ginput_container">
+										<Field
+											id={`matter-example-field-${index}`}
+										/>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+					<div className="gform_footer">
+						<input
+							type="submit"
+							className="gform_button button"
+							value={__('Send', 'matter')}
+						/>
+					</div>
+				</form>
+			</div>
+		</Disabled>
+	);
+}
+
+/**
  * @param {Object}   props               Block props.
  * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Update attributes.
@@ -52,6 +105,10 @@ export default function Edit({ attributes, setAttributes }) {
 		anchor,
 	} = attributes;
 	const blockProps = useBlockProps();
+	const isPreview = useSelect(
+		(select) => !!select(blockEditorStore).getSettings().isPreviewMode,
+		[]
+	);
 	const forms = getForms();
 	const formOptions = getFormOptions(forms);
 	const selectedForm = forms.find(
@@ -74,6 +131,15 @@ export default function Edit({ attributes, setAttributes }) {
 			},
 			skipBlockSupportAttributes: true,
 		});
+
+	// The inserter's preview: a sample, not the form picker.
+	if (isPreview && !formId) {
+		return (
+			<div {...blockProps}>
+				<ExampleForm />
+			</div>
+		);
+	}
 
 	const inspectorControls = (
 		<GravityFormInspectorControls

@@ -38,6 +38,7 @@
 			"default": null
 		}
 	},
+	"example": {},
 	"supports": {
 		"html": false,
 		"anchor": true,

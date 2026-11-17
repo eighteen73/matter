@@ -33,6 +33,52 @@
 			"default": false
 		}
 	},
+	"example": {
+		"innerBlocks": [
+			{
+				"name": "matter/tab",
+				"attributes": {
+					"label": "Overview"
+				},
+				"innerBlocks": [
+					{
+						"name": "core/paragraph",
+						"attributes": {
+							"content": "A short introduction, shown first."
+						}
+					}
+				]
+			},
+			{
+				"name": "matter/tab",
+				"attributes": {
+					"label": "Details"
+				},
+				"innerBlocks": [
+					{
+						"name": "core/paragraph",
+						"attributes": {
+							"content": "More about it."
+						}
+					}
+				]
+			},
+			{
+				"name": "matter/tab",
+				"attributes": {
+					"label": "Delivery"
+				},
+				"innerBlocks": [
+					{
+						"name": "core/paragraph",
+						"attributes": {
+							"content": "How and when it arrives."
+						}
+					}
+				]
+			}
+		]
+	},
 	"supports": {
 		"html": false,
 		"anchor": true,
