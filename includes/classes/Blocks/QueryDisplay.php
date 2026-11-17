@@ -149,6 +149,27 @@ final class QueryDisplay {
 	}
 
 	/**
+	 * Names of the post types a posts display can show, as search keywords
+	 * for it in the inserter: a client searching "faq" finds Posts accordion.
+	 *
+	 * @return string[] Lowercase plural and singular names.
+	 */
+	public static function post_type_keywords(): array {
+		$keywords = [];
+
+		foreach ( get_post_types( [ 'show_in_rest' => true ], 'objects' ) as $post_type ) {
+			if ( 'attachment' === $post_type->name || ! is_post_type_viewable( $post_type ) ) {
+				continue;
+			}
+
+			$keywords[] = mb_strtolower( (string) $post_type->labels->name );
+			$keywords[] = mb_strtolower( (string) $post_type->labels->singular_name );
+		}
+
+		return array_values( array_unique( array_filter( $keywords ) ) );
+	}
+
+	/**
 	 * Whether a query block can be shown as a display type.
 	 *
 	 * @param string $type        Display type (carousel, accordion or tabs).

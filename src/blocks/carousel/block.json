@@ -6,7 +6,7 @@
 	"title": "Carousel",
 	"category": "widgets",
 	"icon": "slides",
-	"description": "Slides that scroll horizontally. Each block inside is a slide; or show posts, products or terms with a query.",
+	"description": "Slides that scroll horizontally: each block inside is a slide. To show posts, products or terms automatically, use Posts, Products or Terms carousel.",
 	"keywords": [ "slider", "slideshow", "gallery" ],
 	"attributes": {
 		"label": {

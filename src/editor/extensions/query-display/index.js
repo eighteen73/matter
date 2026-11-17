@@ -67,6 +67,7 @@ const DISPLAY_ATTRIBUTE = {
 	matterId: { type: 'string' },
 };
 const DISPLAY_CONTEXT = 'matter/display';
+const { postTypeNames = [] } = window.matterEditor ?? {};
 
 // The Site Editor keeps the plain query blocks in its inserter.
 const isPostEditor = () => !document.body.classList.contains('site-editor-php');
@@ -74,21 +75,36 @@ const isPostEditor = () => !document.body.classList.contains('site-editor-php');
 const POSTS_VARIATIONS = {
 	carousel: {
 		title: __('Posts carousel', 'matter'),
-		description: __('Posts shown as slides.', 'matter'),
+		description: __(
+			'Posts shown as slides, e.g. the latest news. New posts appear by themselves.',
+			'matter'
+		),
+		keywords: [
+			__('slider', 'matter'),
+			__('latest', 'matter'),
+			__('news', 'matter'),
+			__('blog', 'matter'),
+		],
 	},
 	accordion: {
 		title: __('Posts accordion', 'matter'),
 		description: __(
-			'Posts shown as an accordion: each post’s title opens its panel.',
+			'Posts shown as an accordion, e.g. every FAQ: each title opens its panel. New posts appear by themselves.',
 			'matter'
 		),
+		keywords: [
+			__('faq', 'matter'),
+			__('questions', 'matter'),
+			__('toggle', 'matter'),
+		],
 	},
 	tabs: {
 		title: __('Posts tabs', 'matter'),
 		description: __(
-			'Posts shown as tabs: each post’s title is a tab.',
+			'Posts shown as tabs: each post’s title is a tab. New posts appear by themselves.',
 			'matter'
 		),
+		keywords: [],
 	},
 };
 
@@ -125,6 +141,8 @@ domReady(() => {
 
 		registerBlockVariation(POSTS, {
 			...variation,
+			// Searching a post type's name ("faq") finds them too.
+			keywords: [...variation.keywords, ...postTypeNames],
 			name: NAMESPACES[type],
 			icon: getBlockType(DISPLAY_BLOCKS[type])?.icon?.src ?? postList,
 			scope: isPostEditor() ? ['inserter'] : [],

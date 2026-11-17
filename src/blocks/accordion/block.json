@@ -6,7 +6,7 @@
 	"title": "Accordion",
 	"category": "widgets",
 	"icon": "list-view",
-	"description": "Expandable items of content. Add items by hand, or list posts with a query.",
+	"description": "Expandable items you write here. To list FAQs or other posts automatically, use Posts accordion.",
 	"keywords": [
 		"faq",
 		"toggle",

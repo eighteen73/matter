@@ -12,6 +12,7 @@
 namespace Eighteen73\Matter\Tests;
 
 use Eighteen73\Matter\Blocks\LoopItem;
+use Eighteen73\Matter\Blocks\QueryDisplay;
 
 /**
  * Loop items.
@@ -356,5 +357,44 @@ class LoopItemTest extends TestCase {
 		$this->assertSame( 1, substr_count( LoopItem::render_term( $term ), 'Scarves' ) );
 
 		unregister_block_pattern( 'matter-test-theme/loop-item-term-post_tag' );
+	}
+
+	/**
+	 * Posts displays are found in the inserter by the names of the post types
+	 * they can show, not attachments or private types.
+	 *
+	 * @return void
+	 */
+	public function test_post_type_keywords(): void {
+		register_post_type(
+			'faq',
+			[
+				'public'       => true,
+				'show_in_rest' => true,
+				'labels'       => [
+					'name'          => 'FAQs',
+					'singular_name' => 'FAQ',
+				],
+			]
+		);
+		register_post_type(
+			'secret',
+			[
+				'public'       => false,
+				'show_in_rest' => true,
+				'labels'       => [ 'name' => 'Secrets' ],
+			]
+		);
+
+		$keywords = QueryDisplay::post_type_keywords();
+
+		$this->assertContains( 'faqs', $keywords );
+		$this->assertContains( 'faq', $keywords );
+		$this->assertContains( 'post', $keywords );
+		$this->assertNotContains( 'media', $keywords );
+		$this->assertNotContains( 'secrets', $keywords );
+
+		unregister_post_type( 'faq' );
+		unregister_post_type( 'secret' );
 	}
 }

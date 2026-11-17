@@ -6,7 +6,7 @@
 	"title": "Tabs",
 	"category": "widgets",
 	"icon": "index-card",
-	"description": "Content split into tabs. Add tabs by hand, or show posts with a query.",
+	"description": "Content split into tabs you write here. To show posts as tabs automatically, use Posts tabs.",
 	"attributes": {
 		"matterId": {
 			"type": "string"

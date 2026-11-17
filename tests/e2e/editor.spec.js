@@ -386,6 +386,38 @@ test.describe('slot alignments', () => {
 	});
 });
 
+test.describe('posts displays', () => {
+	test('searching "faq" or a post type finds Posts accordion, which lists up to 100', async ({
+		admin,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await page
+			.getByRole('button', { name: 'Block Inserter', exact: true })
+			.click();
+
+		const search = page.getByRole('searchbox', { name: 'Search' });
+		const result = page.getByRole('option', { name: 'Posts accordion' });
+
+		for (const term of ['faq', 'pages']) {
+			await search.fill(term);
+			await expect(result).toBeVisible();
+		}
+
+		await result.click();
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						window.wp.data
+							.select('core/block-editor')
+							.getBlocks()[0]?.attributes.query.perPage
+				)
+			)
+			.toBe(100);
+	});
+});
+
 test.describe('carousel picker', () => {
 	test('choosing posts keeps the variant the carousel already has', async ({
 		admin,

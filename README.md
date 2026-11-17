@@ -111,6 +111,8 @@ The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; c
 
 ## Posts as carousels, accordions or tabs
 
+In the inserter, the posts displays are also found by the names of the site's post types ("faq" finds Posts accordion). Posts accordions and tabs start at 100 items per page (core's most), since nothing pages through them; carousels at 9.
+
 A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, also a Product Collection or a Terms Query): one block, one row in List View, with WordPress's own query controls. A `matterDisplay` attribute makes the query that block: `type` (`carousel`, `accordion` or `tabs`), `style` (the block's variant), `scheme`, and the block's own settings (a carousel's `label`; an accordion's `headingLevel`, `autoclose`, `openFirst`, `faqSchema`; tabs' `label`, `orientation`, `deepLink`, `dropdown`).
 
 - **Front end:** the query's output is rendered inside the block (`Blocks\QueryDisplay`), so its markup, script, styles (Matter's and the theme's) and colour scheme apply as for the block itself. The query's alignment moves to the block. Accordion and tabs items are the post template's `matter/accordion-item` or `matter/tab` (titled with the post's title) holding the theme's [loop item](#loop-items) for that block; the query counts as their accordion or tabs (`Blocks\Instances`), so open first, FAQ schema, the heading level and the tab list work as usual. The post template's list is marked `role="presentation"`.

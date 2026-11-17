@@ -110,7 +110,9 @@ export const postsTemplate = (type, postType, display = {}) => [
 		namespace: NAMESPACES[type],
 		[ATTRIBUTE]: { ...display, type },
 		query: {
-			perPage: type === 'carousel' ? 9 : 10,
+			// Accordions and tabs list them all (FAQs, say): core's
+			// most, as nothing pages through them.
+			perPage: type === 'carousel' ? 9 : 100,
 			postType,
 			inherit: false,
 			...(type !== 'carousel' && { order: 'asc', orderBy: 'title' }),
