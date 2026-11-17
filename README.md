@@ -572,6 +572,7 @@ add_filter( 'matter_theme_icons', fn( $icons ) => [ ...$icons, 'label' => 'Theme
 
 - **Button icon.** An icon from the icon registry on `core/button` (attribute `matterIcon`), rendered as `.wp-block-button__icon` inside a `.has-icon` link. Chosen from a library modal like core's Icon block. Limit the collections offered (for button and tab icons) with `matter_icon_collections`.
 - **Focal point.** On `core/image`, using core's own `focalPoint` attribute, and on featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images. Core offers its focal point only for images with a scale set; Matter offers it on every image (sections crop images in CSS) and hides its own control where core's shows.
+- **Image sizes.** Wide and full-width images (`core/image`, `core/post-featured-image`) get `sizes` from their alignment: `100vw` for full, the theme's `wideSize` for wide. Core writes it from the size chosen ("Large" is 1024px), so a full-width image was downloaded at 1024px and stretched. Lazy-loaded images still get core's `auto, ` first.
 
 Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs) and `gravityforms/form`.
 

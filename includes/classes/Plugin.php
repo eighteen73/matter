@@ -16,6 +16,7 @@ use Eighteen73\Matter\Blocks\Registry;
 use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Extensions\ButtonIcon;
 use Eighteen73\Matter\Extensions\FocalPoint;
+use Eighteen73\Matter\Extensions\ImageSizes;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
@@ -56,6 +57,7 @@ class Plugin {
 		Link::instance()->setup();
 		ButtonIcon::instance()->setup();
 		FocalPoint::instance()->setup();
+		ImageSizes::instance()->setup();
 		Editor::instance()->setup();
 
 		// Menus, panels and other PHP-rendered components.

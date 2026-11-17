@@ -1,6 +1,6 @@
 <?php
 /**
- * Core block extensions: button icon and focal point.
+ * Core block extensions: button icon, focal point and image sizes.
  *
  * @package Eighteen73\Matter
  */
@@ -48,5 +48,45 @@ class ExtensionsTest extends TestCase {
 		// The centre is the default, so nothing is added.
 		$html = $this->render( '<!-- wp:image {"focalPoint":{"x":0.5,"y":0.5}} --><figure class="wp-block-image"><img src="a.jpg" alt=""/></figure><!-- /wp:image -->' );
 		$this->assertStringNotContainsString( 'object-position', $html );
+	}
+
+	/**
+	 * Wide and full-width images get `sizes` from their alignment, so the
+	 * browser picks a file as wide as they're shown; core then adds the
+	 * `srcset` and keeps it.
+	 *
+	 * @return void
+	 */
+	public function test_image_sizes(): void {
+		$theme_json = fn( $data ) => $data->update_with(
+			[
+				'version'  => 3,
+				'settings' => [ 'layout' => [ 'wideSize' => '1200px' ] ],
+			]
+		);
+
+		add_filter( 'wp_theme_json_data_theme', $theme_json );
+		wp_clean_theme_json_cache();
+
+		$id    = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/33772.jpg' );
+		$image = fn( string $align ) => wp_filter_content_tags(
+			$this->render(
+				'<!-- wp:image {"id":' . $id . ',"sizeSlug":"large"' . ( $align ? ',"align":"' . $align . '"' : '' ) . '} --><figure class="wp-block-image' . ( $align ? ' align' . $align : '' ) . ' size-large"><img src="' . wp_get_attachment_image_url( $id, 'large' ) . '" alt="" class="wp-image-' . $id . '"/></figure><!-- /wp:image -->'
+			)
+		);
+
+		$full = $image( 'full' );
+
+		// Lazy-loaded, so core puts `auto, ` first.
+		$this->assertMatchesRegularExpression( '/sizes="(auto, )?100vw"/', $full );
+		$this->assertStringContainsString( 'srcset=', $full );
+		$this->assertMatchesRegularExpression( '/sizes="(auto, )?\\(max-width: 1200px\\) 100vw, 1200px"/', $image( 'wide' ) );
+
+		// Others keep core's, from the chosen size.
+		$this->assertMatchesRegularExpression( '/sizes="(auto, )?\(max-width: 1024px\) 100vw, 1024px"/', $image( '' ) );
+		$this->assertStringNotContainsString( 'sizes="100vw"', $image( '' ) );
+
+		remove_filter( 'wp_theme_json_data_theme', $theme_json );
+		wp_clean_theme_json_cache();
 	}
 }
