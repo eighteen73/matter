@@ -307,7 +307,7 @@ class Settings {
 		 *
 		 * @param string $title Page and menu title.
 		 */
-		$title = (string) apply_filters( 'matter_settings_page_title', __( 'Options', 'matter' ) );
+		$title = (string) apply_filters( 'matter_settings_page_title', __( 'Site details', 'matter' ) );
 
 		/**
 		 * Filters the admin menu the settings page sits under.

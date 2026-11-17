@@ -419,7 +419,7 @@ Also available: `get_menu()` returns the HTML rather than echoing it.
 }
 ```
 
-A megamenu can also show a **panel** beside its columns: a PHP file in the theme's `template-parts/megamenu/` with a `Title:` header, chosen in the item's "Megamenu panel" list (`matter_megamenu_panels` filters the list). It receives the menu item as `$args['item']`, so it can use the item's description, and settings from Appearance › Options:
+A megamenu can also show a **panel** beside its columns: a PHP file in the theme's `template-parts/megamenu/` with a `Title:` header, chosen in the item's "Megamenu panel" list (`matter_megamenu_panels` filters the list). It receives the menu item as `$args['item']`, so it can use the item's description, and settings from Appearance › Site details:
 
 ```php
 <?php
@@ -473,7 +473,7 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 
 ## Site settings
 
-The theme declares fields, and Matter adds an **Options** page under Appearance. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
+The theme declares fields, and Matter adds a **Site details** page under Appearance. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
 
 ```php
 add_filter( 'matter_settings_fields', fn() => [
@@ -498,7 +498,7 @@ add_filter( 'matter_settings_fields', fn() => [
 - In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links.
 
 Hooks:
-- `matter_settings_page_title`: the page and menu title (default "Options").
+- `matter_settings_page_title`: the page and menu title (default "Site details").
 - `matter_settings_parent`: the admin menu it sits under (default `themes.php`, Appearance; empty for a top-level item).
 - `matter_settings_saved`: fires after saving.
 
