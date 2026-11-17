@@ -34,7 +34,7 @@ import {
 } from '@wordpress/blocks';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { createHigherOrderComponent } from '@wordpress/compose';
-import { useSelect } from '@wordpress/data';
+import { useRegistry, useSelect } from '@wordpress/data';
 import domReady from '@wordpress/dom-ready';
 import { useEffect } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
@@ -64,13 +64,14 @@ import {
 } from '../../../query-display/templates';
 import CarouselEdit from './carousel-edit';
 import PreviewEdit from './preview-edit';
+import PostTypePicker from './post-type-picker';
 
 const DISPLAY_ATTRIBUTE = {
 	[ATTRIBUTE]: { type: 'object' },
 	matterId: { type: 'string' },
 };
 const DISPLAY_CONTEXT = 'matter/display';
-const { postTypeNames = [] } = window.matterEditor ?? {};
+const { postTypeNames = [], postTypes = [] } = window.matterEditor ?? {};
 
 // The Site Editor keeps the plain query blocks in its inserter.
 const isPostEditor = () => !document.body.classList.contains('site-editor-php');
@@ -177,7 +178,8 @@ const queryExample = (attributes, template, queryKey = 'query') => ({
 // After the blocks register (their icons) and WooCommerce's registry loads.
 domReady(() => {
 	Object.entries(POSTS_VARIATIONS).forEach(([type, variation]) => {
-		const [, attributes] = postsTemplate(type, 'post');
+		// No post type: the client chooses what it lists (DisplayEdit).
+		const [, attributes] = postsTemplate(type, '');
 		const innerBlocks = [['core/post-template', {}, ITEMS[type]]];
 
 		registerBlockVariation(POSTS, {
@@ -305,18 +307,24 @@ const EDITS = {
 };
 
 /**
- * A query display, listing a few items in a preview (the inserter's,
- * a pattern's). Core gives an inserter preview the variation's own
- * attributes over its example's, so the example alone can't limit them. A
- * preview has its own block store: the page being edited is untouched.
+ * A query display, once it's ready to show:
+ *
+ * - A new posts display has no post type until the client chooses what it
+ *   lists (PostTypePicker). With only one choice, it's that one.
+ * - In a preview (the inserter's, a pattern's) it lists a few posts. Core
+ *   gives an inserter preview the variation's own attributes over its
+ *   example's, so the example alone can't limit them. A preview has its own
+ *   block store: the page being edited is untouched.
  *
  * @param {Object}   root           Props.
  * @param {Function} root.Edit      The display's edit component.
  * @param {Function} root.BlockEdit The query block's edit component.
  * @param {Object}   root.props     The query block's props.
- * @return {Element} The display, once its preview lists a few items.
+ * @param {string}   root.type      Display type.
+ * @return {Element} The display, or the post type picker.
  */
-function DisplayEdit({ Edit, BlockEdit, props }) {
+function DisplayEdit({ Edit, BlockEdit, props, type }) {
+	const registry = useRegistry();
 	const isPreview = useSelect(
 		(select) => !!select(blockEditorStore).getSettings().isPreviewMode,
 		[]
@@ -325,15 +333,56 @@ function DisplayEdit({ Edit, BlockEdit, props }) {
 	const key = TERMS === name ? 'termQuery' : 'query';
 	const query = attributes[key];
 	const perPage = Number(query?.perPage);
-	const tooMany = isPreview && !(perPage > 0 && perPage <= PREVIEW_ITEMS);
+	const needsPostType = POSTS === name && !query?.postType;
+
+	// Set without asking: a preview's posts, or a site's only post type.
+	let postType;
+
+	if (needsPostType && isPreview) {
+		postType = 'post';
+	} else if (needsPostType && postTypes.length < 2) {
+		postType = postTypes[0]?.name ?? 'post';
+	}
+
+	const changes = {
+		...(isPreview &&
+			!(perPage > 0 && perPage <= PREVIEW_ITEMS) && {
+				perPage: PREVIEW_ITEMS,
+			}),
+		...(postType && { postType }),
+	};
+	const pending = Object.keys(changes).length > 0;
+	const changesKey = JSON.stringify(changes);
 
 	useEffect(() => {
-		if (tooMany) {
-			setAttributes({ [key]: { ...query, perPage: PREVIEW_ITEMS } });
+		if (!pending) {
+			return;
 		}
-	}, [tooMany, key, query, setAttributes]);
 
-	return tooMany ? null : <Edit BlockEdit={BlockEdit} props={props} />;
+		// Not an edit the client made.
+		registry
+			.dispatch(blockEditorStore)
+			.__unstableMarkNextChangeAsNotPersistent();
+		setAttributes({ [key]: { ...query, ...JSON.parse(changesKey) } });
+	}, [pending, changesKey, key, query, registry, setAttributes]);
+
+	if (pending) {
+		return null;
+	}
+
+	if (needsPostType) {
+		return (
+			<PostTypePicker
+				label={POSTS_VARIATIONS[type]?.title}
+				postTypes={postTypes}
+				onChoose={(chosen) =>
+					setAttributes({ [key]: { ...query, postType: chosen } })
+				}
+			/>
+		);
+	}
+
+	return <Edit BlockEdit={BlockEdit} props={props} />;
 }
 
 addFilter(
@@ -347,6 +396,7 @@ addFilter(
 
 				return Edit ? (
 					<DisplayEdit
+						type={display.type}
 						Edit={Edit}
 						BlockEdit={BlockEdit}
 						props={props}

@@ -81,3 +81,10 @@
 .wp-block-matter-carousel__expand.is-editor-preview {
 	cursor: default;
 }
+
+// A new posts display's "What will it list?" choices.
+.matter-post-type-picker {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}

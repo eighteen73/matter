@@ -25,6 +25,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Singleton;
 use WP_Block;
 use WP_Block_Type_Registry;
@@ -149,6 +150,40 @@ final class QueryDisplay {
 	}
 
 	/**
+	 * The post types a posts display can list, for the editor's "What will
+	 * it list?" choice: viewable, in the REST API, not media, Matter's
+	 * archive entries or WooCommerce's products (shown by the Products
+	 * carousel). Posts first,
+	 * then pages, then the rest by name.
+	 *
+	 * @return array<int, array{name: string, label: string}>
+	 */
+	public static function post_types(): array {
+		$types = [];
+
+		foreach ( get_post_types( [ 'show_in_rest' => true ], 'objects' ) as $post_type ) {
+			if ( in_array( $post_type->name, [ 'attachment', 'product', Archives::POST_TYPE ], true ) || ! is_post_type_viewable( $post_type ) ) {
+				continue;
+			}
+
+			$types[] = [
+				'name'  => $post_type->name,
+				'label' => (string) $post_type->labels->name,
+			];
+		}
+
+		$rank = fn( array $type ): string => match ( $type['name'] ) {
+			'post'  => '0',
+			'page'  => '1',
+			default => '2' . mb_strtolower( $type['label'] ),
+		};
+
+		usort( $types, fn( $a, $b ) => strcmp( $rank( $a ), $rank( $b ) ) );
+
+		return $types;
+	}
+
+	/**
 	 * Names of the post types a posts display can show, as search keywords
 	 * for it in the inserter: a client searching "faq" finds Posts accordion.
 	 *
@@ -158,7 +193,7 @@ final class QueryDisplay {
 		$keywords = [];
 
 		foreach ( get_post_types( [ 'show_in_rest' => true ], 'objects' ) as $post_type ) {
-			if ( 'attachment' === $post_type->name || ! is_post_type_viewable( $post_type ) ) {
+			if ( in_array( $post_type->name, [ 'attachment', Archives::POST_TYPE ], true ) || ! is_post_type_viewable( $post_type ) ) {
 				continue;
 			}
 

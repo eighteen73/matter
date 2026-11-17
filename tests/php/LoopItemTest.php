@@ -394,6 +394,19 @@ class LoopItemTest extends TestCase {
 		$this->assertNotContains( 'media', $keywords );
 		$this->assertNotContains( 'secrets', $keywords );
 
+		// What a new posts display can list: posts, pages, then the rest;
+		// not media, private types or products.
+		$names = array_column( QueryDisplay::post_types(), 'name' );
+
+		$this->assertSame( [ 'post', 'page' ], array_slice( $names, 0, 2 ) );
+		$this->assertContains( 'faq', $names );
+		$this->assertNotContains( 'attachment', $names );
+		$this->assertNotContains( 'secret', $names );
+		$this->assertNotContains( 'product', $names );
+		$this->assertNotContains( 'matter_archive', $names );
+		$this->assertNotContains( 'archives', $keywords );
+		$this->assertContains( [ 'name' => 'faq', 'label' => 'FAQs' ], QueryDisplay::post_types() );
+
 		unregister_post_type( 'faq' );
 		unregister_post_type( 'secret' );
 	}

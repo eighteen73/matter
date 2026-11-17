@@ -66,7 +66,8 @@ export const slideTypesFor = (ancestors = []) =>
 
 // The query blocks that become the carousel.
 const TEMPLATES = {
-	[POSTS]: (variant) => queryTemplate('post', variant),
+	// What it lists is chosen next (the posts display's post type picker).
+	[POSTS]: (variant) => queryTemplate('', variant),
 	[PRODUCTS]: productsTemplate,
 	[TERMS]: termsTemplate,
 };

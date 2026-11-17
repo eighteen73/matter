@@ -87,6 +87,8 @@ class Editor {
 					'queryBlocks'     => QueryDisplay::query_blocks(),
 					// Search keywords for the posts displays.
 					'postTypeNames'   => QueryDisplay::post_type_keywords(),
+					// What a new posts display can list.
+					'postTypes'       => QueryDisplay::post_types(),
 					// Blocks only sections' slots allow: offered only in those
 					// sections (their `ancestor`), not at the top level.
 					'slotOnlyBlocks'  => AllowedBlocks::editor_slot_only(),

@@ -416,6 +416,40 @@ test.describe('posts displays', () => {
 			)
 			.toBe(100);
 	});
+
+	test('a new posts display asks what it lists first', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await page
+			.getByRole('button', { name: 'Block Inserter', exact: true })
+			.click();
+		await page
+			.getByRole('searchbox', { name: 'Search' })
+			.fill('Posts accordion');
+		await page.getByRole('option', { name: 'Posts accordion' }).click();
+
+		await expect(
+			editor.canvas.getByText('What will it list?')
+		).toBeVisible();
+		await editor.canvas.getByRole('button', { name: 'Pages' }).click();
+
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						window.wp.data
+							.select('core/block-editor')
+							.getBlocks()[0]?.attributes.query.postType
+				)
+			)
+			.toBe('page');
+		await expect(editor.canvas.getByText('What will it list?')).toHaveCount(
+			0
+		);
+	});
 });
 
 test.describe('carousel picker', () => {
@@ -1087,11 +1121,16 @@ test.describe('inserter previews', () => {
 					'.matter-query-display__preview .wp-block-matter-accordion-item'
 				);
 
+			// Hovering again asks again if a busy test server failed the
+			// preview's request (failures aren't cached).
 			await expect
-				.poll(async () => {
-					await option.hover();
-					return items.count();
-				})
+				.poll(
+					async () => {
+						await option.hover();
+						return items.count();
+					},
+					{ timeout: 20000 }
+				)
 				.toBe(3);
 		} finally {
 			await removeCreated();
