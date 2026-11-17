@@ -170,6 +170,7 @@ export default function SlidePicker({
 				allowedTypes={['image']}
 				multiple
 				gallery
+				handleUpload={false}
 				onSelect={onImages}
 			/>
 		);

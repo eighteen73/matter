@@ -197,6 +197,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					allowedTypes={['image']}
 					multiple
 					gallery
+					handleUpload={false}
 					onSelect={media.update}
 				/>
 			</div>

@@ -1026,3 +1026,56 @@ test.describe('inserter previews', () => {
 		}
 	});
 });
+
+test.describe('gallery uploads', () => {
+	// A 1×1 PNG.
+	const PIXEL = Buffer.from(
+		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+		'base64'
+	);
+
+	test('several files uploaded at once all join the gallery', async ({
+		admin,
+		editor,
+		page,
+		requestUtils,
+	}) => {
+		const ids = [];
+
+		try {
+			await admin.createNewPost();
+			await editor.insertBlock({ name: 'matter/gallery' });
+			await editor.canvas
+				.locator('.wp-block-matter-gallery input[type="file"]')
+				.setInputFiles(
+					[1, 2, 3].map((n) => ({
+						name: `gallery-upload-${n}.png`,
+						mimeType: 'image/png',
+						buffer: PIXEL,
+					}))
+				);
+
+			const uploaded = () =>
+				page.evaluate(() =>
+					window.wp.data
+						.select('core/block-editor')
+						.getBlocks()[0]
+						.innerBlocks.map(({ attributes }) => attributes.id)
+						.filter(Boolean)
+				);
+
+			await expect.poll(uploaded, { timeout: 20000 }).toHaveLength(3);
+			ids.push(...(await uploaded()));
+		} finally {
+			await Promise.all(
+				ids.map((id) =>
+					requestUtils.rest({
+						method: 'DELETE',
+						path: `/wp/v2/media/${id}`,
+						params: { force: true },
+					})
+				)
+			);
+		}
+	});
+});
