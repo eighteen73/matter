@@ -131,6 +131,43 @@ test.describe('section markup in the editor', () => {
 		await expect(content).toHaveClass(/(^|\s)is-empty(\s|$)/);
 	});
 
+	test('the list view names a section after its first heading', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+		await editor.canvas
+			.getByRole('document', { name: 'Block: Heading' })
+			.fill('Our workshop');
+
+		await page.getByRole('button', { name: 'Document Overview' }).click();
+		const list = page.getByRole('treegrid', {
+			name: 'Block navigation structure',
+		});
+
+		await expect(
+			list.getByRole('link', { name: 'Test section: Our workshop' })
+		).toBeVisible();
+
+		// A name the client gives it wins.
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [section] = select('core/block-editor').getBlocks();
+
+			dispatch('core/block-editor').updateBlockAttributes(
+				section.clientId,
+				{
+					metadata: { name: 'Workshop intro' },
+				}
+			);
+		});
+		await expect(
+			list.getByRole('link', { name: 'Workshop intro' })
+		).toBeVisible();
+	});
+
 	test("a locked slot's blocks can't be removed, but keep their settings", async ({
 		admin,
 		editor,

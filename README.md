@@ -164,6 +164,8 @@ A section is a dynamic block whose `block.json` declares slots. Matter registers
 }
 ```
 
+**In List View** a section is named after its first heading ("Showcase: The perfect backdrop…"), unless the client has renamed it, and its slots after their names (`media-end` is "Media end").
+
 **Markup.** The editor and the default renderer produce the same markup, so one stylesheet serves both:
 
 ```html

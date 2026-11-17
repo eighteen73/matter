@@ -21,6 +21,7 @@ import { addFilter } from '@wordpress/hooks';
  */
 import SchemeControl from './components/scheme-control';
 import SectionEdit from './components/section-edit';
+import { sectionLabel } from './section-label';
 import './archives/bindings';
 import './archives/shows-on';
 import './extensions/block-link';
@@ -63,6 +64,7 @@ sections.forEach((name) => {
 	registerBlockType(name, {
 		edit: SectionEdit,
 		save: () => <InnerBlocks.Content />,
+		__experimentalLabel: sectionLabel(name),
 	});
 });
 
