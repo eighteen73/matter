@@ -935,6 +935,78 @@ test.describe('accordion', () => {
 			)
 			.toBe(2);
 	});
+
+	test('Enter at the end of a question moves to its answer', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'matter/accordion',
+			innerBlocks: [{ name: 'matter/accordion-item' }],
+		});
+
+		await editor.canvas
+			.locator('.wp-block-matter-accordion-item__title')
+			.first()
+			.click();
+		await page.keyboard.type('Do you deliver?');
+		await page.keyboard.press('Enter');
+		await page.keyboard.type('Yes, everywhere.');
+
+		const item = await page.evaluate(() => {
+			const [accordion] = window.wp.data
+				.select('core/block-editor')
+				.getBlocks();
+			const [first] = accordion.innerBlocks;
+
+			return {
+				title: first.attributes.title,
+				answer: first.innerBlocks.map(
+					({ attributes }) => `${attributes.content ?? ''}`
+				),
+			};
+		});
+
+		expect(item).toEqual({
+			title: 'Do you deliver?',
+			answer: ['Yes, everywhere.'],
+		});
+	});
+
+	test("Enter at the end of a tab's name moves to its content", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter/tabs' });
+
+		await editor.canvas
+			.locator('.wp-block-matter-tabs__label[contenteditable]')
+			.click();
+		await page.keyboard.type('Beginners');
+		await page.keyboard.press('Enter');
+		await page.keyboard.type('For first-timers.');
+
+		const tab = await page.evaluate(() => {
+			const [tabs] = window.wp.data
+				.select('core/block-editor')
+				.getBlocks();
+			const [first] = tabs.innerBlocks;
+
+			return {
+				label: first.attributes.label,
+				content: `${first.innerBlocks[0]?.attributes.content ?? ''}`,
+			};
+		});
+
+		expect(tab).toEqual({
+			label: 'Beginners',
+			content: 'For first-timers.',
+		});
+	});
 });
 
 test.describe('inserter previews', () => {

@@ -26,6 +26,7 @@ import { IconToolbar, useIcon } from '../../components/icon-picker';
 import { ActiveTabContext } from './context';
 import { TABS_SETTINGS, TabsSettings } from './settings';
 import { useStableId } from '../../components/stable-id';
+import { useEnterContent } from '../../components/enter-content';
 
 function TabIcon({ name }) {
 	const icon = useIcon(name);
@@ -142,6 +143,7 @@ export default function Edit({
 	};
 
 	const currentTab = tabs.find((tab) => tab.clientId === currentId);
+	const enterContent = useEnterContent(currentId);
 
 	return (
 		<>
@@ -235,6 +237,7 @@ export default function Edit({
 											allowedFormats={[]}
 											// Backspace in an empty name removes the tab.
 											onRemove={() => removeTab(index)}
+											{...enterContent}
 										/>
 									) : (
 										<span className="wp-block-matter-tabs__label">

@@ -14,6 +14,11 @@ import { useSelect } from '@wordpress/data';
 import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
+/**
+ * Internal dependencies
+ */
+import { useEnterContent } from '../../components/enter-content';
+
 const TEMPLATE = [
 	['core/paragraph', { placeholder: __('Item content…', 'matter') }],
 ];
@@ -63,6 +68,7 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 	const level = Math.min(6, Math.max(2, context['matter/headingLevel'] ?? 3));
 	const HeadingTag = `h${level}`;
 	const [postTitle] = useEntityProp('postType', postType, 'title', postId);
+	const enterContent = useEnterContent(clientId);
 
 	const { activeItem, isFirst, isEditing } = useSelect(
 		(select) => {
@@ -183,6 +189,7 @@ export default function Edit({ attributes, setAttributes, context, clientId }) {
 							}
 							placeholder={placeholder}
 							allowedFormats={['core/bold', 'core/italic']}
+							{...enterContent}
 						/>
 					</div>
 				</HeadingTag>
