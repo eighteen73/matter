@@ -1095,8 +1095,11 @@ test.describe('inserter previews', () => {
 
 		try {
 			for (let i = 1; i <= 5; i++) {
+				// With content: an accordion item with nothing in it isn't
+				// shown.
 				const { id } = await requestUtils.createPost({
 					title: `Preview post ${i}`,
+					content: `Answer ${i}`,
 					status: 'publish',
 				});
 
@@ -1121,16 +1124,11 @@ test.describe('inserter previews', () => {
 					'.matter-query-display__preview .wp-block-matter-accordion-item'
 				);
 
-			// Hovering again asks again if a busy test server failed the
-			// preview's request (failures aren't cached).
 			await expect
-				.poll(
-					async () => {
-						await option.hover();
-						return items.count();
-					},
-					{ timeout: 20000 }
-				)
+				.poll(async () => {
+					await option.hover();
+					return items.count();
+				})
 				.toBe(3);
 		} finally {
 			await removeCreated();
