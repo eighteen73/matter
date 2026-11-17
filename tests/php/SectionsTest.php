@@ -147,6 +147,29 @@ class SectionsTest extends TestCase {
 	}
 
 	/**
+	 * A section without an `example` is previewed in the inserter from its
+	 * slots' templates: placeholders as text, a neutral picture for images.
+	 *
+	 * @return void
+	 */
+	public function test_example(): void {
+		$example = \WP_Block_Type_Registry::get_instance()->get_registered( 'matter-test/section' )->example;
+
+		$this->assertSame( 1200, $example['viewportWidth'] );
+		$this->assertSame( [ 'content', 'media' ], array_column( array_column( $example['innerBlocks'], 'attributes' ), 'name' ) );
+
+		[ $content, $media ] = $example['innerBlocks'];
+
+		$this->assertSame( 'core/heading', $content['innerBlocks'][0]['name'] );
+		$this->assertNotEmpty( $content['innerBlocks'][0]['attributes']['content'] );
+		$this->assertStringStartsWith( 'data:image/svg+xml', $media['innerBlocks'][0]['attributes']['url'] );
+
+		// A placeholder is the text.
+		$block = Sections::example( [ 'intro' => [ 'template' => [ [ 'core/paragraph', [ 'placeholder' => 'Introduce the page' ] ] ] ] ] );
+		$this->assertSame( 'Introduce the page', $block['innerBlocks'][0]['innerBlocks'][0]['attributes']['content'] );
+	}
+
+	/**
 	 * A section in its default variant gets the variant's class; a chosen
 	 * variant replaces it; a section without variants gets none.
 	 *

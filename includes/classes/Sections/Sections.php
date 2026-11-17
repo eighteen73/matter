@@ -64,6 +64,12 @@ class Sections {
 	use Singleton;
 
 	/**
+	 * The picture in inserter previews: a grey landscape, so a preview needs
+	 * no request and shows no one's photo.
+	 */
+	private const EXAMPLE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>";
+
+	/**
 	 * Setup hooks.
 	 *
 	 * @return void
@@ -72,6 +78,9 @@ class Sections {
 		add_filter( 'register_block_type_args', [ $this, 'default_render' ], 10, 2 );
 		add_filter( 'block_categories_all', [ $this, 'register_category' ] );
 		add_action( 'init', [ $this, 'register_block_support' ], 5 );
+		// Once every block is registered, so a section in a slot's template
+		// (a card in Cards) is previewed from its own slots.
+		add_action( 'init', [ $this, 'add_examples' ], 999 );
 	}
 
 	/**
@@ -224,6 +233,91 @@ class Sections {
 		}
 
 		return $args;
+	}
+
+	/**
+	 * Inserter previews for sections without their own `example`.
+	 *
+	 * @return void
+	 */
+	public function add_examples(): void {
+		foreach ( WP_Block_Type_Registry::get_instance()->get_all_registered() as $block_type ) {
+			if ( self::is_section( $block_type ) && empty( $block_type->example ) ) {
+				$block_type->example = self::example( (array) $block_type->supports['matter']['slots'] );
+			}
+		}
+	}
+
+	/**
+	 * A section's inserter preview, from its slots' templates: placeholders
+	 * become the text ("Page heading"), images a neutral picture, and a
+	 * section in a template (a card) is filled from its own slots.
+	 *
+	 * Previewed at a laptop's width (core's default is 500px), as sections
+	 * are page-wide bands that change layout on smaller screens.
+	 *
+	 * @param array $slots The section's slots.
+	 * @param int   $depth Sections nested so far (a guard against a section
+	 *                     that contains itself).
+	 * @return array{viewportWidth: int, innerBlocks: array} Block example.
+	 */
+	public static function example( array $slots, int $depth = 0 ): array {
+		$inner = [];
+
+		foreach ( $slots as $name => $slot ) {
+			$inner[] = [
+				'name'        => 'matter/slot',
+				'attributes'  => [ 'name' => (string) $name ],
+				'innerBlocks' => array_map( fn( $entry ) => self::example_block( (array) $entry, $depth ), (array) ( $slot['template'] ?? [] ) ),
+			];
+		}
+
+		return [
+			'viewportWidth' => 1200,
+			'innerBlocks'   => $inner,
+		];
+	}
+
+	/**
+	 * One template entry (`[ name, attributes, inner ]`) as an example block.
+	 *
+	 * @param array $entry Template entry.
+	 * @param int   $depth Sections nested so far.
+	 * @return array{name: string, attributes: array, innerBlocks: array}
+	 */
+	private static function example_block( array $entry, int $depth ): array {
+		$name       = (string) ( $entry[0] ?? '' );
+		$attributes = (array) ( $entry[1] ?? [] );
+		$text       = (string) ( $attributes['placeholder'] ?? '' );
+
+		switch ( $name ) {
+			case 'core/heading':
+				$attributes['content'] = $text ?: __( 'Heading', 'matter' );
+				break;
+			case 'core/paragraph':
+				$attributes['content'] = $text ?: __( 'A sentence or two about this.', 'matter' );
+				break;
+			case 'core/button':
+				$attributes['text'] = $text ?: __( 'Button', 'matter' );
+				break;
+			case 'core/image':
+				$attributes['url'] = self::EXAMPLE_IMAGE;
+				$attributes['alt'] = '';
+				break;
+		}
+
+		$inner = array_map( fn( $child ) => self::example_block( (array) $child, $depth ), (array) ( $entry[2] ?? [] ) );
+		$type  = WP_Block_Type_Registry::get_instance()->get_registered( $name );
+
+		if ( ! $inner && $type && self::is_section( $type ) && $depth < 3 ) {
+			$inner = self::example( (array) $type->supports['matter']['slots'], $depth + 1 )['innerBlocks'];
+		}
+
+		return [
+			'name'        => $name,
+			'attributes'  => $attributes,
+			'innerBlocks' => $inner,
+		];
 	}
 
 	/**
