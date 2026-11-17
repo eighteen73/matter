@@ -447,6 +447,27 @@ test.describe('carousel picker', () => {
 			)
 			.toEqual(['core/query', 'slides']);
 	});
+
+	test("an autoplaying carousel's play button shows as on the site, not disabled", async ({
+		admin,
+		editor,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'matter/carousel',
+			attributes: { className: 'is-style-slides' },
+			innerBlocks: [
+				{ name: 'core/paragraph', attributes: { content: 'One' } },
+				{ name: 'core/paragraph', attributes: { content: 'Two' } },
+			],
+		});
+
+		const play = editor.canvas.locator('.wp-block-matter-carousel__play');
+
+		await expect(play).toHaveAttribute('aria-hidden', 'true');
+		await expect(play).toHaveAttribute('tabindex', '-1');
+		await expect(play).not.toHaveAttribute('disabled');
+	});
 });
 
 test.describe('carousel slide types', () => {

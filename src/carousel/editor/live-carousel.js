@@ -4,7 +4,9 @@
  * the variant's alignment and paging, working arrows and dots.
  *
  * Differences from the front end: no dragging (so slides stay editable), no
- * loop and no autoplay or auto-scroll (their controls show, disabled).
+ * loop and no autoplay or auto-scroll. Play and expand show as on the site,
+ * so the layout matches, but do nothing (hidden from assistive technology
+ * and the tab order) rather than looking disabled.
  * Selecting a block inside a slide scrolls to it.
  */
 
@@ -284,9 +286,9 @@ function Part({ part, carousel, thumbnails }) {
 			return (
 				<button
 					type="button"
-					className={`wp-block-matter-carousel__${part}`}
-					aria-label={__('Front end only', 'matter')}
-					disabled
+					className={`wp-block-matter-carousel__${part} is-editor-preview`}
+					aria-hidden="true"
+					tabIndex={-1}
 				/>
 			);
 		case 'dots':

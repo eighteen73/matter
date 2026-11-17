@@ -74,3 +74,10 @@
 	display: block;
 	margin: 1rem auto;
 }
+
+// A carousel's play and expand buttons only show in the editor (autoplay
+// and the lightbox are off there), so they don't look clickable.
+.wp-block-matter-carousel__play.is-editor-preview,
+.wp-block-matter-carousel__expand.is-editor-preview {
+	cursor: default;
+}
