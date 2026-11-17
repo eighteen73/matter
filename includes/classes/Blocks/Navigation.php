@@ -17,6 +17,18 @@ defined( 'ABSPATH' ) || exit;
 class Navigation {
 
 	/**
+	 * Running submenu count for the current request.
+	 *
+	 * Submenu IDs must be unique across the page, not just within one
+	 * navigation block, as a page commonly has several (e.g. desktop and
+	 * mobile menus). They are used for `id`/`aria-controls` and as keys in
+	 * the view script's shared focus-trap map.
+	 *
+	 * @var int
+	 */
+	private static int $submenu_count = 0;
+
+	/**
 	 * Build navigation markup for block attributes.
 	 *
 	 * @param array<string, mixed> $attributes              Block attributes.
@@ -49,13 +61,15 @@ class Navigation {
 			_prime_post_caches( $post_ids, false, false );
 		}
 
-		$submenu_index = 0;
+		$submenu_index = self::$submenu_count;
 		$items         = self::render_items(
 			$parsed_blocks,
 			$type,
 			$submenu_opens_on_click,
 			$submenu_index
 		);
+
+		self::$submenu_count = $submenu_index;
 
 		if ( '' === $items ) {
 			return '';
