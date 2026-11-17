@@ -502,6 +502,24 @@ class Settings {
 	}
 
 	/**
+	 * An address typed without its scheme (`instagram.com/name`), as people
+	 * copy them, with `https://` added. Relative links and other schemes
+	 * (`mailto:`) are left alone.
+	 *
+	 * @param string $url Typed address.
+	 * @return string
+	 */
+	public static function with_scheme( string $url ): string {
+		$url = trim( $url );
+
+		if ( '' === $url || preg_match( '#^([a-z][a-z0-9+.-]*:|[/?\#])#i', $url ) ) {
+			return str_starts_with( $url, '//' ) ? 'https:' . $url : $url;
+		}
+
+		return 'https://' . $url;
+	}
+
+	/**
 	 * Sanitise a value for a field.
 	 *
 	 * @param mixed $value Raw value.
@@ -519,7 +537,7 @@ class Settings {
 			case 'email':
 				return sanitize_email( (string) $value );
 			case 'url':
-				return esc_url_raw( (string) $value );
+				return esc_url_raw( self::with_scheme( (string) $value ) );
 			case 'number':
 				return is_numeric( $value ) ? $value + 0 : null;
 			case 'toggle':

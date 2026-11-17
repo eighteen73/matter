@@ -742,3 +742,28 @@ test.describe('overlay IDs', () => {
 		await expect.poll(async () => (await blocks(page)).length).toBe(0);
 	});
 });
+
+test.describe('site details', () => {
+	test('a web address typed without https:// is accepted and completed', async ({
+		admin,
+		page,
+	}) => {
+		await admin.visitAdminPage('admin.php', 'page=matter-settings');
+
+		const field = page.getByRole('textbox', { name: 'Instagram' });
+
+		await field.fill('instagram.com/shop');
+		await field.blur();
+		await expect(field).toHaveValue('https://instagram.com/shop');
+
+		await page.getByRole('button', { name: 'Save settings' }).click();
+		await expect(
+			page.getByText('Settings saved.', { exact: true }).first()
+		).toBeVisible();
+
+		await page.reload();
+		await expect(
+			page.getByRole('textbox', { name: 'Instagram' })
+		).toHaveValue('https://instagram.com/shop');
+	});
+});

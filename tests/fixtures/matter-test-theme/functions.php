@@ -79,3 +79,19 @@ add_filter(
 		? [ ...$blocks, 'core/heading', 'core/paragraph', 'core/image', 'matter/*', 'matter-test/*' ]
 		: $blocks
 );
+
+// Site details, for the settings page's browser test.
+add_filter(
+	'matter_settings_fields',
+	fn( $sections ) => $sections + [
+		'social' => [
+			'title'  => 'Social media',
+			'fields' => [
+				'instagram' => [
+					'type'  => 'url',
+					'label' => 'Instagram',
+				],
+			],
+		],
+	]
+);

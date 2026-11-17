@@ -491,7 +491,7 @@ add_filter( 'matter_settings_fields', fn() => [
 ```
 
 **Field types:**
-- `text`, `textarea`, `email`, `url`, `tel`
+- `text`, `textarea`, `email`, `url`, `tel`. A `url` field takes an address as people copy it (`instagram.com/name`) and adds `https://`.
 - `number`, `toggle`
 - `select` (with `options`)
 - `media` (attachment ID)

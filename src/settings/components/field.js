@@ -13,11 +13,11 @@ import {
  */
 import MediaField from './media-field';
 import RepeaterField from './repeater-field';
+import { withScheme } from '../with-scheme';
 
 const INPUT_TYPES = {
 	text: 'text',
 	email: 'email',
-	url: 'url',
 	tel: 'tel',
 };
 
@@ -87,6 +87,31 @@ export default function Field({ field, value, onChange, media }) {
 							})
 						),
 					]}
+				/>
+			);
+
+		// A text field, not `type="url"`: the browser refused addresses typed
+		// without `https://`, without saying why. It's added when the field
+		// is left.
+		case 'url':
+			return (
+				<TextControl
+					{...common}
+					__next40pxDefaultSize
+					type="text"
+					inputMode="url"
+					autoComplete="url"
+					spellCheck={false}
+					placeholder="https://"
+					value={value ?? ''}
+					onChange={onChange}
+					onBlur={() => {
+						const next = withScheme(value);
+
+						if (next !== (value ?? '')) {
+							onChange(next);
+						}
+					}}
 				/>
 			);
 

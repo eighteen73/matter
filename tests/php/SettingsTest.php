@@ -86,7 +86,7 @@ class SettingsTest extends TestCase {
 					'open'    => '1',
 					'kind'    => 'warehouse',
 					'logo'    => 999999,
-					'social'  => [ [ 'url' => 'https://example.com' ], [ 'url' => 'nope' ] ],
+					'social'  => [ [ 'url' => 'https://example.com' ], [ 'url' => 'instagram.com/shop' ], [ 'url' => 'mailto:shop@example.com' ] ],
 					'unknown' => 'dropped',
 				],
 				'other'   => [ 'dropped' => true ],
@@ -105,7 +105,7 @@ class SettingsTest extends TestCase {
 					'open'    => true,
 					'kind'    => '',
 					'logo'    => 0,
-					'social'  => [ [ 'url' => 'https://example.com' ], [ 'url' => 'http://nope' ] ],
+					'social'  => [ [ 'url' => 'https://example.com' ], [ 'url' => 'https://instagram.com/shop' ], [ 'url' => 'mailto:shop@example.com' ] ],
 				],
 			],
 			$saved
