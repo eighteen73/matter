@@ -12,7 +12,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
   - Lock a slot with `templateLock: "all"` or `"insert"`, not `"contentOnly"`, which hides the blocks' settings (an image's focal point) behind "Edit pattern".
   - An empty slot is marked `is-empty` (on the front end, one that renders nothing; in the editor, one with no blocks). In the editor, a section's inner wrapper isn't positioned, as on the front end; the README lists what else the editor adds.
   - A slot's `alignments` are offered to the blocks in it (e.g. wide and full, for a carousel wider than the text around it). Carousels, galleries, tabs and accordions can be aligned wide or full.
-- **Colour schemes:** `supports.matter.scheme`, a swatch control, and CSS generated from the theme's `custom.scheme`.
+- **Colour schemes:** `supports.matter.scheme`, a swatch control (each named under its swatch), and CSS generated from the theme's `custom.scheme`.
 - **Variants:** theme-defined block presets via `matter_variants`, shown as block styles.
 - **Menus:** Appearance › Menus rendered by `Matter\menu()`.
   - Dropdown, accordion and drill-down types, switchable per breakpoint without JavaScript.

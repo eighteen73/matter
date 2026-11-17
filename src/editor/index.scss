@@ -6,22 +6,40 @@
 .matter-scheme-control {
 	display: grid;
 	gap: 8px;
-	grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
 }
 
+// A swatch with its name under it.
 .matter-scheme-control .matter-scheme-control__swatch.components-button,
 .matter-scheme-control .matter-scheme-control__swatch.components-button.is-pressed {
+	align-items: stretch;
+	background: none;
+	color: inherit;
+	flex-direction: column;
+	gap: 4px;
+	height: auto;
+	padding: 0;
+}
+
+.matter-scheme-control .matter-scheme-control__name {
+	font-size: 12px;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+	text-align: center;
+}
+
+.matter-scheme-control .matter-scheme-control__chip {
+	align-items: center;
 	aspect-ratio: 1;
 	background: var(--_swatch-background);
 	border-radius: 4px;
 	box-shadow: inset 0 0 0 1px rgb(0 0 0 / 20%);
 	color: var(--_swatch-text);
+	display: flex;
 	font-size: 16px;
 	font-weight: 600;
-	height: auto;
 	justify-content: center;
 	overflow: hidden;
-	padding: 0;
 	position: relative;
 
 	// Accent strip showing the scheme's button colour.
@@ -32,12 +50,16 @@
 		inset: auto 0 0;
 		position: absolute;
 	}
+}
 
-	&[aria-pressed="true"] {
-		box-shadow:
-			0 0 0 2px #fff,
-			0 0 0 4px var(--wp-admin-theme-color, #3858e9);
-	}
+.matter-scheme-control .matter-scheme-control__swatch[aria-pressed="true"] .matter-scheme-control__chip {
+	box-shadow:
+		0 0 0 2px #fff,
+		0 0 0 4px var(--wp-admin-theme-color, #3858e9);
+}
+
+.matter-scheme-control .matter-scheme-control__swatch[aria-pressed="true"] .matter-scheme-control__name {
+	font-weight: 600;
 }
 
 // A gallery's or carousel's button on a child block's toolbar: divided from

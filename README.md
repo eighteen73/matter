@@ -275,7 +275,7 @@ A class can't change with the screen width, so for a wrapper whose scheme does (
 
 Matter's own default styles use only `--scheme--background`, `--scheme--text` and `--scheme--border`, each with a fallback, so Matter works on a theme without schemes.
 
-Blocks declaring `supports.matter.scheme` get a swatch control in the Styles tab. Selecting the active scheme again inherits the surrounding scheme.
+Blocks declaring `supports.matter.scheme` get a swatch control in the Styles tab, each swatch named under it (the scheme's `label`). Selecting the active scheme again inherits the surrounding scheme.
 
 Filters: `matter_schemes`, `matter_default_scheme`, `matter_scheme_labels`.
 

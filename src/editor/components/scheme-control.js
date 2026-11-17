@@ -83,8 +83,11 @@ export default function SchemeControl({ value, onChange }) {
 	const { baseControlProps } = useBaseControlProps({
 		label: __('Colour scheme', 'matter'),
 		help: value
-			? __('Select the active scheme again to inherit.', 'matter')
-			: __('Inherits the surrounding colour scheme.', 'matter'),
+			? __(
+					'Choose the selected scheme again to use the colours around it instead.',
+					'matter'
+				)
+			: __('Uses the colours around it.', 'matter'),
 		__nextHasNoMarginBottom: true,
 	});
 
@@ -112,30 +115,40 @@ export default function SchemeControl({ value, onChange }) {
 										)
 									: label
 							}
-							showTooltip
 							onClick={() =>
 								onChange(isSelected ? undefined : slug)
 							}
-							style={{
-								'--_swatch-background': resolveColor(
-									tokens.background,
-									palette,
-									custom
-								),
-								'--_swatch-text': resolveColor(
-									tokens['text-heading'] ?? tokens.text,
-									palette,
-									custom
-								),
-								'--_swatch-accent': resolveColor(
-									tokens['background-fill'] ??
-										tokens['text-link'],
-									palette,
-									custom
-								),
-							}}
 						>
-							<span aria-hidden="true">Aa</span>
+							<span
+								className="matter-scheme-control__chip"
+								aria-hidden="true"
+								style={{
+									'--_swatch-background': resolveColor(
+										tokens.background,
+										palette,
+										custom
+									),
+									'--_swatch-text': resolveColor(
+										tokens['text-heading'] ?? tokens.text,
+										palette,
+										custom
+									),
+									'--_swatch-accent': resolveColor(
+										tokens['background-fill'] ??
+											tokens['text-link'],
+										palette,
+										custom
+									),
+								}}
+							>
+								Aa
+							</span>
+							<span
+								className="matter-scheme-control__name"
+								aria-hidden="true"
+							>
+								{label}
+							</span>
 						</Button>
 					);
 				})}
