@@ -5,7 +5,7 @@
  * Renders an Appearance > Menus menu with Matter's interactive menu markup:
  *
  *     Menu::render( [
- *         'location' => 'primary',
+ *         'location' => 'main',
  *         'type'     => [ 'drill-down', 'lg' => 'dropdown' ],
  *     ] );
  *

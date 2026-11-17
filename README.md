@@ -391,7 +391,7 @@ Menus come from Appearance › Menus:
 
 ```php
 Eighteen73\Matter\menu( [
-	'location' => 'primary',
+	'location' => 'main',
 	'type'     => [ 'drill-down', 'lg' => 'dropdown' ],
 ] );
 ```
@@ -468,7 +468,7 @@ A panel is off-canvas below a breakpoint and inline above it. It's usually the h
 ```php
 Eighteen73\Matter\panel_toggle( 'site-nav', [ 'collapse_below' => 'lg' ] );
 Eighteen73\Matter\panel( 'site-nav', function () {
-	Eighteen73\Matter\menu( [ 'location' => 'primary', 'type' => [ 'drill-down', 'lg' => 'dropdown' ] ] );
+	Eighteen73\Matter\menu( [ 'location' => 'main', 'type' => [ 'drill-down', 'lg' => 'dropdown' ] ] );
 }, [ 'collapse_below' => 'lg' ] );
 ```
 
