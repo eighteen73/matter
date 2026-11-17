@@ -866,3 +866,52 @@ test.describe('archive entries', () => {
 		await expect(archiveLink).toHaveText('Edit archive');
 	});
 });
+
+test.describe('accordion', () => {
+	test("“Add accordion item” shows while an item's text is selected", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'matter/accordion',
+			innerBlocks: [
+				{
+					name: 'matter/accordion-item',
+					attributes: { title: 'One' },
+					innerBlocks: [
+						{
+							name: 'core/paragraph',
+							attributes: { content: 'Answer' },
+						},
+					],
+				},
+			],
+		});
+
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [accordion] = select('core/block-editor').getBlocks();
+
+			dispatch('core/block-editor').selectBlock(
+				accordion.innerBlocks[0].innerBlocks[0].clientId
+			);
+		});
+
+		await editor.canvas
+			.getByRole('button', { name: 'Add accordion item' })
+			.click();
+		// The only block it allows: added at once.
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						window.wp.data
+							.select('core/block-editor')
+							.getBlocks()[0].innerBlocks.length
+				)
+			)
+			.toBe(2);
+	});
+});

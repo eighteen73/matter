@@ -2,10 +2,13 @@
  * WordPress dependencies
  */
 import {
+	InnerBlocks,
 	InspectorControls,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
+import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -25,17 +28,33 @@ const ALLOWED_BLOCKS = ['matter/accordion-item'];
  * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Attribute setter.
  * @param {string}   props.clientId      Block client ID.
+ * @param {boolean}  props.isSelected    Whether the accordion is selected.
  * @return {Element} Accordion editor.
  */
-export default function Edit({ attributes, setAttributes, clientId }) {
+export default function Edit({
+	attributes,
+	setAttributes,
+	clientId,
+	isSelected,
+}) {
 	// An accordion holding a Query Loop (from before) becomes the query.
 	// A stable ID for links to its items (`#{id}-2`).
 	useStableId(clientId, 'matterId', 'accordion');
+
+	// "Add accordion item" while anything in the accordion is selected (an
+	// item's text, say), not only the accordion itself.
+	const isEditing = useSelect(
+		(select) =>
+			isSelected ||
+			select(blockEditorStore).hasSelectedInnerBlock(clientId, true),
+		[clientId, isSelected]
+	);
 
 	const blockProps = useBlockProps();
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
 		allowedBlocks: ALLOWED_BLOCKS,
 		template: [['matter/accordion-item']],
+		renderAppender: isEditing ? InnerBlocks.ButtonBlockAppender : false,
 	});
 
 	return (
