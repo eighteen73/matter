@@ -158,6 +158,8 @@ class Archives {
 					'edit_item'          => __( 'Edit archive', 'matter' ),
 					'new_item'           => __( 'New archive', 'matter' ),
 					'view_item'          => __( 'View archive', 'matter' ),
+					// The editor's back link, to the list of archives.
+					'view_items'         => __( 'View archives', 'matter' ),
 					'search_items'       => __( 'Search archives', 'matter' ),
 					'not_found'          => __( 'No archives customised yet: they all show the theme’s default.', 'matter' ),
 					'not_found_in_trash' => __( 'No archives in the bin.', 'matter' ),

@@ -62,7 +62,8 @@ export default function OverlayEdit({
 	} = attributes;
 	const isDialog = type !== 'collapsible';
 	const [copied, setCopied] = useState(false);
-	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	const { replaceInnerBlocks, selectionChange } =
+		useDispatch(blockEditorStore);
 
 	const { isOpen, triggerId, hasTrigger } = useSelect(
 		(select) => {
@@ -115,19 +116,21 @@ export default function OverlayEdit({
 			return;
 		}
 
+		if (!value) {
+			replaceInnerBlocks(triggerId, [], false);
+			return;
+		}
+
+		const text = __('Open', 'matter');
+		const button = createBlock('core/button', { text });
+
 		replaceInnerBlocks(
 			triggerId,
-			value
-				? [
-						createBlock('core/buttons', {}, [
-							createBlock('core/button', {
-								text: __('Open', 'matter'),
-							}),
-						]),
-					]
-				: [],
+			[createBlock('core/buttons', {}, [button])],
 			false
 		);
+		// Its text selected, so typing a label replaces it.
+		selectionChange(button.clientId, 'text', 0, text.length);
 	};
 
 	// As on the front end, a modal or drawer block is the `-host` of its
@@ -225,7 +228,7 @@ export default function OverlayEdit({
 											'matter'
 										)
 									: __(
-											'No close button, and Escape or clicking outside do nothing (e.g. an age gate). Close it with a button inside that links to its #ID.',
+											'No close button, and Escape or clicking outside do nothing (e.g. an age gate). Close it with a button inside it that links to this (Copy link above).',
 											'matter'
 										)
 							}

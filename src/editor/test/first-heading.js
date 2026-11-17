@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import { firstHeading } from '../first-heading';
+import { firstHeading, firstText } from '../first-heading';
 
 const block = (name, attributes = {}, innerBlocks = []) => ({
 	name,
@@ -35,6 +35,29 @@ describe('firstHeading', () => {
 	it('is empty without a heading', () => {
 		expect(firstHeading([block('core/paragraph', { content: 'A' })])).toBe(
 			''
+		);
+	});
+});
+
+describe('firstText', () => {
+	it('finds the first text, without markup, shortened', () => {
+		expect(
+			firstText([
+				block('matter/slot', { name: 'media' }, [block('core/image')]),
+				block('matter/slot', { name: 'content' }, [
+					block('core/paragraph', { content: '' }),
+					block('core/paragraph', {
+						content:
+							'“Beautifully <strong>made</strong> furniture that will last for generations.”',
+					}),
+				]),
+			])
+		).toBe('“Beautifully made furniture that will…');
+	});
+
+	it('keeps short text whole', () => {
+		expect(firstText([block('core/paragraph', { content: 'Hi' })])).toBe(
+			'Hi'
 		);
 	});
 });

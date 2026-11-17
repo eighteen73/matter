@@ -6,7 +6,7 @@
 	"title": "Drawer",
 	"category": "widgets",
 	"icon": "align-pull-right",
-	"description": "Content that slides in from the edge of the screen. Open it with any link or button pointing to its #ID.",
+	"description": "Content that slides in from the edge of the screen, opened by a button or link.",
 	"keywords": [
 		"offcanvas",
 		"sidebar",

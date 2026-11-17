@@ -6,7 +6,7 @@
 	"title": "Modal",
 	"category": "widgets",
 	"icon": "external",
-	"description": "Content shown in a dialog over the page. Open it with any link or button pointing to its #ID.",
+	"description": "Content shown in a box over the page, opened by a button or link.",
 	"keywords": [
 		"dialog",
 		"popup",

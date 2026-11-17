@@ -1151,3 +1151,34 @@ test.describe('gallery uploads', () => {
 		}
 	});
 });
+
+test.describe('overlay triggers', () => {
+	test("a new trigger button's text is selected, so typing replaces it", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter/modal' });
+		await editor.openDocumentSettingsSidebar();
+		await page
+			.getByRole('region', { name: 'Editor settings' })
+			.getByRole('tab', { name: 'Block' })
+			.click();
+		// Clicked, not checked: the sidebar moves to the new button.
+		await page.getByLabel('Trigger on the page').click();
+		await page.keyboard.type('Book a place');
+
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const { getBlocksByName, getBlockAttributes } =
+						window.wp.data.select('core/block-editor');
+					const [button] = getBlocksByName('core/button');
+
+					return `${getBlockAttributes(button)?.text ?? ''}`;
+				})
+			)
+			.toBe('Book a place');
+	});
+});

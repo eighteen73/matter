@@ -1,8 +1,9 @@
 /**
  * Sections in the list view are named after their first heading
- * ("Showcase: The perfect backdrop…"), so a page with several of one section
- * can be read without selecting each. A name the client gives a section
- * (Rename) wins.
+ * ("Showcase: The perfect backdrop…"), or without one the start of their
+ * first text (a quote, say), so a page with several of one section can be
+ * read without selecting each. A name the client gives a section (Rename)
+ * wins.
  *
  * A block's label is worked out from its attributes alone, so the section is
  * found by them: they're the same object the store holds for it.
@@ -17,7 +18,7 @@ import { select } from '@wordpress/data';
 /**
  * Internal dependencies
  */
-import { firstHeading } from './first-heading';
+import { firstHeading, firstText } from './first-heading';
 
 /**
  * A section's list view label.
@@ -40,9 +41,10 @@ export const sectionLabel =
 		const clientId = store
 			.getBlocksByName(name)
 			.find((id) => store.getBlockAttributes(id) === attributes);
-		const heading = clientId ? firstHeading(store.getBlocks(clientId)) : '';
+		const blocks = clientId ? store.getBlocks(clientId) : [];
+		const text = firstHeading(blocks) || firstText(blocks);
 
-		return heading
-			? `${getBlockType(name)?.title ?? name}: ${heading}`
+		return text
+			? `${getBlockType(name)?.title ?? name}: ${text}`
 			: undefined;
 	};
