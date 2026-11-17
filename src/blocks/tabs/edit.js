@@ -52,7 +52,7 @@ export default function Edit({
 
 	// Tabs holding a Query Loop (from before) become the query.
 	// A stable ID for links to its tabs (`#{id}-2`).
-	useStableId(clientId, 'anchor', 'tabs');
+	useStableId(clientId, 'matterId', 'tabs');
 	const [activeId, setActiveId] = useState(null);
 
 	// getBlocks() keeps its result while the inner blocks are unchanged, so

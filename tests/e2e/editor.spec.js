@@ -11,7 +11,10 @@ const blocks = (page) =>
 			.getBlocks()
 			.map(({ name, attributes, innerBlocks }) => ({
 				name,
-				id: attributes.overlayId ?? attributes.anchor,
+				id:
+					attributes.overlayId ??
+					attributes.matterId ??
+					attributes.anchor,
 				slots: innerBlocks.map(
 					(slot) =>
 						`${slot.attributes.name}:${slot.innerBlocks.length}`
@@ -655,7 +658,7 @@ test.describe('overlay IDs', () => {
 			.toEqual([expect.stringMatching(/^modal-/), 'offer']);
 	});
 
-	test("a tabs block's anchor, cleared to retype, isn't filled in again", async ({
+	test("a tabs block's own ID leaves its HTML anchor to the client", async ({
 		admin,
 		editor,
 		page,
@@ -663,16 +666,19 @@ test.describe('overlay IDs', () => {
 		await admin.createNewPost();
 		await editor.insertBlock({ name: 'matter/tabs' });
 
-		const anchor = () =>
-			page.evaluate(
-				() =>
-					window.wp.data.select('core/block-editor').getBlocks()[0]
-						.attributes.anchor ?? ''
-			);
+		const ids = () =>
+			page.evaluate(() => {
+				const { attributes } = window.wp.data
+					.select('core/block-editor')
+					.getBlocks()[0];
 
-		await expect.poll(anchor).toMatch(/^tabs-/);
+				return [attributes.matterId ?? '', attributes.anchor ?? ''];
+			});
+		const anchor = async () => (await ids())[1];
 
-		for (const value of ['', 'f', 'faq']) {
+		await expect.poll(ids).toEqual([expect.stringMatching(/^tabs-/), '']);
+
+		for (const value of ['f', 'faq', '']) {
 			await page.evaluate((next) => {
 				const [tabs] = window.wp.data
 					.select('core/block-editor')

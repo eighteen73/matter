@@ -31,7 +31,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 - **Theme namespace:** `matter_theme_namespace` (and `Matter\theme_namespaces()`) names the prefix of the theme's loop item patterns and its icon collection, so they don't depend on the theme's folder name (default: the folder, then its parent's).
 - **JavaScript API:** `matter.carousel()`, `matter.tabs()`, `matter.accordion()`, `matter.gallery()`, `matter.overlay()` and `matter.panel()` return instances with methods and read-only state; `matter.ready()` waits for a block; every block dispatches `matter-{block}-*` events. The block stores take a target (ID or element) too. A small stub in the page's head defines `window.matter` before any module loads.
 - **Empty accordion items and tabs** (whose content renders nothing to show, e.g. a product's specifications when it has none) aren't output.
-- **Stable IDs for links:** tabs and accordions get an anchor when added, and items in posts tabs and accordions are named after their post (`#{anchor}-post-{postId}`). Links to an item open it and anything it's nested in, also on `#hash` changes.
+- **Stable IDs for links:** tabs, accordions and posts displays get an ID of their own when added (`matterId`; an HTML anchor replaces it), and items in posts tabs and accordions are named after their post (`#{id}-post-{postId}`). Links to an item open it and anything it's nested in, also on `#hash` changes.
 - **Tests:** PHPUnit (with contract markup snapshots), JavaScript unit tests and a Playwright and axe browser suite, run in CI against wp-env, and weekly against WordPress nightly and the latest WooCommerce.
 
 ### Changed

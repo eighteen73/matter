@@ -236,7 +236,7 @@ export default function PreviewEdit({ BlockEdit, props }) {
 
 	useLockedQuery(clientId);
 	// A stable ID for links to its items (`#{id}-post-{postId}`).
-	useStableId(clientId, 'anchor', display.type);
+	useStableId(clientId, 'matterId', display.type);
 
 	const set = (changes) =>
 		setAttributes({ [ATTRIBUTE]: { ...display, ...changes } });

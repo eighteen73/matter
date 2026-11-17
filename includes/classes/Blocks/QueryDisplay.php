@@ -125,6 +125,7 @@ final class QueryDisplay {
 		if ( in_array( $block_name, self::BLOCKS, true ) ) {
 			$args['attributes']                    = $args['attributes'] ?? [];
 			$args['attributes'][ self::ATTRIBUTE ] = [ 'type' => 'object' ];
+			$args['attributes']['matterId']        = [ 'type' => 'string' ];
 		}
 
 		return $args;
@@ -317,12 +318,13 @@ final class QueryDisplay {
 		$style    = sanitize_key( (string) ( $settings['style'] ?? '' ) );
 		$align    = sanitize_key( (string) ( $block['attrs']['align'] ?? '' ) );
 		$anchor   = sanitize_html_class( (string) ( $block['attrs']['anchor'] ?? '' ) );
+		$id       = '' !== $anchor ? $anchor : sanitize_html_class( (string) ( $block['attrs']['matterId'] ?? '' ) );
 		$attrs    = array_filter(
 			[
 				// The query's alignment and anchor apply to the block around it.
 				'className' => trim( ( $style ? 'is-style-' . $style : '' ) . ( $align ? ' align' . $align : '' ) ),
 				'scheme'    => sanitize_key( (string) ( $settings['scheme'] ?? '' ) ),
-				'anchor'    => $anchor,
+				'anchor'    => $id,
 			]
 		) + $display['attributes'];
 

@@ -129,7 +129,10 @@ class Instances {
 
 		[ $name, $settings ] = $container;
 
+		// The client's HTML anchor, else the ID Matter gave the block when it
+		// was added (kept out of the anchor, which the editor shows).
 		$anchor = sanitize_html_class( (string) ( $parent_block->attributes['anchor'] ?? '' ) );
+		$anchor = '' !== $anchor ? $anchor : sanitize_html_class( (string) ( $parent_block->attributes['matterId'] ?? '' ) );
 		$id     = '' !== $anchor ? $anchor : wp_unique_id( str_replace( 'matter/', '', $name ) . '-' );
 
 		self::$active[ $key ]   = [ $id, $name ];

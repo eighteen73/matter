@@ -258,4 +258,27 @@ class ContractMarkupTest extends TestCase {
 		$this->assertStringContainsString( "aria-controls=\"news-post-{$older}\"", $tabs );
 		$this->assertStringContainsString( "\"active\":\"news-post-{$newer}\"", str_replace( '&quot;', '"', $tabs ) );
 	}
+
+	/**
+	 * The ID Matter gives a block when it's added (`matterId`, kept out of the
+	 * HTML anchor) is its ID on the site; an anchor the client sets wins.
+	 *
+	 * @return void
+	 */
+	public function test_matter_id(): void {
+		$tabs = fn( string $attrs ) => $this->render( '<!-- wp:matter/tabs ' . $attrs . ' --><!-- wp:matter/tab {"label":"One"} --><!-- wp:paragraph --><p>One</p><!-- /wp:paragraph --><!-- /wp:matter/tab --><!-- /wp:matter/tabs -->' );
+
+		$this->assertStringContainsString( 'id="tabs-x7k2p-1-tab"', $tabs( '{"matterId":"tabs-x7k2p"}' ) );
+		$this->assertStringContainsString( 'id="specs-1-tab"', $tabs( '{"matterId":"tabs-x7k2p","anchor":"specs"}' ) );
+
+		$post  = self::factory()->post->create();
+		$query = $this->render(
+			'<!-- wp:query {"queryId":9,"matterId":"accordion-a1b2c","query":{"perPage":1,"postType":"post","inherit":false},"matterDisplay":{"type":"accordion"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/accordion-item --><!-- wp:matter/loop-item /--><!-- /wp:matter/accordion-item --><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->'
+		);
+
+		$this->assertSame( 1, substr_count( $query, 'id="accordion-a1b2c"' ) );
+		$this->assertStringContainsString( "id=\"accordion-a1b2c-post-{$post}\"", $query );
+	}
 }

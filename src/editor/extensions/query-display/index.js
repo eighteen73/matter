@@ -62,7 +62,10 @@ import {
 import CarouselEdit from './carousel-edit';
 import PreviewEdit from './preview-edit';
 
-const DISPLAY_ATTRIBUTE = { [ATTRIBUTE]: { type: 'object' } };
+const DISPLAY_ATTRIBUTE = {
+	[ATTRIBUTE]: { type: 'object' },
+	matterId: { type: 'string' },
+};
 const DISPLAY_CONTEXT = 'matter/display';
 
 // The Site Editor keeps the plain query blocks in its inserter.

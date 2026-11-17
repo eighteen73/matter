@@ -8,6 +8,9 @@
 	"icon": "index-card",
 	"description": "Content split into tabs. Add tabs by hand, or show posts with a query.",
 	"attributes": {
+		"matterId": {
+			"type": "string"
+		},
 		"label": {
 			"type": "string",
 			"default": "",
