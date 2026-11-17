@@ -537,11 +537,11 @@ Whether a term's or post type archive's entry also shows further down is the ent
 "metadata": { "bindings": { "content": { "source": "matter/archive", "args": { "key": "title" } } } }
 ```
 
-A bound paragraph that comes out empty (a term without a description) isn't output.
+A bound paragraph that comes out empty (a term without a description) isn't output. Bound blocks can't be typed into: selecting one shows where its text comes from, with a link ("Edit the category").
 
 **Where editors find it:**
 - Appearance › Archives: every entry and what it shows on. "Customise an archive" (Add new) lists each archive, grouped by post type, with a status badge (Customised, Shared, Theme default, Draft, Scheduled), plus a picker for a single term; the Help tab explains the lookup order and scheduling.
-- "Customise archive" / "Edit archive" in the admin bar on any archive, after the core edit link.
+- "Customise archive" / "Edit archive" in the admin bar on any archive, after the core edit link. Customise starts an unsaved draft (an auto-draft, as Add New does), so the archive has an entry only once it's saved.
 - An "Archive" row on term edit screens (where its content comes from, then Edit or Customise), and a link for the taxonomy's default below term lists.
 - "Archive" under each post type with an archive, and under Posts.
 - "New version" on an entry: a draft copy to schedule as its replacement.

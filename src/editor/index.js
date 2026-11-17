@@ -23,6 +23,7 @@ import SchemeControl from './components/scheme-control';
 import SectionEdit from './components/section-edit';
 import { sectionLabel } from './section-label';
 import './archives/bindings';
+import './archives/bound-source';
 import './archives/shows-on';
 import './extensions/block-link';
 import './extensions/button-icon';

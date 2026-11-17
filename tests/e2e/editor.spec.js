@@ -767,3 +767,102 @@ test.describe('site details', () => {
 		).toHaveValue('https://instagram.com/shop');
 	});
 });
+
+test.describe('archive entries', () => {
+	test('customising an archive saves nothing until saved, and its bound text says where it comes from', async ({
+		page,
+		requestUtils,
+	}) => {
+		const [id] = await createCategories(requestUtils, ['Journal']);
+
+		await requestUtils.rest({
+			path: `/wp/v2/categories/${id}`,
+			method: 'POST',
+			data: { description: 'Notes from the workshop.' },
+		});
+
+		const archiveLink = page.locator('#wp-admin-bar-matter-archive > a');
+
+		await page.goto(`/?cat=${id}`);
+		await expect(archiveLink).toHaveText('Customise archive');
+		await archiveLink.click();
+		await page.waitForFunction(() =>
+			window.wp?.data?.select('core/editor')?.getCurrentPostId()
+		);
+
+		expect(
+			await page.evaluate(
+				() =>
+					window.wp.data.select('core/editor').getCurrentPost().status
+			)
+		).toBe('auto-draft');
+
+		await page.evaluate(() => {
+			const block = window.wp.blocks.createBlock('core/paragraph', {
+				metadata: {
+					bindings: {
+						content: {
+							source: 'matter/archive',
+							args: { key: 'description' },
+						},
+					},
+				},
+			});
+
+			window.wp.data.dispatch('core/block-editor').insertBlocks(block);
+			window.wp.data
+				.dispatch('core/block-editor')
+				.selectBlock(block.clientId);
+		});
+		await page.evaluate(() => {
+			window.wp.data
+				.dispatch('core/preferences')
+				.set('core/edit-post', 'welcomeGuide', false);
+			window.wp.data
+				.dispatch('core/edit-post')
+				.openGeneralSidebar('edit-post/block');
+		});
+
+		await expect(
+			page.getByText(
+				'The title and description come from the category “Journal”.'
+			)
+		).toBeVisible();
+		await expect(
+			page.getByRole('link', { name: /Edit the category/ })
+		).toHaveAttribute('href', new RegExp(`tag_ID=${id}`));
+
+		// Leaving without saving leaves the archive as it was.
+		await page.goto(`/?cat=${id}`);
+		await expect(archiveLink).toHaveText('Customise archive');
+	});
+
+	test('a customised archive is kept once saved', async ({
+		page,
+		requestUtils,
+	}) => {
+		const [id] = await createCategories(requestUtils, ['Workshop']);
+		const archiveLink = page.locator('#wp-admin-bar-matter-archive > a');
+
+		await page.goto(`/?cat=${id}`);
+		await archiveLink.click();
+		await page.waitForFunction(() =>
+			window.wp?.data?.select('core/editor')?.getCurrentPostId()
+		);
+		await page.evaluate(() =>
+			window.wp.data.dispatch('core/editor').savePost()
+		);
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						window.wp.data.select('core/editor').getCurrentPost()
+							.status
+				)
+			)
+			.toBe('draft');
+
+		await page.goto(`/?cat=${id}`);
+		await expect(archiveLink).toHaveText('Edit archive');
+	});
+});

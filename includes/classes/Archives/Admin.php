@@ -10,8 +10,9 @@
  * - Appearance › Archives: every entry and what it shows on. "Customise an
  *   archive" (Add new) chooses the archive first; the Help tab explains which
  *   content shows.
- * - Customise: creates a draft for an archive, starting from what shows
- *   there now, and opens it; or opens the archive's own entry.
+ * - Customise: starts a draft for an archive (an auto-draft, kept only once
+ *   saved), from what shows there now, and opens it; or opens the archive's
+ *   own entry.
  *
  * @package Eighteen73\Matter
  */
@@ -119,7 +120,10 @@ class Admin {
 			$id = wp_insert_post(
 				[
 					'post_type'    => Archives::POST_TYPE,
-					'post_status'  => 'draft',
+					// An auto-draft, as "Add New" makes: nothing is saved
+					// until the client saves, and an abandoned one is
+					// cleaned up.
+					'post_status'  => 'auto-draft',
 					'post_title'   => $target->label(),
 					'post_content' => wp_slash( $copy ? $copy->post_content : $archives->content_for( $target ) ),
 					'meta_input'   => [ Archives::META => $target->key() ],
@@ -928,7 +932,51 @@ class Admin {
 				'description' => wp_strip_all_tags( (string) Archives::value( $target, 'description' ) ),
 				'count'       => (string) Archives::value( $target, 'count' ),
 			],
+			'source'  => self::values_source( $target ),
 		];
+	}
+
+	/**
+	 * Where an archive's title and description are edited, for the editor:
+	 * bound blocks can't be typed into, so the client is sent there.
+	 *
+	 * @param Target $target Archive.
+	 * @return array{text: string, link: string, linkText: string}|null
+	 */
+	private static function values_source( Target $target ): ?array {
+		$taxonomy = in_array( $target->type, [ 'term', 'taxonomy' ], true ) ? get_taxonomy( $target->name ) : null;
+		$singular = mb_strtolower( (string) ( $taxonomy->labels->singular_name ?? '' ) );
+		$term     = 'term' === $target->type ? $target->term() : null;
+
+		if ( $term ) {
+			return [
+				/* translators: 1: taxonomy singular name, e.g. "category", 2: term name. */
+				'text'     => sprintf( __( 'The title and description come from the %1$s “%2$s”.', 'matter' ), $singular, $term->name ),
+				'link'     => (string) get_edit_term_link( $term ),
+				/* translators: %s: taxonomy singular name, e.g. "category". */
+				'linkText' => sprintf( __( 'Edit the %s', 'matter' ), $singular ),
+			];
+		}
+
+		if ( $taxonomy ) {
+			return [
+				/* translators: %s: taxonomy singular name, e.g. "category". */
+				'text'     => sprintf( __( 'Each %s shows its own title and description.', 'matter' ), $singular ),
+				'link'     => current_user_can( $taxonomy->cap->manage_terms ) ? admin_url( 'edit-tags.php?taxonomy=' . $taxonomy->name ) : '',
+				/* translators: %s: taxonomy plural name, e.g. "categories". */
+				'linkText' => sprintf( __( 'Edit %s', 'matter' ), mb_strtolower( (string) $taxonomy->labels->name ) ),
+			];
+		}
+
+		if ( 'post_type' === $target->type ) {
+			return [
+				'text'     => __( 'The title and description are set by the theme.', 'matter' ),
+				'link'     => '',
+				'linkText' => '',
+			];
+		}
+
+		return null;
 	}
 
 	/**
