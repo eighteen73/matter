@@ -968,4 +968,61 @@ test.describe('inserter previews', () => {
 		expect(previews.missing).toEqual([]);
 		expect(previews.posts).toEqual([3, 3, 3]);
 	});
+
+	test('a posts display previews three items, though it lists up to 100', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		// More posts than a preview shows; only these are removed after.
+		const created = [];
+		const removeCreated = () =>
+			Promise.all(
+				created.map((id) =>
+					requestUtils.rest({
+						method: 'DELETE',
+						path: `/wp/v2/posts/${id}`,
+						params: { force: true },
+					})
+				)
+			);
+
+		try {
+			for (let i = 1; i <= 5; i++) {
+				const { id } = await requestUtils.createPost({
+					title: `Preview post ${i}`,
+					status: 'publish',
+				});
+
+				created.push(id);
+			}
+
+			await admin.createNewPost();
+			await page
+				.getByRole('button', { name: 'Block Inserter', exact: true })
+				.click();
+			await page
+				.getByRole('searchbox', { name: 'Search' })
+				.fill('Posts accordion');
+
+			// Hovered again while the directory's results load below.
+			const option = page.getByRole('option', {
+				name: 'Posts accordion',
+			});
+			const items = page
+				.frameLocator('.block-editor-inserter__preview iframe')
+				.locator(
+					'.matter-query-display__preview .wp-block-matter-accordion-item'
+				);
+
+			await expect
+				.poll(async () => {
+					await option.hover();
+					return items.count();
+				})
+				.toBe(3);
+		} finally {
+			await removeCreated();
+		}
+	});
 });

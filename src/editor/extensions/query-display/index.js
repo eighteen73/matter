@@ -32,8 +32,11 @@ import {
 	registerBlockVariation,
 	unregisterBlockVariation,
 } from '@wordpress/blocks';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 import { createHigherOrderComponent } from '@wordpress/compose';
+import { useSelect } from '@wordpress/data';
 import domReady from '@wordpress/dom-ready';
+import { useEffect } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import { category, postList, store as shop } from '@wordpress/icons';
@@ -153,8 +156,9 @@ const exampleBlocks = (template = []) =>
 
 /**
  * An inserter preview for a query display: its own attributes and blocks,
- * listing a few items (a product collection applies its own query, so all
- * of them). Carousels are shown at a laptop's width, several slides across.
+ * listing a few items (see DisplayEdit; a product collection applies its own
+ * query, so all of them). Carousels are shown at a laptop's width, several
+ * slides across.
  *
  * @param {Object} attributes Display attributes.
  * @param {Array}  template   Inner block template.
@@ -300,6 +304,38 @@ const EDITS = {
 	tabs: PreviewEdit,
 };
 
+/**
+ * A query display, listing a few items in a preview (the inserter's,
+ * a pattern's). Core gives an inserter preview the variation's own
+ * attributes over its example's, so the example alone can't limit them. A
+ * preview has its own block store: the page being edited is untouched.
+ *
+ * @param {Object}   root           Props.
+ * @param {Function} root.Edit      The display's edit component.
+ * @param {Function} root.BlockEdit The query block's edit component.
+ * @param {Object}   root.props     The query block's props.
+ * @return {Element} The display, once its preview lists a few items.
+ */
+function DisplayEdit({ Edit, BlockEdit, props }) {
+	const isPreview = useSelect(
+		(select) => !!select(blockEditorStore).getSettings().isPreviewMode,
+		[]
+	);
+	const { name, attributes, setAttributes } = props;
+	const key = TERMS === name ? 'termQuery' : 'query';
+	const query = attributes[key];
+	const perPage = Number(query?.perPage);
+	const tooMany = isPreview && !(perPage > 0 && perPage <= PREVIEW_ITEMS);
+
+	useEffect(() => {
+		if (tooMany) {
+			setAttributes({ [key]: { ...query, perPage: PREVIEW_ITEMS } });
+		}
+	}, [tooMany, key, query, setAttributes]);
+
+	return tooMany ? null : <Edit BlockEdit={BlockEdit} props={props} />;
+}
+
 addFilter(
 	'editor.BlockEdit',
 	'matter/query-display/edit',
@@ -310,7 +346,11 @@ addFilter(
 				const Edit = display ? EDITS[display.type] : null;
 
 				return Edit ? (
-					<Edit BlockEdit={BlockEdit} props={props} />
+					<DisplayEdit
+						Edit={Edit}
+						BlockEdit={BlockEdit}
+						props={props}
+					/>
 				) : (
 					<BlockEdit {...props} />
 				);
