@@ -14,3 +14,11 @@
 	cursor: text;
 	flex: 1;
 }
+
+// "Add item" (edit.js) is a full-width row under the last item. Core places
+// a block's appender absolutely at its bottom right, over the last item's
+// caret; keep it in the flow. Doubled classes to outrank core's rules.
+.wp-block-matter-accordion.wp-block-matter-accordion > .block-list-appender.block-list-appender {
+	line-height: inherit;
+	position: static;
+}

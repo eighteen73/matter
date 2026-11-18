@@ -11,12 +11,12 @@ import {
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
 import { createBlock } from '@wordpress/blocks';
-import { Button, MenuItem } from '@wordpress/components';
+import { MenuItem } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { placeCaretAtHorizontalEdge, safeHTML } from '@wordpress/dom';
-import { plus } from '@wordpress/icons';
+import { Icon, plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -253,12 +253,14 @@ export default function Edit({
 							);
 						})}
 						{isEditing && (
-							<Button
-								icon={plus}
-								label={__('Add tab', 'matter')}
+							<button
+								type="button"
+								className="matter-add-button"
 								onClick={addTab}
-								size="small"
-							/>
+							>
+								<Icon icon={plus} size={20} />
+								{__('Add tab', 'matter')}
+							</button>
 						)}
 					</div>
 				)}

@@ -2,14 +2,16 @@
  * WordPress dependencies
  */
 import {
-	InnerBlocks,
 	InspectorControls,
 	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
+import { createBlock } from '@wordpress/blocks';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Icon, plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -50,11 +52,34 @@ export default function Edit({
 		[clientId, isSelected]
 	);
 
+	// "Add item" as a full-width row under the last item: core's square
+	// appender sat over the last item's caret.
+	const { insertBlock } = useDispatch(blockEditorStore);
+	const AddItem = useCallback(
+		() => (
+			<button
+				type="button"
+				className="matter-add-button is-row"
+				onClick={() =>
+					insertBlock(
+						createBlock('matter/accordion-item'),
+						undefined,
+						clientId
+					)
+				}
+			>
+				<Icon icon={plus} size={20} />
+				{__('Add item', 'matter')}
+			</button>
+		),
+		[clientId, insertBlock]
+	);
+
 	const blockProps = useBlockProps();
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
 		allowedBlocks: ALLOWED_BLOCKS,
 		template: [['matter/accordion-item']],
-		renderAppender: isEditing ? InnerBlocks.ButtonBlockAppender : false,
+		renderAppender: isEditing ? AddItem : false,
 	});
 
 	return (

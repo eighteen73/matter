@@ -923,7 +923,7 @@ test.describe('archive entries', () => {
 });
 
 test.describe('accordion', () => {
-	test("“Add accordion item” shows while an item's text is selected", async ({
+	test("“Add item” shows while an item's text is selected, and adds one", async ({
 		admin,
 		editor,
 		page,
@@ -954,10 +954,7 @@ test.describe('accordion', () => {
 			);
 		});
 
-		await editor.canvas
-			.getByRole('button', { name: 'Add accordion item' })
-			.click();
-		// The only block it allows: added at once.
+		await editor.canvas.getByRole('button', { name: 'Add item' }).click();
 		await expect
 			.poll(() =>
 				page.evaluate(
@@ -968,6 +965,12 @@ test.describe('accordion', () => {
 				)
 			)
 			.toBe(2);
+		// Ready to type the new item's title.
+		await expect(
+			editor.canvas
+				.locator('.wp-block-matter-accordion-item__title')
+				.nth(1)
+		).toBeFocused();
 	});
 
 	test('Enter at the end of a question moves to its answer', async ({
@@ -1260,5 +1263,35 @@ test.describe('buttons without a link', () => {
 		});
 
 		await expect(marked).toHaveCount(0);
+	});
+});
+
+test.describe('tabs', () => {
+	test('“Add tab” shows while the tabs are being edited, and adds one', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter/tabs' });
+
+		const addTab = editor.canvas.getByRole('button', { name: 'Add tab' });
+
+		await addTab.click();
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						window.wp.data
+							.select('core/block-editor')
+							.getBlocks()[0].innerBlocks.length
+				)
+			)
+			.toBe(3);
+
+		await page.evaluate(() =>
+			window.wp.data.dispatch('core/block-editor').clearSelectedBlock()
+		);
+		await expect(addTab).toHaveCount(0);
 	});
 });
