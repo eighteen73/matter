@@ -11,6 +11,14 @@ describe('needsLink', () => {
 		).toBe(true);
 	});
 
+	it('counts a bare "#" as no link, but not "#id"', () => {
+		expect(needsLink('core/button', { text: 'Go', url: '#' })).toBe(true);
+		expect(needsLink('core/button', { text: 'Go', url: ' # ' })).toBe(true);
+		expect(
+			needsLink('core/button', { text: 'Book', url: '#contact' })
+		).toBe(false);
+	});
+
 	it('leaves linked, bound, form and empty buttons alone', () => {
 		expect(needsLink('core/button', { text: 'Go', url: '/shop/' })).toBe(
 			false

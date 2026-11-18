@@ -11,7 +11,11 @@ export function needsLink(name, attributes) {
 		return false;
 	}
 
-	if (attributes.url || attributes.metadata?.bindings?.url) {
+	// A bare "#" is a placeholder (patterns and demo content use it); "#id"
+	// opens an overlay or jumps to a section, so it counts as a link.
+	const url = String(attributes.url ?? '').trim();
+
+	if ((url && '#' !== url) || attributes.metadata?.bindings?.url) {
 		return false;
 	}
 
