@@ -147,6 +147,17 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	// As on the front end, show full rows at the number of columns that fit.
 	const itemsRef = useRef();
+
+	// "Images to show" is empty while all are shown: say so. RangeControl has
+	// no placeholder prop, so set it on its number field once it's rendered
+	// (in the sidebar, after this block).
+	const limitRef = (node) => {
+		const input = node?.querySelector('input[type="number"]');
+
+		if (input) {
+			input.placeholder = __('All', 'matter');
+		}
+	};
 	const visible = useVisibleCount(
 		itemsRef,
 		isCarousel ? 0 : limit,
@@ -276,28 +287,30 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						</ToggleGroupControl>
 					)}
 					{!isCarousel && (
-						<RangeControl
-							__nextHasNoMarginBottom
-							__next40pxDefaultSize
-							label={__('Images to show', 'matter')}
-							help={
-								limit > 0
-									? __(
-											'Shown in full rows; the rest open from a "View all" button.',
-											'matter'
-										)
-									: __('All images are shown.', 'matter')
-							}
-							value={limit || undefined}
-							min={rowSize}
-							step={rowSize}
-							max={Math.max(imageCount, rowSize)}
-							allowReset
-							resetFallbackValue={0}
-							onChange={(value) =>
-								setAttributes({ limit: value ?? 0 })
-							}
-						/>
+						<div ref={limitRef}>
+							<RangeControl
+								__nextHasNoMarginBottom
+								__next40pxDefaultSize
+								label={__('Images to show', 'matter')}
+								help={
+									limit > 0
+										? __(
+												'Shown in full rows; the rest open from a "View all" button.',
+												'matter'
+											)
+										: __('All images are shown.', 'matter')
+								}
+								value={limit || undefined}
+								min={rowSize}
+								step={rowSize}
+								max={Math.max(imageCount, rowSize)}
+								allowReset
+								resetFallbackValue={0}
+								onChange={(value) =>
+									setAttributes({ limit: value ?? 0 })
+								}
+							/>
+						</div>
 					)}
 					<AspectRatioControl
 						value={currentRatio}

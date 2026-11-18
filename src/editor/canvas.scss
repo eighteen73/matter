@@ -66,6 +66,30 @@
 	margin-block-start: 8px;
 }
 
+// The carousel's slide picker: icons from a theme or plugin (a Dashicon, an
+// SVG painted in currentcolor) in core's grey, and its hover colour, as core
+// does for its own icons with fill.
+.wp-block-matter-carousel .block-editor-block-variation-picker__variations .components-button > :is(svg, .matter-picker-icon) {
+	color: #949494;
+}
+
+.wp-block-matter-carousel .block-editor-block-variation-picker__variations .components-button:hover > :is(svg, .matter-picker-icon) {
+	color: var(--wp-admin-theme-color);
+}
+
+.matter-picker-icon {
+	align-items: center;
+	display: inline-flex;
+	height: 48px;
+	justify-content: center;
+	width: 48px;
+}
+
+.matter-picker-icon > svg {
+	height: 100%;
+	width: 100%;
+}
+
 // Image focal point preview.
 .wp-block-image[style*="--image-focal-point"] img {
 	object-position: var(--image-focal-point);

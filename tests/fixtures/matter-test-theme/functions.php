@@ -11,6 +11,7 @@ add_action(
 		register_nav_menus( [ 'primary' => 'Primary' ] );
 		register_block_type( __DIR__ . '/blocks/test-section' );
 		register_block_type( __DIR__ . '/blocks/test-feature' );
+		register_block_type( __DIR__ . '/blocks/test-list' );
 	}
 );
 

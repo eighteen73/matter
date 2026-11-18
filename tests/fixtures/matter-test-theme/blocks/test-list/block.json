@@ -1,0 +1,22 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter-test/list",
+	"title": "Test list",
+	"category": "sections",
+	"supports": {
+		"html": false,
+		"matter": {
+			"slots": {
+				"intro": {
+					"allowedBlocks": [ "core/heading", "core/paragraph" ],
+					"template": [ [ "core/heading" ] ]
+				},
+				"items": {
+					"allowedBlocks": [ "matter-test/feature" ],
+					"template": [ [ "matter-test/feature" ], [ "matter-test/feature" ] ]
+				}
+			}
+		}
+	}
+}

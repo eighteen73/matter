@@ -1295,3 +1295,100 @@ test.describe('tabs', () => {
 		await expect(addTab).toHaveCount(0);
 	});
 });
+
+test.describe('add buttons on the toolbar', () => {
+	const count = (page, path) =>
+		page.evaluate((keys) => {
+			let block = {
+				innerBlocks: window.wp.data
+					.select('core/block-editor')
+					.getBlocks(),
+			};
+
+			for (const key of keys) {
+				block = block.innerBlocks[key];
+			}
+
+			return block.innerBlocks.length;
+		}, path);
+
+	const select = (page, path) =>
+		page.evaluate((keys) => {
+			const { select: get, dispatch } = window.wp.data;
+			let block = { innerBlocks: get('core/block-editor').getBlocks() };
+
+			for (const key of keys) {
+				block = block.innerBlocks[key];
+			}
+
+			dispatch('core/block-editor').selectBlock(block.clientId);
+		}, path);
+
+	test('a list offers “Add …” from itself and from anything inside its items', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'matter/tabs',
+			innerBlocks: [
+				{
+					name: 'matter/tab',
+					innerBlocks: [
+						{
+							name: 'core/paragraph',
+							attributes: { content: 'Tab text' },
+						},
+					],
+				},
+			],
+		});
+		await editor.insertBlock({
+			name: 'matter/accordion',
+			innerBlocks: [
+				{
+					name: 'matter/accordion-item',
+					attributes: { title: 'One' },
+					innerBlocks: [
+						{
+							name: 'core/paragraph',
+							attributes: { content: 'Answer' },
+						},
+					],
+				},
+			],
+		});
+		await editor.insertBlock({ name: 'matter-test/list' });
+
+		const toolbar = page.getByRole('toolbar', { name: 'Block tools' });
+
+		// Tabs: from a tab's text.
+		await select(page, [0, 0, 0]);
+		await toolbar.getByRole('button', { name: 'Add tab' }).click();
+		await expect.poll(() => count(page, [0])).toBe(2);
+
+		// Accordion: from an answer.
+		await select(page, [1, 0, 0]);
+		await toolbar.getByRole('button', { name: 'Add item' }).click();
+		await expect.poll(() => count(page, [1])).toBe(2);
+
+		// A section whose slot holds one kind of item: from the section, and
+		// from inside an item; not from its other slot.
+		await expect.poll(() => count(page, [2, 1])).toBe(2);
+		await select(page, [2]);
+		await toolbar.getByRole('button', { name: 'Add test feature' }).click();
+		await expect.poll(() => count(page, [2, 1])).toBe(3);
+
+		await select(page, [2, 1, 0]);
+		await expect(
+			toolbar.getByRole('button', { name: 'Add test feature' })
+		).toBeVisible();
+
+		await select(page, [2, 0, 0]);
+		await expect(toolbar).toBeVisible();
+		await expect(
+			toolbar.getByRole('button', { name: /^Add / })
+		).toHaveCount(0);
+	});
+});

@@ -18,8 +18,9 @@ import {
 	createBlocksFromInnerBlocksTemplate,
 	getBlockType,
 } from '@wordpress/blocks';
+import { Dashicon } from '@wordpress/components';
 import { useDispatch } from '@wordpress/data';
-import { useState } from '@wordpress/element';
+import { cloneElement, isValidElement, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { category, gallery, postList } from '@wordpress/icons';
 
@@ -79,6 +80,33 @@ const TEMPLATES = {
  * @param {Object} theme The carousel's slide types (slideTypesFor()).
  * @return {Array} Variations for the picker.
  */
+/**
+ * A block's icon at the picker's size, like core's own (48px): an SVG may fix
+ * its own size (WooCommerce's draws at 24px from a component), and a Dashicon
+ * (a theme's block.json icon) fills more of its box than a line icon, so it's
+ * drawn smaller. canvas.scss sizes the box and colours them as core's.
+ *
+ * @param {Object|Element|Function|string} icon Block type icon.
+ * @return {Element} Icon for the picker.
+ */
+const pickerIcon = (icon) => {
+	const Src = icon?.src ?? icon;
+
+	if (isValidElement(Src)) {
+		return cloneElement(Src, { width: 48, height: 48 });
+	}
+
+	return (
+		<span className="matter-picker-icon">
+			{typeof Src === 'function' ? (
+				<Src />
+			) : (
+				<Dashicon icon={Src} size={40} />
+			)}
+		</span>
+	);
+};
+
 function slideOptions(theme) {
 	const custom = Object.keys(theme)
 		.filter(
@@ -89,7 +117,7 @@ function slideOptions(theme) {
 		.map((name) => ({
 			name,
 			title: theme[name].label || getBlockType(name).title,
-			icon: getBlockType(name).icon,
+			icon: pickerIcon(getBlockType(name).icon),
 		}));
 
 	return [
@@ -110,7 +138,7 @@ function slideOptions(theme) {
 			name: PRODUCTS,
 			title: theme[PRODUCTS]?.label || __('Products', 'matter'),
 			description: __('One slide per product.', 'matter'),
-			icon: getBlockType(PRODUCTS).icon,
+			icon: pickerIcon(getBlockType(PRODUCTS).icon),
 		},
 		getBlockType(TERMS) && {
 			name: TERMS,
