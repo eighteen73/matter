@@ -16,7 +16,6 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { placeCaretAtHorizontalEdge, safeHTML } from '@wordpress/dom';
-import { Icon, plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -27,6 +26,7 @@ import { ActiveTabContext } from './context';
 import { TABS_SETTINGS, TabsSettings } from './settings';
 import { useStableId } from '../../components/stable-id';
 import { useEnterContent } from '../../components/enter-content';
+import AddButton from '../../components/add-button';
 
 function TabIcon({ name }) {
 	const icon = useIcon(name);
@@ -253,14 +253,10 @@ export default function Edit({
 							);
 						})}
 						{isEditing && (
-							<button
-								type="button"
-								className="matter-add-button"
+							<AddButton
+								label={__('Add tab', 'matter')}
 								onClick={addTab}
-							>
-								<Icon icon={plus} size={20} />
-								{__('Add tab', 'matter')}
-							</button>
+							/>
 						)}
 					</div>
 				)}

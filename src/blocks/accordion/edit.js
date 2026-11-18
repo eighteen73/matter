@@ -11,7 +11,6 @@ import { createBlock } from '@wordpress/blocks';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Icon, plus } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -19,6 +18,7 @@ import { Icon, plus } from '@wordpress/icons';
 import { ToolsPanel } from '../../components/compat';
 import { ACCORDION_SETTINGS, AccordionSettings } from './settings';
 import { useStableId } from '../../components/stable-id';
+import AddButton from '../../components/add-button';
 
 const ALLOWED_BLOCKS = ['matter/accordion-item'];
 
@@ -57,9 +57,8 @@ export default function Edit({
 	const { insertBlock } = useDispatch(blockEditorStore);
 	const AddItem = useCallback(
 		() => (
-			<button
-				type="button"
-				className="matter-add-button is-row"
+			<AddButton
+				label={__('Add item', 'matter')}
 				onClick={() =>
 					insertBlock(
 						createBlock('matter/accordion-item'),
@@ -67,10 +66,8 @@ export default function Edit({
 						clientId
 					)
 				}
-			>
-				<Icon icon={plus} size={20} />
-				{__('Add item', 'matter')}
-			</button>
+				isRow
+			/>
 		),
 		[clientId, insertBlock]
 	);

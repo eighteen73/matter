@@ -15,25 +15,24 @@
 }
 
 // A button with text but no link (extensions/button-link.js): an outline in
-// the admin colour with a "No link" tab on its top corner, drawn on the
-// block's wrapper so the two line up. Editor UI, so not left to the theme.
+// the admin colour with a "No link" tag in its top corner, both inside the
+// block's box so they don't change its spacing. Editor UI, so not left to the
+// theme.
 .wp-block-button.matter-needs-link {
-	--matter-needs-link-offset: 3px;
-	--matter-needs-link-width: 2px;
-	outline: var(--matter-needs-link-width) solid var(--wp-admin-theme-color, #3858e9);
-	outline-offset: var(--matter-needs-link-offset);
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: -2px;
 	position: relative;
 
 	&::before {
 		background: var(--wp-admin-theme-color, #3858e9);
-		border-radius: 2px 2px 0 0;
+		border-end-start-radius: 2px;
 		color: #fff;
 		content: attr(data-matter-hint);
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 		font-size: 11px;
 		font-weight: 500;
-		inset-block-end: calc(100% + var(--matter-needs-link-offset) + var(--matter-needs-link-width));
-		inset-inline-end: calc(-1 * (var(--matter-needs-link-offset) + var(--matter-needs-link-width)));
+		inset-block-start: 0;
+		inset-inline-end: 0;
 		letter-spacing: 0;
 		line-height: 1;
 		padding: 3px 6px;
@@ -45,54 +44,24 @@
 	}
 }
 
-// "Add tab" and "Add item" (tabs and accordion edit.js): dashed, in the
-// section's text colour so they suit light and dark schemes, and in the
-// editor's font, as editor controls rather than content.
-.matter-add-button {
-	align-items: center;
+// "Add tab" and "Add item" (components/add-button.js): core's block appender
+// (its look comes from its class), laid out as a labelled button: inline
+// with the tab names, or a full-width row under an accordion's items.
+.block-editor-button-block-appender.matter-add-button {
 	align-self: center;
-	background: none;
-	border: 1px dashed currentcolor;
-	border-radius: 2px;
-	color: inherit;
-	cursor: pointer;
-	display: inline-flex;
 	flex: none;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	font-size: 13px;
-	font-weight: 500;
-	gap: 4px;
-	letter-spacing: 0;
-	line-height: 1;
-	min-height: 32px;
-	opacity: 0.7;
-	padding: 0 10px 0 6px;
-	text-transform: none;
-
-	&:hover {
-		opacity: 1;
-	}
-
-	&:focus-visible {
-		opacity: 1;
-		outline: 2px solid var(--wp-admin-theme-color, #3858e9);
-		outline-offset: 2px;
-	}
-
-	&.is-row {
-		justify-content: center;
-		margin-block-start: 12px;
-		min-height: 44px;
-		width: 100%;
-	}
+	flex-direction: row;
+	width: auto;
 }
 
-.matter-add-button svg {
-	fill: currentcolor;
+.block-editor-button-block-appender.matter-add-button.is-row {
+	justify-content: center;
+	margin-block-start: 12px;
+	width: 100%;
 }
 
 // Vertical tabs: below the names, lined up with them.
-.wp-block-matter-tabs.is-vertical .matter-add-button {
+.wp-block-matter-tabs.is-vertical .block-editor-button-block-appender.matter-add-button {
 	align-self: flex-start;
 	margin-block-start: 8px;
 }
