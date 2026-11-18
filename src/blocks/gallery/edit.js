@@ -12,7 +12,6 @@ import {
 import {
 	PanelBody,
 	RangeControl,
-	SelectControl,
 	TextControl,
 	ToggleControl,
 	ToolbarButton,
@@ -169,6 +168,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const aspectRatios = useAspectRatios();
 	const currentRatio = aspectRatio || options.aspectRatio || 'auto';
 	const currentCaptions = captions || options.captions || 'tooltip';
+	// "Show captions" on: the theme's style, or Toggle if it hides them.
+	const shownCaptions = 'hidden' === options.captions ? 'tooltip' : undefined;
 
 	const blockProps = useBlockProps({
 		className: [
@@ -319,35 +320,41 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							setAttributes({ aspectRatio: value })
 						}
 					/>
-					<SelectControl
+					<ToggleControl
 						__nextHasNoMarginBottom
-						__next40pxDefaultSize
-						label={__('Captions', 'matter')}
-						help={
-							'hidden' === currentCaptions
-								? __(
-										'Not shown on the page or in the lightbox.',
-										'matter'
-									)
-								: undefined
+						label={__('Show captions', 'matter')}
+						help={__(
+							'Show captions in the lightbox and on gallery images that have one.',
+							'matter'
+						)}
+						checked={'hidden' !== currentCaptions}
+						onChange={(show) =>
+							setAttributes({
+								captions: show ? shownCaptions : 'hidden',
+							})
 						}
-						value={currentCaptions}
-						options={[
-							{
-								value: 'tooltip',
-								label: __('Behind an info button', 'matter'),
-							},
-							{
-								value: 'overlay',
-								label: __(
-									'Over the bottom of the image',
-									'matter'
-								),
-							},
-							{ value: 'hidden', label: __('Hidden', 'matter') },
-						]}
-						onChange={(value) => setAttributes({ captions: value })}
 					/>
+					{'hidden' !== currentCaptions && (
+						<ToggleGroupControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							isBlock
+							label={__('Caption style', 'matter')}
+							value={currentCaptions}
+							onChange={(value) =>
+								setAttributes({ captions: value })
+							}
+						>
+							<ToggleGroupControlOption
+								value="tooltip"
+								label={__('Toggle', 'matter')}
+							/>
+							<ToggleGroupControlOption
+								value="overlay"
+								label={__('Overlay', 'matter')}
+							/>
+						</ToggleGroupControl>
+					)}
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={__('Open images in a lightbox', 'matter')}
