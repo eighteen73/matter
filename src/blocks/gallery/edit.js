@@ -12,6 +12,7 @@ import {
 import {
 	PanelBody,
 	RangeControl,
+	SelectControl,
 	TextControl,
 	ToggleControl,
 	ToolbarButton,
@@ -305,43 +306,35 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							setAttributes({ aspectRatio: value })
 						}
 					/>
-					<ToggleGroupControl
+					<SelectControl
 						__nextHasNoMarginBottom
 						__next40pxDefaultSize
-						isBlock
 						label={__('Captions', 'matter')}
 						help={
-							{
-								tooltip: __(
-									'Behind an info button on each image.',
-									'matter'
-								),
-								overlay: __(
-									'Over the bottom of each image.',
-									'matter'
-								),
-								hidden: __(
-									'Not shown on the page or in the lightbox.',
-									'matter'
-								),
-							}[currentCaptions]
+							'hidden' === currentCaptions
+								? __(
+										'Not shown on the page or in the lightbox.',
+										'matter'
+									)
+								: undefined
 						}
 						value={currentCaptions}
+						options={[
+							{
+								value: 'tooltip',
+								label: __('Behind an info button', 'matter'),
+							},
+							{
+								value: 'overlay',
+								label: __(
+									'Over the bottom of the image',
+									'matter'
+								),
+							},
+							{ value: 'hidden', label: __('Hidden', 'matter') },
+						]}
 						onChange={(value) => setAttributes({ captions: value })}
-					>
-						<ToggleGroupControlOption
-							value="tooltip"
-							label={__('Info button', 'matter')}
-						/>
-						<ToggleGroupControlOption
-							value="overlay"
-							label={__('Over image', 'matter')}
-						/>
-						<ToggleGroupControlOption
-							value="hidden"
-							label={__('Hidden', 'matter')}
-						/>
-					</ToggleGroupControl>
+					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={__('Open images in a lightbox', 'matter')}
