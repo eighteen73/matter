@@ -27,6 +27,7 @@ import './archives/bound-source';
 import './archives/shows-on';
 import './extensions/block-link';
 import './extensions/button-icon';
+import './extensions/button-link';
 import './extensions/query-display';
 import './extensions/focal-point';
 import './extensions/parent-toolbar';

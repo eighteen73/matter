@@ -1219,3 +1219,53 @@ test.describe('overlay triggers', () => {
 			.toBe('Book a place');
 	});
 });
+
+test.describe('buttons without a link', () => {
+	test('a button with text but no link is marked until it has one', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost({ postType: 'page' });
+		await editor.insertBlock({
+			name: 'core/buttons',
+			innerBlocks: [
+				{ name: 'core/button', attributes: { text: 'See all' } },
+				{
+					name: 'core/button',
+					attributes: { text: 'Shop', url: '/shop/' },
+				},
+				{ name: 'core/button', attributes: { text: '' } },
+			],
+		});
+
+		const marked = editor.canvas.locator(
+			'.wp-block-button.matter-needs-link'
+		);
+
+		await expect(marked).toHaveCount(1);
+		await expect(marked).toHaveAttribute('data-matter-hint', 'No link');
+		await expect(marked).toContainText('See all');
+
+		await marked.locator('.wp-block-button__link').click();
+		const notice = page.locator('.matter-button-link-notice');
+
+		await expect(notice).toContainText(
+			'This button doesn’t go anywhere yet.'
+		);
+
+		await page.evaluate(() => {
+			const { getSelectedBlockClientId } =
+				window.wp.data.select('core/block-editor');
+
+			window.wp.data
+				.dispatch('core/block-editor')
+				.updateBlockAttributes(getSelectedBlockClientId(), {
+					url: '/journal/',
+				});
+		});
+
+		await expect(marked).toHaveCount(0);
+		await expect(notice).toHaveCount(0);
+	});
+});

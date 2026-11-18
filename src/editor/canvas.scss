@@ -14,6 +14,37 @@
 	width: 1em;
 }
 
+// A button with text but no link (extensions/button-link.js): a dashed
+// outline and a "No link" tag. Editor UI, so not left to the theme.
+.wp-block-button.matter-needs-link {
+	position: relative;
+
+	&::before {
+		background: #b45309;
+		border-radius: 2px;
+		color: #fff;
+		content: attr(data-matter-hint);
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		font-size: 11px;
+		font-weight: 500;
+		inset-block-start: -12px;
+		inset-inline-end: -10px;
+		letter-spacing: 0;
+		line-height: 1;
+		padding: 3px 5px;
+		pointer-events: none;
+		position: absolute;
+		text-transform: none;
+		white-space: nowrap;
+		z-index: 1;
+	}
+}
+
+.wp-block-button.matter-needs-link > .wp-block-button__link {
+	outline: 2px dashed #b45309;
+	outline-offset: 3px;
+}
+
 // Image focal point preview.
 .wp-block-image[style*="--image-focal-point"] img {
 	object-position: var(--image-focal-point);
