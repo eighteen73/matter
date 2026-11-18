@@ -14,13 +14,13 @@
 	width: 1em;
 }
 
-// A button with text but no link (extensions/button-link.js): a dashed
-// outline and a "No link" tag. Editor UI, so not left to the theme.
+// A button with text but no link (extensions/button-link.js): an outline and
+// a "No link" tag in the admin colour. Editor UI, so not left to the theme.
 .wp-block-button.matter-needs-link {
 	position: relative;
 
 	&::before {
-		background: #b45309;
+		background: var(--wp-admin-theme-color, #3858e9);
 		border-radius: 2px;
 		color: #fff;
 		content: attr(data-matter-hint);
@@ -41,7 +41,7 @@
 }
 
 .wp-block-button.matter-needs-link > .wp-block-button__link {
-	outline: 2px dashed #b45309;
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
 	outline-offset: 3px;
 }
 

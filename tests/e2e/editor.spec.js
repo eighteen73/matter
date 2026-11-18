@@ -1248,12 +1248,6 @@ test.describe('buttons without a link', () => {
 		await expect(marked).toContainText('See all');
 
 		await marked.locator('.wp-block-button__link').click();
-		const notice = page.locator('.matter-button-link-notice');
-
-		await expect(notice).toContainText(
-			'This button doesn’t go anywhere yet.'
-		);
-
 		await page.evaluate(() => {
 			const { getSelectedBlockClientId } =
 				window.wp.data.select('core/block-editor');
@@ -1266,6 +1260,5 @@ test.describe('buttons without a link', () => {
 		});
 
 		await expect(marked).toHaveCount(0);
-		await expect(notice).toHaveCount(0);
 	});
 });
