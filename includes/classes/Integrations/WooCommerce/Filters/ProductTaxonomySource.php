@@ -22,6 +22,7 @@ use Eighteen73\Matter\Filters\Listing;
 use Eighteen73\Matter\Filters\QueryParams;
 use Eighteen73\Matter\Filters\Sources;
 use Eighteen73\Matter\Filters\TaxonomySource;
+use Eighteen73\Matter\Integrations\WooCommerce\WooCommerce;
 use WP_Block;
 
 defined( 'ABSPATH' ) || exit;
@@ -49,6 +50,16 @@ final class ProductTaxonomySource extends TaxonomySource implements QueryParams 
 	 */
 	public function label(): string {
 		return str_starts_with( $this->taxonomy, 'pa_' ) ? (string) wc_attribute_label( $this->taxonomy ) : parent::label();
+	}
+
+	/**
+	 * How its filter shows at first: swatches for an attribute with
+	 * WooCommerce's colour or image swatches, else checkboxes.
+	 *
+	 * @return string
+	 */
+	public function default_display(): string {
+		return WooCommerce::is_visual( $this->taxonomy ) ? 'swatches' : 'checkboxes';
 	}
 
 	/**

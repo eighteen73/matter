@@ -120,6 +120,50 @@ function rangeLabel(filter) {
 }
 
 /**
+ * Whether an option is chosen ("Any", `''`, when none is). With "& up"
+ * (`atLeast`), the option is the lowest value chosen.
+ *
+ * @param {Object} filter Filter state.
+ * @param {string} value  Option value.
+ * @return {boolean} Chosen.
+ */
+export function isChosen(filter, value) {
+	const values = (filter?.values ?? []).map(String);
+
+	if (value === '') {
+		return !values.length;
+	}
+
+	if (filter?.atLeast) {
+		return (
+			values.length > 0 &&
+			Number(value) === Math.min(...values.map(Number))
+		);
+	}
+
+	return values.includes(value);
+}
+
+/**
+ * An option's count: with "& up", its own and every higher option's.
+ *
+ * @param {Object} filter Filter state.
+ * @param {string} value  Option value.
+ * @return {number} Count.
+ */
+export function countOf(filter, value) {
+	const counts = filter?.counts ?? {};
+
+	if (!filter?.atLeast) {
+		return counts[value] ?? 0;
+	}
+
+	return Object.entries(counts)
+		.filter(([key]) => Number(key) >= Number(value))
+		.reduce((total, [, count]) => total + Number(count), 0);
+}
+
+/**
  * The listing's active filters, as chips (see chip()).
  *
  * @param {Object} listing Listing state.
@@ -145,6 +189,15 @@ export function chipsOf(listing) {
 					)
 				);
 			}
+
+			return;
+		}
+
+		// "& up": one chip, the lowest chosen.
+		if (filter.atLeast && filter.values?.length) {
+			const lowest = String(Math.min(...filter.values.map(Number)));
+
+			chips.push(chip(id, lowest, labels[lowest] ?? lowest));
 
 			return;
 		}
@@ -319,16 +372,13 @@ const { state, actions } = store('matter/filters', {
 		// An option is chosen; "Any" (`''`) when none is.
 		get isChecked() {
 			const context = getContext();
-			const values = filterOf(context)?.values ?? [];
 
-			return context.value === ''
-				? !values.length
-				: values.includes(context.value);
+			return isChosen(filterOf(context), context.value);
 		},
 		get count() {
 			const context = getContext();
 
-			return filterOf(context)?.counts?.[context.value] ?? 0;
+			return countOf(filterOf(context), context.value);
 		},
 		// An option with no results is hidden, unless it's chosen.
 		get isHidden() {
@@ -436,7 +486,14 @@ const { state, actions } = store('matter/filters', {
 				return;
 			}
 
-			filter.values = value ? [value] : [];
+			// "4 & up": 4 and every value above it.
+			if (filter.atLeast && value) {
+				filter.values = Object.keys(filter.counts ?? {}).filter(
+					(key) => Number(key) >= Number(value)
+				);
+			} else {
+				filter.values = value ? [value] : [];
+			}
 
 			yield actions.navigate(context.listing);
 		},
@@ -468,6 +525,8 @@ const { state, actions } = store('matter/filters', {
 			if (removed.value === 'range') {
 				filter.min = null;
 				filter.max = null;
+			} else if (filter.atLeast) {
+				filter.values = [];
 			} else {
 				filter.values = filter.values.filter(
 					(value) => value !== removed.value

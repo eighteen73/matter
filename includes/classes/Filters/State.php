@@ -34,25 +34,21 @@ final class State {
 			// An option is chosen; "Any" (`''`) when none is.
 			'isChecked'     => function () {
 				$context = wp_interactivity_get_context();
-				$filter  = self::filter( $context );
-				$value   = (string) ( $context['value'] ?? '' );
 
-				return '' === $value ? empty( $filter['values'] ) : in_array( $value, (array) ( $filter['values'] ?? [] ), true );
+				return self::is_checked( self::filter( $context ), (string) ( $context['value'] ?? '' ) );
 			},
 			'count'         => function () {
 				$context = wp_interactivity_get_context();
-				$counts  = (array) ( self::filter( $context )['counts'] ?? [] );
 
-				return (int) ( $counts[ (string) ( $context['value'] ?? '' ) ] ?? 0 );
+				return self::count( self::filter( $context ), (string) ( $context['value'] ?? '' ) );
 			},
 			// An option with no results is hidden, unless it's chosen.
 			'isHidden'      => function () {
 				$context = wp_interactivity_get_context();
 				$filter  = self::filter( $context );
 				$value   = (string) ( $context['value'] ?? '' );
-				$counts  = (array) ( $filter['counts'] ?? [] );
 
-				return '' !== $value && ! in_array( $value, (array) ( $filter['values'] ?? [] ), true ) && 0 === (int) ( $counts[ $value ] ?? 0 );
+				return '' !== $value && ! self::is_checked( $filter, $value ) && 0 === self::count( $filter, $value );
 			},
 			'activeCount'   => fn() => self::active_count( self::listing( wp_interactivity_get_context() ) ),
 			'hasActive'     => fn() => self::active_count( self::listing( wp_interactivity_get_context() ) ) > 0,
@@ -91,6 +87,53 @@ final class State {
 	}
 
 	/**
+	 * Whether an option is chosen ("Any", `''`, when none is). With "& up"
+	 * (`atLeast`), the option is the lowest value chosen.
+	 *
+	 * @param array  $filter Filter state.
+	 * @param string $value  Option value.
+	 * @return bool
+	 */
+	public static function is_checked( array $filter, string $value ): bool {
+		$values = array_map( 'strval', (array) ( $filter['values'] ?? [] ) );
+
+		if ( '' === $value ) {
+			return ! $values;
+		}
+
+		if ( ! empty( $filter['atLeast'] ) ) {
+			return $values && (float) $value === min( array_map( 'floatval', $values ) );
+		}
+
+		return in_array( $value, $values, true );
+	}
+
+	/**
+	 * An option's count: with "& up", its own and every higher option's.
+	 *
+	 * @param array  $filter Filter state.
+	 * @param string $value  Option value.
+	 * @return int
+	 */
+	public static function count( array $filter, string $value ): int {
+		$counts = (array) ( $filter['counts'] ?? [] );
+
+		if ( empty( $filter['atLeast'] ) ) {
+			return (int) ( $counts[ $value ] ?? 0 );
+		}
+
+		$total = 0;
+
+		foreach ( $counts as $key => $count ) {
+			if ( (float) $key >= (float) $value ) {
+				$total += (int) $count;
+			}
+		}
+
+		return $total;
+	}
+
+	/**
 	 * How many filters are applied: each chosen option, and each range set.
 	 *
 	 * @param array $listing Listing state.
@@ -121,8 +164,18 @@ final class State {
 				continue;
 			}
 
-			foreach ( (array) ( $filter['values'] ?? [] ) as $value ) {
-				$chips[] = self::chip( (string) $id, (string) $value, (string) ( $labels[ $value ] ?? $value ) );
+			$values = array_map( 'strval', (array) ( $filter['values'] ?? [] ) );
+
+			// "& up": one chip, the lowest chosen.
+			if ( ! empty( $filter['atLeast'] ) && $values ) {
+				$lowest  = (string) min( array_map( 'floatval', $values ) );
+				$chips[] = self::chip( (string) $id, $lowest, (string) ( $labels[ $lowest ] ?? $lowest ) );
+
+				continue;
+			}
+
+			foreach ( $values as $value ) {
+				$chips[] = self::chip( (string) $id, $value, (string) ( $labels[ $value ] ?? $value ) );
 			}
 		}
 

@@ -28,6 +28,7 @@
 
 namespace Eighteen73\Matter\Integrations\WooCommerce;
 
+use Automattic\WooCommerce\Internal\ProductAttributes\VisualAttributeTermMeta;
 use Automattic\WooCommerce\Internal\ProductFilters\Params;
 use Eighteen73\Matter\Filters\Sources;
 use Eighteen73\Matter\Integrations\Integration;
@@ -100,6 +101,7 @@ final class WooCommerce implements Integration {
 		add_action( 'matter_filter_sources', [ $this, 'filter_sources' ], 20 );
 		add_filter( 'matter_hidden_blocks', [ $this, 'hide_filter_blocks' ] );
 		add_filter( 'matter_filters_base_query_vars', [ $this, 'base_query_vars' ], 10, 3 );
+		add_filter( 'matter_filter_swatch', [ $this, 'swatch' ], 10, 2 );
 
 		// Product loop items for everyone, without the shopper's cart.
 		( new LoopItems() )->setup();
@@ -123,6 +125,46 @@ final class WooCommerce implements Integration {
 		];
 
 		return $blocks;
+	}
+
+	/**
+	 * An attribute term's swatch, from WooCommerce's colour and image
+	 * swatches (its visual attributes): a colour, or its image as a cover.
+	 *
+	 * @param mixed $swatch A swatch already given.
+	 * @param mixed $term   Term.
+	 * @return string
+	 */
+	public function swatch( $swatch, $term ): string {
+		if ( '' !== (string) $swatch || ! $term instanceof WP_Term || ! self::is_visual( $term->taxonomy ) ) {
+			return (string) $swatch;
+		}
+
+		$visual = VisualAttributeTermMeta::get_term_visual( $term->term_id );
+		$value  = (string) ( $visual['value'] ?? '' );
+
+		if ( VisualAttributeTermMeta::TYPE_COLOR === ( $visual['type'] ?? '' ) ) {
+			return (string) sanitize_hex_color( $value );
+		}
+
+		if ( VisualAttributeTermMeta::TYPE_IMAGE === ( $visual['type'] ?? '' ) && '' !== $value ) {
+			return sprintf( 'url("%s") center / cover', esc_url_raw( $value ) );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Whether a taxonomy is an attribute with WooCommerce's colour or image
+	 * swatches (WooCommerce 10.9).
+	 *
+	 * @param string $taxonomy Taxonomy.
+	 * @return bool
+	 */
+	public static function is_visual( string $taxonomy ): bool {
+		return str_starts_with( $taxonomy, 'pa_' )
+			&& class_exists( VisualAttributeTermMeta::class )
+			&& VisualAttributeTermMeta::is_visual_attribute_taxonomy( $taxonomy );
 	}
 
 	/**

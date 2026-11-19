@@ -589,7 +589,7 @@ Filters for a listing, replacing FacetWP. A listing is a Query Loop (or, with th
 | Block | What it is |
 | --- | --- |
 | `matter/filters` | The filters, in a form. A sidebar at and above its variant's `collapseBelow` breakpoint, and below it a drawer (a [panel](#panels), ID `filters-{queryId}`) opened by `matter/filters-toggle`, with Clear all and "Show N results" at its foot. Its `label` names the drawer and the button (default "Filters"). |
-| `matter/filter` | One filter: a `source` (what it filters by), shown as `checkboxes`, `chips`, `swatches`, `radio`, `dropdown` or, for a range, `range`. `showCounts`, `operator` (`or`: results with any chosen option; `and`: with all), `limit` (options shown before "Show more"). The inserter has a variation per source ("Category filter", "Colour filter"…), so a new taxonomy or attribute is there by itself. Options with no results are hidden, unless chosen, and a filter with nothing to choose isn't shown. |
+| `matter/filter` | One filter: a `source` (what it filters by), shown as `checkboxes`, `chips`, `swatches`, `radio`, `dropdown`, `stars` (a source with ordered values: ratings) or, for a range, `range`. `atLeast` makes each of an ordered source's options include those above it ("4 & up": a single choice, its count the sum, one chip). `showCounts`, `operator` (`or`: results with any chosen option; `and`: with all), `limit` (options shown before "Show more"). The inserter has a variation per source ("Category filter", "Colour filter"…), so a new taxonomy or attribute is there by itself. Options with no results are hidden, unless chosen, and a filter with nothing to choose isn't shown. |
 | `matter/filters-toggle` | Opens the drawer, with the number of filters applied. Hidden while the filters are inline. |
 | `matter/active-filters` | A chip per filter applied, which removes it, and Clear all. Hidden when there are none. |
 | `matter/results-count` | "Showing 1–12 of 48 results", "48 results" or "No results", announced politely. |
@@ -675,7 +675,7 @@ A provider that adds placeholders a page didn't render calls `Live\Live::expect(
 | `matter_filter_sources` (action) | Given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key. |
 | `matter_filterable_query_blocks` | Query blocks that can be filtered, and the attributes that make them navigate. |
 | `matter_pre_filter_counts` | Counts from elsewhere (Seek). |
-| `matter_filter_swatch` | `$swatch, $term`: a term's colour, for the swatches display. |
+| `matter_filter_swatch` | `$swatch, $term`: a term's swatch, for the swatches display: any CSS background (a colour, or an image as `url(…) center / cover`). The WooCommerce integration gives attributes' colour and image swatches (WooCommerce 10.9's visual attributes), and a filter for one of those shows swatches at first. |
 | `matter_filters_listing` (action) | A listing's query block has rendered (`$listing`). |
 | `matter_filters_base_query_vars` | `$vars, $listing, $block`: a listing's query vars without filters, for query blocks that build theirs differently (the WooCommerce integration's Product Collection). |
 | `matter_filters_page_param` | `$param, $listing`: the parameter that pages a listing. |

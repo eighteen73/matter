@@ -131,10 +131,20 @@ final class RatingSource implements Source, QueryParams {
 				'label'  => self::rating_label( $rating ),
 				'count'  => (int) ( $counts[ $rating ] ?? 0 ),
 				'parent' => '',
+				'rating' => $rating,
 			];
 		}
 
 		return $options;
+	}
+
+	/**
+	 * Ratings are ordered: a filter can show them as stars, and as "4 & up".
+	 *
+	 * @return bool
+	 */
+	public function ordered(): bool {
+		return true;
 	}
 
 	/**

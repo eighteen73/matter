@@ -34,11 +34,15 @@ const PREVIEW = 5;
 const sources = () => window.matterEditor?.filterSources ?? [];
 
 export default function Edit({ attributes, setAttributes }) {
-	const { source, display, label, showCounts, operator, limit } = attributes;
+	const { source, display, label, showCounts, operator, limit, atLeast } =
+		attributes;
 	const found = sources().find(({ key }) => key === source);
 	const isRange = found?.kind === 'range';
+	const ordered = !!found?.ordered;
 	const shown = isRange ? 'range' : display;
-	const isMultiple = ['checkboxes', 'chips', 'swatches'].includes(shown);
+	const isMultiple =
+		['checkboxes', 'chips', 'swatches', 'stars'].includes(shown) &&
+		!(ordered && atLeast);
 	const terms = useSelect(
 		(select) =>
 			found?.taxonomy
@@ -50,14 +54,26 @@ export default function Edit({ attributes, setAttributes }) {
 				: null,
 		[found?.taxonomy]
 	);
-	const options = (terms ?? []).length
-		? terms.map(({ id, name, count }) => ({ id, name, count }))
-		: [1, 2, 3].map((n) => ({
-				id: n,
-				/* translators: %d: a sample option's number. */
-				name: __('Option %d', 'matter').replace('%d', n),
-				count: 0,
-			}));
+	const ratings = (atLeast ? [4, 3, 2, 1] : [5, 4, 3, 2, 1]).map((n) => ({
+		id: n,
+		rating: n,
+		/* translators: %d: a rating, 1 to 5. */
+		name: __('Rated %d out of 5', 'matter').replace('%d', n),
+		count: 0,
+	}));
+	const samples = [1, 2, 3].map((n) => ({
+		id: n,
+		/* translators: %d: a sample option's number. */
+		name: __('Option %d', 'matter').replace('%d', n),
+		count: 0,
+	}));
+	let options = samples;
+
+	if ((terms ?? []).length) {
+		options = terms.map(({ id, name, count }) => ({ id, name, count }));
+	} else if (ordered) {
+		options = ratings;
+	}
 
 	const blockProps = useBlockProps({ className: `is-display-${shown}` });
 
@@ -106,11 +122,37 @@ export default function Edit({ attributes, setAttributes }) {
 								__nextHasNoMarginBottom
 								label={__('Show as', 'matter')}
 								value={display}
-								options={CHOICES}
+								options={
+									ordered
+										? [
+												...CHOICES,
+												{
+													value: 'stars',
+													label: __(
+														'Stars',
+														'matter'
+													),
+												},
+											]
+										: CHOICES
+								}
 								onChange={(value) =>
 									setAttributes({ display: value })
 								}
 							/>
+							{ordered && (
+								<ToggleControl
+									__nextHasNoMarginBottom
+									label={__(
+										'Each option includes those above it ("4 & up")',
+										'matter'
+									)}
+									checked={!!atLeast}
+									onChange={(value) =>
+										setAttributes({ atLeast: value })
+									}
+								/>
+							)}
 							{isMultiple && (
 								<SelectControl
 									__next40pxDefaultSize
@@ -202,7 +244,7 @@ export default function Edit({ attributes, setAttributes }) {
 					)}
 					{!isRange && display !== 'dropdown' && (
 						<ul className="wp-block-matter-filter__options">
-							{options.map(({ id, name, count }) => (
+							{options.map(({ id, name, count, rating }) => (
 								<li
 									key={id}
 									className="wp-block-matter-filter__option"
@@ -210,15 +252,33 @@ export default function Edit({ attributes, setAttributes }) {
 									<span className="wp-block-matter-filter__choice">
 										<input
 											type={
-												display === 'radio'
+												display === 'radio' ||
+												(ordered && atLeast)
 													? 'radio'
 													: 'checkbox'
 											}
 											aria-label={name}
 										/>
-										<span className="wp-block-matter-filter__name">
-											{name}
-										</span>
+										{display === 'stars' && rating ? (
+											<>
+												<span
+													className="wp-block-matter-filter__stars"
+													style={{
+														'--rating': rating,
+													}}
+													aria-hidden="true"
+												/>
+												{atLeast && (
+													<span className="wp-block-matter-filter__up">
+														{__('& up', 'matter')}
+													</span>
+												)}
+											</>
+										) : (
+											<span className="wp-block-matter-filter__name">
+												{name}
+											</span>
+										)}
 										{showCounts && count > 0 && (
 											<span className="wp-block-matter-filter__count">
 												{count}

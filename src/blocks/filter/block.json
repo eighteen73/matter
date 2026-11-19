@@ -27,6 +27,7 @@
 				"chips",
 				"dropdown",
 				"swatches",
+				"stars",
 				"range"
 			],
 			"default": "checkboxes"
@@ -51,6 +52,10 @@
 		"limit": {
 			"type": "number",
 			"default": 0
+		},
+		"atLeast": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {

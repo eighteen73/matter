@@ -80,6 +80,24 @@
 	outline-offset: 2px;
 }
 
+// Stars: a rating as five stars, filled to it (its name is for screen
+// readers). A mask, so the stars are the text's colour.
+:where(.wp-block-matter-filter__stars) {
+	--matter-star-fill: to right;
+	background: linear-gradient(var(--matter-star-fill), currentcolor calc(var(--rating, 0) / 5 * 100%), color-mix(in srgb, currentcolor 30%, transparent) 0);
+	block-size: 1em;
+	display: inline-block;
+	flex: none;
+	forced-color-adjust: none;
+	inline-size: 5em;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z'/%3E%3C/svg%3E") repeat-x left center / 1em 1em;
+}
+
+:where(.wp-block-matter-filter__stars):dir(rtl) {
+	--matter-star-fill: to left;
+	mask-position: right center;
+}
+
 // Swatches: a colour beside each option.
 :where(.wp-block-matter-filter__swatch) {
 	background: var(--swatch);

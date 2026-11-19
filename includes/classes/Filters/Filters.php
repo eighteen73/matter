@@ -496,7 +496,7 @@ final class Filters {
 				'title'      => sprintf( __( '%s filter', 'matter' ), $source->label() ),
 				'attributes' => [
 					'source'  => $key,
-					'display' => 'range' === $source->kind() ? 'range' : 'checkboxes',
+					'display' => method_exists( $source, 'default_display' ) ? (string) $source->default_display() : ( 'range' === $source->kind() ? 'range' : 'checkboxes' ),
 				],
 				'isActive'   => [ 'source' ],
 				'scope'      => [ 'inserter', 'transform' ],
@@ -507,8 +507,9 @@ final class Filters {
 	}
 
 	/**
-	 * The sources, for the filter block's editor: each `key`, `label`, `kind`
-	 * and, for a taxonomy's, `taxonomy` (to preview its terms).
+	 * The sources, for the filter block's editor: each `key`, `label`, `kind`,
+	 * for a taxonomy's `taxonomy` (to preview its terms), and `ordered` for
+	 * one whose values are (ratings: stars, "& up").
 	 *
 	 * @return array<int, array{key: string, label: string, kind: string, taxonomy?: string}>
 	 */
@@ -522,6 +523,8 @@ final class Filters {
 					'label'    => $source->label(),
 					'kind'     => $source->kind(),
 					'taxonomy' => str_starts_with( $key, 'taxonomy:' ) ? substr( $key, 9 ) : null,
+					// Ordered values (ratings): stars, and "4 & up".
+					'ordered'  => method_exists( $source, 'ordered' ) && $source->ordered() ? true : null,
 				]
 			);
 		}

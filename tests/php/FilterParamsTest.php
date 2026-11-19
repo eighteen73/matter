@@ -14,6 +14,7 @@ use Eighteen73\Matter\Filters\QueryParams;
 use Eighteen73\Matter\Filters\Request;
 use Eighteen73\Matter\Filters\Source;
 use Eighteen73\Matter\Filters\Sources;
+use Eighteen73\Matter\Filters\State;
 use WP_Block;
 
 /**
@@ -157,6 +158,37 @@ class FilterParamsTest extends TestCase {
 		$this->assertArrayNotHasKey( 'post__in', $posts, 'The pages\' filter leaves posts alone.' );
 		$this->assertSame( 'category', $posts['tax_query'][0]['taxonomy'], 'Posts\' own category filter applies.' );
 		$this->assertSame( [ 0 ], $pages['post__in'] );
+	}
+
+	/**
+	 * "& up": an option is chosen when it's the lowest value chosen, its
+	 * count includes those above it, and the filter has one chip.
+	 *
+	 * @return void
+	 */
+	public function test_at_least(): void {
+		$filter = [
+			'atLeast' => true,
+			'values'  => [ '4', '5' ],
+			'counts'  => [
+				'5' => 1,
+				'4' => 2,
+				'3' => 0,
+				'2' => 4,
+			],
+			'labels'  => [ '4' => 'Rated 4 out of 5 and up' ],
+		];
+
+		$this->assertTrue( State::is_checked( $filter, '4' ) );
+		$this->assertFalse( State::is_checked( $filter, '5' ) );
+		$this->assertFalse( State::is_checked( $filter, '' ) );
+		$this->assertSame( 3, State::count( $filter, '4' ) );
+		$this->assertSame( 7, State::count( $filter, '2' ) );
+
+		$chips = State::chips( [ 'filters' => [ 'rating' => $filter ] ] );
+
+		$this->assertCount( 1, $chips );
+		$this->assertSame( 'Rated 4 out of 5 and up', $chips[0]['label'] );
 	}
 
 	/**

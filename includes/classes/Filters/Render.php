@@ -25,7 +25,7 @@ final class Render {
 	/**
 	 * Displays for a choice of options.
 	 */
-	private const CHOICES = [ 'checkboxes', 'radio', 'chips', 'dropdown', 'swatches' ];
+	private const CHOICES = [ 'checkboxes', 'radio', 'chips', 'dropdown', 'swatches', 'stars' ];
 
 	/**
 	 * The filters block: its filters in a form (submitted as a plain GET
@@ -116,6 +116,11 @@ final class Render {
 		$display  = (string) ( $attributes['display'] ?? 'checkboxes' );
 		$display  = 'range' === $source->kind() ? 'range' : ( in_array( $display, self::CHOICES, true ) ? $display : 'checkboxes' );
 		$options  = $source->options( $listing, $block, $settings );
+		// A source with ordered values (ratings) can show stars, and options
+		// that include the ones above them ("4 & up").
+		$ordered  = method_exists( $source, 'ordered' ) && $source->ordered();
+		$at_least = $ordered && ! empty( $attributes['atLeast'] ) && 'range' !== $display;
+		$display  = 'stars' === $display && ! $ordered ? 'checkboxes' : $display;
 		$label    = trim( (string) ( $attributes['label'] ?? '' ) );
 		$label    = '' !== $label ? $label : $source->label();
 		$selected = $source->selected( Request::params() );
@@ -132,11 +137,21 @@ final class Render {
 
 			foreach ( $options as $option ) {
 				$counts[ (string) $option['value'] ] = (int) $option['count'];
-				$labels[ (string) $option['value'] ] = (string) $option['label'];
+				$labels[ (string) $option['value'] ] = $at_least
+					/* translators: %s: an option, e.g. "Rated 4 out of 5". */
+					? sprintf( __( '%s and up', 'matter' ), (string) $option['label'] )
+					: (string) $option['label'];
 			}
 
 			$listing->note_filter( $id, array_keys( $counts ), $block );
-			self::state( $listing, $id, $counts, $labels );
+			self::state( $listing, $id, $counts, $labels, $at_least );
+
+			// "4 & up" for each but the highest (which is only itself).
+			if ( $at_least ) {
+				usort( $options, fn( $a, $b ) => (float) $b['value'] <=> (float) $a['value'] );
+				$options = count( $options ) > 1 ? array_slice( $options, 1 ) : $options;
+				$options = array_map( fn( $option ) => [ 'label' => $labels[ (string) $option['value'] ] ] + $option, $options );
+			}
 
 			// A filter with nothing to choose (no option has results, and none
 			// is chosen) isn't shown.
@@ -146,7 +161,7 @@ final class Render {
 
 			$body = 'dropdown' === $display
 				? self::dropdown( $id, $params, $options, $label, ! empty( $attributes['showCounts'] ) )
-				: self::choices( $id, $display, $params, $options, $label, $attributes );
+				: self::choices( $id, $display, $params, $options, $label, $attributes, $at_least );
 		}
 
 		return sprintf(
@@ -163,9 +178,10 @@ final class Render {
 	 * @param string  $id      Filter ID.
 	 * @param array   $counts  Value => count.
 	 * @param array   $labels  Value => name.
+	 * @param bool    $at_least Whether each option includes those above it.
 	 * @return void
 	 */
-	private static function state( Listing $listing, string $id, array $counts, array $labels ): void {
+	private static function state( Listing $listing, string $id, array $counts, array $labels, bool $at_least = false ): void {
 		$state = wp_interactivity_state( Filters::STORE );
 		$known = (array) ( $state['listings'][ $listing->key() ]['filters'][ $id ]['labels'] ?? [] );
 
@@ -176,9 +192,11 @@ final class Render {
 					$listing->key() => [
 						'filters' => [
 							$id => [
-								'counts' => (object) $counts,
+								'counts'  => (object) $counts,
 								// Replaced, not merged: values can be numbers (ratings).
-								'labels' => (object) array_replace( $labels, $known ),
+								// "& up" names its options and chip itself.
+								'labels'  => (object) ( $at_least ? array_replace( $known, $labels ) : array_replace( $labels, $known ) ),
+								'atLeast' => $at_least,
 							],
 						],
 					],
@@ -197,10 +215,11 @@ final class Render {
 	 * @param array  $options    Options.
 	 * @param string $label      Legend.
 	 * @param array  $attributes Block attributes.
+	 * @param bool   $at_least   Whether each option includes those above it (radio buttons).
 	 * @return string
 	 */
-	private static function choices( string $id, string $display, array $params, array $options, string $label, array $attributes ): string {
-		$radio  = 'radio' === $display;
+	private static function choices( string $id, string $display, array $params, array $options, string $label, array $attributes, bool $at_least = false ): string {
+		$radio  = 'radio' === $display || $at_least;
 		$limit  = max( 0, (int) ( $attributes['limit'] ?? 0 ) );
 		$counts = ! empty( $attributes['showCounts'] );
 
@@ -226,7 +245,7 @@ final class Render {
 		$more = $limit > 0 && count( $top ) > $limit;
 		$html = sprintf(
 			'<ul class="wp-block-matter-filter__options" data-wp-class--is-collapsed="state.isCollapsed">%s</ul>',
-			self::option_list( $top, $children, $params, $radio, $counts, $limit )
+			self::option_list( $top, $children, $params, $radio, $counts, $limit, $display, $at_least )
 		);
 
 		if ( $more ) {
@@ -253,15 +272,17 @@ final class Render {
 	/**
 	 * A level of options (and, inside each, its children).
 	 *
-	 * @param array $options  Options at this level.
-	 * @param array $children Options by their parent's value.
-	 * @param array $params   The source's parameters.
-	 * @param bool  $radio    Radio buttons (one choice).
-	 * @param bool  $counts   Show counts.
-	 * @param int   $limit    Top-level options shown before "Show more" (0 for all).
+	 * @param array  $options  Options at this level.
+	 * @param array  $children Options by their parent's value.
+	 * @param array  $params   The source's parameters.
+	 * @param bool   $radio    Radio buttons (one choice).
+	 * @param bool   $counts   Show counts.
+	 * @param int    $limit    Top-level options shown before "Show more" (0 for all).
+	 * @param string $display  Display.
+	 * @param bool   $at_least Whether each option includes those above it.
 	 * @return string
 	 */
-	private static function option_list( array $options, array $children, array $params, bool $radio, bool $counts, int $limit = 0 ): string {
+	private static function option_list( array $options, array $children, array $params, bool $radio, bool $counts, int $limit = 0, string $display = '', bool $at_least = false ): string {
 		$html = '';
 
 		foreach ( array_values( $options ) as $index => $option ) {
@@ -269,7 +290,7 @@ final class Render {
 			$kids  = '' !== $value ? ( $children[ $value ] ?? [] ) : [];
 
 			$html .= sprintf(
-				'<li class="%1$s" %2$s data-wp-bind--hidden="state.isHidden"><label class="wp-block-matter-filter__choice"><input type="%3$s" name="%4$s" value="%5$s" data-wp-bind--checked="state.isChecked" data-wp-on--change="%6$s" data-wp-on--pointerenter="actions.prefetch" data-wp-on--focus="actions.prefetch" />%7$s<span class="wp-block-matter-filter__name">%8$s</span>%9$s</label>%10$s</li>',
+				'<li class="%1$s" %2$s data-wp-bind--hidden="state.isHidden"><label class="wp-block-matter-filter__choice"><input type="%3$s" name="%4$s" value="%5$s" data-wp-bind--checked="state.isChecked" data-wp-on--change="%6$s" data-wp-on--pointerenter="actions.prefetch" data-wp-on--focus="actions.prefetch" />%7$s%8$s%9$s</label>%10$s</li>',
 				esc_attr( implode( ' ', array_filter( [ 'wp-block-matter-filter__option', $limit > 0 && $index >= $limit ? 'is-more' : '' ] ) ) ),
 				wp_interactivity_data_wp_context( [ 'value' => $value ] ),
 				$radio ? 'radio' : 'checkbox',
@@ -277,13 +298,35 @@ final class Render {
 				esc_attr( $value ),
 				$radio ? 'actions.choose' : 'actions.toggle',
 				! empty( $option['swatch'] ) ? sprintf( '<span class="wp-block-matter-filter__swatch" style="%s" aria-hidden="true"></span>', esc_attr( '--swatch:' . $option['swatch'] ) ) : '',
-				esc_html( (string) $option['label'] ),
+				self::option_name( $option, $display, $at_least ),
 				$counts && '' !== $value ? sprintf( ' <span class="wp-block-matter-filter__count" data-wp-text="state.count">%d</span>', (int) $option['count'] ) : '',
-				$kids ? sprintf( '<ul class="wp-block-matter-filter__children">%s</ul>', self::option_list( $kids, $children, $params, $radio, $counts ) ) : ''
+				$kids ? sprintf( '<ul class="wp-block-matter-filter__children">%s</ul>', self::option_list( $kids, $children, $params, $radio, $counts, 0, $display, $at_least ) ) : ''
 			);
 		}
 
 		return $html;
+	}
+
+	/**
+	 * An option's name: as text, or for a rating shown as stars, the stars
+	 * (with "& up") and its name for screen readers.
+	 *
+	 * @param array  $option   Option.
+	 * @param string $display  Display.
+	 * @param bool   $at_least Whether each option includes those above it.
+	 * @return string
+	 */
+	private static function option_name( array $option, string $display, bool $at_least ): string {
+		if ( 'stars' !== $display || ! isset( $option['rating'] ) ) {
+			return sprintf( '<span class="wp-block-matter-filter__name">%s</span>', esc_html( (string) $option['label'] ) );
+		}
+
+		return sprintf(
+			'<span class="wp-block-matter-filter__stars" style="%1$s" aria-hidden="true"></span><span class="wp-block-matter-filter__name screen-reader-text">%2$s</span>%3$s',
+			esc_attr( '--rating:' . (float) $option['rating'] ),
+			esc_html( (string) $option['label'] ),
+			$at_least ? '<span class="wp-block-matter-filter__up" aria-hidden="true">' . esc_html__( '& up', 'matter' ) . '</span>' : ''
+		);
 	}
 
 	/**
