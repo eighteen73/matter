@@ -143,3 +143,79 @@
 :where(.wp-block-matter-filter__chosen[hidden]) {
 	display: none;
 }
+
+// A range's slider: two native range inputs on one track. Only the thumbs
+// take the pointer, so either can be dragged; the track between them fills
+// (--from and --to, set from the state).
+.wp-block-matter-filter__slider {
+	position: relative;
+}
+
+.wp-block-matter-filter__thumb {
+	appearance: none;
+	background: transparent;
+	block-size: 100%;
+	inline-size: 100%;
+	inset: 0;
+	margin: 0;
+	pointer-events: none;
+	position: absolute;
+}
+
+.wp-block-matter-filter__thumb::-webkit-slider-thumb {
+	pointer-events: auto;
+}
+
+.wp-block-matter-filter__thumb::-moz-range-thumb {
+	pointer-events: auto;
+}
+
+:where(.wp-block-matter-filter__slider) {
+	--matter-slider-direction: to right;
+	--matter-slider-track: color-mix(in srgb, currentcolor 25%, transparent);
+	--matter-slider-fill: currentcolor;
+	background: linear-gradient(var(--matter-slider-direction), var(--matter-slider-track) var(--from, 0%), var(--matter-slider-fill) var(--from, 0%) var(--to, 100%), var(--matter-slider-track) var(--to, 100%)) center / 100% 0.25rem no-repeat;
+	block-size: 1.5rem;
+	margin-block: 0.5rem;
+}
+
+:where(.wp-block-matter-filter__slider):dir(rtl) {
+	--matter-slider-direction: to left;
+}
+
+:where(.wp-block-matter-filter__thumb)::-webkit-slider-runnable-track {
+	background: transparent;
+	border: 0;
+}
+
+:where(.wp-block-matter-filter__thumb)::-moz-range-track {
+	background: transparent;
+	border: 0;
+}
+
+:where(.wp-block-matter-filter__thumb)::-webkit-slider-thumb {
+	appearance: none;
+	background: currentcolor;
+	block-size: 1rem;
+	border: 0;
+	border-radius: 50%;
+	inline-size: 1rem;
+}
+
+:where(.wp-block-matter-filter__thumb)::-moz-range-thumb {
+	background: currentcolor;
+	block-size: 1rem;
+	border: 0;
+	border-radius: 50%;
+	inline-size: 1rem;
+}
+
+:where(.wp-block-matter-filter__thumb):focus-visible {
+	outline: 2px solid currentcolor;
+	outline-offset: 2px;
+}
+
+:where(.wp-block-matter-filter__span) {
+	display: block;
+	margin-block-end: 0.5rem;
+}

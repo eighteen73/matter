@@ -79,6 +79,52 @@ const chip = (filter, value, label) => ({
 });
 
 /**
+ * An amount as a range's source writes it ("£1,250", "£12.50"): whole
+ * amounts without decimals. Plain without the source's templates.
+ *
+ * @param {Object|undefined} labels The source's `rangeLabels`.
+ * @param {number}           value  Amount.
+ * @return {string} Text.
+ */
+function amountOf(labels, value) {
+	if (!labels) {
+		return String(value);
+	}
+
+	const number = Number(value);
+	const [whole, fraction] = number
+		.toFixed(Number.isInteger(number) ? 0 : (labels.decimals ?? 2))
+		.split('.');
+	const grouped = whole.replace(
+		/\B(?=(\d{3})+(?!\d))/g,
+		labels.thousand ?? ''
+	);
+
+	return (labels.amount ?? '%s').replace(
+		'%s',
+		fraction ? `${grouped}${labels.decimal ?? '.'}${fraction}` : grouped
+	);
+}
+
+/**
+ * Where a range's bound is: its slider's draft while dragged, else the
+ * filter's, else the slider's end.
+ *
+ * @param {Object} context Context (`draft`, `bounds`).
+ * @param {Object} filter  Filter state.
+ * @param {string} bound   `min` or `max`.
+ * @return {number|null} Value.
+ */
+function boundOf(context, filter, bound) {
+	return (
+		context.draft?.[bound] ??
+		filter?.[bound] ??
+		context.bounds?.[bound] ??
+		null
+	);
+}
+
+/**
  * A range's chip label from its source's templates (`rangeLabels`), as the
  * server words it ("Up to £20"), or null without them.
  *
@@ -92,21 +138,7 @@ function rangeLabel(filter) {
 		return null;
 	}
 
-	const amount = (value) => {
-		const number = Number(value);
-		const [whole, fraction] = number
-			.toFixed(Number.isInteger(number) ? 0 : (labels.decimals ?? 2))
-			.split('.');
-		const grouped = whole.replace(
-			/\B(?=(\d{3})+(?!\d))/g,
-			labels.thousand ?? ''
-		);
-
-		return (labels.amount ?? '%s').replace(
-			'%s',
-			fraction ? `${grouped}${labels.decimal ?? '.'}${fraction}` : grouped
-		);
-	};
+	const amount = (value) => amountOf(labels, value);
 
 	if (isSet(filter.min) && isSet(filter.max)) {
 		return labels.both
@@ -393,6 +425,68 @@ const { state, actions } = store('matter/filters', {
 		get chips() {
 			return chipsOf(state.listings[getContext().listing]);
 		},
+		// A range's fields and slider: each bound, where its thumb is, what it
+		// says, and the track between them.
+		get boundValue() {
+			const context = getContext();
+			const value =
+				context.draft?.[context.bound] ??
+				filterOf(context)?.[context.bound];
+
+			return isSet(value) ? String(value) : '';
+		},
+		get sliderValue() {
+			const context = getContext();
+
+			return String(
+				boundOf(context, filterOf(context), context.bound) ?? ''
+			);
+		},
+		get sliderText() {
+			const context = getContext();
+			const filter = filterOf(context);
+
+			return amountOf(
+				filter?.rangeLabels,
+				boundOf(context, filter, context.bound)
+			);
+		},
+		get sliderStyle() {
+			const context = getContext();
+			const { min, max } = context.bounds ?? {};
+
+			if (!isSet(min) || !isSet(max) || max <= min) {
+				return '';
+			}
+
+			const filter = filterOf(context);
+
+			const at = (bound) =>
+				((boundOf(context, filter, bound) - min) / (max - min)) * 100;
+
+			return `--from:${at('min')}%;--to:${at('max')}%`;
+		},
+		get rangeText() {
+			const context = getContext();
+			const filter = filterOf(context);
+			const both = filter?.rangeLabels?.both ?? '%1$s – %2$s';
+
+			return both
+				.replace(
+					'%1$s',
+					amountOf(
+						filter?.rangeLabels,
+						boundOf(context, filter, 'min')
+					)
+				)
+				.replace(
+					'%2$s',
+					amountOf(
+						filter?.rangeLabels,
+						boundOf(context, filter, 'max')
+					)
+				);
+		},
 		// A collapsible filter: open, and how many of its options are chosen.
 		get isOpen() {
 			return filterOf(getContext())?.open !== false;
@@ -524,7 +618,18 @@ const { state, actions } = store('matter/filters', {
 				return;
 			}
 
-			filter[context.bound] = value === '' ? null : Number(value);
+			let next = value === '' ? null : Number(value);
+
+			// A slider's thumb at its end of the track is no bound.
+			if (next !== null && next === context.bounds?.[context.bound]) {
+				next = null;
+			}
+
+			filter[context.bound] = next;
+
+			if (context.draft) {
+				context.draft[context.bound] = null;
+			}
 
 			yield actions.navigate(context.listing);
 		},
@@ -587,6 +692,27 @@ const { state, actions } = store('matter/filters', {
 			yield router.actions.prefetch(
 				toggledUrl(listing, context.filter, context.value)
 			);
+		},
+
+		// A slider's thumb dragged: where it would filter, not past the other.
+		slide(event) {
+			const context = getContext();
+
+			if (!context.draft || !context.bounds) {
+				return;
+			}
+
+			const filter = filterOf(context);
+
+			let value = Number(event.target.value);
+
+			value =
+				context.bound === 'min'
+					? Math.min(value, boundOf(context, filter, 'max'))
+					: Math.max(value, boundOf(context, filter, 'min'));
+
+			context.draft[context.bound] = value;
+			event.target.value = String(value);
 		},
 
 		// A collapsible filter opened or closed: remembered, so it stays so.

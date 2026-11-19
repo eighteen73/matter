@@ -64,6 +64,10 @@
 		"open": {
 			"type": "boolean",
 			"default": true
+		},
+		"slider": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"supports": {

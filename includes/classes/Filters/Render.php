@@ -130,7 +130,7 @@ final class Render {
 			$listing->note_filter( $id, [], $block );
 			self::state( $listing, $id, [], [] );
 
-			$body = self::range( $listing, $id, $params, $options, $selected, $label );
+			$body = self::range( $listing, $id, $params, $options, $selected, $label, ! empty( $attributes['slider'] ) );
 		} else {
 			$counts = [];
 			$labels = [];
@@ -431,16 +431,17 @@ final class Render {
 	 * @param array   $bounds   The listing's `min` and `max`.
 	 * @param array   $selected The selection's `min` and `max`.
 	 * @param string  $label    Legend.
+	 * @param bool    $slider   Whether it has a slider too.
 	 * @return string
 	 */
-	private static function range( Listing $listing, string $id, array $params, array $bounds, array $selected, string $label ): string {
+	private static function range( Listing $listing, string $id, array $params, array $bounds, array $selected, string $label, bool $slider = false ): string {
 		$field = function ( string $bound, string $name ) use ( $listing, $id, $params, $bounds, $selected ): string {
 			$field_id = 'matter-filter-' . $listing->key() . '-' . $id . '-' . $bound;
 			$value    = $selected[ $bound ] ?? null;
 			$limit    = $bounds[ $bound ] ?? null;
 
 			return sprintf(
-				'<div class="wp-block-matter-filter__bound" %1$s><label for="%2$s">%3$s</label><input id="%2$s" type="number" inputmode="decimal" name="%4$s" step="any"%5$s%6$s%7$s%8$s data-wp-on--change="actions.setRange" /></div>',
+				'<div class="wp-block-matter-filter__bound" %1$s><label for="%2$s">%3$s</label><input id="%2$s" type="number" inputmode="decimal" name="%4$s" step="any"%5$s%6$s%7$s%8$s data-wp-bind--value="state.boundValue" data-wp-on--change="actions.setRange" /></div>',
 				wp_interactivity_data_wp_context( [ 'bound' => $bound ] ),
 				esc_attr( $field_id ),
 				esc_html( $name ),
@@ -452,17 +453,55 @@ final class Render {
 			);
 		};
 
+		$has_bounds = null !== ( $bounds['min'] ?? null ) && null !== ( $bounds['max'] ?? null ) && $bounds['max'] > $bounds['min'];
+		$slider     = $slider && $has_bounds;
+
 		return sprintf(
-			'<fieldset class="wp-block-matter-filter__fieldset" data-wp-interactive="matter/filters" %1$s><legend class="wp-block-matter-filter__label">%2$s</legend><div class="wp-block-matter-filter__range">%3$s%4$s</div></fieldset>',
+			'<fieldset class="wp-block-matter-filter__fieldset" data-wp-interactive="matter/filters" %1$s><legend class="wp-block-matter-filter__label">%2$s</legend>%3$s<div class="wp-block-matter-filter__range">%4$s%5$s</div></fieldset>',
 			wp_interactivity_data_wp_context(
-				[
-					'listing' => $listing->key(),
-					'filter'  => $id,
-				]
+				array_filter(
+					[
+						'listing' => $listing->key(),
+						'filter'  => $id,
+						// A slider's ends, and where its thumbs are while dragged.
+						'bounds'  => $slider ? [
+							'min' => (float) $bounds['min'],
+							'max' => (float) $bounds['max'],
+						] : null,
+						'draft'   => $slider ? [
+							'min' => null,
+							'max' => null,
+						] : null,
+					]
+				)
 			),
 			esc_html( $label ),
+			$slider ? self::slider( $label ) : '',
 			$field( 'min', __( 'Min', 'matter' ) ),
 			$field( 'max', __( 'Max', 'matter' ) )
+		);
+	}
+
+	/**
+	 * A range's slider: two thumbs on one track, the lowest and highest,
+	 * with what they span as text ("£10 – £40"). Dragging shows where they'd
+	 * filter; letting go filters. A thumb at its end of the track is no
+	 * bound. The fields below stay, for typing an exact value.
+	 *
+	 * @param string $label The filter's name.
+	 * @return string
+	 */
+	private static function slider( string $label ): string {
+		$thumb = fn( string $bound, string $name ) => sprintf(
+			'<input type="range" class="wp-block-matter-filter__thumb is-%1$s" aria-label="%2$s" step="1" data-wp-context=\'{"bound":"%1$s"}\' data-wp-bind--min="context.bounds.min" data-wp-bind--max="context.bounds.max" data-wp-bind--value="state.sliderValue" data-wp-bind--aria-valuetext="state.sliderText" data-wp-on--input="actions.slide" data-wp-on--change="actions.setRange" />',
+			esc_attr( $bound ),
+			esc_attr( sprintf( '%1$s: %2$s', $label, $name ) )
+		);
+
+		return sprintf(
+			'<div class="wp-block-matter-filter__slider" data-wp-bind--style="state.sliderStyle">%1$s%2$s</div><output class="wp-block-matter-filter__span" data-wp-text="state.rangeText"></output>',
+			$thumb( 'min', __( 'lowest', 'matter' ) ),
+			$thumb( 'max', __( 'highest', 'matter' ) )
 		);
 	}
 

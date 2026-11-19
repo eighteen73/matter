@@ -50,6 +50,46 @@ final class State {
 
 				return '' !== $value && ! self::is_checked( $filter, $value ) && 0 === self::count( $filter, $value );
 			},
+			// A range's fields and slider (see the store's).
+			'boundValue'    => function () {
+				$context = wp_interactivity_get_context();
+				$value   = $context['draft'][ $context['bound'] ?? '' ] ?? self::filter( $context )[ $context['bound'] ?? '' ] ?? null;
+
+				return null === $value ? '' : (string) $value;
+			},
+			'sliderValue'   => function () {
+				$context = wp_interactivity_get_context();
+
+				return (string) self::bound( $context, (string) ( $context['bound'] ?? '' ) );
+			},
+			'sliderText'    => function () {
+				$context = wp_interactivity_get_context();
+
+				return self::amount( (array) ( self::filter( $context )['rangeLabels'] ?? [] ), self::bound( $context, (string) ( $context['bound'] ?? '' ) ) );
+			},
+			'sliderStyle'   => function () {
+				$context = wp_interactivity_get_context();
+				$min     = $context['bounds']['min'] ?? null;
+				$max     = $context['bounds']['max'] ?? null;
+
+				if ( null === $min || null === $max || $max <= $min ) {
+					return '';
+				}
+
+				$at = fn( string $bound ) => ( (float) self::bound( $context, $bound ) - $min ) / ( $max - $min ) * 100;
+
+				return sprintf( '--from:%s%%;--to:%s%%', $at( 'min' ), $at( 'max' ) );
+			},
+			'rangeText'     => function () {
+				$context = wp_interactivity_get_context();
+				$labels  = (array) ( self::filter( $context )['rangeLabels'] ?? [] );
+
+				return str_replace(
+					[ '%1$s', '%2$s' ],
+					[ self::amount( $labels, self::bound( $context, 'min' ) ), self::amount( $labels, self::bound( $context, 'max' ) ) ],
+					(string) ( $labels['both'] ?? '%1$s – %2$s' )
+				);
+			},
 			// A collapsible filter: open, and how many of its options are chosen.
 			'isOpen'        => fn() => false !== ( self::filter( wp_interactivity_get_context() )['open'] ?? true ),
 			'chosenCount'   => function () {
@@ -91,6 +131,42 @@ final class State {
 	 */
 	private static function filter( array $context ): array {
 		return (array) ( self::listing( $context )['filters'][ (string) ( $context['filter'] ?? '' ) ] ?? [] );
+	}
+
+	/**
+	 * Where a range's bound is: its slider's draft while dragged, else the
+	 * filter's, else the slider's end.
+	 *
+	 * @param array  $context Context.
+	 * @param string $bound   `min` or `max`.
+	 * @return float|null
+	 */
+	private static function bound( array $context, string $bound ): ?float {
+		$value = $context['draft'][ $bound ] ?? self::filter( $context )[ $bound ] ?? $context['bounds'][ $bound ] ?? null;
+
+		return null === $value ? null : (float) $value;
+	}
+
+	/**
+	 * An amount as a range's source writes it (its `rangeLabels`): whole
+	 * amounts without decimals.
+	 *
+	 * @param array      $labels The source's `rangeLabels`.
+	 * @param float|null $value  Amount.
+	 * @return string
+	 */
+	private static function amount( array $labels, ?float $value ): string {
+		if ( null === $value ) {
+			return '';
+		}
+
+		if ( ! $labels ) {
+			return (string) $value;
+		}
+
+		$decimals = floor( $value ) === $value ? 0 : (int) ( $labels['decimals'] ?? 2 );
+
+		return str_replace( '%s', number_format( $value, $decimals, (string) ( $labels['decimal'] ?? '.' ), (string) ( $labels['thousand'] ?? '' ) ), (string) ( $labels['amount'] ?? '%s' ) );
 	}
 
 	/**

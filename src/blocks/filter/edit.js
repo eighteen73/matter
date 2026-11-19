@@ -44,6 +44,7 @@ export default function Edit({ attributes, setAttributes }) {
 		atLeast,
 		collapsible,
 		open,
+		slider,
 	} = attributes;
 	const found = sources().find(({ key }) => key === source);
 	const isRange = found?.kind === 'range';
@@ -142,6 +143,20 @@ export default function Edit({ attributes, setAttributes }) {
 							label={__('Open at first', 'matter')}
 							checked={open !== false}
 							onChange={(value) => setAttributes({ open: value })}
+						/>
+					)}
+					{isRange && (
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={__('Slider', 'matter')}
+							help={__(
+								'Two thumbs on a track, above the fields.',
+								'matter'
+							)}
+							checked={!!slider}
+							onChange={(value) =>
+								setAttributes({ slider: value })
+							}
 						/>
 					)}
 					{!isRange && (
@@ -263,6 +278,12 @@ export default function Edit({ attributes, setAttributes }) {
 							found?.label ||
 							__('Choose what to filter by', 'matter')}
 					</legend>
+					{isRange && slider && (
+						<div
+							className="wp-block-matter-filter__slider"
+							style={{ '--from': '0%', '--to': '100%' }}
+						/>
+					)}
 					{isRange && (
 						<div className="wp-block-matter-filter__range">
 							<span className="wp-block-matter-filter__bound">
