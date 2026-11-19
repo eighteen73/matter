@@ -18,7 +18,10 @@
  *   price, stock and rating, with WooCommerce's own parameters and counts
  *   (Filters\). WooCommerce's own filter blocks are hidden: Matter's
  *   replace them.
- * - Product loop items (LoopItems\Prerendered) without the shopper's cart (Loop items).
+ * - Product loop items (LoopItems\Prerendered) without the shopper's cart
+ *   (LoopItems).
+ * - Price filters and sorting by the shopper's own prices, when a pricing
+ *   plugin says they have them (OwnPrices).
  *
  * @package Eighteen73\Matter
  */
@@ -100,6 +103,9 @@ final class WooCommerce implements Integration {
 
 		// Product loop items for everyone, without the shopper's cart.
 		( new LoopItems() )->setup();
+
+		// Price filters and sorting by the shopper's own prices.
+		( new OwnPrices() )->setup();
 	}
 
 	/**

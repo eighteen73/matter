@@ -615,6 +615,15 @@ A query block with filters inside gets `enhancedPagination: true` (Product Colle
 
 **Counts.** A core filter's counts are the listing's results per term, with the other filters applied (and its own too when its operator is `and`); a parent term counts its children's. They're counted in one grouped query over the listing's SQL, and cached until a post or term changes. `matter_pre_filter_counts` (`$counts, $taxonomy, $query_vars`) answers first when it returns term ID => count (Seek, from Meilisearch). Product filters' counts are WooCommerce's own, which Seek already answers.
 
+**Prices of their own.** WooCommerce filters (`min_price`, `max_price`) and sorts (`orderby=price`) by its own prices. A shopper with prices of their own, such as a trade customer's group prices, would get a list that disagrees with what they're shown. So when a pricing plugin says a shopper has them (`matter_own_prices`), and a price filter or price sort is active, the WooCommerce integration:
+1. finds every product the listing matches without its price filter;
+2. prices them for the shopper (`matter_product_prices`: each product's lowest and highest price for one);
+3. keeps those whose range overlaps the filter, as WooCommerce does;
+4. sorts them, lowest going up or highest coming down, then by ID;
+5. limits the query to them, in that order (`post__in`).
+
+Counts and the results count follow, because they're worked out from the same query. This works for the shop's main query (its archive and product taxonomies) and for Product Collections. It prices every product the listing matches, so it's for listings of hundreds, not tens of thousands. Other shoppers stay with WooCommerce's prices. Prices are compared as the hook gives them, which should be how the shop stores them, as WooCommerce's own lookup table does.
+
 **In the browser** the `matter/filters` store (script module `matter/filters`) builds the URL from the listing's state and goes there: through a results provider if one answers, else the router. Hovering or focusing an option prefetches where it leads. After each navigation the listing's state (selection, counts, results) is the server's.
 
 ```js
@@ -658,6 +667,8 @@ A provider that adds placeholders a page didn't render calls `Live\Live::expect(
 | `matter_filters_listing` (action) | A listing's query block has rendered (`$listing`). |
 | `matter_filters_base_query_vars` | `$vars, $listing, $block`: a listing's query vars without filters, for query blocks that build theirs differently (the WooCommerce integration's Product Collection). |
 | `matter_filters_page_param` | `$param, $listing`: the parameter that pages a listing. |
+| `matter_own_prices` | Whether the shopper may pay prices of their own (default false). When true, `ownPrices` is in the `matter/filters` config, so a results provider leaves price filters and sorting to the server. |
+| `matter_product_prices` | `$prices, $product_ids`: the shopper's price for one of each product, as `[ 'min' => …, 'max' => … ]` by ID. Products left out keep the shop's. |
 
 ## Live blocks
 
@@ -740,7 +751,7 @@ Matter's own code never names another plugin. What it does with WooCommerce and 
 
 | Integration | Boots when | Adds |
 | --- | --- | --- |
-| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Prerendered loop items](#prerendered-loop-items) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of their version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. |
+| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Prerendered loop items](#prerendered-loop-items) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of their version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. Price filters and sorting by the shopper's own prices (`Integrations\WooCommerce\OwnPrices`), when a pricing plugin says they have them. |
 | Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
 
 The hooks they use are open to a project's own code, or its own integration:
