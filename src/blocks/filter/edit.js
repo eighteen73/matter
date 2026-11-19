@@ -34,8 +34,17 @@ const PREVIEW = 5;
 const sources = () => window.matterEditor?.filterSources ?? [];
 
 export default function Edit({ attributes, setAttributes }) {
-	const { source, display, label, showCounts, operator, limit, atLeast } =
-		attributes;
+	const {
+		source,
+		display,
+		label,
+		showCounts,
+		operator,
+		limit,
+		atLeast,
+		collapsible,
+		open,
+	} = attributes;
 	const found = sources().find(({ key }) => key === source);
 	const isRange = found?.kind === 'range';
 	const ordered = !!found?.ordered;
@@ -115,6 +124,26 @@ export default function Edit({ attributes, setAttributes }) {
 						placeholder={found?.label}
 						onChange={(value) => setAttributes({ label: value })}
 					/>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__('Collapsible', 'matter')}
+						help={__(
+							'Its name opens and closes its options.',
+							'matter'
+						)}
+						checked={!!collapsible}
+						onChange={(value) =>
+							setAttributes({ collapsible: value })
+						}
+					/>
+					{collapsible && (
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={__('Open at first', 'matter')}
+							checked={open !== false}
+							onChange={(value) => setAttributes({ open: value })}
+						/>
+					)}
 					{!isRange && (
 						<>
 							<SelectControl
@@ -213,8 +242,23 @@ export default function Edit({ attributes, setAttributes }) {
 				</PanelBody>
 			</InspectorControls>
 			<div {...blockProps}>
+				{collapsible && (
+					<div className="wp-block-matter-filter__summary">
+						{label ||
+							found?.label ||
+							__('Choose what to filter by', 'matter')}
+						{open === false &&
+							` (${__('closed at first', 'matter')})`}
+					</div>
+				)}
 				<fieldset className="wp-block-matter-filter__fieldset" disabled>
-					<legend className="wp-block-matter-filter__label">
+					<legend
+						className={
+							collapsible
+								? 'wp-block-matter-filter__label screen-reader-text'
+								: 'wp-block-matter-filter__label'
+						}
+					>
 						{label ||
 							found?.label ||
 							__('Choose what to filter by', 'matter')}

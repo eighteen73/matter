@@ -50,6 +50,13 @@ final class State {
 
 				return '' !== $value && ! self::is_checked( $filter, $value ) && 0 === self::count( $filter, $value );
 			},
+			// A collapsible filter: open, and how many of its options are chosen.
+			'isOpen'        => fn() => false !== ( self::filter( wp_interactivity_get_context() )['open'] ?? true ),
+			'chosenCount'   => function () {
+				$context = wp_interactivity_get_context();
+
+				return count( self::chips( [ 'filters' => [ (string) ( $context['filter'] ?? '' ) => self::filter( $context ) ] ] ) );
+			},
 			'activeCount'   => fn() => self::active_count( self::listing( wp_interactivity_get_context() ) ),
 			'hasActive'     => fn() => self::active_count( self::listing( wp_interactivity_get_context() ) ) > 0,
 			'chips'         => fn() => self::chips( self::listing( wp_interactivity_get_context() ) ),

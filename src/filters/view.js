@@ -363,6 +363,10 @@ const toggledUrl = (listing, id, value) => {
 // Filters blocks, by element.
 const elements = new Map();
 
+// Collapsible filters the shopper opened or closed, by `listing:filter`: kept
+// out of the store, so syncing with the server doesn't watch them.
+const opened = new Map();
+
 const { state, actions } = store('matter/filters', {
 	state: {
 		// The filter form's Apply button is for browsers without JavaScript.
@@ -388,6 +392,18 @@ const { state, actions } = store('matter/filters', {
 		},
 		get chips() {
 			return chipsOf(state.listings[getContext().listing]);
+		},
+		// A collapsible filter: open, and how many of its options are chosen.
+		get isOpen() {
+			return filterOf(getContext())?.open !== false;
+		},
+		get chosenCount() {
+			const context = getContext();
+			const filter = filterOf(context);
+
+			return filter
+				? chipsOf({ filters: { [context.filter]: filter } }).length
+				: 0;
 		},
 		get activeCount() {
 			return state.chips.length;
@@ -573,6 +589,18 @@ const { state, actions } = store('matter/filters', {
 			);
 		},
 
+		// A collapsible filter opened or closed: remembered, so it stays so.
+		toggleOpen(event) {
+			const filter = filterOf(getContext());
+
+			if (filter) {
+				const { listing, filter: id } = getContext();
+
+				filter.open = event.target.open;
+				opened.set(`${listing}:${id}`, event.target.open);
+			}
+		},
+
 		showMore() {
 			getContext().expanded = true;
 		},
@@ -586,7 +614,16 @@ const { state, actions } = store('matter/filters', {
 			const server = getServerState().listings?.[listing];
 
 			if (server) {
-				state.listings[listing] = structuredClone(server);
+				const next = structuredClone(server);
+
+				// Collapsible filters stay as the shopper left them.
+				Object.entries(next.filters ?? {}).forEach(([id, filter]) => {
+					if (opened.has(`${listing}:${id}`)) {
+						filter.open = opened.get(`${listing}:${id}`);
+					}
+				});
+
+				state.listings[listing] = next;
 			}
 		},
 

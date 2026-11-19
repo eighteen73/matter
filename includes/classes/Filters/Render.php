@@ -164,9 +164,55 @@ final class Render {
 				: self::choices( $id, $display, $params, $options, $label, $attributes, $at_least );
 		}
 
+		if ( ! empty( $attributes['collapsible'] ) ) {
+			$body = self::collapsible( $listing, $id, $label, $body, ! isset( $attributes['open'] ) || ! empty( $attributes['open'] ) );
+		}
+
 		return sprintf(
 			'<div %1$s>%2$s</div>',
 			get_block_wrapper_attributes( [ 'class' => 'is-display-' . $display ] ),
+			$body
+		);
+	}
+
+	/**
+	 * A collapsible filter: its options in a disclosure (`details`) whose
+	 * summary is its name and how many are chosen. Whether it's open is the
+	 * listing's state (`open`, from the block's "Open at first"), so it stays
+	 * as the shopper left it when the listing changes. The filter's own label
+	 * stays, for screen readers, naming its group of options.
+	 *
+	 * @param Listing $listing Listing.
+	 * @param string  $id      Filter ID.
+	 * @param string  $label   Its name.
+	 * @param string  $body    Its options.
+	 * @param bool    $open    Whether it's open at first.
+	 * @return string
+	 */
+	private static function collapsible( Listing $listing, string $id, string $label, string $body, bool $open ): string {
+		$state = wp_interactivity_state( Filters::STORE );
+
+		if ( ! isset( $state['listings'][ $listing->key() ]['filters'][ $id ]['open'] ) ) {
+			wp_interactivity_state( Filters::STORE, [ 'listings' => [ $listing->key() => [ 'filters' => [ $id => [ 'open' => $open ] ] ] ] ] );
+		}
+
+		$processor = new \WP_HTML_Tag_Processor( $body );
+
+		if ( $processor->next_tag( [ 'class_name' => 'wp-block-matter-filter__label' ] ) ) {
+			$processor->add_class( 'screen-reader-text' );
+			$body = $processor->get_updated_html();
+		}
+
+		return sprintf(
+			'<details class="wp-block-matter-filter__group" data-wp-interactive="matter/filters" %1$s data-wp-bind--open="state.isOpen" data-wp-on--toggle="actions.toggleOpen"><summary class="wp-block-matter-filter__summary"><span class="wp-block-matter-filter__summary-label">%2$s</span> <span class="wp-block-matter-filter__chosen" data-wp-bind--hidden="!state.chosenCount"><span data-wp-text="state.chosenCount"></span><span class="screen-reader-text"> %3$s</span></span></summary>%4$s</details>',
+			wp_interactivity_data_wp_context(
+				[
+					'listing' => $listing->key(),
+					'filter'  => $id,
+				]
+			),
+			esc_html( $label ),
+			esc_html__( 'chosen', 'matter' ),
 			$body
 		);
 	}

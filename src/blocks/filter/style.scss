@@ -126,3 +126,20 @@
 :where(.wp-block-matter-filter__more[hidden]) {
 	display: none;
 }
+
+// Collapsible: its name opens and closes its options (a disclosure).
+:where(.wp-block-matter-filter__summary) {
+	cursor: pointer;
+}
+
+:where(.wp-block-matter-filter__chosen)::before {
+	content: "(";
+}
+
+:where(.wp-block-matter-filter__chosen)::after {
+	content: ")";
+}
+
+:where(.wp-block-matter-filter__chosen[hidden]) {
+	display: none;
+}
