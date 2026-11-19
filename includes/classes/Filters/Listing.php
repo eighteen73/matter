@@ -144,7 +144,7 @@ final class Listing {
 	 */
 	public function query_vars( WP_Block $block, ?string $except = null ): array {
 		if ( $this->inherit ) {
-			return Query::apply( Query::main_vars(), $except );
+			return Query::apply( Query::main_vars(), $except, Query::main_post_types() );
 		}
 
 		return Query::building( $except, fn() => build_query_vars_from_query_block( $block, 1 ) );
@@ -211,7 +211,7 @@ final class Listing {
 		$vars = (array) apply_filters( 'matter_filters_base_query_vars', $vars, $this, $block );
 
 		// Every source's parameters (some arrive as query vars), and paging.
-		foreach ( array_merge( Sources::params(), [ 'paged', 'page', 'offset' ] ) as $param ) {
+		foreach ( array_merge( Sources::params(), Sources::query_param_names(), [ 'paged', 'page', 'offset' ] ) as $param ) {
 			unset( $vars[ $param ] );
 		}
 
@@ -276,6 +276,6 @@ final class Listing {
 		// A pretty paged URL (`/page/2/`) starts again from the first page.
 		$url = (string) preg_replace( '#/page/\d+/?(?=\?|$)#', '/', $url );
 
-		return remove_query_arg( array_merge( Sources::params(), Request::paging_params() ), $url );
+		return remove_query_arg( array_merge( Sources::params(), Sources::query_param_names(), Request::paging_params() ), $url );
 	}
 }

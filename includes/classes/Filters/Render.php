@@ -177,7 +177,8 @@ final class Render {
 						'filters' => [
 							$id => [
 								'counts' => (object) $counts,
-								'labels' => (object) array_merge( $labels, $known ),
+								// Replaced, not merged: values can be numbers (ratings).
+								'labels' => (object) array_replace( $labels, $known ),
 							],
 						],
 					],

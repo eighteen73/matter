@@ -234,7 +234,7 @@ class FiltersTest extends TestCase {
 	public function test_filters_combine(): void {
 		$_GET = [
 			'filter_category' => 'news,events',
-			'filter_post_tag' => 'featured',
+			'filter_tag'      => 'featured',
 		];
 
 		$html = $this->listing( '<!-- wp:matter/filter {"source":"taxonomy:post_tag","display":"chips"} /-->' );
@@ -251,8 +251,8 @@ class FiltersTest extends TestCase {
 	 */
 	public function test_all_terms_must_match(): void {
 		$_GET = [
-			'filter_category'     => 'news,events',
-			'query_type_category' => 'and',
+			'filter_category'       => 'news,events',
+			'filter_category_match' => 'all',
 		];
 
 		$this->assertSame( [], $this->titles( $this->listing() ) );
@@ -312,15 +312,15 @@ class FiltersTest extends TestCase {
 		$this->assertSame(
 			[
 				'value'    => 'filter_category',
-				'operator' => 'query_type_category',
+				'operator' => 'filter_category_match',
 			],
 			$source->params()
 		);
 
 		$selected = $source->selected(
 			[
-				'filter_category'     => 'news,<b>events</b>,,news',
-				'query_type_category' => 'and',
+				'filter_category'       => 'news,<b>events</b>,,news',
+				'filter_category_match' => 'all',
 			]
 		);
 

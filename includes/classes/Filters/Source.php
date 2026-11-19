@@ -7,10 +7,20 @@
  * reload, a shared link, a form with no JavaScript). It applies its selection
  * to a query, and lists its options with counts for a listing.
  *
+ * URL parameters follow one convention: `filter_{name}` for a choice
+ * (comma-separated values) with `filter_{name}_match=all` when every value
+ * must match, and `filter_{name}_min` and `filter_{name}_max` for a range.
+ * `{name}` is short and readable (`category`, `tag`, `color`, `price`), so
+ * two sources can share one when they're for different post types (a post's
+ * category and a product's): a source applies only to queries for its own.
+ * A source the query block applies itself (WooCommerce's) translates its
+ * parameters into the block's own (QueryParams).
+ *
  * Two kinds:
  *
  * - `choice`: options to pick (terms, stock statuses, ratings). The
- *   selection is `[ 'values' => string[], 'operator' => 'or'|'and' ]`.
+ *   selection is `[ 'values' => string[], 'operator' => 'or'|'and' ]`
+ *   (`and` from `_match=all`).
  * - `range`: a low and high value (price). The selection is
  *   `[ 'min' => float|null, 'max' => float|null ]`.
  *

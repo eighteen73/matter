@@ -1,13 +1,15 @@
 <?php
 /**
- * Filter products by a product taxonomy or attribute, with WooCommerce's own
- * parameters, so its shop and Product Collections apply them:
+ * Filter products by a product taxonomy or attribute: `filter_{name}`
+ * (`filter_category`, `filter_tag`, `filter_brand`, `filter_color`), with
+ * `filter_{name}_match=all` for an attribute whose chosen terms must all
+ * match. They're translated to WooCommerce's own parameters (QueryParams),
+ * which its shop and Product Collections apply:
  *
  * - Categories, tags and brands: `categories`, `tags`, `brands`; another
  *   product taxonomy: `filter_{taxonomy}` (WooCommerce's names, through its
  *   `woocommerce_product_filter_params` filter). Any of the chosen terms.
- * - Attributes (`pa_{name}`): `filter_{name}`, with `query_type_{name}=and`
- *   when every chosen term must match.
+ * - Attributes (`pa_{name}`): `filter_{name}`, with `query_type_{name}=and`.
  *
  * Counts come from WooCommerce (Counts).
  *
@@ -17,6 +19,8 @@
 namespace Eighteen73\Matter\Integrations\WooCommerce\Filters;
 
 use Eighteen73\Matter\Filters\Listing;
+use Eighteen73\Matter\Filters\QueryParams;
+use Eighteen73\Matter\Filters\Sources;
 use Eighteen73\Matter\Filters\TaxonomySource;
 use WP_Block;
 
@@ -25,7 +29,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Product taxonomy filter source.
  */
-final class ProductTaxonomySource extends TaxonomySource {
+final class ProductTaxonomySource extends TaxonomySource implements QueryParams {
 
 	/**
 	 * Constructor.
@@ -57,17 +61,35 @@ final class ProductTaxonomySource extends TaxonomySource {
 	}
 
 	/**
-	 * WooCommerce's parameters.
+	 * `filter_{name}`, and for an attribute `filter_{name}_match`.
 	 *
 	 * @return array<string, string>
 	 */
 	public function params(): array {
+		$name = Sources::param_name( $this->taxonomy );
+
 		return array_filter(
 			[
-				'value'    => $this->param,
-				'operator' => $this->operator,
+				'value'    => "filter_{$name}",
+				'operator' => null !== $this->operator ? "filter_{$name}_match" : null,
 			]
 		);
+	}
+
+	/**
+	 * WooCommerce's parameters for the chosen terms.
+	 *
+	 * @param array $selected Selection.
+	 * @return array<string, string>
+	 */
+	public function query_params( array $selected ): array {
+		$params = [ $this->param => implode( ',', (array) ( $selected['values'] ?? [] ) ) ];
+
+		if ( null !== $this->operator ) {
+			$params[ $this->operator ] = 'and' === ( $selected['operator'] ?? '' ) && ! empty( $selected['values'] ) ? 'and' : '';
+		}
+
+		return $params;
 	}
 
 	/**

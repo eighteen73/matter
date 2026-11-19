@@ -9,6 +9,7 @@
 namespace Eighteen73\Matter\Integrations\WooCommerce\Filters;
 
 use Eighteen73\Matter\Filters\Listing;
+use Eighteen73\Matter\Filters\QueryParams;
 use Eighteen73\Matter\Filters\Source;
 use WP_Block;
 
@@ -17,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Stock status filter source.
  */
-final class StockSource implements Source {
+final class StockSource implements Source, QueryParams {
 
 	/**
 	 * Key.
@@ -56,12 +57,22 @@ final class StockSource implements Source {
 	}
 
 	/**
-	 * WooCommerce's parameter.
+	 * `filter_stock`.
 	 *
 	 * @return array<string, string>
 	 */
 	public function params(): array {
-		return [ 'value' => 'filter_stock_status' ];
+		return [ 'value' => 'filter_stock' ];
+	}
+
+	/**
+	 * WooCommerce's parameter for the chosen statuses.
+	 *
+	 * @param array $selected Selection.
+	 * @return array<string, string>
+	 */
+	public function query_params( array $selected ): array {
+		return [ 'filter_stock_status' => implode( ',', (array) ( $selected['values'] ?? [] ) ) ];
 	}
 
 	/**
@@ -72,7 +83,7 @@ final class StockSource implements Source {
 	 */
 	public function selected( array $request ): array {
 		$statuses = array_keys( wc_get_product_stock_status_options() );
-		$values   = array_map( 'sanitize_key', explode( ',', (string) ( $request['filter_stock_status'] ?? '' ) ) );
+		$values   = array_map( 'sanitize_key', explode( ',', (string) ( $request['filter_stock'] ?? '' ) ) );
 
 		return [
 			'values'   => array_values( array_intersect( array_unique( $values ), $statuses ) ),

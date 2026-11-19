@@ -48,6 +48,33 @@ final class Request {
 			$_REQUEST[ $param ] = $value;
 		}
 		// phpcs:enable
+
+		self::add_query_params();
+	}
+
+	/**
+	 * Add the query block's own parameters (WooCommerce's) for each selection
+	 * a source like that has, so it applies them as if the URL had them. A
+	 * parameter the URL already has is left as it is.
+	 *
+	 * @return void
+	 */
+	private static function add_query_params(): void {
+		$request = self::params();
+
+		foreach ( Sources::all() as $source ) {
+			if ( ! $source instanceof QueryParams ) {
+				continue;
+			}
+
+			foreach ( $source->query_params( $source->selected( $request ) ) as $param => $value ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filtering of a public listing.
+				if ( '' !== (string) $value && ! isset( $_GET[ $param ] ) ) {
+					$_GET[ $param ]     = (string) $value;
+					$_REQUEST[ $param ] = (string) $value;
+				}
+			}
+		}
 	}
 
 	/**
@@ -120,6 +147,6 @@ final class Request {
 	 * @return array<string, string>
 	 */
 	public static function kept_params(): array {
-		return array_diff_key( self::params(), array_flip( array_merge( Sources::params(), self::paging_params() ) ) );
+		return array_diff_key( self::params(), array_flip( array_merge( Sources::params(), Sources::query_param_names(), self::paging_params() ) ) );
 	}
 }

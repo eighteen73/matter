@@ -598,14 +598,26 @@ Pagination is core's Query Pagination, which works inside the router region.
 
 **The URL is the state.** Each source owns its parameters, so a filtered listing is a plain URL the server renders the same way however it's reached: a click, a reload, a shared link, or the form submitted without JavaScript (its Apply button shows only then; checkboxes arrive as `filter_x[]=…` and are joined into the comma form before WordPress reads the request). Changing a filter goes back to the first page.
 
+Parameters follow one convention, for every source:
+
+| Kind | Parameters |
+| --- | --- |
+| A choice | `filter_{name}=a,b` (comma-separated values), with `filter_{name}_match=all` when every value must match (else any) |
+| A range | `filter_{name}_min`, `filter_{name}_max` |
+
+`{name}` is short and readable, not a taxonomy's slug. A post's and a product's category can share `category`, because a source applies only to queries for its own post types. `matter_filter_param_name` (`$name, $taxonomy`) renames a taxonomy's filter.
+
 | Source (`source`) | Parameters | From |
 | --- | --- | --- |
-| `taxonomy:{taxonomy}`, any public taxonomy | `filter_{taxonomy}=a,b` (term slugs), `query_type_{taxonomy}=and` | Core (`Filters\TaxonomySource`) |
-| `taxonomy:product_cat`, `product_tag`, `product_brand` | `categories`, `tags`, `brands` | WooCommerce integration (its own parameters, which it applies) |
-| `taxonomy:pa_{name}` (attributes) | `filter_{name}`, `query_type_{name}=and` | WooCommerce integration |
-| `price` | `min_price`, `max_price` | WooCommerce integration |
-| `stock` | `filter_stock_status` | WooCommerce integration |
-| `rating` | `rating_filter` | WooCommerce integration |
+| `taxonomy:category`, `taxonomy:post_tag` | `filter_category`, `filter_tag` (`_match=all`) | Core (`Filters\TaxonomySource`) |
+| `taxonomy:{taxonomy}`, any other public taxonomy | `filter_{taxonomy}` (`_match=all`) | Core |
+| `taxonomy:product_cat`, `product_tag`, `product_brand` | `filter_category`, `filter_tag`, `filter_brand` | WooCommerce integration |
+| `taxonomy:pa_{name}` (attributes) | `filter_{name}` (`_match=all`), e.g. `filter_color` | WooCommerce integration |
+| `price` | `filter_price_min`, `filter_price_max` | WooCommerce integration |
+| `stock` | `filter_stock` | WooCommerce integration |
+| `rating` | `filter_rating` | WooCommerce integration |
+
+**WooCommerce's parameters.** WooCommerce applies its own filters, from its own parameters (`categories`, `filter_color` with `query_type_color=and`, `min_price`, `filter_stock_status`, `rating_filter`). Its sources implement `Filters\QueryParams`: as the request starts (`wp_loaded`), Matter adds WooCommerce's parameters for each selection to it, so WooCommerce and Seek read them as before. Links that use WooCommerce's parameters still filter the results, but the filter blocks don't show those choices.
 
 **Queries.** Core sources apply their selection to the listing's Query Loop (`query_loop_block_query_vars`) and to an archive's main query (`pre_get_posts`, on archive, blog and search requests with a filter parameter), so a template's inheriting Query Loop can be filtered too.
 

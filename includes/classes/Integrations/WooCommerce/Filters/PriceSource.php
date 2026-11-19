@@ -9,6 +9,7 @@
 namespace Eighteen73\Matter\Integrations\WooCommerce\Filters;
 
 use Eighteen73\Matter\Filters\Listing;
+use Eighteen73\Matter\Filters\QueryParams;
 use Eighteen73\Matter\Filters\Source;
 use WP_Block;
 
@@ -17,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Price filter source.
  */
-final class PriceSource implements Source {
+final class PriceSource implements Source, QueryParams {
 
 	/**
 	 * Key.
@@ -62,8 +63,23 @@ final class PriceSource implements Source {
 	 */
 	public function params(): array {
 		return [
-			'min' => 'min_price',
-			'max' => 'max_price',
+			'min' => 'filter_price_min',
+			'max' => 'filter_price_max',
+		];
+	}
+
+	/**
+	 * WooCommerce's parameters for a price range.
+	 *
+	 * @param array $selected Selection.
+	 * @return array<string, string>
+	 */
+	public function query_params( array $selected ): array {
+		$bound = fn( $value ) => null === $value ? '' : (string) (float) $value;
+
+		return [
+			'min_price' => $bound( $selected['min'] ?? null ),
+			'max_price' => $bound( $selected['max'] ?? null ),
 		];
 	}
 
@@ -77,8 +93,8 @@ final class PriceSource implements Source {
 		$bound = fn( string $param ) => isset( $request[ $param ] ) && is_numeric( $request[ $param ] ) ? max( 0.0, (float) $request[ $param ] ) : null;
 
 		return [
-			'min' => $bound( 'min_price' ),
-			'max' => $bound( 'max_price' ),
+			'min' => $bound( $this->params()['min'] ),
+			'max' => $bound( $this->params()['max'] ),
 		];
 	}
 

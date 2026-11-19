@@ -250,7 +250,7 @@ export function urlFor(listing) {
 			url.searchParams.set(params.value, filter.values.join(','));
 
 			if (filter.operator === 'and' && params.operator) {
-				url.searchParams.set(params.operator, 'and');
+				url.searchParams.set(params.operator, 'all');
 			}
 		}
 	});

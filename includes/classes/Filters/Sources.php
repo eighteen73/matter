@@ -114,6 +114,53 @@ final class Sources {
 	}
 
 	/**
+	 * Every query block parameter a source adds to the request
+	 * (QueryParams): WooCommerce's.
+	 *
+	 * @return string[]
+	 */
+	public static function query_param_names(): array {
+		$params = [];
+
+		foreach ( self::all() as $source ) {
+			if ( $source instanceof QueryParams ) {
+				$params = array_merge( $params, array_keys( $source->query_params( [] ) ) );
+			}
+		}
+
+		return array_values( array_unique( $params ) );
+	}
+
+	/**
+	 * A URL parameter name for a taxonomy: short and readable, as a filter's
+	 * name in `filter_{name}` (`category` and `tag` for posts' and products'
+	 * categories and tags, `brand`, an attribute's own name, else the
+	 * taxonomy's).
+	 *
+	 * @param string $taxonomy Taxonomy.
+	 * @return string
+	 */
+	public static function param_name( string $taxonomy ): string {
+		$names = [
+			'category'      => 'category',
+			'post_tag'      => 'tag',
+			'product_cat'   => 'category',
+			'product_tag'   => 'tag',
+			'product_brand' => 'brand',
+		];
+		$name  = $names[ $taxonomy ] ?? ( str_starts_with( $taxonomy, 'pa_' ) ? substr( $taxonomy, 3 ) : $taxonomy );
+
+		/**
+		 * Filters the name a taxonomy's filter has in its URL parameters
+		 * (`filter_{name}`).
+		 *
+		 * @param string $name     Name.
+		 * @param string $taxonomy Taxonomy.
+		 */
+		return sanitize_key( (string) apply_filters( 'matter_filter_param_name', $name, $taxonomy ) );
+	}
+
+	/**
 	 * Every URL parameter a source reads.
 	 *
 	 * @return string[]

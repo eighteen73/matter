@@ -139,7 +139,7 @@ final class WooCommerce implements Integration {
 			return (array) $vars;
 		}
 
-		return FilterCounts::query_vars( $block, Sources::params() );
+		return FilterCounts::query_vars( $block, Sources::query_param_names() );
 	}
 
 	/**

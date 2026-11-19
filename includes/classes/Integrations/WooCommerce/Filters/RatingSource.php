@@ -10,6 +10,7 @@
 namespace Eighteen73\Matter\Integrations\WooCommerce\Filters;
 
 use Eighteen73\Matter\Filters\Listing;
+use Eighteen73\Matter\Filters\QueryParams;
 use Eighteen73\Matter\Filters\Source;
 use WP_Block;
 
@@ -18,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Rating filter source.
  */
-final class RatingSource implements Source {
+final class RatingSource implements Source, QueryParams {
 
 	/**
 	 * Key.
@@ -57,12 +58,22 @@ final class RatingSource implements Source {
 	}
 
 	/**
-	 * WooCommerce's parameter.
+	 * `filter_rating`.
 	 *
 	 * @return array<string, string>
 	 */
 	public function params(): array {
-		return [ 'value' => 'rating_filter' ];
+		return [ 'value' => 'filter_rating' ];
+	}
+
+	/**
+	 * WooCommerce's parameter for the chosen ratings.
+	 *
+	 * @param array $selected Selection.
+	 * @return array<string, string>
+	 */
+	public function query_params( array $selected ): array {
+		return [ 'rating_filter' => implode( ',', (array) ( $selected['values'] ?? [] ) ) ];
 	}
 
 	/**
@@ -73,7 +84,7 @@ final class RatingSource implements Source {
 	 */
 	public function selected( array $request ): array {
 		$values = array_filter(
-			array_map( 'absint', explode( ',', (string) ( $request['rating_filter'] ?? '' ) ) ),
+			array_map( 'absint', explode( ',', (string) ( $request['filter_rating'] ?? '' ) ) ),
 			fn( $rating ) => $rating >= 1 && $rating <= 5
 		);
 

@@ -38,6 +38,13 @@ final class Query {
 	private static ?array $main_vars = null;
 
 	/**
+	 * The main query's post types (null for any), for its sources.
+	 *
+	 * @var string[]|null
+	 */
+	private static ?array $main_types = null;
+
+	/**
 	 * A source to leave out while building a query (its own options' counts).
 	 *
 	 * @var string|null
@@ -63,9 +70,62 @@ final class Query {
 			return;
 		}
 
-		self::$main_vars = $query->query_vars;
+		self::$main_vars  = $query->query_vars;
+		self::$main_types = self::post_types( $query );
 
-		$query->query_vars = self::apply( $query->query_vars );
+		$query->query_vars = self::apply( $query->query_vars, null, self::$main_types );
+	}
+
+	/**
+	 * The main query's post types, as its filters were applied: null for any.
+	 *
+	 * @return string[]|null
+	 */
+	public static function main_post_types(): ?array {
+		return self::$main_types;
+	}
+
+	/**
+	 * The post types in query vars: null for any.
+	 *
+	 * @param array $query_vars Query vars.
+	 * @return string[]|null
+	 */
+	public static function types_of( array $query_vars ): ?array {
+		$types = array_values( array_filter( (array) ( $query_vars['post_type'] ?? 'post' ) ) );
+
+		return ! $types || in_array( 'any', $types, true ) ? null : $types;
+	}
+
+	/**
+	 * The post types a main query lists: its own, its taxonomy's (an
+	 * archive's), or posts (the blog). Null for any (a search).
+	 *
+	 * @param WP_Query $query Query.
+	 * @return string[]|null
+	 */
+	private static function post_types( WP_Query $query ): ?array {
+		$types = array_filter( (array) $query->get( 'post_type' ) );
+
+		if ( $types ) {
+			return in_array( 'any', $types, true ) ? null : array_values( $types );
+		}
+
+		if ( $query->is_search() ) {
+			return null;
+		}
+
+		if ( $query->is_category() || $query->is_tag() || $query->is_tax() ) {
+			$types = [];
+
+			foreach ( (array) ( $query->tax_query->queried_terms ?? [] ) as $taxonomy => $terms ) {
+				$types = array_merge( $types, (array) ( get_taxonomy( (string) $taxonomy )->object_type ?? [] ) );
+			}
+
+			return $types ? array_values( array_unique( $types ) ) : null;
+		}
+
+		return [ 'post' ];
 	}
 
 	/**
@@ -82,7 +142,7 @@ final class Query {
 			return $query;
 		}
 
-		$query = self::apply( $query, self::$except );
+		$query = self::apply( $query, self::$except, self::types_of( $query ) );
 
 		// The loop's own query (not a filter counting its options).
 		if ( null === self::$except ) {
@@ -94,13 +154,15 @@ final class Query {
 
 	/**
 	 * Query vars with the request's selections applied, for every registered
-	 * source (but one).
+	 * source (but one) for the query's post types: a post's category filter
+	 * and a product's can share a parameter name.
 	 *
-	 * @param array       $query_vars WP_Query vars.
-	 * @param string|null $except     Source key to leave out.
+	 * @param array         $query_vars WP_Query vars.
+	 * @param string|null   $except     Source key to leave out.
+	 * @param string[]|null $post_types The query's post types; null for any.
 	 * @return array
 	 */
-	public static function apply( array $query_vars, ?string $except = null ): array {
+	public static function apply( array $query_vars, ?string $except = null, ?array $post_types = null ): array {
 		if ( self::ALL === $except ) {
 			return $query_vars;
 		}
@@ -108,7 +170,7 @@ final class Query {
 		$request = Request::params();
 
 		foreach ( Sources::all() as $key => $source ) {
-			if ( $key === $except ) {
+			if ( $key === $except || ( null !== $post_types && ! array_intersect( $source->post_types(), $post_types ) ) ) {
 				continue;
 			}
 
@@ -188,6 +250,7 @@ final class Query {
 	 */
 	public static function reset(): void {
 		self::$main_vars    = null;
+		self::$main_types   = null;
 		self::$except       = null;
 		self::$listing_vars = null;
 	}

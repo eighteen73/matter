@@ -1,8 +1,8 @@
 <?php
 /**
- * Filter by a taxonomy's terms: `filter_{taxonomy}` (comma-separated term
- * slugs), with `query_type_{taxonomy}=and` when every term must match (else
- * any), as WooCommerce names its attribute filters.
+ * Filter by a taxonomy's terms: `filter_{name}` (comma-separated term slugs),
+ * with `filter_{name}_match=all` when every term must match (else any).
+ * `{name}` is short (Sources::param_name(): `category`, `tag`).
  *
  * @package Eighteen73\Matter
  */
@@ -66,14 +66,16 @@ class TaxonomySource implements Source {
 	}
 
 	/**
-	 * `filter_{taxonomy}` and `query_type_{taxonomy}`.
+	 * `filter_{name}` and `filter_{name}_match`.
 	 *
 	 * @return array<string, string>
 	 */
 	public function params(): array {
+		$name = Sources::param_name( $this->taxonomy );
+
 		return [
-			'value'    => 'filter_' . $this->taxonomy,
-			'operator' => 'query_type_' . $this->taxonomy,
+			'value'    => "filter_{$name}",
+			'operator' => "filter_{$name}_match",
 		];
 	}
 
@@ -88,7 +90,7 @@ class TaxonomySource implements Source {
 
 		return [
 			'values'   => self::values( $request[ $params['value'] ] ?? '' ),
-			'operator' => isset( $params['operator'] ) && 'and' === ( $request[ $params['operator'] ] ?? '' ) ? 'and' : 'or',
+			'operator' => isset( $params['operator'] ) && 'all' === ( $request[ $params['operator'] ] ?? '' ) ? 'and' : 'or',
 		];
 	}
 
