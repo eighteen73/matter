@@ -1,11 +1,12 @@
 <?php
 /**
- * Cards: an item's loop item, rendered to be stored and shown elsewhere.
+ * Prerendered loop items: an item's loop item, rendered ahead of time to be
+ * stored and shown elsewhere.
  *
- * A search index can hold each item's card, so a listing's results can be
- * shown without a page render (Seek does, through its Matter integration). A
- * card is what `matter/loop-item` renders in a plain loop's item (the theme's
- * `loop-item-{post_type}` pattern), with what goes around it:
+ * A search index can hold each item's prerendered loop item, so a listing's
+ * results can be shown without a page render (Seek does, through its Matter
+ * integration). It's what `matter/loop-item` renders in a plain loop's item
+ * (the theme's `loop-item-{post_type}` pattern), with what goes around it:
  *
  * - `html`: the loop item. Live blocks (Live\Live) are placeholders, filled in
  *   the browser like a page's, so nothing in it depends on who looks.
@@ -13,14 +14,14 @@
  * - `data`: the Interactivity API state and config its blocks add.
  * - `version`: which pattern and code rendered it; see version().
  *
- * A card is shared by everyone who sees it (anything in a search index can
- * be read by anyone who can search it), so it's always rendered as a guest,
+ * It's shared by everyone who sees it (anything in a search index can be read
+ * by anyone who can search it), so it's always rendered as a guest,
  * and its blocks' state is kept apart from the page being served.
  *
  * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Matter\Cards;
+namespace Eighteen73\Matter\LoopItems;
 
 use Eighteen73\Matter\Blocks\LoopItem;
 use Eighteen73\Matter\Live\Live;
@@ -32,9 +33,9 @@ use WP_User;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Cards.
+ * Loop items.
  */
-final class Cards {
+final class Prerendered {
 
 	/**
 	 * Versions worked out this request, by post type.
@@ -44,7 +45,7 @@ final class Cards {
 	private static array $versions = [];
 
 	/**
-	 * An item's card, or null when it has none: it isn't published and
+	 * An item's prerendered loop item, or null when it has none: it isn't published and
 	 * public, or the theme has no loop item pattern for its type.
 	 *
 	 * @param int $post_id Post ID.
@@ -73,12 +74,12 @@ final class Cards {
 		$GLOBALS['wp_interactivity'] = new WP_Interactivity_API(); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restored below.
 
 		/**
-		 * Fires before a card renders, as a guest: hide anything of the
+		 * Fires before a loop item renders, as a guest: hide anything of the
 		 * current visitor's its blocks would otherwise show (a shop's cart).
 		 *
 		 * @param WP_Post $post The item.
 		 */
-		do_action( 'matter_card_render_start', $post );
+		do_action( 'matter_prerender_loop_item_start', $post );
 
 		try {
 			$html    = Live::with_placeholders( fn() => LoopItem::render( $post->ID ) );
@@ -86,17 +87,17 @@ final class Cards {
 			$data    = $GLOBALS['wp_interactivity']->filter_script_module_interactivity_data( [] );
 		} finally {
 			/**
-			 * Fires after a card renders, to restore what matter_card_render_start hid.
+			 * Fires after a loop item renders, to restore what matter_prerender_loop_item_start hid.
 			 *
 			 * @param WP_Post $post The item.
 			 */
-			do_action( 'matter_card_render_end', $post );
+			do_action( 'matter_prerender_loop_item_end', $post );
 
 			$GLOBALS['wp_interactivity'] = $interactivity; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restoring.
 			$GLOBALS['current_user']     = $user; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restoring.
 		}
 
-		$card = [
+		$item = [
 			'html'    => $html,
 			'classes' => self::classes( $classes ),
 			'data'    => array_filter(
@@ -109,24 +110,24 @@ final class Cards {
 		];
 
 		/**
-		 * Filters a card: e.g. without classes or state that belong to the
+		 * Filters a loop item: e.g. without classes or state that belong to the
 		 * page (a shop's cart) or to where the item is in a list.
 		 *
-		 * @param array   $card The card: `html`, `classes`, `data` and `version`.
+		 * @param array   $item The loop item: `html`, `classes`, `data` and `version`.
 		 * @param WP_Post $post The item.
 		 */
-		$card = apply_filters( 'matter_card', $card, $post );
+		$item = apply_filters( 'matter_prerendered_loop_item', $item, $post );
 
-		return is_array( $card ) ? $card : null;
+		return is_array( $item ) ? $item : null;
 	}
 
 	/**
-	 * A version of a post type's cards: changes when what renders them does
+	 * A version of a post type's loop items: changes when what renders them does
 	 * (the theme's pattern, Matter, the theme, which blocks are live), so a
-	 * card with another version is stale. Null when the theme has no loop
+	 * loop item with another version is stale. Null when the theme has no loop
 	 * item pattern for the type.
 	 *
-	 * Blocks' own code isn't covered, beyond what `matter_card_version` adds
+	 * Blocks' own code isn't covered, beyond what `matter_prerendered_loop_item_version` adds
 	 * (WooCommerce's version, by Matter's WooCommerce integration).
 	 *
 	 * @param string $post_type Post type.
@@ -157,13 +158,13 @@ final class Cards {
 		];
 
 		/**
-		 * Filters what a post type's card version is made from: add what else
-		 * changes cards (a plugin's version, for its blocks).
+		 * Filters what a post type's prerendered loop items' version is made from: add what else
+		 * changes loop items (a plugin's version, for its blocks).
 		 *
 		 * @param array  $parts     Name => value.
 		 * @param string $post_type Post type.
 		 */
-		$parts = (array) apply_filters( 'matter_card_version', $parts, $post_type );
+		$parts = (array) apply_filters( 'matter_prerendered_loop_item_version', $parts, $post_type );
 
 		self::$versions[ $post_type ] = substr( md5( (string) wp_json_encode( $parts ) ), 0, 12 );
 
@@ -181,7 +182,7 @@ final class Cards {
 	}
 
 	/**
-	 * Post classes, the same wherever the card is rendered: WordPress orders
+	 * Post classes, the same wherever the loop item is rendered: WordPress orders
 	 * them differently in admin, and a shop's can be empty.
 	 *
 	 * @param array $classes Classes.

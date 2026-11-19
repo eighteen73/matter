@@ -1,7 +1,7 @@
 <?php
 /**
  * Live blocks: blocks whose output can't be part of a copy that's shared (a
- * cached page, a card in a search index), because it depends on who is
+ * cached page, a loop item in a search index), because it depends on who is
  * looking or changes too often: a price that differs per customer, a stock
  * level.
  *
@@ -16,7 +16,7 @@
  * keyed by the item's post ID and the block's place among the item's live
  * blocks. The browser (src/live/view.js) fills placeholders from
  * `GET matter/v1/live?ids[]=12`, which renders each item's live blocks
- * as the current visitor. So a card can be shared by everyone (cached, or
+ * as the current visitor. So a loop item can be shared by everyone (cached, or
  * stored in a search index) while its price is always current and the
  * visitor's own.
  *
@@ -25,7 +25,7 @@
  * doesn't belong here.
  *
  * Placeholders are used:
- * - while rendering with_placeholders() (e.g. a card for a search index);
+ * - while rendering with_placeholders() (e.g. a loop item for a search index);
  * - on pages, when `matter_live_placeholders` is true, so a listing can be
  *   cached for every visitor, logged in or not.
  *
@@ -144,7 +144,7 @@ final class Live {
 	}
 
 	/**
-	 * Render something with live blocks as placeholders (e.g. a card for a
+	 * Render something with live blocks as placeholders (e.g. a loop item for a
 	 * search index).
 	 *
 	 * @param callable $render Renders it.
@@ -281,7 +281,7 @@ final class Live {
 
 	/**
 	 * A page will show placeholders it didn't render (a results provider's
-	 * cards): load the module and its configuration.
+	 * loop items): load the module and its configuration.
 	 *
 	 * @return void
 	 */

@@ -1,26 +1,26 @@
 <?php
 /**
- * Products' cards (Cards\Cards), for everyone.
+ * Products' loop items (LoopItems\Prerendered), for everyone.
  *
- * A product card is rendered as a guest, but some of WooCommerce's blocks
+ * A product loop item is rendered as a guest, but some of WooCommerce's blocks
  * read the shop's session rather than the user: the Add to Cart button
- * counts what's in the current cart ("1 in basket"). So while a card renders
- * the cart is hidden, and the card keeps nothing of it:
+ * counts what's in the current cart ("1 in basket"). So while a loop item renders
+ * the cart is hidden, and the loop item keeps nothing of it:
  *
  * - without the `woocommerce` store's state and config (the cart, notices):
  *   the page has its own, the shopper's;
- * - without `first` and `last` (where it was in a loop: a card has no
+ * - without `first` and `last` (where it was in a loop: a loop item has no
  *   place) and `sale` (whether it's on sale depends on the shopper's prices,
  *   which are live blocks).
  *
  * A product's list item says which product it is (`woocommerce/products`
  * context), and its Add to Cart button reads the product from WooCommerce's
- * products store. So a product card holds the product's data too, loaded as
+ * products store. So a product loop item holds the product's data too, loaded as
  * a guest, with only what a listing's blocks use: without its prices (which
  * are live), images or descriptions.
  *
- * WooCommerce's version is part of the card version, since its blocks
- * render cards.
+ * WooCommerce's version is part of the loop item version, since its blocks
+ * render loop items.
  *
  * @package Eighteen73\Matter
  */
@@ -32,12 +32,12 @@ use WP_Post;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Product cards.
+ * Product loop items.
  */
-final class Cards {
+final class LoopItems {
 
 	/**
-	 * Classes that don't belong in a card.
+	 * Classes that don't belong in a loop item.
 	 */
 	private const CLASSES = [ 'first', 'last', 'sale' ];
 
@@ -57,7 +57,7 @@ final class Cards {
 	private const CONSENT = 'I acknowledge that using experimental APIs means my theme or plugin will inevitably break in the next version of WooCommerce';
 
 	/**
-	 * A product's data a card keeps.
+	 * A product's data a loop item keeps.
 	 */
 	private const PRODUCT_FIELDS = [
 		'id',
@@ -80,14 +80,14 @@ final class Cards {
 	];
 
 	/**
-	 * Products loaded while their cards render, by post ID.
+	 * Products loaded while their loop items render, by post ID.
 	 *
 	 * @var array<int, array>
 	 */
 	private array $products = [];
 
 	/**
-	 * Carts hidden while cards render (nested renders each keep their own).
+	 * Carts hidden while loop items render (nested renders each keep their own).
 	 *
 	 * @var array<int, mixed>
 	 */
@@ -99,11 +99,11 @@ final class Cards {
 	 * @return void
 	 */
 	public function setup(): void {
-		add_action( 'matter_card_render_start', [ $this, 'hide_cart' ] );
-		add_action( 'matter_card_render_start', [ $this, 'load_product' ], 20 );
-		add_action( 'matter_card_render_end', [ $this, 'restore_cart' ] );
-		add_filter( 'matter_card', [ $this, 'card' ], 10, 2 );
-		add_filter( 'matter_card_version', [ $this, 'version' ] );
+		add_action( 'matter_prerender_loop_item_start', [ $this, 'hide_cart' ] );
+		add_action( 'matter_prerender_loop_item_start', [ $this, 'load_product' ], 20 );
+		add_action( 'matter_prerender_loop_item_end', [ $this, 'restore_cart' ] );
+		add_filter( 'matter_prerendered_loop_item', [ $this, 'item' ], 10, 2 );
+		add_filter( 'matter_prerendered_loop_item_version', [ $this, 'version' ] );
 	}
 
 	/**
@@ -118,7 +118,7 @@ final class Cards {
 	}
 
 	/**
-	 * Load a product card's product, as the guest the card is rendered for.
+	 * Load a product loop item's product, as the guest the loop item is rendered for.
 	 *
 	 * @param mixed $post The item.
 	 * @return void
@@ -147,24 +147,24 @@ final class Cards {
 	}
 
 	/**
-	 * A card without the page's cart, or its place in a loop or sale class.
+	 * A loop item without the page's cart, or its place in a loop or sale class.
 	 *
-	 * @param mixed $card Card.
+	 * @param mixed $item Loop item.
 	 * @param mixed $post The item.
 	 * @return mixed
 	 */
-	public function card( $card, $post = null ) {
-		if ( ! is_array( $card ) ) {
-			return $card;
+	public function item( $item, $post = null ) {
+		if ( ! is_array( $item ) ) {
+			return $item;
 		}
 
-		$card['classes'] = array_values( array_diff( (array) ( $card['classes'] ?? [] ), self::CLASSES ) );
+		$item['classes'] = array_values( array_diff( (array) ( $item['classes'] ?? [] ), self::CLASSES ) );
 
 		foreach ( [ 'state', 'config' ] as $kind ) {
-			unset( $card['data'][ $kind ][ self::STORE ] );
+			unset( $item['data'][ $kind ][ self::STORE ] );
 
-			if ( empty( $card['data'][ $kind ] ) ) {
-				unset( $card['data'][ $kind ] );
+			if ( empty( $item['data'][ $kind ] ) ) {
+				unset( $item['data'][ $kind ] );
 			}
 		}
 
@@ -172,16 +172,16 @@ final class Cards {
 		$id = $post instanceof WP_Post ? $post->ID : 0;
 
 		if ( ! empty( $this->products[ $id ] ) ) {
-			$card['data']['state'][ self::PRODUCTS ]['products'][ $id ] = $this->products[ $id ];
+			$item['data']['state'][ self::PRODUCTS ]['products'][ $id ] = $this->products[ $id ];
 		}
 
 		unset( $this->products[ $id ] );
 
-		return $card;
+		return $item;
 	}
 
 	/**
-	 * WooCommerce's version, whose blocks render product cards.
+	 * WooCommerce's version, whose blocks render product loop items.
 	 *
 	 * @param mixed $parts Version parts.
 	 * @return array

@@ -661,7 +661,7 @@ A provider that adds placeholders a page didn't render calls `Live\Live::expect(
 
 ## Live blocks
 
-Some blocks show something that can't be part of a copy everyone shares, a cached page or a card in a search index. Either it depends on who is looking (a trade customer's price, a member's discount) or it changes too often to be stored (a stock level). A plugin declares such blocks as live: Abacus declares the product price, the sale badge and its own offer blocks. In a loop item they then become placeholders. The browser fills them from `matter/v1/live`, which renders them for that visitor, now.
+Some blocks show something that can't be part of a copy everyone shares, a cached page or a loop item in a search index. Either it depends on who is looking (a trade customer's price, a member's discount) or it changes too often to be stored (a stock level). A plugin declares such blocks as live: Abacus declares the product price, the sale badge and its own offer blocks. In a loop item they then become placeholders. The browser fills them from `matter/v1/live`, which renders them for that visitor, now.
 
 ```html
 <div class="matter-live is-woocommerce-product-price" data-matter-live="12:0" aria-busy="true"></div>
@@ -670,7 +670,7 @@ Some blocks show something that can't be part of a copy everyone shares, a cache
 That's item 12's first live block. Placeholders are only made in plain loop items (`matter/loop-item` rendering the item's pattern, not a carousel's), because the endpoint renders that pattern.
 
 **When.** By default, pages render live blocks as usual: a page is rendered for its visitor. Placeholders are made:
-- in a render wrapped in `Live::with_placeholders( fn() => … )`, such as a card stored in a search index;
+- in a render wrapped in `Live::with_placeholders( fn() => … )`, such as a loop item stored in a search index;
 - on pages too, when `matter_live_placeholders` returns true, so a listing can be cached for everyone (never in admin, REST or WP-CLI).
 
 **The endpoint.** `GET /wp-json/matter/v1/live?ids[]=12&ids[]=13&v={version}` (up to 100 IDs) returns `{ items: { 12: [ html, … ] }, expires }`, each item's live blocks in their order, for published items the visitor can see.
@@ -679,7 +679,7 @@ That's item 12's first live block. Placeholders are only made in plain loop item
 
 `v` changes whenever what live blocks show does (for Abacus, any price or promotion), so a cached answer isn't reused after a change.
 
-**In the browser** the `matter/live` script module, loaded on pages with placeholders, fills them in one request. It also fills new ones as they appear (a router navigation, a results provider's cards), asking only for items it hasn't fetched. What it fetches is kept until `expires`, so a placeholder seen again fills at once. On failure a placeholder stays empty: never a stale price, or someone else's.
+**In the browser** the `matter/live` script module, loaded on pages with placeholders, fills them in one request. It also fills new ones as they appear (a router navigation, a results provider's loop items), asking only for items it hasn't fetched. What it fetches is kept until `expires`, so a placeholder seen again fills at once. On failure a placeholder stays empty: never a stale price, or someone else's.
 
 ```js
 import { fill, prefetch } from 'matter/live';
@@ -697,42 +697,42 @@ await fill( element );        // Fill the placeholders in an element.
 | `matter_live_version` | A version of what they show, changed whenever it changes (sent as `v`). |
 | `matter_live_expires` | Unix time when what they show next changes by itself, e.g. a promotion starting. Capped at five minutes. |
 
-An empty placeholder is reserved one line's height (`:where(.matter-live[aria-busy])`), so filling it doesn't move the card much. A theme can style `.matter-live.is-{block}` to fit.
+An empty placeholder is reserved one line's height (`:where(.matter-live[aria-busy])`), so filling it doesn't move what's around it much. A theme can style `.matter-live.is-{block}` to fit.
 
-## Cards
+## Prerendered loop items
 
-A card is an item's loop item, rendered so it can be stored and shown somewhere else. A search index can hold each item's card, so a listing's results can be shown without a page render. Seek does this through its Matter integration.
+A prerendered loop item is an item's loop item, rendered ahead of time so it can be stored and shown somewhere else. A search index can hold each item's prerendered loop item, so a listing's results can be shown without a page render. Seek does this through its Matter integration.
 
 ```php
-use Eighteen73\Matter\Cards\Cards;
+use Eighteen73\Matter\LoopItems\Prerendered;
 
-$card = Cards::render( $post_id ); // Null if the item isn't public, or the theme has no loop item pattern for its type.
+$item = Prerendered::render( $post_id ); // Null if the item isn't public, or the theme has no loop item pattern for its type.
 ```
 
 | Key | What it is |
 | --- | --- |
-| `html` | What `matter/loop-item` renders in a plain loop's item: the theme's `loop-item-{post_type}` pattern. [Live blocks](#live-blocks) are placeholders, filled in the browser as on a page. Apart from those, it's the same markup the page's card has. |
+| `html` | What `matter/loop-item` renders in a plain loop's item: the theme's `loop-item-{post_type}` pattern. [Live blocks](#live-blocks) are placeholders, filled in the browser as on a page. Apart from those, it's the same markup the page's loop item has. |
 | `classes` | The item's post classes, for its list item, sorted. |
 | `data` | The Interactivity API `state` and `config` its blocks add, without derived state (closures). The page being served keeps its own. A product's has its `woocommerce/products` data, which its list item and Add to Cart button need, without prices, images or descriptions. |
-| `version` | `Cards::version( $post_type )`: which pattern and code rendered it. |
+| `version` | `Prerendered::version( $post_type )`: which pattern and code rendered it. |
 
-**Everyone sees the same card.** Anything in a search index can be read by anyone who can search it. So a card is always rendered as a guest, whoever is logged in, with live blocks as placeholders. It renders the same from a page, admin, REST, cron or WP-CLI.
+**Everyone sees the same loop item.** Anything in a search index can be read by anyone who can search it. So a loop item is always rendered as a guest, whoever is logged in, with live blocks as placeholders. It renders the same from a page, admin, REST, cron or WP-CLI.
 
-**Versions.** A card goes stale when what renders it changes, even though the item itself hasn't. Its version is a hash of:
+**Versions.** A loop item goes stale when what renders it changes, even though the item itself hasn't. Its version is a hash of:
 - the theme's pattern;
 - Matter's and the theme's versions;
 - which blocks are live;
-- whatever `matter_card_version` adds (WooCommerce's version, from the [WooCommerce integration](#integrations)).
+- whatever `matter_prerendered_loop_item_version` adds (WooCommerce's version, from the [WooCommerce integration](#integrations)).
 
-A card with another version than `Cards::version()` gives today is stale, and whatever stores cards renders it again (Seek does this by itself). Other changes to blocks' code aren't detected.
+A loop item with another version than `Prerendered::version()` gives today is stale, and whatever stores loop items renders it again (Seek does this by itself). Other changes to blocks' code aren't detected.
 
 **Hooks:**
 
 | Hook | Value |
 | --- | --- |
-| `matter_card` (filter) | The card (`$card, $post`), e.g. without classes or state that belong to the page. |
-| `matter_card_version` (filter) | What a type's version is made from (`$parts, $post_type`). Add a plugin's version for its blocks. |
-| `matter_card_render_start`, `matter_card_render_end` (actions) | Around a card's render (`$post`), to hide something of the visitor's that a block reads, such as a shop's cart. |
+| `matter_prerendered_loop_item` (filter) | The loop item (`$item, $post`), e.g. without classes or state that belong to the page. |
+| `matter_prerendered_loop_item_version` (filter) | What a type's version is made from (`$parts, $post_type`). Add a plugin's version for its blocks. |
+| `matter_prerender_loop_item_start`, `matter_prerender_loop_item_end` (actions) | Around a loop item's render (`$post`), to hide something of the visitor's that a block reads, such as a shop's cart. |
 
 ## Integrations
 
@@ -740,7 +740,7 @@ Matter's own code never names another plugin. What it does with WooCommerce and 
 
 | Integration | Boots when | Adds |
 | --- | --- | --- |
-| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Cards](#cards) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of the card version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. |
+| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Prerendered loop items](#prerendered-loop-items) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of their version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. |
 | Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
 
 The hooks they use are open to a project's own code, or its own integration:

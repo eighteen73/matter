@@ -1,13 +1,13 @@
 /**
  * Live blocks (module: matter/live): fills the placeholders a page or
- * a card holds for blocks whose output can't be shared (a price that depends
+ * a loop item holds for blocks whose output can't be shared (a price that depends
  * on who is looking, a stock level), with the visitor's own, current, from `GET matter/v1/live?ids[]=…` (see
  * Live\Live).
  *
  * A placeholder, `<div data-matter-live="12:0">`, is item 12's first
  * live block. Its contents are filled; the element itself stays, so the
  * Interactivity router, which may have rendered it, still recognises it. New
- * placeholders (a router navigation, a results provider's cards) and changed
+ * placeholders (a router navigation, a results provider's loop items) and changed
  * ones are filled as they appear.
  *
  * What's fetched is kept until it expires (the server says when: the next

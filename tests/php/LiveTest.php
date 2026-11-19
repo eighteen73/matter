@@ -64,7 +64,7 @@ class LiveTest extends TestCase {
 	}
 
 	/**
-	 * Rendered with placeholders (a card for a search index), each is an empty
+	 * Rendered with placeholders (a loop item for a search index), each is an empty
 	 * placeholder keyed by the item and its place.
 	 *
 	 * @return void
