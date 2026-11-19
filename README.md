@@ -626,6 +626,46 @@ registerProvider( async ( { url, listing, filters } ) => { … } );
 
 **Hooks:** `matter_filter_sources` (action, given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key), `matter_filterable_query_blocks` (query blocks that can be filtered, and the attributes that make them navigate), `matter_pre_filter_counts`, and `matter_filter_swatch` (`$swatch, $term`: a term's colour for the swatches display).
 
+## Live blocks
+
+Some blocks show something that can't be part of a copy everyone shares, a cached page or a card in a search index. Either it depends on who is looking (a trade customer's price, a member's discount) or it changes too often to be stored (a stock level). A plugin declares such blocks as live: Abacus declares the product price, the sale badge and its own offer blocks. In a loop item they then become placeholders. The browser fills them from `matter/v1/live`, which renders them for that visitor, now.
+
+```html
+<div class="matter-live is-woocommerce-product-price" data-matter-live="12:0" aria-busy="true"></div>
+```
+
+That's item 12's first live block. Placeholders are only made in plain loop items (`matter/loop-item` rendering the item's pattern, not a carousel's), because the endpoint renders that pattern.
+
+**When.** By default, pages render live blocks as usual: a page is rendered for its visitor. Placeholders are made:
+- in a render wrapped in `Live::with_placeholders( fn() => … )`, such as a card stored in a search index;
+- on pages too, when `matter_live_placeholders` returns true, so a listing can be cached for everyone (never in admin, REST or WP-CLI).
+
+**The endpoint.** `GET /wp-json/matter/v1/live?ids[]=12&ids[]=13&v={version}` (up to 100 IDs) returns `{ items: { 12: [ html, … ] }, expires }`, each item's live blocks in their order, for published items the visitor can see.
+- **Guests:** `Cache-Control: public` until `expires` (at most a minute), so a CDN can share it. A live block must therefore show every guest the same thing: anything that depends on a guest's session, such as their basket, doesn't belong in one.
+- **Logged-in visitors:** private. A request that carries a login cookie but no REST nonce, from a page cached without one, would otherwise be answered as a guest. It's refused with a 403 (`matter_live_nonce`) carrying a nonce, and the browser asks again with it.
+
+`v` changes whenever what live blocks show does (for Abacus, any price or promotion), so a cached answer isn't reused after a change.
+
+**In the browser** the `matter/live` script module, loaded on pages with placeholders, fills them in one request. It also fills new ones as they appear (a router navigation, a results provider's cards), asking only for items it hasn't fetched. What it fetches is kept until `expires`, so a placeholder seen again fills at once. On failure a placeholder stays empty: never a stale price, or someone else's.
+
+```js
+import { fill, prefetch } from 'matter/live';
+
+await prefetch( [ 12, 13 ] ); // Fetch ahead, e.g. for results about to render.
+await fill( element );        // Fill the placeholders in an element.
+```
+
+**Hooks:**
+
+| Filter | Value |
+| --- | --- |
+| `matter_live_blocks` | Block names whose output can't be shared: it depends on the visitor, or changes too often to store. |
+| `matter_live_placeholders` | Whether pages render them as placeholders (default false). |
+| `matter_live_version` | A version of what they show, changed whenever it changes (sent as `v`). |
+| `matter_live_expires` | Unix time when what they show next changes by itself, e.g. a promotion starting. Capped at five minutes. |
+
+An empty placeholder is reserved one line's height (`:where(.matter-live[aria-busy])`), so filling it doesn't move the card much. A theme can style `.matter-live.is-{block}` to fit.
+
 ## Integrations
 
 Matter's own code never names another plugin. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads.
@@ -765,7 +805,7 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries (Query Loop, Product Collection, and `core/terms-query` as a carousel), the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
 - **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{namespace}/loop-item-{post_type}`, `{namespace}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, with `-{variant}` after those for a variant; for terms `{namespace}/loop-item-term-{taxonomy}`, `{namespace}/loop-item-term` and their `-carousel` ones; in the order under [Loop items](#loop-items)).
 - **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
-- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track, whose list has the class `matter-query-list` (`.matter-query-list > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list, `.matter-query-list`), state classes (`is-*`, `has-*`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
+- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track, whose list has the class `matter-query-list` (`.matter-query-list > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list, `.matter-query-list`), state classes (`is-*`, `has-*`), live block placeholders (`.matter-live.is-{block}`, `data-matter-live`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 
 **The default skin** (everything in `:where()`) is minimal: what a block needs to be usable and accessible on a theme with no styles for it (unstyled buttons, icons, the scheme's background and text colours, a backdrop, spacing, motion). It isn't a design: no radii, shadows, font weights or decorative borders. Themes are expected to style every Matter block they use (Pulsar ships base styles for each), and not to rely on the skin.

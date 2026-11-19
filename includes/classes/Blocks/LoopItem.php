@@ -39,6 +39,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Live\Live;
 use Eighteen73\Matter\Singleton;
 use WP_Block;
 use WP_Block_Patterns_Registry;
@@ -301,7 +302,11 @@ final class LoopItem {
 			setup_postdata( $post );
 		}
 
-		$html = self::render_pattern( $slug, $context, $key );
+		// In a plain loop, live blocks (a price) can be placeholders, filled
+		// with the visitor's own (Live\Live).
+		$html = '' === $block
+			? Live::item( $post->ID, fn() => self::render_pattern( $slug, $context, $key ) )
+			: self::render_pattern( $slug, $context, $key );
 
 		if ( $is_other_post ) {
 			$GLOBALS['post'] = $previous_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restoring.

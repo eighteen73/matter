@@ -42,6 +42,8 @@ class Assets {
 		// Filters' store, shared by the filter blocks; a results provider
 		// (e.g. Seek's) imports its registerProvider().
 		'matter/filters'    => 'filters/view.js',
+		// Fills live blocks' placeholders (a price) with the visitor's own.
+		'matter/live'       => 'live/view.js',
 	];
 
 	/**

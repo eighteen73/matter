@@ -19,6 +19,7 @@ use Eighteen73\Matter\Extensions\ImageSizes;
 use Eighteen73\Matter\Filters\Filters;
 use Eighteen73\Matter\Integrations\Integrations;
 use Eighteen73\Matter\Navigation\Megamenu;
+use Eighteen73\Matter\Live\Live;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
 use Eighteen73\Matter\Supports\Link;
@@ -72,6 +73,10 @@ class Plugin {
 
 		// Filters for a listing (replacing FacetWP).
 		Filters::instance()->setup();
+
+		// Blocks whose output depends on who is looking (a price), as
+		// placeholders the browser fills.
+		Live::instance()->setup();
 
 		// What Matter does with other plugins (WooCommerce, Gravity Forms),
 		// booted once they've loaded and only when they're active.
