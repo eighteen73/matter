@@ -1,0 +1,29 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/active-filters",
+	"version": "1.0.0",
+	"title": "Active filters",
+	"category": "theme",
+	"icon": "dismiss",
+	"description": "The filters applied to the list, each removable, and Clear all.",
+	"usesContext": [
+		"queryId",
+		"query"
+	],
+	"attributes": {},
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"reusable": false,
+		"renaming": false,
+		"interactivity": {
+			"clientNavigation": true
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"viewScriptModule": "matter/filters",
+	"render": "file:./render.php"
+}

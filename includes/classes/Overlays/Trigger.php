@@ -28,6 +28,10 @@ class Trigger {
 	 *     @type bool   $show_label Show the label visually (otherwise it's for screen readers).
 	 *     @type bool   $hamburger  Include the three-line icon.
 	 *     @type string $class      Extra classes.
+	 *     @type string $content    Extra HTML inside the button, after the label (e.g. a count).
+	 *     @type bool   $process    Process its Interactivity API directives (default true, for
+	 *                              templates). A block's render passes false: the outermost
+	 *                              interactive block processes them.
 	 * }
 	 * @return string
 	 */
@@ -40,6 +44,8 @@ class Trigger {
 				'show_label'     => false,
 				'hamburger'      => true,
 				'class'          => '',
+				'content'        => '',
+				'process'        => true,
 			]
 		);
 
@@ -58,14 +64,15 @@ class Trigger {
 		];
 
 		$html = sprintf(
-			'<button type="button" class="%1$s" aria-controls="%2$s" aria-expanded="false" data-wp-interactive="matter/panel" %3$s data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isOpen" data-wp-class--is-active="state.isOpen">%4$s<span class="matter-panel-toggle__label">%5$s</span></button>',
+			'<button type="button" class="%1$s" aria-controls="%2$s" aria-expanded="false" data-wp-interactive="matter/panel" %3$s data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isOpen" data-wp-class--is-active="state.isOpen">%4$s<span class="matter-panel-toggle__label">%5$s</span>%6$s</button>',
 			esc_attr( implode( ' ', array_filter( $classes ) ) ),
 			esc_attr( $id ),
 			wp_interactivity_data_wp_context( [ 'id' => $id ] ),
 			$args['hamburger'] ? '<span class="matter-panel-toggle__icon" aria-hidden="true"><span></span><span></span><span></span></span>' : '',
-			esc_html( $args['label'] )
+			esc_html( $args['label'] ),
+			(string) $args['content']
 		);
 
-		return wp_interactivity_process_directives( $html );
+		return $args['process'] ? wp_interactivity_process_directives( $html ) : $html;
 	}
 }

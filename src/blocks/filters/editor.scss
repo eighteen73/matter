@@ -1,0 +1,6 @@
+// In the editor the filters always show inline (the drawer is the front
+// end's), with room to add one.
+.wp-block-matter-filters .wp-block-matter-filters__form {
+	display: grid;
+	gap: 1.5rem;
+}

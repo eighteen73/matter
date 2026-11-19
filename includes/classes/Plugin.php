@@ -16,6 +16,7 @@ use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Extensions\ButtonIcon;
 use Eighteen73\Matter\Extensions\FocalPoint;
 use Eighteen73\Matter\Extensions\ImageSizes;
+use Eighteen73\Matter\Filters\Filters;
 use Eighteen73\Matter\Integrations\Integrations;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
@@ -68,6 +69,9 @@ class Plugin {
 
 		// Editable content around archive lists.
 		Archives::instance()->setup();
+
+		// Filters for a listing (replacing FacetWP).
+		Filters::instance()->setup();
 
 		// What Matter does with other plugins (WooCommerce, Gravity Forms),
 		// booted once they've loaded and only when they're active.

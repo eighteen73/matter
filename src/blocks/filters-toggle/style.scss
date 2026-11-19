@@ -1,0 +1,19 @@
+// The Filters button: its count of active filters beside its label.
+
+:where(.wp-block-matter-filters-toggle__button) {
+	align-items: center;
+	display: inline-flex;
+	gap: 0.5rem;
+}
+
+:where(.wp-block-matter-filters-toggle__count)::before {
+	content: "(";
+}
+
+:where(.wp-block-matter-filters-toggle__count)::after {
+	content: ")";
+}
+
+:where(.wp-block-matter-filters-toggle__count[hidden]) {
+	display: none;
+}

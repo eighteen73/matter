@@ -1,0 +1,31 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/filters-toggle",
+	"version": "1.0.0",
+	"title": "Filters button",
+	"category": "theme",
+	"icon": "filter",
+	"description": "Opens the list's filters on small screens, with how many are applied. Hidden while the filters show inline.",
+	"usesContext": [
+		"queryId",
+		"query"
+	],
+	"attributes": {
+		"label": { "type": "string", "default": "", "role": "content" }
+	},
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"reusable": false,
+		"renaming": false,
+		"interactivity": {
+			"clientNavigation": true
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"viewScriptModule": "matter/filters",
+	"render": "file:./render.php"
+}

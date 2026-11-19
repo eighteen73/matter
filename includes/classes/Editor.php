@@ -12,6 +12,7 @@ use Eighteen73\Matter\Blocks\Carousel;
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\QueryDisplay;
 use Eighteen73\Matter\Blocks\TemplatePart;
+use Eighteen73\Matter\Filters\Filters;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Supports\Scheme;
 
@@ -91,6 +92,8 @@ class Editor {
 					'queryDisplays'   => QueryDisplay::blocks(),
 					// Loop templates, and whether they list posts or terms.
 					'queryLoops'      => Instances::loops(),
+					// What a filter block can filter by.
+					'filterSources'   => Filters::editor_sources(),
 					// Search keywords for the posts displays.
 					'postTypeNames'   => QueryDisplay::post_type_keywords(),
 					// What a new posts display can list.

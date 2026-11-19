@@ -39,6 +39,9 @@ class Assets {
 		'matter/menu'       => 'menu/view.js',
 		'matter/panel'      => 'panel/view.js',
 		'matter/overlay'    => 'overlay/view.js',
+		// Filters' store, shared by the filter blocks; a results provider
+		// (e.g. Seek's) imports its registerProvider().
+		'matter/filters'    => 'filters/view.js',
 	];
 
 	/**
@@ -54,7 +57,7 @@ class Assets {
 	/**
 	 * Block types with a `matter.{type}()` accessor.
 	 */
-	public const API_TYPES = [ 'accordion', 'carousel', 'gallery', 'overlay', 'panel', 'tabs' ];
+	public const API_TYPES = [ 'accordion', 'carousel', 'filters', 'gallery', 'overlay', 'panel', 'tabs' ];
 
 	/**
 	 * A small `window.matter` for theme scripts that run before Matter's

@@ -42,6 +42,7 @@ const moduleEntries = {
 	'overlay/view': src('overlay/view.js'),
 	'menu/view': src('menu/view.js'),
 	'panel/view': src('panel/view.js'),
+	'filters/view': src('filters/view.js'),
 };
 
 /**

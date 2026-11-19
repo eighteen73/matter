@@ -64,6 +64,15 @@ class Variants {
 		'matter/archive-loop' => [
 			'label' => 'Default',
 		],
+		'matter/filters'      => [
+			'label'         => 'Default',
+			// Breakpoint below which the filters are a drawer, opened by the
+			// Filters button; above it they're inline (a sidebar). Empty: always
+			// a drawer. False: never (always inline).
+			'collapseBelow' => 'lg',
+			// The edge the drawer slides in from: start or end.
+			'position'      => 'start',
+		],
 		'matter/gallery'      => [
 			'label'          => 'Default',
 			// Registered image size used for every image in the gallery.

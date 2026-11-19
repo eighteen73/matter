@@ -32,7 +32,10 @@
 		"reusable": false,
 		"lock": false,
 		"renaming": false,
-		"customCSS": false
+		"customCSS": false,
+		"interactivity": {
+			"clientNavigation": true
+		}
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",

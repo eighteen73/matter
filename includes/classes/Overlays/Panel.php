@@ -54,6 +54,9 @@ class Panel {
 	 *     @type string      $label          Accessible dialog label.
 	 *     @type string      $close_label    Close button label.
 	 *     @type string      $class          Extra classes.
+	 *     @type bool        $process        Process its Interactivity API directives (default
+	 *                                       true, for templates). A block's render passes false:
+	 *                                       the outermost interactive block processes them.
 	 * }
 	 * @return string
 	 */
@@ -66,6 +69,7 @@ class Panel {
 				'label'          => __( 'Menu', 'matter' ),
 				'close_label'    => __( 'Close menu', 'matter' ),
 				'class'          => '',
+				'process'        => true,
 			]
 		);
 
@@ -97,7 +101,7 @@ class Panel {
 			$content
 		);
 
-		return wp_interactivity_process_directives( $html );
+		return $args['process'] ? wp_interactivity_process_directives( $html ) : $html;
 	}
 
 	/**

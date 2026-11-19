@@ -1,0 +1,69 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/filter",
+	"version": "1.0.0",
+	"title": "Filter",
+	"category": "theme",
+	"icon": "filter",
+	"description": "Filter the list by a category, tag, attribute or other choice, with how many results each option has.",
+	"parent": [
+		"matter/filters"
+	],
+	"usesContext": [
+		"queryId",
+		"query"
+	],
+	"attributes": {
+		"source": {
+			"type": "string",
+			"default": ""
+		},
+		"display": {
+			"type": "string",
+			"enum": [
+				"checkboxes",
+				"radio",
+				"chips",
+				"dropdown",
+				"swatches",
+				"range"
+			],
+			"default": "checkboxes"
+		},
+		"label": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"showCounts": {
+			"type": "boolean",
+			"default": true
+		},
+		"operator": {
+			"type": "string",
+			"enum": [
+				"or",
+				"and"
+			],
+			"default": "or"
+		},
+		"limit": {
+			"type": "number",
+			"default": 0
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false,
+		"renaming": false,
+		"interactivity": {
+			"clientNavigation": true
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"viewScriptModule": "matter/filters",
+	"render": "file:./render.php"
+}

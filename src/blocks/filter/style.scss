@@ -1,0 +1,110 @@
+// A filter: only what's needed to use it (see README, "The default skin").
+
+:where(.wp-block-matter-filter__fieldset) {
+	border: 0;
+	margin: 0;
+	min-inline-size: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-filter__label) {
+	display: block;
+	padding: 0;
+}
+
+:where(.wp-block-matter-filter__options, .wp-block-matter-filter__children) {
+	display: grid;
+	gap: 0.25rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-filter__children) {
+	margin-block-start: 0.25rem;
+	padding-inline-start: 1.5rem;
+}
+
+:where(.wp-block-matter-filter__choice) {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: 0.5rem;
+	// Each option a row at least 24px high, so a small checkbox still has a
+	// target's space around it (WCAG 2.2 target size).
+	min-block-size: 1.5rem;
+}
+
+:where(.wp-block-matter-filter__count)::before {
+	content: "(";
+}
+
+:where(.wp-block-matter-filter__count)::after {
+	content: ")";
+}
+
+// "Show more": options past the first few, until it's clicked.
+:where(.wp-block-matter-filter__options.is-collapsed) > .is-more,
+:where(.wp-block-matter-filter__option[hidden]) {
+	display: none;
+}
+
+// Chips: each option a button-like label, its checkbox out of sight but
+// still focusable and announced.
+:where(.is-display-chips .wp-block-matter-filter__options) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice) {
+	border: 1px solid currentcolor;
+	border-radius: 999px;
+	padding: 0.25rem 0.75rem;
+	position: relative;
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice) input {
+	inset: 0;
+	opacity: 0;
+	position: absolute;
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice):has(input:checked) {
+	background: var(--scheme--text);
+	color: var(--scheme--background);
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice):has(input:focus-visible) {
+	outline: 2px solid currentcolor;
+	outline-offset: 2px;
+}
+
+// Swatches: a colour beside each option.
+:where(.wp-block-matter-filter__swatch) {
+	background: var(--swatch);
+	block-size: 1.25em;
+	border: 1px solid currentcolor;
+	border-radius: 50%;
+	flex: none;
+	inline-size: 1.25em;
+}
+
+:where(.wp-block-matter-filter__range) {
+	display: grid;
+	gap: 0.75rem;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:where(.wp-block-matter-filter__bound) label {
+	display: block;
+}
+
+:where(.wp-block-matter-filter__bound) input {
+	box-sizing: border-box;
+	inline-size: 100%;
+}
+
+:where(.wp-block-matter-filter__more[hidden]) {
+	display: none;
+}
