@@ -23,7 +23,7 @@
 // up to 0,2,1, so the query's list needs the carousel's classes to win.
 // stylelint-disable selector-max-specificity -- See above.
 .wp-block-matter-carousel__track,
-.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template) {
+.wp-block-matter-carousel.is-query .matter-query-list {
 	display: flex;
 	flex-wrap: nowrap;
 	gap: var(--carousel-gap, 0);
@@ -37,7 +37,7 @@
 // slide but the first down, and WooCommerce gives a Product Collection 30px
 // below (one class). Two classes win over both.
 .wp-block-matter-carousel .wp-block-matter-carousel__track > *,
-.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template) > * {
+.wp-block-matter-carousel.is-query .matter-query-list > * {
 	margin-block: 0;
 }
 // stylelint-enable selector-max-specificity
@@ -45,7 +45,7 @@
 // Slide widths, from the theme's settings, at zero specificity so a theme's
 // own widths win whichever stylesheet loads last.
 :where(.wp-block-matter-carousel__track) > *,
-:where(.wp-block-matter-carousel.is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template)) > * {
+:where(.wp-block-matter-carousel.is-query .matter-query-list) > * {
 	flex: 0 0 calc((100% - (var(--carousel-per-view, 1) - 1) * var(--carousel-gap, 0px)) / var(--carousel-per-view, 1));
 	min-width: 0;
 }
@@ -80,7 +80,7 @@
 }
 
 :where(.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track) > *,
-:where(.wp-block-matter-carousel:not(.is-initialised).is-query :is(.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template)) > * {
+:where(.wp-block-matter-carousel:not(.is-initialised).is-query .matter-query-list) > * {
 	scroll-snap-align: start;
 }
 

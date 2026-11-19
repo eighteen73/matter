@@ -1,0 +1,273 @@
+<?php
+/**
+ * Integrations: other plugins' code is kept out of Matter's own, and added
+ * through its hooks only when that plugin is active.
+ *
+ * @package Eighteen73\Matter
+ */
+
+namespace Eighteen73\Matter\Tests;
+
+use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Blocks\QueryDisplay;
+use Eighteen73\Matter\Blocks\Registry;
+use Eighteen73\Matter\Integrations\GravityForms\GravityForms;
+use Eighteen73\Matter\Integrations\Integration;
+use Eighteen73\Matter\Integrations\Integrations;
+use Eighteen73\Matter\Integrations\WooCommerce\WooCommerce;
+
+/**
+ * Integrations tests.
+ */
+class IntegrationsTest extends TestCase {
+
+	/**
+	 * Filters added by a test, removed afterwards.
+	 *
+	 * @var array<int, array{0: string, 1: callable, 2: int}>
+	 */
+	private array $hooks = [];
+
+	/**
+	 * Remove hooks a test added.
+	 *
+	 * @return void
+	 */
+	public function tear_down(): void {
+		foreach ( $this->hooks as [ $hook, $callback, $priority ] ) {
+			remove_filter( $hook, $callback, $priority );
+		}
+
+		$this->hooks = [];
+
+		parent::tear_down();
+	}
+
+	/**
+	 * Boot an integration as Integrations would, and note its hooks so they're
+	 * removed after the test.
+	 *
+	 * @param Integration $integration Integration.
+	 * @return void
+	 */
+	private function boot( Integration $integration ): void {
+		global $wp_filter;
+
+		$before = $this->callbacks( $wp_filter );
+
+		$integration->boot();
+
+		foreach ( $wp_filter as $hook => $filter ) {
+			foreach ( $filter->callbacks as $priority => $callbacks ) {
+				foreach ( $callbacks as $id => $callback ) {
+					if ( ! isset( $before[ "{$hook}:{$priority}:{$id}" ] ) ) {
+						$this->hooks[] = [ $hook, $callback['function'], $priority ];
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Every hooked callback, by hook, priority and ID.
+	 *
+	 * @param array $filters `$wp_filter`.
+	 * @return array<string, true>
+	 */
+	private function callbacks( array $filters ): array {
+		$seen = [];
+
+		foreach ( $filters as $hook => $filter ) {
+			foreach ( $filter->callbacks as $priority => $callbacks ) {
+				foreach ( array_keys( $callbacks ) as $id ) {
+					$seen[ "{$hook}:{$priority}:{$id}" ] = true;
+				}
+			}
+		}
+
+		return $seen;
+	}
+
+	/**
+	 * An integration boots only when its plugin is active, on
+	 * `plugins_loaded`: neither plugin is active in the test site.
+	 *
+	 * @return void
+	 */
+	public function test_integrations_boot_only_with_their_plugin(): void {
+		$this->assertContains( WooCommerce::class, Integrations::all() );
+		$this->assertContains( GravityForms::class, Integrations::all() );
+
+		$this->assertSame( class_exists( 'WooCommerce' ), Integrations::active( WooCommerce::class ) );
+		$this->assertSame( class_exists( 'GFAPI' ), Integrations::active( GravityForms::class ) );
+	}
+
+	/**
+	 * A project can add its own integration; one that can't boot doesn't.
+	 *
+	 * @return void
+	 */
+	public function test_a_project_can_add_an_integration(): void {
+		$booted = new class() implements Integration {
+			/**
+			 * Times boot() ran.
+			 *
+			 * @var int
+			 */
+			public static int $boots = 0;
+
+			/**
+			 * Always.
+			 *
+			 * @return bool
+			 */
+			public function can_boot(): bool {
+				return true;
+			}
+
+			/**
+			 * Count the boot.
+			 *
+			 * @return void
+			 */
+			public function boot(): void {
+				++self::$boots;
+			}
+		};
+
+		$add = fn( $integrations ) => [ ...$integrations, $booted::class, \stdClass::class ];
+		add_filter( 'matter_integrations', $add );
+		$this->hooks[] = [ 'matter_integrations', $add, 10 ];
+
+		Integrations::instance()->boot();
+		Integrations::instance()->boot();
+
+		$this->assertSame( 1, $booted::$boots, 'Booted once, however often the loader runs.' );
+		$this->assertTrue( Integrations::active( $booted::class ) );
+		$this->assertFalse( Integrations::active( \stdClass::class ), 'Only Integration classes boot.' );
+	}
+
+	/**
+	 * Without its integration, Matter's Gravity Form block doesn't register,
+	 * and Gravity Forms' own Form block isn't hidden.
+	 *
+	 * @return void
+	 */
+	public function test_gravity_form_block_waits_for_its_integration(): void {
+		$this->assertSame( class_exists( 'GFAPI' ), \WP_Block_Type_Registry::get_instance()->is_registered( 'matter/gravity-form' ) );
+
+		if ( class_exists( 'GFAPI' ) ) {
+			return;
+		}
+
+		$this->assertNotContains( 'gravityforms/form', Registry::hidden_blocks() );
+
+		$this->boot( new GravityForms() );
+
+		$this->assertContains( 'gravityforms/form', Registry::hidden_blocks() );
+		$this->assertTrue( apply_filters( 'matter_register_gravity-form', false, '' ) );
+	}
+
+	/**
+	 * Matter's own lists name only core's blocks; the WooCommerce integration
+	 * adds the Product Collection and its template.
+	 *
+	 * @return void
+	 */
+	public function test_woocommerce_integration_adds_its_query_blocks(): void {
+		if ( class_exists( 'WooCommerce' ) ) {
+			$this->markTestSkipped( 'WooCommerce is active: its integration has already booted.' );
+		}
+
+		$this->assertSame(
+			[
+				'core/query'       => [ 'carousel', 'accordion', 'tabs' ],
+				'core/terms-query' => [ 'carousel' ],
+			],
+			QueryDisplay::blocks()
+		);
+		$this->assertSame(
+			[
+				'core/post-template' => 'post',
+				'core/term-template' => 'term',
+			],
+			Instances::loops()
+		);
+
+		$this->boot( new WooCommerce() );
+
+		$this->assertSame( [ 'carousel' ], QueryDisplay::blocks()[ WooCommerce::PRODUCT_COLLECTION ] );
+		$this->assertContains( WooCommerce::PRODUCT_COLLECTION, QueryDisplay::queries( 'carousel' ) );
+		$this->assertNotContains( WooCommerce::PRODUCT_COLLECTION, QueryDisplay::queries( 'accordion' ) );
+		$this->assertTrue( QueryDisplay::supports( 'carousel', WooCommerce::PRODUCT_COLLECTION ) );
+		$this->assertFalse( QueryDisplay::supports( 'tabs', WooCommerce::PRODUCT_COLLECTION ) );
+		$this->assertSame( 'post', Instances::loops()[ WooCommerce::PRODUCT_TEMPLATE ] );
+	}
+
+	/**
+	 * Products leave the posts displays' choices only with the integration.
+	 *
+	 * @return void
+	 */
+	public function test_woocommerce_integration_keeps_products_for_the_products_carousel(): void {
+		if ( class_exists( 'WooCommerce' ) ) {
+			$this->markTestSkipped( 'WooCommerce is active: its integration has already booted.' );
+		}
+
+		register_post_type(
+			'product',
+			[
+				'public'       => true,
+				'show_in_rest' => true,
+				'label'        => 'Products',
+			]
+		);
+
+		$this->assertContains( 'product', array_column( QueryDisplay::post_types(), 'name' ) );
+
+		$this->boot( new WooCommerce() );
+
+		$this->assertNotContains( 'product', array_column( QueryDisplay::post_types(), 'name' ) );
+		$this->assertContains( 'post', array_column( QueryDisplay::post_types(), 'name' ) );
+
+		unregister_post_type( 'product' );
+	}
+
+	/**
+	 * A product category's thumbnail is its archive's image only with the
+	 * integration; core terms have none.
+	 *
+	 * @return void
+	 */
+	public function test_term_image_comes_from_the_integration(): void {
+		if ( class_exists( 'WooCommerce' ) ) {
+			$this->markTestSkipped( 'WooCommerce is active: its integration has already booted.' );
+		}
+
+		$term  = self::factory()->term->create_and_get( [ 'taxonomy' => 'category' ] );
+		$image = self::factory()->attachment->create();
+
+		update_term_meta( $term->term_id, 'thumbnail_id', $image );
+
+		$this->assertSame( 0, (int) apply_filters( 'matter_archive_term_image_id', 0, $term ) );
+
+		$this->boot( new WooCommerce() );
+
+		$this->assertSame( $image, (int) apply_filters( 'matter_archive_term_image_id', 0, $term ) );
+		$this->assertSame( 0, (int) apply_filters( 'matter_archive_term_image_id', 0, null ) );
+	}
+
+	/**
+	 * Every loop template's list has Matter's class, so blocks around a query
+	 * find its items by one class.
+	 *
+	 * @return void
+	 */
+	public function test_loop_lists_are_marked(): void {
+		self::factory()->post->create( [ 'post_title' => 'Listed' ] );
+
+		$html = $this->render( '<!-- wp:query {"queryId":1,"query":{"perPage":3,"postType":"post","inherit":false}} --><div class="wp-block-query"><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --></div><!-- /wp:query -->' );
+
+		$this->assertMatchesRegularExpression( '/<ul class="[^"]*\bwp-block-post-template\b[^"]*\b' . Instances::LIST_CLASS . '\b/', $html );
+	}
+}

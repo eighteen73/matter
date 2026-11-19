@@ -15,6 +15,7 @@
 
 use Eighteen73\Matter\AspectRatio;
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Variants;
 
 $matter_options = Variants::get( 'matter/carousel', $attributes );
@@ -35,7 +36,7 @@ if ( $matter_is_images ) {
 // A query shown as a carousel (Blocks\QueryDisplay) has no inner blocks: its
 // items are the slides. Marked here too (view.js marks it as well), so the
 // layout is right before the script starts.
-$matter_is_query = ! $block->inner_blocks && preg_match( '/\b(?:wp-block-post-template|wc-block-product-template|wp-block-woocommerce-product-template|wp-block-term-template)\b/', $content );
+$matter_is_query = ! $block->inner_blocks && str_contains( $content, Instances::LIST_CLASS );
 $matter_classes  = array_filter(
 	[
 		$matter_style ? 'has-image-aspect-ratio' : '',

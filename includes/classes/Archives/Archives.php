@@ -604,7 +604,16 @@ class Archives {
 				return 'search' === $target->type ? (int) $GLOBALS['wp_query']?->found_posts : null;
 
 			case 'image':
-				$image = $term ? (int) get_term_meta( $term->term_id, 'thumbnail_id', true ) : 0;
+				/**
+				 * Filters a term archive's image (an attachment ID), for the
+				 * `image` key of the `matter/archive` bindings source. Core
+				 * terms have none; the WooCommerce integration gives product
+				 * categories their thumbnail.
+				 *
+				 * @param int           $image Attachment ID, or 0 for none.
+				 * @param \WP_Term|null $term  The archive's term, if it's a term archive.
+				 */
+				$image = $term ? (int) apply_filters( 'matter_archive_term_image_id', 0, $term ) : 0;
 
 				if ( ! $image ) {
 					return null;
@@ -621,7 +630,8 @@ class Archives {
 	}
 
 	/**
-	 * A post type archive's title (the blog and shop: their page's title).
+	 * A post type archive's title (the blog's: its page's title; an
+	 * integration can name others, e.g. the shop by its page).
 	 *
 	 * @param string $post_type Post type.
 	 * @return string
@@ -633,13 +643,22 @@ class Archives {
 			return $page ? get_the_title( $page ) : __( 'Blog', 'matter' );
 		}
 
-		// WooCommerce's shop page names the products archive.
-		if ( 'product' === $post_type && function_exists( 'wc_get_page_id' ) && wc_get_page_id( 'shop' ) > 0 ) {
-			return get_the_title( wc_get_page_id( 'shop' ) );
+		/**
+		 * Filters a post type archive's title before Matter works it out, in
+		 * the front end, the editor and the admin alike. Return a string to
+		 * use it. The WooCommerce integration names the products archive
+		 * after the shop page.
+		 *
+		 * @param string|null $title     Title, or null to work it out.
+		 * @param string      $post_type Post type.
+		 */
+		$title = apply_filters( 'matter_archive_post_type_title', null, $post_type );
+
+		if ( is_string( $title ) && '' !== $title ) {
+			return $title;
 		}
 
-		// Core's filter, as post_type_archive_title() applies it (WooCommerce
-		// uses it for the shop page's title).
+		// Core's filter, as post_type_archive_title() applies it.
 		return (string) apply_filters( 'post_type_archive_title', (string) ( get_post_type_object( $post_type )->labels->name ?? $post_type ), $post_type );
 	}
 

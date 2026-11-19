@@ -9,6 +9,7 @@
 namespace Eighteen73\Matter;
 
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\QueryDisplay;
 use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Sections\Sections;
@@ -85,6 +86,11 @@ class Editor {
 					// Allowing a carousel, accordion or tabs allows the query
 					// blocks behind their posts versions.
 					'queryBlocks'     => QueryDisplay::query_blocks(),
+					// Query blocks that can be shown as a block, and the
+					// displays each supports (core's and integrations').
+					'queryDisplays'   => QueryDisplay::blocks(),
+					// Loop templates, and whether they list posts or terms.
+					'queryLoops'      => Instances::loops(),
 					// Search keywords for the posts displays.
 					'postTypeNames'   => QueryDisplay::post_type_keywords(),
 					// What a new posts display can list.

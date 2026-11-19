@@ -19,6 +19,11 @@ const src = (file) => path.resolve(__dirname, 'src', file);
 const scriptEntries = {
 	'editor/index': src('editor/index.js'),
 	'settings/index': src('settings/index.js'),
+	// Integrations' editor scripts, enqueued by each integration only when
+	// its plugin is active.
+	'integrations/woocommerce/editor': src(
+		'integrations/woocommerce/editor.js'
+	),
 };
 
 const styleEntries = {

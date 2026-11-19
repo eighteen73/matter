@@ -1,7 +1,8 @@
 /**
  * What a new carousel holds: images (from the media library), the theme's
- * slide types (e.g. cards; `matter_carousel_slides`), posts, products or
- * terms (e.g. categories).
+ * slide types (e.g. cards; `matter_carousel_slides`), posts, terms (e.g.
+ * categories), or what an integration adds (e.g. products, with
+ * WooCommerce's).
  * Each type can set the variant the carousel starts with, unless the carousel
  * already has one (e.g. from a section's template): that one is kept.
  */
@@ -20,6 +21,7 @@ import {
 } from '@wordpress/blocks';
 import { Dashicon } from '@wordpress/components';
 import { useDispatch } from '@wordpress/data';
+import { applyFilters } from '@wordpress/hooks';
 import { cloneElement, isValidElement, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { category, gallery, postList } from '@wordpress/icons';
@@ -30,12 +32,9 @@ import { category, gallery, postList } from '@wordpress/icons';
 import { BlockVariationPicker } from '../../components/compat';
 import {
 	POSTS,
-	PRODUCTS,
-	QUERY_BLOCKS,
 	TERMS,
-	productsTemplate,
-	queryTemplate,
-	termsTemplate,
+	carouselTemplate,
+	queryBlocks,
 } from '../../query-display/templates';
 import { useSwapBlock } from '../../query-display/use-swap-block';
 
@@ -65,21 +64,6 @@ export const slideTypesFor = (ancestors = []) =>
 		)
 	);
 
-// The query blocks that become the carousel.
-const TEMPLATES = {
-	// What it lists is chosen next (the posts display's post type picker).
-	[POSTS]: (variant) => queryTemplate('', variant),
-	[PRODUCTS]: productsTemplate,
-	[TERMS]: termsTemplate,
-};
-
-/**
- * Picker options: images, the theme's types, posts, products (with
- * WooCommerce), then terms.
- *
- * @param {Object} theme The carousel's slide types (slideTypesFor()).
- * @return {Array} Variations for the picker.
- */
 /**
  * A block's icon at the picker's size, like core's own (48px): an SVG may fix
  * its own size (WooCommerce's draws at 24px from a component), and a Dashicon
@@ -107,11 +91,18 @@ const pickerIcon = (icon) => {
 	);
 };
 
+/**
+ * Picker options: images, the theme's types, posts, what integrations add
+ * (e.g. products, with WooCommerce's), then terms.
+ *
+ * @param {Object} theme The carousel's slide types (slideTypesFor()).
+ * @return {Array} Variations for the picker.
+ */
 function slideOptions(theme) {
 	const custom = Object.keys(theme)
 		.filter(
 			(name) =>
-				!['core/image', ...QUERY_BLOCKS].includes(name) &&
+				!['core/image', ...queryBlocks()].includes(name) &&
 				getBlockType(name)
 		)
 		.map((name) => ({
@@ -134,12 +125,7 @@ function slideOptions(theme) {
 			description: __('One slide per post.', 'matter'),
 			icon: postList,
 		},
-		getBlockType(PRODUCTS) && {
-			name: PRODUCTS,
-			title: theme[PRODUCTS]?.label || __('Products', 'matter'),
-			description: __('One slide per product.', 'matter'),
-			icon: pickerIcon(getBlockType(PRODUCTS).icon),
-		},
+		...integrationOptions(theme),
 		getBlockType(TERMS) && {
 			name: TERMS,
 			title: theme[TERMS]?.label || __('Terms', 'matter'),
@@ -151,6 +137,29 @@ function slideOptions(theme) {
 		},
 	].filter(Boolean);
 }
+
+/**
+ * Query blocks an integration offers as slides (`matter.carousel.queryOptions`
+ * filter), each `{ name, title, description }` for a registered query block
+ * that can be a carousel, shown with its block's icon. A theme's label for
+ * the block (`matter_carousel_slides`) wins over the integration's title.
+ *
+ * @param {Object} theme The carousel's slide types (slideTypesFor()).
+ * @return {Array} Variations for the picker.
+ */
+const integrationOptions = (theme) =>
+	applyFilters('matter.carousel.queryOptions', [], theme)
+		.filter(
+			(option) =>
+				option?.name &&
+				queryBlocks().includes(option.name) &&
+				getBlockType(option.name)
+		)
+		.map((option) => ({
+			...option,
+			title: theme[option.name]?.label || option.title,
+			icon: option.icon ?? pickerIcon(getBlockType(option.name).icon),
+		}));
 
 /**
  * The carousel's own variant, if it has one other than the default.
@@ -209,12 +218,14 @@ export default function SlidePicker({
 		const kept = currentVariant(className);
 		const variant = kept ?? types[name]?.variant;
 
-		// Posts, products and terms: the query block is the carousel, so it
-		// takes this block's place.
-		if (TEMPLATES[name]) {
-			const [block] = createBlocksFromInnerBlocksTemplate([
-				TEMPLATES[name](variant),
-			]);
+		// Posts, terms and an integration's queries (e.g. products): the
+		// query block is the carousel, so it takes this block's place.
+		const template = queryBlocks().includes(name)
+			? carouselTemplate(name, variant)
+			: null;
+
+		if (template) {
+			const [block] = createBlocksFromInnerBlocksTemplate([template]);
 
 			swapBlock(clientId, block);
 			return;

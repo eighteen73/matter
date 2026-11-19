@@ -5,17 +5,61 @@
  * The query block itself is the carousel, accordion or tabs: a
  * `matterDisplay` attribute holds the type, the block's style and colour
  * scheme and its own settings. It's marked as Matter's (`namespace` on a
- * Query Loop, `collection` on a Product Collection; a Terms Query by its
- * `matterDisplay` alone) for its title and the native controls it offers. Its items are fixed: the theme's loop item for
+ * Query Loop; a Terms Query by its `matterDisplay` alone; an integration's
+ * query block as it chooses, e.g. `collection` on a Product Collection) for
+ * its title and the native controls it offers. Its items are fixed: the theme's loop item for
  * a carousel's slides, or an accordion item or tab holding one. A loop item
  * picks the theme's pattern for the block it's in (Blocks\LoopItem), e.g.
  * `loop-item-faq-accordion`.
  */
 
+/**
+ * WordPress dependencies
+ */
+import { applyFilters } from '@wordpress/hooks';
+
 export const POSTS = 'core/query';
-export const PRODUCTS = 'woocommerce/product-collection';
 export const TERMS = 'core/terms-query';
-export const QUERY_BLOCKS = [POSTS, PRODUCTS, TERMS];
+
+// Core's query blocks and the displays each supports, for before the
+// server's list (Blocks\QueryDisplay::blocks()) is loaded.
+const CORE_DISPLAYS = {
+	[POSTS]: ['carousel', 'accordion', 'tabs'],
+	[TERMS]: ['carousel'],
+};
+
+/**
+ * The query blocks that can be shown as a block, and the displays each
+ * supports: core's, and any an integration adds on the server (e.g. the
+ * WooCommerce integration's Product Collection, as a carousel).
+ *
+ * @return {Object<string, string[]>} Query block name => display types.
+ */
+export const displays = () =>
+	window.matterEditor?.queryDisplays ?? CORE_DISPLAYS;
+
+/**
+ * The query blocks that can be shown as a block.
+ *
+ * @return {string[]} Block names.
+ */
+export const queryBlocks = () => Object.keys(displays());
+
+/**
+ * Loop templates (blocks that render their children once per item of a
+ * query), and whether their items are posts or terms
+ * (Blocks\Instances::loops()).
+ *
+ * @return {Object<string, string>} Block name => `post` or `term`.
+ */
+export const queryLoops = () =>
+	window.matterEditor?.queryLoops ?? {
+		'core/post-template': 'post',
+		'core/term-template': 'term',
+	};
+
+// The class on every loop template's list (Blocks\Instances::LIST_CLASS).
+export const LIST_CLASS = 'matter-query-list';
 
 export const ATTRIBUTE = 'matterDisplay';
 
@@ -34,7 +78,6 @@ export const NAMESPACES = {
 };
 
 export const POSTS_NAMESPACE = NAMESPACES.carousel;
-export const PRODUCTS_COLLECTION = 'matter/product-collection/carousel';
 
 // The "Terms carousel" Terms Query variation (matched by its display).
 export const TERMS_VARIATION = 'matter/carousel-terms';
@@ -58,21 +101,6 @@ export const POSTS_CONTROLS = [
 	'excludeCurrent',
 ];
 
-// Product Collection controls a carousel hides (WooCommerce's `hideControls`):
-// a carousel shows one page of its own products.
-export const PRODUCTS_HIDDEN_CONTROLS = [
-	'inherit',
-	'filterable',
-	'offset',
-	'max-pages-to-show',
-	'default-order',
-	'related-by',
-];
-
-// A stacked layout: WooCommerce's grid columns don't apply in a carousel
-// (its slide widths come from the carousel's style).
-export const PRODUCTS_LAYOUT = { type: 'list' };
-
 /**
  * A query's display (its `matterDisplay`), if it's shown as a block.
  *
@@ -84,7 +112,6 @@ export function displayOf(name, attributes) {
 	const display = attributes?.[ATTRIBUTE];
 
 	if (
-		!QUERY_BLOCKS.includes(name) ||
 		!display ||
 		typeof display !== 'object' ||
 		!DISPLAY_BLOCKS[display.type]
@@ -92,8 +119,8 @@ export function displayOf(name, attributes) {
 		return null;
 	}
 
-	// Products and terms are carousels only.
-	return name === POSTS || display.type === 'carousel' ? display : null;
+	// Terms (and an integration's queries, e.g. products) are carousels only.
+	return displays()[name]?.includes(display.type) ? display : null;
 }
 
 /**
@@ -167,82 +194,33 @@ export const termsTemplate = (style) => [
 ];
 
 /**
- * WooCommerce's stock statuses to show, as its own Product Collection
- * defaults them (all, less out of stock when the store hides those).
+ * A new carousel of a query block's items (the carousel's slide picker): a
+ * posts carousel (its post type chosen next), a terms carousel, or one an
+ * integration adds with the `matter.queryDisplay.carouselTemplate` filter
+ * (e.g. the WooCommerce integration's products carousel).
  *
- * @return {Array|undefined} Stock status keys, if WooCommerce's settings are loaded.
- */
-function stockStatuses() {
-	const getSetting =
-		window.wc?.wcSettings?.getSetting ??
-		((name, fallback) => window.wcSettings?.[name] ?? fallback);
-	const options = Object.keys(getSetting('stockStatusOptions', {}) ?? {});
-
-	if (!options.length) {
-		return undefined;
-	}
-
-	return getSetting('hideOutOfStockItems', false)
-		? options.filter((status) => status !== 'outofstock')
-		: options;
-}
-
-/**
- * A Product Collection's attributes, as WooCommerce sets them for its
- * "Product Catalog" collection, as Matter's carousel collection. With inner
- * blocks it shows products straight away rather than the collection chooser.
- * The whole `query` is given because WooCommerce replaces, rather than
- * merges, it.
- *
+ * @param {string} name  Query block name.
  * @param {string} style Carousel style (block style name), if any.
- * @return {Object} Block attributes.
+ * @return {Array|null} Block template, or null when there's none.
  */
-export const productsAttributes = (style) => ({
-	[ATTRIBUTE]: { type: 'carousel', ...(style && { style }) },
-	query: {
-		perPage: 9,
-		pages: 0,
-		offset: 0,
-		postType: 'product',
-		order: 'desc',
-		orderBy: 'date',
-		search: '',
-		exclude: [],
-		inherit: false,
-		taxQuery: {},
-		isProductCollectionBlock: true,
-		featured: false,
-		woocommerceOnSale: false,
-		woocommerceStockStatus: stockStatuses(),
-		woocommerceAttributes: [],
-		woocommerceHandPickedProducts: [],
-		filterable: false,
-		relatedBy: { categories: true, tags: true },
-	},
-	tagName: 'div',
-	collection: PRODUCTS_COLLECTION,
-	hideControls: PRODUCTS_HIDDEN_CONTROLS,
-	displayLayout: PRODUCTS_LAYOUT,
-	dimensions: { widthType: 'fill' },
-	queryContextIncludes: ['collection'],
-	forcePageReload: false,
-});
+export const carouselTemplate = (name, style) => {
+	const core = {
+		[POSTS]: () => queryTemplate('', style),
+		[TERMS]: () => termsTemplate(style),
+	};
 
-/**
- * A products carousel: a Product Collection that is the carousel.
- *
- * @param {string} style Carousel style (block style name), if any.
- * @return {Array} Block template.
- */
-export const productsTemplate = (style) => [
-	PRODUCTS,
-	productsAttributes(style),
-	[['woocommerce/product-template', {}, ITEMS.carousel]],
-];
+	return applyFilters(
+		'matter.queryDisplay.carouselTemplate',
+		core[name]?.() ?? null,
+		name,
+		style
+	);
+};
 
 /**
  * The attributes that mark a displayed query as Matter's, for queries made
- * before (or by hand). Empty when it already is.
+ * before (or by hand). Empty when it already is. An integration adds its own
+ * query block's with the `matter.queryDisplay.displayAttributes` filter.
  *
  * @param {string} name       Query block name.
  * @param {Object} attributes Its attributes.
@@ -260,26 +238,11 @@ export function displayQueryAttributes(name, attributes) {
 		changes.namespace = NAMESPACES[display.type];
 	}
 
-	if (name === PRODUCTS) {
-		const hidden = attributes.hideControls ?? [];
-
-		if (attributes.collection !== PRODUCTS_COLLECTION) {
-			changes.collection = PRODUCTS_COLLECTION;
-		}
-
-		if (
-			hidden.length !== PRODUCTS_HIDDEN_CONTROLS.length ||
-			PRODUCTS_HIDDEN_CONTROLS.some(
-				(control) => !hidden.includes(control)
-			)
-		) {
-			changes.hideControls = PRODUCTS_HIDDEN_CONTROLS;
-		}
-
-		if (attributes.displayLayout?.type !== PRODUCTS_LAYOUT.type) {
-			changes.displayLayout = PRODUCTS_LAYOUT;
-		}
-	}
-
-	return changes;
+	return applyFilters(
+		'matter.queryDisplay.displayAttributes',
+		changes,
+		name,
+		attributes,
+		display
+	);
 }

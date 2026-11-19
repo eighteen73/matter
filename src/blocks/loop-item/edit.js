@@ -18,6 +18,7 @@ import { addQueryArgs } from '@wordpress/url';
  */
 import { useInert } from '../../components/use-inert';
 import boundedMap from '../../components/bounded-map';
+import { queryLoops } from '../../query-display/templates';
 
 // Most items in one request (LoopItem::MAX_PREVIEWS).
 const MAX_PER_REQUEST = 100;
@@ -27,10 +28,6 @@ const ROUTES = {
 	post: '/matter/v1/loop-items',
 	term: '/matter/v1/loop-items/terms',
 };
-
-// Loop templates whose items are posts. A loop item in one of these, even
-// inside a term's design, is a post.
-const POST_LOOPS = ['core/post-template', 'woocommerce/product-template'];
 
 // Rendered items by kind, block and ID (`post:carousel:12`) for the editor
 // session: the HTML, or null when the item can't be shown (e.g. the user
@@ -229,13 +226,16 @@ export default function Edit({
 		(select) => {
 			const { getBlockName, getBlockParentsByBlockName } =
 				select(blockEditorStore);
+			// The innermost loop template decides: a loop item in one
+			// listing posts, even inside a term's design, is a post.
+			const loops = queryLoops();
 			const [innermost] = getBlockParentsByBlockName(
 				clientId,
-				[...POST_LOOPS, 'core/term-template'],
+				Object.keys(loops),
 				true
 			);
 
-			return !!innermost && POST_LOOPS.includes(getBlockName(innermost));
+			return !!innermost && 'post' === loops[getBlockName(innermost)];
 		},
 		[clientId]
 	);

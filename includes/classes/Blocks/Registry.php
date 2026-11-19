@@ -38,14 +38,14 @@ class Registry {
 	];
 
 	/**
-	 * Third party blocks that Matter replaces (parents + children).
-	 *
-	 * Hidden from the inserter; existing content using them still renders.
+	 * Matter's blocks for another plugin's content (folder names), which
+	 * register only when that plugin's integration turns them on with
+	 * `matter_register_{$block_slug}` (see Integrations).
 	 *
 	 * @var string[]
 	 */
-	private const DISABLED_THIRD_PARTY_BLOCKS = [
-		'gravityforms/form',
+	private const INTEGRATION_BLOCKS = [
+		'gravity-form',
 	];
 
 	/**
@@ -101,6 +101,23 @@ class Registry {
 	}
 
 	/**
+	 * Blocks Matter replaces, hidden from the inserter: core's, plus other
+	 * plugins' that their integrations add (e.g. Gravity Forms' Form block,
+	 * replaced by Matter's).
+	 *
+	 * @return string[] Block names.
+	 */
+	public static function hidden_blocks(): array {
+		/**
+		 * Filters the blocks Matter hides from the inserter because it
+		 * replaces them. Existing content using them still renders.
+		 *
+		 * @param string[] $blocks Block names.
+		 */
+		return array_values( (array) apply_filters( 'matter_hidden_blocks', self::DISABLED_CORE_BLOCKS ) );
+	}
+
+	/**
 	 * Hide blocks Matter replaces from the inserter.
 	 *
 	 * Uses supports.inserter rather than the allowed-blocks list, so blocks
@@ -112,7 +129,7 @@ class Registry {
 	 * @return array
 	 */
 	public function hide_replaced_blocks( array $args, string $block_name ): array {
-		if ( in_array( $block_name, array_merge( self::DISABLED_CORE_BLOCKS, self::DISABLED_THIRD_PARTY_BLOCKS ), true ) ) {
+		if ( in_array( $block_name, self::hidden_blocks(), true ) ) {
 			$args['supports']             = $args['supports'] ?? [];
 			$args['supports']['inserter'] = false;
 		}
@@ -153,12 +170,13 @@ class Registry {
 			$block_folder = trailingslashit( $blocks_path ) . $block_slug;
 
 			/**
-			 * Allow blocks to be conditionally registered.
+			 * Allow blocks to be conditionally registered. Blocks for another
+			 * plugin's content start off, and their integration turns them on.
 			 *
 			 * Usage:
 			 * add_filter( 'matter_register_{$block_slug}', function( $should_register, $block_folder ) { ... }, 10, 2 );
 			 */
-			$should_register = apply_filters( "matter_register_{$block_slug}", true, $block_folder );
+			$should_register = apply_filters( "matter_register_{$block_slug}", ! in_array( $block_slug, self::INTEGRATION_BLOCKS, true ), $block_folder );
 
 			if ( ! $should_register ) {
 				continue;

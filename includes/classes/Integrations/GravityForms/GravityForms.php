@@ -1,22 +1,25 @@
 <?php
 /**
- * Gravity Form block helpers.
+ * Gravity Forms integration.
+ *
+ * Boots when Gravity Forms is active. It registers Matter's Gravity Form
+ * block (`matter/gravity-form`), which replaces Gravity Forms' own Form block
+ * in the inserter, gives the block's editor script the list of forms, and
+ * keeps forms out of Interactivity API hydration.
  *
  * @package Eighteen73\Matter
  */
 
-namespace Eighteen73\Matter\Blocks;
+namespace Eighteen73\Matter\Integrations\GravityForms;
 
-use Eighteen73\Matter\Singleton;
+use Eighteen73\Matter\Integrations\Integration;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Gravity Form block.
+ * Gravity Forms integration.
  */
-class GravityForm {
-
-	use Singleton;
+final class GravityForms implements Integration {
 
 	/**
 	 * Editor script handle registered from block.json.
@@ -26,28 +29,36 @@ class GravityForm {
 	private const EDITOR_SCRIPT_HANDLE = 'matter-gravity-form-editor-script';
 
 	/**
+	 * Whether Gravity Forms is active.
+	 *
+	 * @return bool
+	 */
+	public function can_boot(): bool {
+		return class_exists( 'GFAPI' );
+	}
+
+	/**
 	 * Setup hooks.
 	 *
 	 * @return void
 	 */
-	public function setup(): void {
-		add_filter( 'matter_register_gravity-form', [ $this, 'should_register' ] );
+	public function boot(): void {
+		add_filter( 'matter_register_gravity-form', '__return_true' );
+		add_filter( 'matter_hidden_blocks', [ $this, 'hide_form_block' ] );
 		add_action( 'enqueue_block_editor_assets', [ $this, 'localize_editor_script' ] );
 		add_filter( 'gform_get_form_filter', [ $this, 'isolate_from_interactivity_api' ], 10, 2 );
 	}
 
 	/**
-	 * Only register the block when Gravity Forms is available.
+	 * Hide Gravity Forms' own Form block, which Matter's replaces.
 	 *
-	 * @param bool $should_register Whether the block should register.
-	 * @return bool
+	 * @param string[] $blocks Block names.
+	 * @return string[]
 	 */
-	public function should_register( bool $should_register ): bool {
-		if ( ! class_exists( 'GFAPI' ) ) {
-			return false;
-		}
+	public function hide_form_block( array $blocks ): array {
+		$blocks[] = 'gravityforms/form';
 
-		return $should_register;
+		return $blocks;
 	}
 
 	/**
@@ -56,10 +67,6 @@ class GravityForm {
 	 * @return void
 	 */
 	public function localize_editor_script(): void {
-		if ( ! class_exists( 'GFAPI' ) ) {
-			return;
-		}
-
 		if ( ! wp_script_is( self::EDITOR_SCRIPT_HANDLE, 'registered' ) ) {
 			return;
 		}
@@ -117,7 +124,7 @@ class GravityForm {
 	 * @return string
 	 */
 	public function isolate_from_interactivity_api( string $form_string, $form ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-		if ( '' === $form_string || ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
+		if ( '' === $form_string ) {
 			return $form_string;
 		}
 

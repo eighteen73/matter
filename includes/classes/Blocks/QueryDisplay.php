@@ -53,31 +53,33 @@ final class QueryDisplay {
 	public const TERMS = 'core/terms-query';
 
 	/**
-	 * Query blocks that can be shown as a block.
+	 * Core's query blocks that can be shown as a block, and the displays each
+	 * supports (terms are carousels only). Integrations add theirs (see
+	 * blocks()).
 	 */
-	public const BLOCKS = [ 'core/query', 'woocommerce/product-collection', self::TERMS ];
+	private const BLOCKS = [
+		'core/query' => [ 'carousel', 'accordion', 'tabs' ],
+		self::TERMS  => [ 'carousel' ],
+	];
 
 	/**
-	 * Display types: the block each wraps the query in, the query blocks it
-	 * supports (products and terms are carousels only), and whether its loop
+	 * Display types: the block each wraps the query in, and whether its loop
 	 * items can fall back to the item's own design (a card). An accordion's or
-	 * tabs' can't: the post's title is already the heading or tab.
+	 * tabs' can't: the post's title is already the heading or tab. The query
+	 * blocks each supports come from blocks().
 	 */
 	public const TYPES = [
 		'carousel'  => [
-			'block'   => 'matter/carousel',
-			'queries' => self::BLOCKS,
-			'cards'   => true,
+			'block' => 'matter/carousel',
+			'cards' => true,
 		],
 		'accordion' => [
-			'block'   => 'matter/accordion',
-			'queries' => [ 'core/query' ],
-			'cards'   => false,
+			'block' => 'matter/accordion',
+			'cards' => false,
 		],
 		'tabs'      => [
-			'block'   => 'matter/tabs',
-			'queries' => [ 'core/query' ],
-			'cards'   => false,
+			'block' => 'matter/tabs',
+			'cards' => false,
 		],
 	];
 
@@ -123,7 +125,7 @@ final class QueryDisplay {
 	 * @return array
 	 */
 	public function register_attribute( array $args, string $block_name ): array {
-		if ( in_array( $block_name, self::BLOCKS, true ) ) {
+		if ( isset( self::blocks()[ $block_name ] ) ) {
 			$args['attributes']                    = $args['attributes'] ?? [];
 			$args['attributes'][ self::ATTRIBUTE ] = [ 'type' => 'object' ];
 			$args['attributes']['matterId']        = [ 'type' => 'string' ];
@@ -142,19 +144,51 @@ final class QueryDisplay {
 		$registry = WP_Block_Type_Registry::get_instance();
 		$blocks   = [];
 
-		foreach ( self::TYPES as $type ) {
-			$blocks[ $type['block'] ] = array_values( array_filter( $type['queries'], [ $registry, 'is_registered' ] ) );
+		foreach ( self::TYPES as $name => $type ) {
+			$blocks[ $type['block'] ] = array_values( array_filter( self::queries( $name ), [ $registry, 'is_registered' ] ) );
 		}
 
 		return $blocks;
 	}
 
 	/**
+	 * Query blocks that can be shown as a block, and the displays each
+	 * supports.
+	 *
+	 * @return array<string, string[]> Query block name => display types.
+	 */
+	public static function blocks(): array {
+		/**
+		 * Filters the query blocks that can be shown as a carousel, accordion
+		 * or tabs, and which of those each supports. The WooCommerce
+		 * integration adds the Product Collection, as a carousel.
+		 *
+		 * @param array<string, string[]> $blocks Query block name => display types.
+		 */
+		$blocks = (array) apply_filters( 'matter_query_blocks', self::BLOCKS );
+
+		return array_map(
+			fn( $types ) => array_values( array_intersect( (array) $types, array_keys( self::TYPES ) ) ),
+			$blocks
+		);
+	}
+
+	/**
+	 * The query blocks a display type supports.
+	 *
+	 * @param string $type Display type (carousel, accordion or tabs).
+	 * @return string[] Query block names.
+	 */
+	public static function queries( string $type ): array {
+		return array_keys( array_filter( self::blocks(), fn( $types ) => in_array( $type, $types, true ) ) );
+	}
+
+	/**
 	 * The post types a posts display can list, for the editor's "What will
-	 * it list?" choice: viewable, in the REST API, not media, Matter's
-	 * archive entries or WooCommerce's products (shown by the Products
-	 * carousel). Posts first,
-	 * then pages, then the rest by name.
+	 * it list?" choice: viewable, in the REST API, not media or Matter's
+	 * archive entries, nor any an integration shows with a query block of its
+	 * own (e.g. WooCommerce's products, by the Products carousel). Posts
+	 * first, then pages, then the rest by name.
 	 *
 	 * @return array<int, array{name: string, label: string}>
 	 */
@@ -162,7 +196,7 @@ final class QueryDisplay {
 		$types = [];
 
 		foreach ( get_post_types( [ 'show_in_rest' => true ], 'objects' ) as $post_type ) {
-			if ( in_array( $post_type->name, [ 'attachment', 'product', Archives::POST_TYPE ], true ) || ! is_post_type_viewable( $post_type ) ) {
+			if ( in_array( $post_type->name, [ 'attachment', Archives::POST_TYPE ], true ) || ! is_post_type_viewable( $post_type ) ) {
 				continue;
 			}
 
@@ -171,6 +205,15 @@ final class QueryDisplay {
 				'label' => (string) $post_type->labels->name,
 			];
 		}
+
+		/**
+		 * Filters the post types a posts carousel, accordion or tabs can list.
+		 * The WooCommerce integration takes products out: the Products
+		 * carousel shows them.
+		 *
+		 * @param array<int, array{name: string, label: string}> $types Post types.
+		 */
+		$types = array_values( (array) apply_filters( 'matter_query_display_post_types', $types ) );
 
 		$rank = fn( array $type ): string => match ( $type['name'] ) {
 			'post'  => '0',
@@ -212,7 +255,7 @@ final class QueryDisplay {
 	 * @return bool
 	 */
 	public static function supports( string $type, string $query_block ): bool {
-		return isset( self::TYPES[ $type ] ) && in_array( $query_block, self::TYPES[ $type ]['queries'], true );
+		return isset( self::TYPES[ $type ] ) && in_array( $type, self::blocks()[ $query_block ] ?? [], true );
 	}
 
 	/**
@@ -269,9 +312,9 @@ final class QueryDisplay {
 		$registry = WP_Block_Type_Registry::get_instance();
 		$queries  = [];
 
-		foreach ( self::TYPES as $type ) {
+		foreach ( self::TYPES as $name => $type ) {
 			if ( in_array( $type['block'], $allowed_blocks, true ) ) {
-				$queries = array_merge( $queries, array_filter( $type['queries'], [ $registry, 'is_registered' ] ) );
+				$queries = array_merge( $queries, array_filter( self::queries( $name ), [ $registry, 'is_registered' ] ) );
 			}
 		}
 
@@ -360,7 +403,7 @@ final class QueryDisplay {
 			unset( self::$rendering[ spl_object_id( $instance ) ] );
 		}
 
-		if ( ! in_array( $block['blockName'] ?? '', self::BLOCKS, true ) || '' === trim( $content ) ) {
+		if ( ! isset( self::blocks()[ $block['blockName'] ?? '' ] ) || '' === trim( $content ) ) {
 			return $content;
 		}
 

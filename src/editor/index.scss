@@ -133,15 +133,6 @@
 	margin-block-start: 16px;
 }
 
-// A carousel's Product Collection: WooCommerce's Layout (Stack, Grid, its own
-// Carousel) and Width settings don't apply, as the carousel lays out the
-// slides, and its `hideControls` can't hide them. Matched by their options,
-// only while the carousel's panel is in the sidebar; if WooCommerce changes
-// its markup they simply show again.
-.block-editor-block-inspector:has(.matter-carousel-query-panel) .wc-block-editor-product-collection__settings_panel .components-tools-panel-item:has([data-value="carousel"], [data-value="fixed"]) {
-	display: none;
-}
-
 // A displayed query's style buttons (the block's own block styles).
 .matter-display-styles {
 	display: grid;

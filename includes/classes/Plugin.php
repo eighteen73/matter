@@ -8,7 +8,6 @@
 namespace Eighteen73\Matter;
 
 use Eighteen73\Matter\Archives\Archives;
-use Eighteen73\Matter\Blocks\GravityForm;
 use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Blocks\LoopItem;
 use Eighteen73\Matter\Blocks\QueryDisplay;
@@ -17,6 +16,7 @@ use Eighteen73\Matter\Blocks\TemplatePart;
 use Eighteen73\Matter\Extensions\ButtonIcon;
 use Eighteen73\Matter\Extensions\FocalPoint;
 use Eighteen73\Matter\Extensions\ImageSizes;
+use Eighteen73\Matter\Integrations\Integrations;
 use Eighteen73\Matter\Navigation\Megamenu;
 use Eighteen73\Matter\Sections\Sections;
 use Eighteen73\Matter\Settings\Settings;
@@ -43,7 +43,6 @@ class Plugin {
 		// Blocks.
 		Registry::instance()->setup();
 		Instances::instance()->setup();
-		GravityForm::instance()->setup();
 		QueryDisplay::instance()->setup();
 		LoopItem::instance()->setup();
 		Variants::instance()->setup();
@@ -69,6 +68,10 @@ class Plugin {
 
 		// Editable content around archive lists.
 		Archives::instance()->setup();
+
+		// What Matter does with other plugins (WooCommerce, Gravity Forms),
+		// booted once they've loaded and only when they're active.
+		Integrations::instance()->setup();
 	}
 
 	/**

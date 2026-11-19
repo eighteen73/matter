@@ -44,13 +44,18 @@ class Instances {
 	private const CONTAINERS = [ 'matter/accordion', 'matter/tabs' ];
 
 	/**
-	 * Blocks that render their children once per item of a query, and what
-	 * the items are.
+	 * The class on every loop template's list (a Query Loop's post template,
+	 * a Terms Query's term template, and any an integration adds).
+	 */
+	public const LIST_CLASS = 'matter-query-list';
+
+	/**
+	 * Core's blocks that render their children once per item of a query, and
+	 * what the items are. Integrations add theirs (see loops()).
 	 */
 	private const LOOPS = [
-		'core/post-template'           => 'post',
-		'woocommerce/product-template' => 'post',
-		'core/term-template'           => 'term',
+		'core/post-template' => 'post',
+		'core/term-template' => 'term',
 	];
 
 	/**
@@ -107,8 +112,10 @@ class Instances {
 	 * @return array
 	 */
 	public function start( array $parsed_block, array $source_block = [], ?\WP_Block $parent_block = null ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
-		if ( isset( self::LOOPS[ $parsed_block['blockName'] ?? '' ] ) ) {
-			self::$loops[] = self::LOOPS[ $parsed_block['blockName'] ];
+		$loop = self::loops()[ $parsed_block['blockName'] ?? '' ] ?? null;
+
+		if ( null !== $loop ) {
+			self::$loops[] = $loop;
 		}
 
 		if ( null === $parent_block ) {
@@ -152,8 +159,9 @@ class Instances {
 	 * @return string
 	 */
 	public function finish( string $block_content, array $parsed_block, ?\WP_Block $instance = null ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed -- Filter signature.
-		if ( isset( self::LOOPS[ $parsed_block['blockName'] ?? '' ] ) ) {
+		if ( isset( self::loops()[ $parsed_block['blockName'] ?? '' ] ) ) {
 			array_pop( self::$loops );
+			$block_content = self::mark_list( $block_content );
 		}
 
 		$key = null !== $instance ? spl_object_id( $instance ) : null;
@@ -166,6 +174,49 @@ class Instances {
 		}
 
 		return $block_content;
+	}
+
+	/**
+	 * Mark a loop template's list (its first element) with LIST_CLASS, so
+	 * blocks around a query (a carousel, an accordion) find its items by one
+	 * class, whichever block listed them.
+	 *
+	 * @param string $html Rendered loop template.
+	 * @return string
+	 */
+	private static function mark_list( string $html ): string {
+		if ( '' === trim( $html ) ) {
+			return $html;
+		}
+
+		$processor = new \WP_HTML_Tag_Processor( $html );
+
+		if ( ! $processor->next_tag() ) {
+			return $html;
+		}
+
+		$processor->add_class( self::LIST_CLASS );
+
+		return $processor->get_updated_html();
+	}
+
+	/**
+	 * Blocks that render their children once per item of a query (a loop
+	 * template), and what the items are: `post` or `term`.
+	 *
+	 * @return array<string, string> Block name => `post` or `term`.
+	 */
+	public static function loops(): array {
+		/**
+		 * Filters the loop templates: blocks that render their children once
+		 * per item of a query, and whether the items are posts or terms. The
+		 * WooCommerce integration adds the Product Collection's product template.
+		 *
+		 * @param array<string, string> $loops Block name => `post` or `term`.
+		 */
+		$loops = (array) apply_filters( 'matter_query_loops', self::LOOPS );
+
+		return array_filter( $loops, fn( $kind ) => in_array( $kind, [ 'post', 'term' ], true ) );
 	}
 
 	/**

@@ -11,14 +11,14 @@
  *   on the front end, which can be clicked through.
  * - Posts: "Posts carousel", "Posts accordion" and "Posts tabs" Query Loop
  *   variations, matched by `namespace`, with core's `allowedControls`.
- * - Products (carousels only): a "Products carousel" collection, with
- *   WooCommerce's `hideControls` (its Layout and Width settings are hidden by
- *   the editor stylesheet instead). No "Choose collection" button.
+ * - An integration's query blocks (carousels only), e.g. the WooCommerce
+ *   integration's "Products carousel" collection, registered by its own
+ *   editor script with the helpers on `window.matterEditor.queryDisplay`.
  * - Terms (carousels only): a "Terms carousel" Terms Query variation, matched
  *   by its display, with core's own controls (taxonomy, order, empty terms,
  *   nesting, chosen terms). Its slides are the theme's term loop items.
- * - In the post editor these replace the plain Query Loop, Product
- *   Collection (and WooCommerce's other collections) and Terms Query in the
+ * - In the post editor these replace the plain query blocks (and any other
+ *   variations of them, e.g. WooCommerce's other collections) in the
  *   inserter. The Site Editor keeps them all, for templates.
  * - The query's items can't be selected, edited or added to.
  */
@@ -39,7 +39,7 @@ import domReady from '@wordpress/dom-ready';
 import { useEffect } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
-import { category, postList, store as shop } from '@wordpress/icons';
+import { category, postList } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -48,18 +48,16 @@ import {
 	ATTRIBUTE,
 	DISPLAY_BLOCKS,
 	ITEMS,
+	LIST_CLASS,
 	NAMESPACES,
 	POSTS,
 	POSTS_CONTROLS,
-	PRODUCTS,
-	PRODUCTS_COLLECTION,
-	PRODUCTS_HIDDEN_CONTROLS,
-	PRODUCTS_LAYOUT,
-	QUERY_BLOCKS,
 	TERMS,
 	TERMS_VARIATION,
 	displayOf,
 	postsTemplate,
+	queryBlocks,
+	queryLoops,
 	termsAttributes,
 } from '../../../query-display/templates';
 import CarouselEdit from './carousel-edit';
@@ -135,7 +133,7 @@ addFilter(
 	'blocks.registerBlockType',
 	'matter/query-display/attribute',
 	(settings, name) =>
-		QUERY_BLOCKS.includes(name) ? withDisplay(settings) : settings
+		queryBlocks().includes(name) ? withDisplay(settings) : settings
 );
 
 // Items in an inserter preview: enough to show the display, not every post.
@@ -175,7 +173,19 @@ const queryExample = (attributes, template, queryKey = 'query') => ({
 	innerBlocks: exampleBlocks(template),
 });
 
-// After the blocks register (their icons) and WooCommerce's registry loads.
+/*
+ * Helpers for integrations' editor scripts, which load after this one (it's
+ * their dependency), so their query blocks show as Matter's do: e.g. the
+ * WooCommerce integration's "Products carousel" collection.
+ */
+window.matterEditor = {
+	...window.matterEditor,
+	queryDisplay: { ATTRIBUTE, ITEMS, isPostEditor, queryExample },
+};
+
+// After the blocks register (their icons) and other plugins' registries load
+// (an integration registers its own variations after this, in its own
+// domReady, so they're never hidden below).
 domReady(() => {
 	Object.entries(POSTS_VARIATIONS).forEach(([type, variation]) => {
 		// No post type: the client chooses what it lists (DisplayEdit).
@@ -196,30 +206,6 @@ domReady(() => {
 			innerBlocks,
 			example: queryExample(attributes, innerBlocks),
 		});
-	});
-
-	const productsAttributes = {
-		[ATTRIBUTE]: { type: 'carousel' },
-		hideControls: PRODUCTS_HIDDEN_CONTROLS,
-		displayLayout: PRODUCTS_LAYOUT,
-		query: { perPage: 9 },
-	};
-	const productsBlocks = [
-		['woocommerce/product-template', {}, ITEMS.carousel],
-	];
-
-	window.wc?.wcBlocksRegistry?.__experimentalRegisterProductCollection?.({
-		name: PRODUCTS_COLLECTION,
-		title: __('Products carousel', 'matter'),
-		description: __('Products shown as slides.', 'matter'),
-		icon: shop,
-		scope: isPostEditor() ? ['inserter'] : [],
-		attributes: productsAttributes,
-		innerBlocks: productsBlocks,
-		example: queryExample(
-			{ ...productsAttributes, collection: PRODUCTS_COLLECTION },
-			productsBlocks
-		),
 	});
 
 	if (getBlockType(TERMS)) {
@@ -249,14 +235,10 @@ domReady(() => {
 		return;
 	}
 
-	// Clients get Matter's, not the plain blocks or other collections.
-	const ours = [
-		...Object.values(NAMESPACES),
-		PRODUCTS_COLLECTION,
-		TERMS_VARIATION,
-	];
+	// Clients get Matter's, not the plain blocks or other variations.
+	const ours = [...Object.values(NAMESPACES), TERMS_VARIATION];
 
-	QUERY_BLOCKS.forEach((name) =>
+	queryBlocks().forEach((name) =>
 		(getBlockVariations(name) ?? []).forEach((variation) => {
 			if (
 				!ours.includes(variation.name) &&
@@ -273,17 +255,31 @@ domReady(() => {
 			}
 		})
 	);
-
-	// The carousel collection stands in for the plain Product Collection.
-	const products = (getBlockVariations(PRODUCTS) ?? []).find(
-		({ name }) => name === PRODUCTS_COLLECTION
-	);
-
-	if (products && !products.isDefault) {
-		unregisterBlockVariation(PRODUCTS, PRODUCTS_COLLECTION);
-		registerBlockVariation(PRODUCTS, { ...products, isDefault: true });
-	}
 });
+
+// Every loop template's list has Matter's class, as on the front end
+// (Blocks\Instances::mark_list()), so a carousel around a query finds its
+// slides by one class, whichever block lists them.
+addFilter(
+	'editor.BlockListBlock',
+	'matter/query-display/list-class',
+	createHigherOrderComponent(
+		(BlockListBlock) =>
+			function QueryListBlock(props) {
+				return queryLoops()[props.name] ? (
+					<BlockListBlock
+						{...props}
+						className={[props.className, LIST_CLASS]
+							.filter(Boolean)
+							.join(' ')}
+					/>
+				) : (
+					<BlockListBlock {...props} />
+				);
+			},
+		'withQueryListClass'
+	)
+);
 
 // Nothing can be added inside a displayed query: its items are fixed. (Core's
 // filter for insertion rules; `__unstable` in name only, as WooCommerce uses

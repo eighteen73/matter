@@ -46,8 +46,9 @@ import {
 } from '../../interactivity/api';
 
 const SELECTOR = '.wp-block-matter-carousel';
-const QUERY_LISTS =
-	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template';
+// Every loop template's list (a Query Loop's, a Terms Query's, an
+// integration's) has this class (Blocks\Instances::LIST_CLASS).
+const QUERY_LIST = '.matter-query-list';
 
 registerType('carousel', SELECTOR);
 
@@ -282,11 +283,7 @@ store('matter/carousel', {
 			);
 			// The carousel's own query (the track's child), not one inside a
 			// slide.
-			const queryList = track.querySelector(
-				QUERY_LISTS.split(',')
-					.map((list) => `:scope > * > ${list.trim()}`)
-					.join(', ')
-			);
+			const queryList = track.querySelector(`:scope > * > ${QUERY_LIST}`);
 			const canMove = !reducedMotion.matches;
 
 			ref.classList.toggle('is-query', !!queryList);

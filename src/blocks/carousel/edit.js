@@ -39,7 +39,7 @@ import {
 	useGalleryMedia,
 } from '../../components/gallery-media';
 import SlidePicker, { slideTypesFor, themeSlideTypes } from './slide-picker';
-import { QUERY_BLOCKS } from '../../query-display/templates';
+import { queryBlocks } from '../../query-display/templates';
 
 // With theme slide types, slides are limited to images and the types this
 // carousel has (slideTypesFor(): a type with `within` only inside those
@@ -53,7 +53,7 @@ const allowedSlides = (types) => {
 		...new Set([
 			'core/image',
 			...Object.keys(types).filter(
-				(name) => !QUERY_BLOCKS.includes(name)
+				(name) => !queryBlocks().includes(name)
 			),
 		]),
 	];

@@ -21,8 +21,9 @@ import EmblaCarousel from 'embla-carousel';
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
-const QUERY_LISTS =
-	'.wp-block-post-template, .wc-block-product-template, .wp-block-woocommerce-product-template, .wp-block-term-template';
+// Every loop template's list (a Query Loop's, a Terms Query's, an
+// integration's) has this class (Blocks\Instances::LIST_CLASS).
+const QUERY_LIST = '.matter-query-list';
 
 /**
  * A block's variant options, as resolved on the server by Variants::get().
@@ -91,7 +92,7 @@ export function useLiveCarousel(options) {
 
 		const create = () => {
 			embla?.destroy();
-			container = track.querySelector(QUERY_LISTS) || track;
+			container = track.querySelector(QUERY_LIST) || track;
 			embla = EmblaCarousel(viewport, {
 				align,
 				slidesToScroll,
@@ -136,8 +137,7 @@ export function useLiveCarousel(options) {
 			new viewport.ownerDocument.defaultView.MutationObserver(
 				(mutations) => {
 					if (
-						(track.querySelector(QUERY_LISTS) || track) !==
-						container
+						(track.querySelector(QUERY_LIST) || track) !== container
 					) {
 						create();
 					} else if (

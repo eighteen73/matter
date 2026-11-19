@@ -27,7 +27,7 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { QUERY_BLOCKS } from '../../query-display/templates';
+import { queryBlocks } from '../../query-display/templates';
 import { useAddSlide } from '../../carousel/editor/use-add-slide';
 import {
 	GalleryMediaUpload,
@@ -153,7 +153,7 @@ function ParentToolbar({ parentId, parentName }) {
 	const { lastSlide, addSlide } = useAddSlide(parentId);
 
 	// A carousel of query results has no slides to manage here.
-	if (QUERY_BLOCKS.includes(lastSlide?.name)) {
+	if (queryBlocks().includes(lastSlide?.name)) {
 		return null;
 	}
 

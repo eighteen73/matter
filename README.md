@@ -119,7 +119,7 @@ A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, 
 - **Items:** fixed per type. A carousel's slides are the theme's [loop items](#loop-items). They can't be selected, edited or added to.
 - **Editor:** the sidebar has the block's panel (**Carousel**, **Accordion** or **Tabs**: style, colour scheme and the block's own settings, the same controls as the block) above WordPress's or WooCommerce's controls, trimmed to suit:
   - Posts: "Posts carousel", "Posts accordion" and "Posts tabs" Query Loop variations (`namespace`: `matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`), allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
-  - Products (carousels only): a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
+  - Products (carousels only, from the [WooCommerce integration](#integrations)): a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
   - Terms (carousels only): a "Terms carousel" Terms Query variation (`matter/carousel-terms`, matched by its `matterDisplay`, as a Terms Query has no `namespace`), with core's own controls: taxonomy, order, empty terms, nested terms, chosen terms and "inherit" (a term archive's child terms). Its term template holds the loop item, so each slide is the theme's [term loop item](#loop-items). E.g. "Shop by category": a Terms carousel of Product categories, with the chosen categories.
   - A carousel is a live carousel around the query. An accordion or tabs is the server's rendering, as on the front end (`POST matter/v1/query-display`, with the styles it enqueued), refreshed as its settings change; items open and tabs switch when clicked, and links don't navigate.
 - **Inserting:** a carousel's picker offers posts, products and terms, which replace the carousel block with the query. In the post editor the three posts variations, "Products carousel" and "Terms carousel" replace the plain Query Loop, Product Collection (and WooCommerce's other collections) and Terms Query in the inserter; the Site Editor keeps those for templates.
@@ -579,7 +579,31 @@ add_filter( 'matter_theme_icons', fn( $icons ) => [ ...$icons, 'label' => 'Theme
 - **Focal point.** On `core/image`, using core's own `focalPoint` attribute, and on featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images. Core offers its focal point only for images with a scale set; Matter offers it on every image (sections crop images in CSS) and hides its own control where core's shows.
 - **Image sizes.** Wide and full-width images (`core/image`, `core/post-featured-image`) get `sizes` from their alignment: `100vw` for full, the theme's `wideSize` for wide. Core writes it from the size chosen ("Large" is 1024px), so a full-width image was downloaded at 1024px and stretched. Lazy-loaded images still get core's `auto, ` first.
 
-Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs) and `gravityforms/form`.
+Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs), and what its integrations replace (`gravityforms/form`). Add to the list with `matter_hidden_blocks`.
+
+## Integrations
+
+Matter's own code never names another plugin. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads.
+
+| Integration | Boots when | Adds |
+| --- | --- | --- |
+| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. |
+| Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
+
+The hooks they use are open to a project's own code, or its own integration:
+
+| Filter | Value |
+| --- | --- |
+| `matter_integrations` | Integration classes (implementing `Eighteen73\Matter\Integrations\Integration`: `can_boot()` and `boot()`). A project can add its own. |
+| `matter_query_blocks` | Query block name => the displays it can be shown as (`carousel`, `accordion`, `tabs`). Core's: `core/query` (all three) and `core/terms-query` (carousel). |
+| `matter_query_loops` | Loop template block name => `post` or `term`. Core's: `core/post-template`, `core/term-template`. Every loop template's list gets the class `matter-query-list`. |
+| `matter_query_display_post_types` | The post types a posts carousel, accordion or tabs can list. |
+| `matter_archive_post_type_title` | A post type archive's title (null to work it out). |
+| `matter_archive_term_image_id` | A term archive's image, an attachment ID (core terms have none). |
+| `matter_hidden_blocks` | Blocks hidden from the inserter because Matter replaces them. |
+| `matter_register_{$block_slug}` | Whether one of Matter's blocks registers. Blocks for another plugin's content (`gravity-form`) start off. |
+
+In the editor, an integration's script loads after Matter's (`matter-editor` is its dependency) and adds to it with these `wp.hooks` filters: `matter.queryDisplay.carouselTemplate` (a new carousel of a query block's items), `matter.queryDisplay.displayAttributes` (the attributes that mark a displayed query as Matter's) and `matter.carousel.queryOptions` (the carousel picker's query options). `window.matterEditor.queryDisplay` has the helpers they need (`ATTRIBUTE`, `ITEMS`, `isPostEditor()`, `queryExample()`).
 
 ## CSS conventions
 
@@ -696,7 +720,7 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries (Query Loop, Product Collection, and `core/terms-query` as a carousel), the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
 - **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{namespace}/loop-item-{post_type}`, `{namespace}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, with `-{variant}` after those for a variant; for terms `{namespace}/loop-item-term-{taxonomy}`, `{namespace}/loop-item-term` and their `-carousel` ones; in the order under [Loop items](#loop-items)).
 - **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
-- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track (`.wp-block-term-template > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list), state classes (`is-*`, `has-*`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
+- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track, whose list has the class `matter-query-list` (`.matter-query-list > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list, `.matter-query-list`), state classes (`is-*`, `has-*`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 
 **The default skin** (everything in `:where()`) is minimal: what a block needs to be usable and accessible on a theme with no styles for it (unstyled buttons, icons, the scheme's background and text colours, a backdrop, spacing, motion). It isn't a design: no radii, shadows, font weights or decorative borders. Themes are expected to style every Matter block they use (Pulsar ships base styles for each), and not to rely on the skin.
