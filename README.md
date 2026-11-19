@@ -666,13 +666,48 @@ await fill( element );        // Fill the placeholders in an element.
 
 An empty placeholder is reserved one line's height (`:where(.matter-live[aria-busy])`), so filling it doesn't move the card much. A theme can style `.matter-live.is-{block}` to fit.
 
+## Cards
+
+A card is an item's loop item, rendered so it can be stored and shown somewhere else. A search index can hold each item's card, so a listing's results can be shown without a page render. Seek does this through its Matter integration.
+
+```php
+use Eighteen73\Matter\Cards\Cards;
+
+$card = Cards::render( $post_id ); // Null if the item isn't public, or the theme has no loop item pattern for its type.
+```
+
+| Key | What it is |
+| --- | --- |
+| `html` | What `matter/loop-item` renders in a plain loop's item: the theme's `loop-item-{post_type}` pattern. [Live blocks](#live-blocks) are placeholders, filled in the browser as on a page. Apart from those, it's the same markup the page's card has. |
+| `classes` | The item's post classes, for its list item, sorted. |
+| `data` | The Interactivity API `state` and `config` its blocks add, without derived state (closures). The page being served keeps its own. |
+| `version` | `Cards::version( $post_type )`: which pattern and code rendered it. |
+
+**Everyone sees the same card.** Anything in a search index can be read by anyone who can search it. So a card is always rendered as a guest, whoever is logged in, with live blocks as placeholders. It renders the same from a page, admin, REST, cron or WP-CLI.
+
+**Versions.** A card goes stale when what renders it changes, even though the item itself hasn't. Its version is a hash of:
+- the theme's pattern;
+- Matter's and the theme's versions;
+- which blocks are live;
+- whatever `matter_card_version` adds (WooCommerce's version, from the [WooCommerce integration](#integrations)).
+
+A card with another version than `Cards::version()` gives today is stale, and whatever stores cards renders it again (Seek does this by itself). Other changes to blocks' code aren't detected.
+
+**Hooks:**
+
+| Hook | Value |
+| --- | --- |
+| `matter_card` (filter) | The card (`$card, $post`), e.g. without classes or state that belong to the page. |
+| `matter_card_version` (filter) | What a type's version is made from (`$parts, $post_type`). Add a plugin's version for its blocks. |
+| `matter_card_render_start`, `matter_card_render_end` (actions) | Around a card's render (`$post`), to hide something of the visitor's that a block reads, such as a shop's cart. |
+
 ## Integrations
 
 Matter's own code never names another plugin. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads.
 
 | Integration | Boots when | Adds |
 | --- | --- | --- |
-| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. |
+| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Cards](#cards) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes; WooCommerce's version is part of the card version. |
 | Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
 
 The hooks they use are open to a project's own code, or its own integration:

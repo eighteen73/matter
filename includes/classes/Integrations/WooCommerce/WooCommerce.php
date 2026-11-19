@@ -18,6 +18,7 @@
  *   price, stock and rating, with WooCommerce's own parameters and counts
  *   (Filters\). WooCommerce's own filter blocks are hidden: Matter's
  *   replace them.
+ * - Product cards (Cards\Cards) without the shopper's cart (Cards).
  *
  * @package Eighteen73\Matter
  */
@@ -94,6 +95,9 @@ final class WooCommerce implements Integration {
 		add_filter( 'matter_filterable_query_blocks', [ $this, 'filterable_query_blocks' ] );
 		add_action( 'matter_filter_sources', [ $this, 'filter_sources' ], 20 );
 		add_filter( 'matter_hidden_blocks', [ $this, 'hide_filter_blocks' ] );
+
+		// Product cards for everyone, without the shopper's cart.
+		( new Cards() )->setup();
 	}
 
 	/**
