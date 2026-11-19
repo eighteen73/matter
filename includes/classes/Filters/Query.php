@@ -26,6 +26,11 @@ defined( 'ABSPATH' ) || exit;
 final class Query {
 
 	/**
+	 * Leave every source out (see building()): the listing's own query.
+	 */
+	public const ALL = '*';
+
+	/**
 	 * The main query's vars before filters were applied, for counting.
 	 *
 	 * @var array|null
@@ -96,6 +101,10 @@ final class Query {
 	 * @return array
 	 */
 	public static function apply( array $query_vars, ?string $except = null ): array {
+		if ( self::ALL === $except ) {
+			return $query_vars;
+		}
+
 		$request = Request::params();
 
 		foreach ( Sources::all() as $key => $source ) {
@@ -126,9 +135,9 @@ final class Query {
 	}
 
 	/**
-	 * Build a query's vars while leaving a source out.
+	 * Build a query's vars while leaving a source out (or all of them: ALL).
 	 *
-	 * @param string|null $except Source key.
+	 * @param string|null $except Source key, or ALL.
 	 * @param callable    $build  Builds the vars.
 	 * @return array
 	 */

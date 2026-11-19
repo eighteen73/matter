@@ -34,6 +34,20 @@ final class Listing {
 	private array $handed_out = [];
 
 	/**
+	 * Each choice filter's options (values), by filter ID, as rendered.
+	 *
+	 * @var array<string, string[]>
+	 */
+	private array $options = [];
+
+	/**
+	 * A filter block inside the query (with its context), once one renders.
+	 *
+	 * @var WP_Block|null
+	 */
+	private ?WP_Block $block = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param int    $query_id   The query block's `queryId`.
@@ -134,6 +148,95 @@ final class Listing {
 		}
 
 		return Query::building( $except, fn() => build_query_vars_from_query_block( $block, 1 ) );
+	}
+
+	/**
+	 * Note a filter as it renders: its options' values (none for a range) and
+	 * the block, which has the query's context.
+	 *
+	 * @param string   $id     Filter ID.
+	 * @param string[] $values Option values.
+	 * @param WP_Block $block  The filter block.
+	 * @return void
+	 */
+	public function note_filter( string $id, array $values, WP_Block $block ): void {
+		$this->options[ $id ] = array_values( array_map( 'strval', $values ) );
+		$this->block        ??= $block;
+	}
+
+	/**
+	 * Each choice filter's options' values, by filter ID, as rendered.
+	 *
+	 * @return array<string, string[]>
+	 */
+	public function options(): array {
+		return $this->options;
+	}
+
+	/**
+	 * A block inside the query, with its context, once a filter has rendered.
+	 *
+	 * @return WP_Block|null
+	 */
+	public function block(): ?WP_Block {
+		return $this->block;
+	}
+
+	/**
+	 * The listing's query vars without any filter, on its first page: what a
+	 * results provider adds the filters' clauses to. Null before a filter
+	 * has rendered (no block to build them from).
+	 *
+	 * @return array|null
+	 */
+	public function base_query_vars(): ?array {
+		if ( null === $this->block ) {
+			return null;
+		}
+
+		$block = $this->block;
+		$vars  = $this->inherit
+			? Query::main_vars()
+			: Query::building( Query::ALL, fn() => build_query_vars_from_query_block( $block, 1 ) );
+
+		/**
+		 * Filters a listing's query vars without filters, for query blocks
+		 * that build theirs differently (the WooCommerce integration's
+		 * Product Collection).
+		 *
+		 * @param array    $vars    Query vars.
+		 * @param Listing  $listing Listing.
+		 * @param WP_Block $block   A block inside its query.
+		 */
+		$vars = (array) apply_filters( 'matter_filters_base_query_vars', $vars, $this, $block );
+
+		// Every source's parameters (some arrive as query vars), and paging.
+		foreach ( array_merge( Sources::params(), [ 'paged', 'page', 'offset' ] ) as $param ) {
+			unset( $vars[ $param ] );
+		}
+
+		return $vars;
+	}
+
+	/**
+	 * The parameter that pages the listing: `paged` for an archive's,
+	 * `query-{id}-page` for a Query Loop's, or the query block's own.
+	 *
+	 * @return string
+	 */
+	public function page_param(): string {
+		if ( $this->inherit ) {
+			return 'paged';
+		}
+
+		/**
+		 * Filters the parameter that pages a listing (the WooCommerce
+		 * integration's Product Collection: `product-page`).
+		 *
+		 * @param string  $param   Parameter.
+		 * @param Listing $listing Listing.
+		 */
+		return (string) apply_filters( 'matter_filters_page_param', "query-{$this->query_id}-page", $this );
 	}
 
 	/**

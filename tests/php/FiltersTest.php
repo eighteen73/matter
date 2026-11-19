@@ -80,7 +80,17 @@ class FiltersTest extends TestCase {
 	 * @return string
 	 */
 	private function listing( string $filters = '' ): string {
-		return $this->render(
+		return $this->render( $this->markup( $filters ) );
+	}
+
+	/**
+	 * A listing's block markup (see listing()).
+	 *
+	 * @param string $filters Extra filter block markup.
+	 * @return string
+	 */
+	private function markup( string $filters = '' ): string {
+		return (
 			'<!-- wp:query {"queryId":3,"query":{"perPage":10,"postType":"post","order":"asc","orderBy":"title","inherit":false}} --><div class="wp-block-query">'
 			. '<!-- wp:matter/filters-toggle /-->'
 			. '<!-- wp:matter/filters --><!-- wp:matter/filter {"source":"taxonomy:category"} /-->' . $filters . '<!-- /wp:matter/filters -->'
@@ -134,6 +144,68 @@ class FiltersTest extends TestCase {
 		$this->assertSame( 1, $this->option_count( $html, 'workshops' ) );
 		$this->assertStringContainsString( 'action="' . esc_url( home_url( '/' ) ) . '"', $html );
 		$this->assertMatchesRegularExpression( '#<div hidden class="wp-block-matter-active-filters"|<div class="wp-block-matter-active-filters"[^>]*hidden#', $html, 'No active filters: hidden.' );
+	}
+
+	/**
+	 * A listing inside another block (a template's group) navigates
+	 * client-side too: WordPress builds a nested block before filtering its
+	 * data, so its navigation is turned on from the top-level block.
+	 *
+	 * @return void
+	 */
+	public function test_nested_listing_navigates(): void {
+		$html = $this->render( '<!-- wp:group --><div class="wp-block-group">' . $this->markup() . '</div><!-- /wp:group -->' );
+
+		$this->assertStringContainsString( 'data-wp-router-region="query-3"', $html );
+	}
+
+	/**
+	 * Once its query block has rendered, a listing has what a results
+	 * provider needs: its options, its query without filters (or paging) and
+	 * its paging parameter.
+	 *
+	 * @return void
+	 */
+	public function test_listing_for_providers(): void {
+		$_GET = [
+			'filter_category' => 'news',
+			'query-3-page'    => '2',
+		];
+		$seen = null;
+		$hook = function ( $listing ) use ( &$seen ) {
+			$seen = [
+				'options' => $listing->options(),
+				'vars'    => $listing->base_query_vars(),
+				'param'   => $listing->page_param(),
+			];
+		};
+
+		add_action( 'matter_filters_listing', $hook );
+		$this->listing();
+		remove_action( 'matter_filters_listing', $hook );
+
+		$this->assertNotNull( $seen );
+		$this->assertContains( 'news', $seen['options']['taxonomy-category'] );
+		$this->assertContains( 'workshops', $seen['options']['taxonomy-category'] );
+		$this->assertSame( 'post', $seen['vars']['post_type'] );
+		$this->assertEmpty( $seen['vars']['tax_query'] ?? [], 'Without the chosen category.' );
+		$this->assertArrayNotHasKey( 'paged', $seen['vars'] );
+		$this->assertSame( 'query-3-page', $seen['param'] );
+	}
+
+	/**
+	 * The results' words are in the store's config, for a provider's results.
+	 *
+	 * @return void
+	 */
+	public function test_results_words(): void {
+		$this->listing();
+
+		$texts = wp_interactivity_config( 'matter/filters' )['texts'];
+
+		$this->assertSame( 'No results', $texts['none'] );
+		$this->assertSame( '%s results', $texts['all']['other'] );
+		$this->assertSame( 'Showing %1$s–%2$s of %3$s result', $texts['showing']['one'] );
 	}
 
 	/**

@@ -124,6 +124,64 @@ export function chipsOf(listing) {
 const isSet = (bound) => bound !== null && bound !== undefined && bound !== '';
 
 /**
+ * A listing's results state, as the server words it (Filters::results_state):
+ * `total`, `resultsText` ("Showing 1–12 of 48 results", "48 results" or "No
+ * results") and `showText` ("Show 48 results"), for a provider's results.
+ *
+ * @param {number} total   Results in all.
+ * @param {number} page    The page shown.
+ * @param {number} perPage Results per page.
+ * @return {Object} State.
+ */
+export function resultsState(total, page = 1, perPage = 10) {
+	const texts = getConfig('matter/filters').texts ?? {};
+	const locale = document.documentElement.lang || undefined;
+	const number = (value) => new Intl.NumberFormat(locale).format(value);
+	const form = (forms, count) => {
+		let plural = 'other';
+
+		try {
+			plural = new Intl.PluralRules(locale).select(count);
+		} catch {}
+
+		return (plural === 'one' ? forms?.one : forms?.other) ?? '';
+	};
+	const fill = (text, ...values) =>
+		values.reduce(
+			(result, value, index) =>
+				result
+					.replace(`%${index + 1}$s`, value)
+					.replace(index === 0 ? '%s' : '\u0000', value),
+			text
+		);
+
+	if (!total) {
+		return {
+			total: 0,
+			resultsText: texts.none ?? '',
+			showText: texts.none ?? '',
+		};
+	}
+
+	const first = (page - 1) * perPage + 1;
+	const last = Math.min(total, page * perPage);
+
+	return {
+		total,
+		resultsText:
+			first === 1 && last >= total
+				? fill(form(texts.all, total), number(total))
+				: fill(
+						form(texts.showing, total),
+						number(first),
+						number(last),
+						number(total)
+					),
+		showText: fill(form(texts.show, total), number(total)),
+	};
+}
+
+/**
  * The URL for a listing's filters: its base URL (the page without filters or
  * paging) and each filter's parameters.
  *

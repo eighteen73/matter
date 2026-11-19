@@ -607,24 +607,57 @@ Pagination is core's Query Pagination, which works inside the router region.
 | `stock` | `filter_stock_status` | WooCommerce integration |
 | `rating` | `rating_filter` | WooCommerce integration |
 
-**Queries.** Core sources apply their selection to the listing's Query Loop (`query_loop_block_query_vars`) and to an archive's main query (`pre_get_posts`, on archive, blog and search requests with a filter parameter), so a template's inheriting Query Loop can be filtered too. A query block with filters inside gets `enhancedPagination: true` (Product Collection: `forcePageReload: false` and `query.filterable: true`), so it navigates without a page load; every block inside it must support client navigation (`supports.interactivity.clientNavigation`), as Matter's do, or core turns navigation off.
+**Queries.** Core sources apply their selection to the listing's Query Loop (`query_loop_block_query_vars`) and to an archive's main query (`pre_get_posts`, on archive, blog and search requests with a filter parameter), so a template's inheriting Query Loop can be filtered too.
+
+A query block with filters inside gets `enhancedPagination: true` (Product Collection: `forcePageReload: false` and `query.filterable: true`), so it navigates without a page load.
+- **Nested query blocks** (a template's list inside a group) get it too. WordPress builds a nested block, reading its attributes, before filtering its data, and doesn't read them again. So Matter sets the attributes from the top-level block, before anything inside it is built.
+- **Client navigation:** every block inside the query block must support it (`supports.interactivity.clientNavigation`), as Matter's do, or core turns navigation off.
 
 **Counts.** A core filter's counts are the listing's results per term, with the other filters applied (and its own too when its operator is `and`); a parent term counts its children's. They're counted in one grouped query over the listing's SQL, and cached until a post or term changes. `matter_pre_filter_counts` (`$counts, $taxonomy, $query_vars`) answers first when it returns term ID => count (Seek, from Meilisearch). Product filters' counts are WooCommerce's own, which Seek already answers.
 
 **In the browser** the `matter/filters` store (script module `matter/filters`) builds the URL from the listing's state and goes there: through a results provider if one answers, else the router. Hovering or focusing an option prefetches where it leads. After each navigation the listing's state (selection, counts, results) is the server's.
 
 ```js
-import { registerProvider } from 'matter/filters';
+import { registerProvider, resultsState } from 'matter/filters';
 
 // Given { url, listing, filters }, return { html } (a page with the listing's
 // region, which the router renders and hydrates), or nothing for the next
 // provider and finally the router.
 registerProvider( async ( { url, listing, filters } ) => { … } );
+
+// The listing's results state as the server words it: total, resultsText
+// ("Showing 1–12 of 48 results") and showText ("Show 48 results").
+resultsState( 48, 1, 12 );
 ```
+
+The page a provider returns needs everything the router reads from a page:
+- every router region on the page (a region missing from the new page is emptied);
+- the Interactivity data script, with the listing's `matter/filters` state (`filters` with each `values` and `counts`, plus `total`, `resultsText` and `showText`);
+- the page's stylesheets (the router turns off any the new page doesn't list).
+
+Seek's provider (its Matter integration) answers from Meilisearch in the browser.
+
+**What the server gives a provider.** Once a listing's query block has rendered, `matter_filters_listing` fires with the `Filters\Listing`. It has:
+- `options()`: each choice filter's option values;
+- `selections()`: each filter's source and settings;
+- `base_query_vars()`: its query without filters or paging;
+- `page_param()`: the parameter that pages it.
+
+A provider that adds placeholders a page didn't render calls `Live\Live::expect()`, so the page loads the live module and its config.
 
 `matter.filters( target )` returns a listing's instance (`selection`, `set( filterId, values )`, `clear()`); `matter-filters-ready` and `matter-filters-change` (`detail.url`) bubble from the filters block.
 
-**Hooks:** `matter_filter_sources` (action, given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key), `matter_filterable_query_blocks` (query blocks that can be filtered, and the attributes that make them navigate), `matter_pre_filter_counts`, and `matter_filter_swatch` (`$swatch, $term`: a term's colour for the swatches display).
+**Hooks:**
+
+| Hook | Value |
+| --- | --- |
+| `matter_filter_sources` (action) | Given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key. |
+| `matter_filterable_query_blocks` | Query blocks that can be filtered, and the attributes that make them navigate. |
+| `matter_pre_filter_counts` | Counts from elsewhere (Seek). |
+| `matter_filter_swatch` | `$swatch, $term`: a term's colour, for the swatches display. |
+| `matter_filters_listing` (action) | A listing's query block has rendered (`$listing`). |
+| `matter_filters_base_query_vars` | `$vars, $listing, $block`: a listing's query vars without filters, for query blocks that build theirs differently (the WooCommerce integration's Product Collection). |
+| `matter_filters_page_param` | `$param, $listing`: the parameter that pages a listing. |
 
 ## Live blocks
 
@@ -680,7 +713,7 @@ $card = Cards::render( $post_id ); // Null if the item isn't public, or the them
 | --- | --- |
 | `html` | What `matter/loop-item` renders in a plain loop's item: the theme's `loop-item-{post_type}` pattern. [Live blocks](#live-blocks) are placeholders, filled in the browser as on a page. Apart from those, it's the same markup the page's card has. |
 | `classes` | The item's post classes, for its list item, sorted. |
-| `data` | The Interactivity API `state` and `config` its blocks add, without derived state (closures). The page being served keeps its own. |
+| `data` | The Interactivity API `state` and `config` its blocks add, without derived state (closures). The page being served keeps its own. A product's has its `woocommerce/products` data, which its list item and Add to Cart button need, without prices, images or descriptions. |
 | `version` | `Cards::version( $post_type )`: which pattern and code rendered it. |
 
 **Everyone sees the same card.** Anything in a search index can be read by anyone who can search it. So a card is always rendered as a guest, whoever is logged in, with live blocks as placeholders. It renders the same from a page, admin, REST, cron or WP-CLI.
@@ -707,7 +740,7 @@ Matter's own code never names another plugin. What it does with WooCommerce and 
 
 | Integration | Boots when | Adds |
 | --- | --- | --- |
-| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Cards](#cards) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes; WooCommerce's version is part of the card version. |
+| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Cards](#cards) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of the card version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. |
 | Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
 
 The hooks they use are open to a project's own code, or its own integration:

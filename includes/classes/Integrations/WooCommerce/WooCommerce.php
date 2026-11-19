@@ -28,6 +28,7 @@ namespace Eighteen73\Matter\Integrations\WooCommerce;
 use Automattic\WooCommerce\Internal\ProductFilters\Params;
 use Eighteen73\Matter\Filters\Sources;
 use Eighteen73\Matter\Integrations\Integration;
+use Eighteen73\Matter\Integrations\WooCommerce\Filters\Counts as FilterCounts;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\PriceSource;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\ProductTaxonomySource;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\RatingSource;
@@ -95,6 +96,7 @@ final class WooCommerce implements Integration {
 		add_filter( 'matter_filterable_query_blocks', [ $this, 'filterable_query_blocks' ] );
 		add_action( 'matter_filter_sources', [ $this, 'filter_sources' ], 20 );
 		add_filter( 'matter_hidden_blocks', [ $this, 'hide_filter_blocks' ] );
+		add_filter( 'matter_filters_base_query_vars', [ $this, 'base_query_vars' ], 10, 3 );
 
 		// Product cards for everyone, without the shopper's cart.
 		( new Cards() )->setup();
@@ -115,6 +117,23 @@ final class WooCommerce implements Integration {
 		];
 
 		return $blocks;
+	}
+
+	/**
+	 * A Product Collection's query vars without filters: as WooCommerce's
+	 * filter blocks read them, without any filter's parameters.
+	 *
+	 * @param mixed     $vars    Query vars.
+	 * @param mixed     $listing Listing.
+	 * @param \WP_Block $block   A block inside its query.
+	 * @return array
+	 */
+	public function base_query_vars( $vars, $listing, $block ): array {
+		if ( ! $listing instanceof \Eighteen73\Matter\Filters\Listing || self::PRODUCT_COLLECTION !== $listing->block_name || ! $block instanceof \WP_Block ) {
+			return (array) $vars;
+		}
+
+		return FilterCounts::query_vars( $block, Sources::params() );
 	}
 
 	/**

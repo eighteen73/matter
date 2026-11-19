@@ -280,6 +280,16 @@ final class Live {
 	}
 
 	/**
+	 * A page will show placeholders it didn't render (a results provider's
+	 * cards): load the module and its configuration.
+	 *
+	 * @return void
+	 */
+	public static function expect(): void {
+		self::$used = true;
+	}
+
+	/**
 	 * Whether a page rendered placeholders.
 	 *
 	 * @return bool

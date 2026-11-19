@@ -67,6 +67,7 @@ final class Filters {
 		add_filter( 'the_posts', [ Query::class, 'results' ], 10, 2 );
 
 		// Before core checks the query's blocks can navigate client-side (10).
+		add_filter( 'render_block_data', [ $this, 'navigable' ], 4, 3 );
 		add_filter( 'render_block_data', [ $this, 'start' ], 5 );
 		add_filter( 'render_block', [ $this, 'finish' ], 10, 2 );
 		add_filter( 'register_block_type_args', [ $this, 'block_args' ], 10, 2 );
@@ -97,6 +98,56 @@ final class Filters {
 	 */
 	public static function listing(): ?Listing {
 		return self::$listings ? end( self::$listings ) : null;
+	}
+
+	/**
+	 * Turn on client-side navigation for the filterable query blocks inside a
+	 * top-level block, before WordPress builds its inner blocks.
+	 *
+	 * start() does it too, as the query block renders, but too late for one
+	 * inside another block: WordPress builds an inner block (reading its
+	 * attributes, for the context it provides) before filtering its data, and
+	 * doesn't read them again after (WP_Block::refresh_parsed_block_dependents()
+	 * keeps them). So a nested query's `enhancedPagination` would stay false,
+	 * and every filter click reload the page.
+	 *
+	 * @param array          $parsed_block Parsed block.
+	 * @param array          $source_block The block before filtering.
+	 * @param \WP_Block|null $parent_block Its parent, if any.
+	 * @return array
+	 */
+	public function navigable( array $parsed_block, $source_block = [], $parent_block = null ): array {
+		if ( null !== $parent_block || empty( $parsed_block['innerBlocks'] ) ) {
+			return $parsed_block;
+		}
+
+		$parsed_block['innerBlocks'] = self::with_navigation( $parsed_block['innerBlocks'], self::query_blocks() );
+
+		return $parsed_block;
+	}
+
+	/**
+	 * Blocks, with client-side navigation turned on for the filterable query
+	 * blocks among them (at any depth) that have filters inside.
+	 *
+	 * @param array $blocks Parsed blocks.
+	 * @param array $query_blocks Query block name => attributes turning it on.
+	 * @return array
+	 */
+	private static function with_navigation( array $blocks, array $query_blocks ): array {
+		foreach ( $blocks as $index => $block ) {
+			$name = (string) ( $block['blockName'] ?? '' );
+
+			if ( isset( $query_blocks[ $name ], $block['attrs']['queryId'] ) && self::find( $block['innerBlocks'] ?? [], 'matter/filters' ) ) {
+				$blocks[ $index ]['attrs'] = array_replace_recursive( (array) $block['attrs'], (array) $query_blocks[ $name ] );
+			}
+
+			if ( ! empty( $block['innerBlocks'] ) ) {
+				$blocks[ $index ]['innerBlocks'] = self::with_navigation( $block['innerBlocks'], $query_blocks );
+			}
+		}
+
+		return $blocks;
 	}
 
 	/**
@@ -185,6 +236,15 @@ final class Filters {
 			if ( null === $listing->results() ) {
 				self::count_results( $listing, $block );
 			}
+
+			/**
+			 * Fires when a listing's query block has rendered: its filters,
+			 * options and results are known (e.g. for a results provider's
+			 * configuration).
+			 *
+			 * @param Listing $listing Listing.
+			 */
+			do_action( 'matter_filters_listing', $listing );
 
 			array_pop( self::$listings );
 		}
@@ -297,6 +357,8 @@ final class Filters {
 			[
 				/* translators: %s: an active filter, e.g. "News". */
 				'removeText' => __( 'Remove %s', 'matter' ),
+				// For results a provider shows (resultsState() in the store).
+				'texts'      => self::texts(),
 			]
 		);
 	}
@@ -332,6 +394,37 @@ final class Filters {
 				],
 			]
 		);
+	}
+
+	/**
+	 * The results' words, for the store to say them for a provider's results
+	 * as results_state() does: each plural one as its singular (`one`) and
+	 * plural (`other`) forms.
+	 *
+	 * @return array
+	 */
+	private static function texts(): array {
+		return [
+			'none'    => __( 'No results', 'matter' ),
+			'all'     => [
+				/* translators: %s: number of results. */
+				'one'   => _n( '%s result', '%s results', 1, 'matter' ),
+				/* translators: %s: number of results. */
+				'other' => _n( '%s result', '%s results', 2, 'matter' ),
+			],
+			'showing' => [
+				/* translators: 1: first result shown, 2: last result shown, 3: number of results. */
+				'one'   => _n( 'Showing %1$s–%2$s of %3$s result', 'Showing %1$s–%2$s of %3$s results', 1, 'matter' ),
+				/* translators: 1: first result shown, 2: last result shown, 3: number of results. */
+				'other' => _n( 'Showing %1$s–%2$s of %3$s result', 'Showing %1$s–%2$s of %3$s results', 2, 'matter' ),
+			],
+			'show'    => [
+				/* translators: %s: number of results. */
+				'one'   => _n( 'Show %s result', 'Show %s results', 1, 'matter' ),
+				/* translators: %s: number of results. */
+				'other' => _n( 'Show %s result', 'Show %s results', 2, 'matter' ),
+			],
+		];
 	}
 
 	/**

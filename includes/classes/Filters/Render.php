@@ -122,6 +122,7 @@ final class Render {
 		$params   = $source->params();
 
 		if ( 'range' === $display ) {
+			$listing->note_filter( $id, [], $block );
 			self::state( $listing, $id, [], [] );
 
 			$body = self::range( $listing, $id, $params, $options, $selected, $label );
@@ -134,6 +135,7 @@ final class Render {
 				$labels[ (string) $option['value'] ] = (string) $option['label'];
 			}
 
+			$listing->note_filter( $id, array_keys( $counts ), $block );
 			self::state( $listing, $id, $counts, $labels );
 
 			// A filter with nothing to choose (no option has results, and none
