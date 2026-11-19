@@ -786,7 +786,31 @@ const { state, actions } = store('matter/filters', {
 				},
 			});
 
-			return () => elements.delete(ref);
+			// A bar's dropdown left open as the filters become a drawer (the
+			// window resized, a tablet turned) would float above it: closed.
+			const closeHidden = () =>
+				ref
+					.querySelectorAll('.wp-block-matter-filter__popover')
+					.forEach((popover) => {
+						const trigger = ref.querySelector(
+							`[popovertarget="${popover.id}"]`
+						);
+
+						if (
+							popover.matches(':popover-open') &&
+							trigger &&
+							!trigger.checkVisibility()
+						) {
+							popover.hidePopover();
+						}
+					});
+
+			window.addEventListener('resize', closeHidden);
+
+			return () => {
+				elements.delete(ref);
+				window.removeEventListener('resize', closeHidden);
+			};
 		},
 	},
 });

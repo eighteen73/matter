@@ -376,4 +376,30 @@ class FiltersTest extends TestCase {
 		$this->assertContains( 'taxonomy-category', $names );
 		$this->assertSame( 'Category filter', $variations[ array_search( 'taxonomy-category', $names, true ) ]['title'] );
 	}
+
+	/**
+	 * A bar variant shows each filter as a button and its dropdown (a
+	 * popover), with the dropdowns' styles for its breakpoint; the default
+	 * (sidebar) has neither.
+	 *
+	 * @return void
+	 */
+	public function test_bar_layout(): void {
+		$bar = fn( $variants ) => array_replace_recursive( $variants, [ 'matter/filters' => [ 'bar' => [ 'layout' => 'bar' ] ] ] );
+
+		add_filter( 'matter_variants', $bar );
+
+		$html = $this->render( str_replace( '<!-- wp:matter/filters -->', '<!-- wp:matter/filters {"className":"is-style-bar"} -->', $this->markup() ) );
+
+		remove_filter( 'matter_variants', $bar );
+
+		$this->assertMatchesRegularExpression( '#<button type="button" class="wp-block-matter-filter__trigger" popovertarget="(matter-filter-[\w-]+)"[^>]*>.*?</button><div id="\1" class="wp-block-matter-filter__popover" popover>#s', $html );
+		$this->assertStringContainsString( 'is-layout-bar', $html );
+		$this->assertStringContainsString( 'popover-open', implode( '', (array) wp_styles()->get_data( 'matter-filters-bar', 'after' ) ) );
+
+		$sidebar = $this->listing();
+
+		$this->assertStringNotContainsString( 'popovertarget', $sidebar );
+		$this->assertStringContainsString( 'is-layout-sidebar', $sidebar );
+	}
 }

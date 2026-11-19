@@ -1,0 +1,64 @@
+// Filters in a bar: from their breakpoint up (always, when they're never a
+// drawer), a row of buttons, each opening its filter's options in a popover
+// below it. Authored against `.is-expanded`, in :where(); Matter swaps it for
+// the filters' panel class and wraps these rules in its "from breakpoint"
+// media query (Render::bar_styles()). Below it, and in a browser without
+// popovers, the options show in place (the filter block's own styles).
+
+@supports selector(:popover-open) {
+	:where(.is-expanded) .wp-block-matter-filters__form {
+		align-items: flex-start;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	:where(.is-expanded) .wp-block-matter-filter__trigger {
+		align-items: center;
+		display: inline-flex;
+		gap: 0.25em;
+	}
+
+	:where(.is-expanded) .wp-block-matter-filter__popover:not(:popover-open) {
+		display: none;
+	}
+
+	// Open: the browser's popover (in the top layer, centred), until anchor
+	// positioning puts it below its button.
+	:where(.is-expanded) .wp-block-matter-filter__popover:popover-open {
+		inset: 0;
+		margin: auto;
+		max-block-size: min(28rem, 80dvh);
+		overflow: auto;
+		position: fixed;
+	}
+
+	// The default skin.
+	:where(.is-expanded .wp-block-matter-filter__popover:popover-open) {
+		background: var(--scheme--background, Canvas);
+		border: 1px solid currentcolor;
+		color: var(--scheme--text, CanvasText);
+		min-inline-size: 14rem;
+		padding: 1rem;
+	}
+
+	@supports (position-area: block-end) {
+		:where(.is-expanded) .wp-block-matter-filter__popover:popover-open {
+			inset: auto;
+			margin: 0.25rem 0 0;
+			position-area: block-end span-inline-end;
+			position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+		}
+	}
+
+	// The button names the options; their group keeps its name for screen
+	// readers.
+	:where(.is-expanded) .wp-block-matter-filter__popover .wp-block-matter-filter__label {
+		block-size: 1px;
+		clip-path: inset(50%);
+		inline-size: 1px;
+		overflow: hidden;
+		position: absolute;
+		white-space: nowrap;
+	}
+}

@@ -35,6 +35,7 @@ const styleEntries = {
 	'panel/base': src('panel/styles/base.scss'),
 	'panel/collapsed': src('panel/styles/collapsed.scss'),
 	'panel/expanded': src('panel/styles/expanded.scss'),
+	'filters/bar': src('filters/styles/bar.scss'),
 };
 
 const moduleEntries = {

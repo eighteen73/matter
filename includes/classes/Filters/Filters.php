@@ -203,10 +203,10 @@ final class Filters {
 	/**
 	 * A filters block's panel, from its variant: `collapse_below` (a
 	 * breakpoint below which it's a drawer; `''` for always a drawer; null for
-	 * never), `position` and `label`.
+	 * never), `position`, `label` and `layout` (inline: `sidebar` or `bar`).
 	 *
 	 * @param array $attributes The filters block's attributes.
-	 * @return array{collapse_below: string|null, position: string, label: string}
+	 * @return array{collapse_below: string|null, position: string, label: string, layout: string}
 	 */
 	public static function panel( array $attributes ): array {
 		$options  = Variants::get( 'matter/filters', $attributes );
@@ -217,6 +217,7 @@ final class Filters {
 			'collapse_below' => false === $collapse || 'never' === $collapse ? null : (string) $collapse,
 			'position'       => in_array( $options['position'] ?? '', [ 'start', 'end' ], true ) ? $options['position'] : 'start',
 			'label'          => '' !== $label ? $label : __( 'Filters', 'matter' ),
+			'layout'         => 'bar' === ( $options['layout'] ?? '' ) ? 'bar' : 'sidebar',
 		];
 	}
 

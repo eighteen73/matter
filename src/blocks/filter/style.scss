@@ -219,3 +219,32 @@
 	display: block;
 	margin-block-end: 0.5rem;
 }
+
+// In a bar of filters (the filters' `bar` layout): where the filters are a
+// drawer, or without popovers, the options show in place and the button that
+// would open them doesn't; filters/bar.scss makes them dropdowns above the
+// breakpoint.
+.wp-block-matter-filter__trigger {
+	display: none;
+}
+
+.wp-block-matter-filter__popover {
+	background: transparent;
+	border: 0;
+	color: inherit;
+	display: block;
+	inset: auto;
+	margin: 0;
+	overflow: visible;
+	padding: 0;
+	position: static;
+}
+
+:where(.wp-block-matter-filter__trigger) {
+	background: none;
+	border: 1px solid currentcolor;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	padding: 0.25rem 0.75rem;
+}

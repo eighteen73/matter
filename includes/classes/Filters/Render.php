@@ -44,7 +44,11 @@ final class Render {
 
 		$panel   = Filters::panel( $attributes );
 		$context = wp_interactivity_data_wp_context( [ 'listing' => $listing->key() ] );
-		$kept    = '';
+
+		if ( 'bar' === $panel['layout'] ) {
+			self::bar_styles( $listing, $panel );
+		}
+		$kept = '';
 
 		foreach ( Request::kept_params() as $name => $value ) {
 			$kept .= sprintf( '<input type="hidden" name="%s" value="%s" />', esc_attr( $name ), esc_attr( $value ) );
@@ -86,6 +90,7 @@ final class Render {
 			'<div %1$s>%2$s</div>',
 			get_block_wrapper_attributes(
 				[
+					'class'               => 'is-layout-' . $panel['layout'],
 					'data-wp-interactive' => 'matter/filters',
 					'data-wp-context'     => (string) wp_json_encode( [ 'listing' => $listing->key() ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP ),
 					'data-wp-init'        => 'callbacks.init',
@@ -164,7 +169,9 @@ final class Render {
 				: self::choices( $id, $display, $params, $options, $label, $attributes, $at_least );
 		}
 
-		if ( ! empty( $attributes['collapsible'] ) ) {
+		if ( 'bar' === ( $listing->panel['layout'] ?? '' ) ) {
+			$body = self::dropdown_panel( $listing, $id, $label, $body );
+		} elseif ( ! empty( $attributes['collapsible'] ) ) {
 			$body = self::collapsible( $listing, $id, $label, $body, ! isset( $attributes['open'] ) || ! empty( $attributes['open'] ) );
 		}
 
@@ -172,6 +179,75 @@ final class Render {
 			'<div %1$s>%2$s</div>',
 			get_block_wrapper_attributes( [ 'class' => 'is-display-' . $display ] ),
 			$body
+		);
+	}
+
+	/**
+	 * A filter in a bar of filters: a button with its name and how many are
+	 * chosen, opening its options in a popover below it. Where the filters
+	 * are a drawer (and in a browser without popovers) the options show in
+	 * place and the button doesn't (filters/bar.scss, scoped to the panel's
+	 * breakpoint).
+	 *
+	 * @param Listing $listing Listing.
+	 * @param string  $id      Filter ID.
+	 * @param string  $label   Its name.
+	 * @param string  $body    Its options.
+	 * @return string
+	 */
+	private static function dropdown_panel( Listing $listing, string $id, string $label, string $body ): string {
+		$popover = 'matter-filter-' . $listing->key() . '-' . $id;
+
+		return sprintf(
+			'<button type="button" class="wp-block-matter-filter__trigger" popovertarget="%1$s" data-wp-interactive="matter/filters" %2$s><span class="wp-block-matter-filter__trigger-label">%3$s</span> <span class="wp-block-matter-filter__chosen" data-wp-bind--hidden="!state.chosenCount"><span data-wp-text="state.chosenCount"></span><span class="screen-reader-text"> %4$s</span></span></button><div id="%1$s" class="wp-block-matter-filter__popover" popover>%5$s</div>',
+			esc_attr( $popover ),
+			wp_interactivity_data_wp_context(
+				[
+					'listing' => $listing->key(),
+					'filter'  => $id,
+				]
+			),
+			esc_html( $label ),
+			esc_html__( 'chosen', 'matter' ),
+			$body
+		);
+	}
+
+	/**
+	 * The bar layout's dropdowns, from the filters' breakpoint up (always,
+	 * when they're never a drawer): filters/bar.css scoped to the panel's
+	 * breakpoint, once per breakpoint.
+	 *
+	 * @param Listing $listing Listing.
+	 * @param array   $panel   Its panel (Filters::panel()).
+	 * @return void
+	 */
+	private static function bar_styles( Listing $listing, array $panel ): void {
+		static $printed = [];
+
+		// Always a drawer: no dropdowns.
+		if ( '' === $panel['collapse_below'] ) {
+			return;
+		}
+
+		$settings = null === $panel['collapse_below']
+			? [
+				'class'    => 'wp-block-matter-filters',
+				'expanded' => '',
+			]
+			: \Eighteen73\Matter\Overlays\Panel::settings( $listing->panel_id(), $panel['collapse_below'] );
+
+		if ( isset( $printed[ $settings['class'] ] ) ) {
+			return;
+		}
+
+		$printed[ $settings['class'] ] = true;
+
+		wp_register_style( 'matter-filters-bar', false, [], MATTER_VERSION );
+		wp_enqueue_style( 'matter-filters-bar' );
+		wp_add_inline_style(
+			'matter-filters-bar',
+			\Eighteen73\Matter\Breakpoints::scope_stylesheet( \Eighteen73\Matter\Assets::path( 'filters/bar.css' ), 'is-expanded', $settings['class'], $settings['expanded'] )
 		);
 	}
 

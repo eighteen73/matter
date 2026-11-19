@@ -72,6 +72,9 @@ class Variants {
 			'collapseBelow' => 'lg',
 			// The edge the drawer slides in from: start or end.
 			'position'      => 'start',
+			// How they're laid out inline: `sidebar` (a column of filters) or
+			// `bar` (a row of buttons, each opening its filter's options).
+			'layout'        => 'sidebar',
 		],
 		'matter/gallery'      => [
 			'label'          => 'Default',
