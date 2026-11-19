@@ -675,7 +675,7 @@ A provider that adds placeholders a page didn't render calls `Live\Live::expect(
 Some blocks show something that can't be part of a copy everyone shares, a cached page or a loop item in a search index. Either it depends on who is looking (a trade customer's price, a member's discount) or it changes too often to be stored (a stock level). A plugin declares such blocks as live: Abacus declares the product price, the sale badge and its own offer blocks. In a loop item they then become placeholders. The browser fills them from `matter/v1/live`, which renders them for that visitor, now.
 
 ```html
-<div class="matter-live is-woocommerce-product-price" data-matter-live="12:0" aria-busy="true"></div>
+<div class="matter-live is-woocommerce-product-price" data-matter-live="12:0" data-wp-key="matter-live-12-0" aria-busy="true"></div>
 ```
 
 That's item 12's first live block. Placeholders are only made in plain loop items (`matter/loop-item` rendering the item's pattern, not a carousel's), because the endpoint renders that pattern.

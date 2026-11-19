@@ -337,6 +337,11 @@ final class Filters {
 				'labels'   => (object) $labels,
 				'counts'   => (object) [],
 			];
+
+			// A range's chip worded in the browser (a provider's results).
+			if ( 'range' === $source->kind() && method_exists( $source, 'range_labels' ) ) {
+				$filters[ $id ]['rangeLabels'] = $source->range_labels();
+			}
 		}
 
 		wp_interactivity_state(

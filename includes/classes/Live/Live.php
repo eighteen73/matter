@@ -11,7 +11,8 @@
  * instead of its output:
  *
  *     <div class="matter-live is-woocommerce-product-price"
- *          data-matter-live="12:0" aria-busy="true"></div>
+ *          data-matter-live="12:0" data-wp-key="matter-live-12-0"
+ *          aria-busy="true"></div>
  *
  * keyed by the item's post ID and the block's place among the item's live
  * blocks. The browser (src/live/view.js) fills placeholders from
@@ -243,8 +244,11 @@ final class Live {
 
 		self::$used = true;
 
+		// Keyed, so when the router renders the block itself there (a page the
+		// server rendered), the placeholder and what was filled into it are
+		// replaced, not added to.
 		return sprintf(
-			'<div class="matter-live is-%1$s" data-matter-live="%2$d:%3$d" aria-busy="true"></div>',
+			'<div class="matter-live is-%1$s" data-matter-live="%2$d:%3$d" data-wp-key="matter-live-%2$d-%3$d" aria-busy="true"></div>',
 			esc_attr( str_replace( '/', '-', (string) $block['blockName'] ) ),
 			$item['post'],
 			$n

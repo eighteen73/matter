@@ -75,6 +75,7 @@ class LiveTest extends TestCase {
 		$this->assertStringNotContainsString( 'Priced item', $html );
 		$this->assertStringContainsString( 'data-matter-live="' . $this->post . ':0"', $html );
 		$this->assertStringContainsString( 'class="matter-live is-core-post-title"', $html );
+		$this->assertStringContainsString( 'data-wp-key="matter-live-' . $this->post . '-0"', $html, 'Keyed, so the router replaces it.' );
 
 		// After that render, live blocks render as usual again.
 		$this->assertStringContainsString( 'Priced item', LoopItem::render( $this->post ) );

@@ -126,10 +126,36 @@ final class PriceSource implements Source {
 	}
 
 	/**
-	 * One chip: "£10 – £50", "From £10" or "Up to £50".
+	 * How to word a range's chip in the browser, as chips() does: its
+	 * templates (`min`, `max`, `both`) and how to write an amount (`amount`,
+	 * with `%s` for the number, and the price's `decimals`, `decimal` and
+	 * `thousand` separators; whole amounts without decimals).
+	 *
+	 * @return array
+	 */
+	public function range_labels(): array {
+		$symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' );
+
+		return [
+			/* translators: %s: lowest price. */
+			'min'      => __( 'From %s', 'matter' ),
+			/* translators: %s: highest price. */
+			'max'      => __( 'Up to %s', 'matter' ),
+			/* translators: 1: lowest price, 2: highest price. */
+			'both'     => __( '%1$s – %2$s', 'matter' ),
+			'amount'   => html_entity_decode( sprintf( get_woocommerce_price_format(), $symbol, '%s' ), ENT_QUOTES, 'UTF-8' ),
+			'decimals' => wc_get_price_decimals(),
+			'decimal'  => wc_get_price_decimal_separator(),
+			'thousand' => wc_get_price_thousand_separator(),
+		];
+	}
+
+	/**
+	 * The chosen range's chip: "From £10", "Up to £20" or "£10 – £20", whole
+	 * amounts without decimals.
 	 *
 	 * @param array $selected Selection.
-	 * @return array<int, array{value: string, label: string}>
+	 * @return array
 	 */
 	public function chips( array $selected ): array {
 		$min = $selected['min'] ?? null;

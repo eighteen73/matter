@@ -79,6 +79,47 @@ const chip = (filter, value, label) => ({
 });
 
 /**
+ * A range's chip label from its source's templates (`rangeLabels`), as the
+ * server words it ("Up to £20"), or null without them.
+ *
+ * @param {Object} filter Filter state.
+ * @return {string|null} Label.
+ */
+function rangeLabel(filter) {
+	const labels = filter.rangeLabels;
+
+	if (!labels) {
+		return null;
+	}
+
+	const amount = (value) => {
+		const number = Number(value);
+		const [whole, fraction] = number
+			.toFixed(Number.isInteger(number) ? 0 : (labels.decimals ?? 2))
+			.split('.');
+		const grouped = whole.replace(
+			/\B(?=(\d{3})+(?!\d))/g,
+			labels.thousand ?? ''
+		);
+
+		return (labels.amount ?? '%s').replace(
+			'%s',
+			fraction ? `${grouped}${labels.decimal ?? '.'}${fraction}` : grouped
+		);
+	};
+
+	if (isSet(filter.min) && isSet(filter.max)) {
+		return labels.both
+			.replace('%1$s', amount(filter.min))
+			.replace('%2$s', amount(filter.max));
+	}
+
+	return isSet(filter.min)
+		? labels.min.replace('%s', amount(filter.min))
+		: labels.max.replace('%s', amount(filter.max));
+}
+
+/**
  * The listing's active filters, as chips (see chip()).
  *
  * @param {Object} listing Listing state.
@@ -96,7 +137,8 @@ export function chipsOf(listing) {
 					chip(
 						id,
 						'range',
-						labels.range ||
+						rangeLabel(filter) ||
+							labels.range ||
 							[filter.min, filter.max]
 								.map((bound) => (isSet(bound) ? bound : '…'))
 								.join(' – ')
