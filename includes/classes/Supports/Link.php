@@ -213,14 +213,14 @@ class Link {
 		$text = '';
 
 		if ( preg_match( '/<p\b[^>]*>(.*?)<\/p>/is', $html, $match ) ) {
-			$text = self::shorten( (string) preg_replace( '/\s+/u', ' ', trim( html_entity_decode( wp_strip_all_tags( $match[1] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) ) );
+			$text = self::shorten( self::tidy( html_entity_decode( wp_strip_all_tags( $match[1] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) );
 		}
 
 		if ( '' === $text ) {
 			$tags = new \WP_HTML_Tag_Processor( $html );
 
 			while ( $tags->next_tag( 'img' ) ) {
-				$text = self::shorten( (string) preg_replace( '/\s+/u', ' ', trim( (string) $tags->get_attribute( 'alt' ) ) ) );
+				$text = self::shorten( self::tidy( (string) $tags->get_attribute( 'alt' ) ) );
 
 				if ( '' !== $text ) {
 					break;
@@ -229,6 +229,21 @@ class Link {
 		}
 
 		return '' !== $text ? $text : __( 'Read more', 'matter' );
+	}
+
+	/**
+	 * Text with every run of whitespace (a no-break space included, which
+	 * `trim()` leaves) collapsed to one space, and the ends trimmed. Empty
+	 * when nothing but whitespace is left, so a paragraph of `&nbsp;` names
+	 * nothing.
+	 *
+	 * @param string $text Text, entities decoded.
+	 * @return string
+	 */
+	private static function tidy( string $text ): string {
+		$text = trim( (string) preg_replace( '/[\s\x{00A0}]+/u', ' ', $text ) );
+
+		return preg_match( '/\S/u', $text ) ? $text : '';
 	}
 
 	/**

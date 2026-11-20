@@ -167,6 +167,28 @@ class LinkTest extends TestCase {
 	}
 
 	/**
+	 * A paragraph of only whitespace (a no-break space, a space, a line
+	 * break) names nothing: the label falls to the image's description, then
+	 * "Read more".
+	 *
+	 * @return void
+	 */
+	public function test_a_blank_paragraph_does_not_name_the_link(): void {
+		foreach ( array( '<p>&nbsp;</p>', '<p> </p>', '<p><br></p>', "<p>\u{00A0} \u{00A0}</p>" ) as $blank ) {
+			$this->assertStringContainsString(
+				'<span class="screen-reader-text">Read more</span>',
+				$this->link( '<div>' . $blank . '</div>' ),
+				$blank
+			);
+			$this->assertStringContainsString(
+				'<span class="screen-reader-text">A red door</span>',
+				$this->link( '<div>' . $blank . '<img src="b.jpg" alt="A red door"></div>' ),
+				$blank
+			);
+		}
+	}
+
+	/**
 	 * Without a heading the hidden link is named after the block's first
 	 * text, shortened, else its first image's description, else "Read more".
 	 *
