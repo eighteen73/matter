@@ -12,7 +12,7 @@ html.has-panel-open {
 }
 
 // As for modals: only a page that scrolls keeps its scrollbar's space.
-html.has-panel-open.has-panel-gutter {
+html.has-panel-open.has-scroll-gutter {
 	scrollbar-gutter: stable;
 }
 

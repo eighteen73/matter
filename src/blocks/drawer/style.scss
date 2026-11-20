@@ -11,7 +11,7 @@ html.has-overlay-open {
 	overflow: hidden;
 }
 
-html.has-overlay-open.has-overlay-gutter {
+html.has-overlay-open.has-scroll-gutter {
 	scrollbar-gutter: stable;
 }
 
@@ -38,7 +38,7 @@ html.has-overlay-open.has-overlay-gutter {
 // Core layout rules set margins on post content children, including
 // `:root :where(.is-layout-*) > :last-child` (0,2,0), which would zero the
 // bottom margin when this is the last block. This selector outranks them.
-// // Likewise the content-width cap on constrained layouts' children: the drawer
+// Likewise the content-width cap on constrained layouts' children: the drawer
 // never outgrows the viewport.
 :root dialog.wp-block-matter-drawer {
 	margin: 0;

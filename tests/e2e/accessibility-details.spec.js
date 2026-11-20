@@ -637,9 +637,7 @@ test.describe('scroll lock', () => {
 
 		await page.getByRole('link', { name: 'Open welcome' }).click();
 		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
-		await expect(page.locator('html')).toHaveClass(
-			/\bhas-overlay-gutter\b/
-		);
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
 		expect(await gutter(page)).toBe('stable');
 		// The header gives up no more than the scrollbar's own width (this
 		// browser draws none until the lock hides it, then keeps its space).
@@ -653,7 +651,7 @@ test.describe('scroll lock', () => {
 			/\bhas-overlay-open\b/
 		);
 		await expect(page.locator('html')).not.toHaveClass(
-			/\bhas-overlay-gutter\b/
+			/\bhas-scroll-gutter\b/
 		);
 		expect(await gutter(page)).toBe('auto');
 	});
@@ -676,7 +674,7 @@ test.describe('scroll lock', () => {
 		await page.getByRole('link', { name: 'Open short' }).click();
 		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
 		await expect(page.locator('html')).not.toHaveClass(
-			/\bhas-overlay-gutter\b/
+			/\bhas-scroll-gutter\b/
 		);
 		expect(await gutter(page)).toBe('auto');
 		expect(await layout(page)).toEqual(before);
@@ -707,11 +705,69 @@ test.describe('scroll lock', () => {
 
 		await page.getByRole('link', { name: 'Open short' }).click();
 		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
-		await expect(page.locator('html')).toHaveClass(
-			/\bhas-overlay-gutter\b/
-		);
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
 		expect(await gutter(page)).toBe('stable');
 		expect(await layout(page)).toEqual(before);
+	});
+
+	test('a modal opened over the panel, and the panel closed first, keeps the scrollbar space', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height: 500 });
+		await page.goto(panelPage.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
+
+		await page.evaluate(() => window.matter.overlay('in-tab').open());
+		await expect(
+			page.getByRole('dialog', { name: 'Modal in a tab' })
+		).toBeVisible();
+		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
+
+		// The panel goes while the modal stays: the page is still locked, with
+		// the space it had.
+		await page.evaluate(() => window.matter.panel('test-nav').close());
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-panel-open\b/
+		);
+		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
+		expect(await gutter(page)).toBe('stable');
+
+		await page.keyboard.press('Escape');
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-overlay-open\b/
+		);
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-scroll-gutter\b/
+		);
+		expect(await gutter(page)).toBe('auto');
+	});
+
+	test('a panel opened over a modal, and the modal closed first, keeps the scrollbar space', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height: 500 });
+		await page.goto(panelPage.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+		await page.evaluate(() => window.matter.overlay('in-tab').open());
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
+
+		// Opened by a script: the modal makes the toggle unreachable.
+		await page.evaluate(() =>
+			document.querySelector('[aria-controls="test-nav"]').click()
+		);
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
+
+		await page.keyboard.press('Escape');
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-overlay-open\b/
+		);
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
+		expect(await gutter(page)).toBe('stable');
 	});
 
 	test("the panel's lock follows the same rule", async ({ page }) => {
@@ -728,7 +784,7 @@ test.describe('scroll lock', () => {
 
 		expect(scrolls).toBe(false);
 		await expect(page.locator('html')).not.toHaveClass(
-			/\bhas-panel-gutter\b/
+			/\bhas-scroll-gutter\b/
 		);
 		expect(await gutter(page)).toBe('auto');
 
@@ -736,7 +792,7 @@ test.describe('scroll lock', () => {
 		await page.setViewportSize({ width: 390, height: 500 });
 		await page.locator('[aria-controls="test-nav"]').click();
 		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
-		await expect(page.locator('html')).toHaveClass(/\bhas-panel-gutter\b/);
+		await expect(page.locator('html')).toHaveClass(/\bhas-scroll-gutter\b/);
 		expect(await gutter(page)).toBe('stable');
 	});
 });

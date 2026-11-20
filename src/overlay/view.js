@@ -49,11 +49,14 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
-import { suspendForModal } from '@matter/inert';
+import {
+	acquireScrollLock,
+	releaseScrollLock,
+	suspendForModal,
+} from '@matter/inert';
 import { createSuspensions } from './suspensions';
 import { focusFirst, focused, isUsable } from '../interactivity/focus';
 import { hashId } from '../interactivity/hash';
-import { hasScrollbar } from '../interactivity/scrollbar';
 import {
 	afterTransitions,
 	cancelClose,
@@ -139,7 +142,10 @@ const rememberDismissal = (id, days) => {
 	}
 };
 
+const OPEN_CLASS = 'has-overlay-open';
+
 let removalWatcher = null;
+let scrollLocked = false;
 
 const syncDocumentClass = () => {
 	// A dialog removed while open is no longer holding anything back. One that
@@ -159,19 +165,14 @@ const syncDocumentClass = () => {
 		([id, element]) => isDialog(id) && element.isConnected && element.open
 	);
 
-	const root = document.documentElement;
-
-	// Keep the scrollbar's space only on a page that has a scrollbar (measured, so
-	// one a theme always shows counts, and an overlay scrollbar, which takes
-	// no space, doesn't): a page without one would shift sideways for a gutter
-	// with nothing in it. Looked at as the lock starts.
-	if (open && !root.classList.contains('has-overlay-open')) {
-		root.classList.toggle('has-overlay-gutter', hasScrollbar());
-	} else if (!open) {
-		root.classList.remove('has-overlay-gutter');
+	// The shared scroll lock (also the panel's), held while any dialog is open.
+	if (open && !scrollLocked) {
+		acquireScrollLock(OPEN_CLASS);
+		scrollLocked = true;
+	} else if (!open && scrollLocked) {
+		releaseScrollLock(OPEN_CLASS);
+		scrollLocked = false;
 	}
-
-	root.classList.toggle('has-overlay-open', open);
 
 	// A dialog taken out of the page while open (by a script, or a
 	// replacement the interactivity runtime never tears down) must release

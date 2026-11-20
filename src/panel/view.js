@@ -37,8 +37,13 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { focused, isUsable } from '../interactivity/focus';
-import { hasScrollbar } from '../interactivity/scrollbar';
-import { inertAround, onModal, supports } from '@matter/inert';
+import {
+	acquireScrollLock,
+	inertAround,
+	onModal,
+	releaseScrollLock,
+	supports,
+} from '@matter/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 
 registerType('panel', '.matter-panel');
@@ -47,7 +52,6 @@ registerType('panel', '.matter-panel');
 const HAS_MODAL = supports(':modal');
 
 const OPEN_CLASS = 'has-panel-open';
-const GUTTER_CLASS = 'has-panel-gutter';
 const FOCUSABLE =
 	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -178,15 +182,7 @@ const activate = (panel, id) => {
 	// of what can fail, and undone by inertAround() if it does, so a failure
 	// leaves the page as it was.
 	releases.set(id, inertAround(content, { keep: '.matter-panel__backdrop' }));
-	const root = document.documentElement;
-
-	// Keep the scrollbar's space only on a page that has a scrollbar (see the
-	// overlay script), looked at before the lock starts.
-	if (!root.classList.contains(OPEN_CLASS)) {
-		root.classList.toggle(GUTTER_CLASS, hasScrollbar());
-	}
-
-	root.classList.add(OPEN_CLASS);
+	acquireScrollLock(OPEN_CLASS);
 
 	traps.set(id, trap);
 	owners.set(id, panel);
@@ -275,9 +271,7 @@ const deactivate = (
 			stack.splice(position, 1);
 		}
 
-		if (!traps.size) {
-			document.documentElement.classList.remove(OPEN_CLASS, GUTTER_CLASS);
-		}
+		releaseScrollLock(OPEN_CLASS);
 	}
 
 	if (!silent) {

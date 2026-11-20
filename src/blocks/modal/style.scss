@@ -14,7 +14,7 @@ html.has-overlay-open {
 
 // Only a page that scrolls keeps its scrollbar's space, so the page doesn't
 // jump sideways as it goes (the script adds the class; a short page has none).
-html.has-overlay-open.has-overlay-gutter {
+html.has-overlay-open.has-scroll-gutter {
 	scrollbar-gutter: stable;
 }
 

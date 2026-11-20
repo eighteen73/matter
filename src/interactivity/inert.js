@@ -289,3 +289,6 @@ export function onModal(pause) {
 
 	return () => pausers.delete(pause);
 }
+
+// The scroll lock is shared the same way, so it comes from the same module.
+export { acquireScrollLock, releaseScrollLock } from './scroll-lock';
