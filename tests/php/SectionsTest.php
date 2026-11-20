@@ -185,6 +185,50 @@ class SectionsTest extends TestCase {
 	}
 
 	/**
+	 * A stray opening marker of a name doesn't hide a valid pair of the same
+	 * name after it, however many strays come first.
+	 *
+	 * @return void
+	 */
+	public function test_a_stray_open_marker_does_not_hide_a_valid_slot(): void {
+		$this->assertSame(
+			[ 'a' => 'X' ],
+			Sections::slots( '<!--matter-slot:a-->stray <!--matter-slot:a-->X<!--/matter-slot:a-->' )
+		);
+
+		$this->assertSame(
+			[ 'a' => 'X' ],
+			Sections::slots( '<!--matter-slot:a--><!--matter-slot:a-->two <!--matter-slot:a-->X<!--/matter-slot:a-->' )
+		);
+
+		// A stray after the pair, and a pair of another name, are unaffected.
+		$this->assertSame(
+			[
+				'a' => 'X',
+				'b' => 'Y',
+			],
+			Sections::slots( '<!--matter-slot:a-->X<!--/matter-slot:a--><!--matter-slot:a-->late' . Sections::mark_slot( 'b', 'Y' ) )
+		);
+	}
+
+	/**
+	 * Strays of a name that is closed once, later, are still scanned in
+	 * linear time.
+	 *
+	 * @return void
+	 */
+	public function test_many_strays_before_a_valid_pair_are_scanned_once(): void {
+		$content = str_repeat( '<!--matter-slot:a-->x', 20000 ) . '<!--/matter-slot:a-->';
+
+		$started = microtime( true );
+		$slots   = Sections::slots( $content );
+		$elapsed = microtime( true ) - $started;
+
+		$this->assertSame( [ 'a' => 'x' ], $slots );
+		$this->assertLessThan( 0.5, $elapsed, 'the scan took ' . round( $elapsed, 2 ) . ' s' );
+	}
+
+	/**
 	 * A slot name other than letters, numbers, hyphens and underscores can't
 	 * be matched by its marker, so declaring one is reported.
 	 *

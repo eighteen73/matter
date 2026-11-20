@@ -476,67 +476,49 @@ class Sections {
 	 * @return array<string, string> Slot name => HTML.
 	 */
 	private static function find_slots( string $content ): array {
-		$prefix = '<!--matter-slot:';
-		$found  = [];
-		$pos    = 0;
+		if ( ! str_contains( $content, '<!--matter-slot:' ) ) {
+			return [];
+		}
 
-		// Names with no closing marker after a point have none after a later
-		// one, so they're not searched for again (thousands of stray markers
-		// would otherwise each scan to the end).
-		$unclosed = [];
+		// Every marker in one pass, paired the way brackets are: a closing
+		// marker ends the latest still-open marker of its name. An opening
+		// marker with no closing marker is stray and pairs with nothing, so it
+		// can't hide a valid pair after it, and no marker is scanned twice.
+		preg_match_all( '/<!--(\/?)matter-slot:([\w-]+)-->/', $content, $markers, PREG_SET_ORDER | PREG_OFFSET_CAPTURE );
 
-		while ( true ) {
-			$start = strpos( $content, $prefix, $pos );
+		$open  = [];
+		$spans = [];
 
-			if ( false === $start ) {
-				break;
-			}
+		foreach ( $markers as $marker ) {
+			$name = $marker[2][0];
+			$at   = $marker[0][1];
 
-			$name_at = $start + strlen( $prefix );
-			$end     = strpos( $content, '-->', $name_at );
-
-			if ( false === $end ) {
-				break;
-			}
-
-			$name = substr( $content, $name_at, $end - $name_at );
-			$pos  = $name_at;
-
-			if ( ! preg_match( '/^[\w-]+$/', $name ) || isset( $unclosed[ $name ] ) ) {
+			if ( '' === $marker[1][0] ) {
+				$open[ $name ][] = [ $at, $at + strlen( $marker[0][0] ) ];
 				continue;
 			}
 
-			$open      = "{$prefix}{$name}-->";
-			$close     = "<!--/matter-slot:{$name}-->";
-			$body_at   = $end + 3;
-			$cursor    = $body_at;
-			$depth     = 1;
-			$next_open = strpos( $content, $open, $cursor );
-
-			while ( true ) {
-				$next_close = strpos( $content, $close, $cursor );
-
-				if ( false === $next_close ) {
-					$unclosed[ $name ] = true;
-					break;
-				}
-
-				if ( false !== $next_open && $next_open < $next_close ) {
-					++$depth;
-					$cursor    = $next_open + strlen( $open );
-					$next_open = strpos( $content, $open, $cursor );
-					continue;
-				}
-
-				--$depth;
-				$cursor = $next_close + strlen( $close );
-
-				if ( 0 === $depth ) {
-					$found[ $name ] ??= substr( $content, $body_at, $next_close - $body_at );
-					$pos              = $cursor;
-					break;
-				}
+			if ( empty( $open[ $name ] ) ) {
+				continue;
 			}
+
+			[ $start, $body_at ] = array_pop( $open[ $name ] );
+			$spans[ $start ]     = [ $name, $body_at, $at ];
+		}
+
+		// Outermost pairs only, by position; the first of a name wins.
+		ksort( $spans );
+
+		$found = [];
+		$until = -1;
+
+		foreach ( $spans as $start => [ $name, $body_at, $close_at ] ) {
+			if ( $start < $until ) {
+				continue;
+			}
+
+			$found[ $name ] ??= substr( $content, $body_at, $close_at - $body_at );
+			$until            = $close_at + strlen( "<!--/matter-slot:{$name}-->" );
 		}
 
 		return $found;
