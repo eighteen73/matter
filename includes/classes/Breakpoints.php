@@ -29,9 +29,11 @@ class Breakpoints {
 	/**
 	 * Breakpoints as name => min-width (e.g. 'lg' => '1024px'), smallest first.
 	 *
-	 * Widths are given in px, em or rem (or a bare number, as px) and come out
-	 * in px (an em is 16px, as in a media query), so they can be compared and
-	 * ordered. Another unit is refused with a notice, and the breakpoint left out.
+	 * Widths are given in px, em or rem (or a bare number, as px) and keep their
+	 * unit, so a breakpoint in em or rem still follows the visitor's text size
+	 * in the media queries built from it. They're ordered by their size in px
+	 * (an em is 16px, as in a media query); equal widths keep the order given.
+	 * Another unit is refused with a notice, and the breakpoint left out.
 	 *
 	 * @return array<string, string>
 	 */
@@ -54,28 +56,28 @@ class Breakpoints {
 				continue;
 			}
 
-			$px = self::to_px( $width );
+			$normalised = self::normalise( $width );
 
-			if ( null === $px ) {
+			if ( null === $normalised ) {
 				self::warn_once( (string) $name, $width );
 				continue;
 			}
 
-			$breakpoints[ (string) $name ] = $px;
+			$breakpoints[ (string) $name ] = $normalised;
 		}
 
-		uasort( $breakpoints, fn( $a, $b ) => (float) $a <=> (float) $b );
+		uasort( $breakpoints, fn( $a, $b ) => self::to_px( $a ) <=> self::to_px( $b ) );
 
 		return $breakpoints;
 	}
 
 	/**
-	 * A breakpoint width in px.
+	 * A breakpoint width as a number and its unit (`64em`, `768px`).
 	 *
-	 * @param mixed $width Width: `1024px`, `64em`, `64rem` or `1024`.
+	 * @param mixed $width Width: `1024px`, `64em`, `64rem`, `1024` (px) or `0`.
 	 * @return string|null Null when it isn't one of those.
 	 */
-	private static function to_px( mixed $width ): ?string {
+	private static function normalise( mixed $width ): ?string {
 		if ( ! is_string( $width ) && ! is_int( $width ) && ! is_float( $width ) ) {
 			return null;
 		}
@@ -84,9 +86,17 @@ class Breakpoints {
 			return null;
 		}
 
-		$px = (float) $matches[1] * ( in_array( strtolower( $matches[2] ?? '' ), [ 'em', 'rem' ], true ) ? 16 : 1 );
+		return rtrim( rtrim( number_format( (float) $matches[1], 4, '.', '' ), '0' ), '.' ) . strtolower( $matches[2] ?? 'px' );
+	}
 
-		return $px > 0 ? rtrim( rtrim( number_format( $px, 4, '.', '' ), '0' ), '.' ) . 'px' : null;
+	/**
+	 * A normalised width in px, for ordering (an em or rem is 16px).
+	 *
+	 * @param string $width Width from normalise().
+	 * @return float
+	 */
+	private static function to_px( string $width ): float {
+		return (float) $width * ( str_ends_with( $width, 'em' ) ? 16 : 1 );
 	}
 
 	/**
