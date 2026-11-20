@@ -50,8 +50,9 @@ jest.mock(
 	{ virtual: true }
 );
 
-const mediaQuery = () => ({
-	matches: false,
+const mediaQuery = (query = '') => ({
+	// A mouse: hover menus open.
+	matches: query.includes('pointer: fine'),
 	addEventListener: jest.fn(),
 	removeEventListener: jest.fn(),
 });
@@ -65,8 +66,8 @@ describe('menu teardown', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		queryListeners = [];
-		window.matchMedia = jest.fn(() => {
-			const query = mediaQuery();
+		window.matchMedia = jest.fn((text) => {
+			const query = mediaQuery(text);
 
 			queryListeners.push(query);
 
@@ -145,21 +146,35 @@ describe('menu teardown', () => {
 	});
 
 	it('clears a pending hover close and a dropdown placement watcher', () => {
+		jest.useFakeTimers();
+
 		const removeResize = jest.spyOn(window, 'removeEventListener');
+		const clear = jest.spyOn(window, 'clearTimeout');
 		const cleanup = start([{ type: 'dropdown' }]);
 
 		mockElement = { ref: item };
 		mockContext.opensOn = 'hover';
-		config.actions.toggleSubmenu();
+		mockContext.menuType = 'dropdown';
+		config.actions.openOnHover();
 
 		expect(mockContext.openSubmenus).toEqual([1]);
+		expect(mockContext.openModes[1]).toBe('hover');
+
+		// The pointer leaves: a real close is pending.
+		config.actions.closeOnHover();
+
+		expect(jest.getTimerCount()).toBe(1);
 
 		cleanup();
 
+		expect(clear).toHaveBeenCalled();
+		expect(jest.getTimerCount()).toBe(0);
 		expect(mockContext.openSubmenus).toEqual([]);
 		expect(removeResize).toHaveBeenCalledWith(
 			'resize',
 			expect.any(Function)
 		);
+
+		jest.useRealTimers();
 	});
 });
