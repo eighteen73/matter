@@ -486,7 +486,7 @@ The panel sits in `.matter-menu__panel`; give it a width beside the columns, e.g
 
 **Accessibility:**
 - Arrow, Home and End keys move between items (not inside a field, such as a search in a megamenu panel); Escape closes the innermost submenu, and closes open dropdowns wherever focus is. Left and Right follow the screen: in a right-to-left menu (the direction is the menu's own, so a right-to-left section in a left-to-right page works) Left is the next item. A dropdown that would run off the inline end of the screen (the right edge, or the left in a right-to-left menu) opens the other way.
-- Drill-down panels trap focus, and expose only the open level: while a submenu is open the level it covers (the other items, its toggle) is `inert`, and focus is on its Back button, whose name says which level it is. Back, Escape, closing the panel and a change of menu type all put it back.
+- Drill-down panels trap focus, and expose only the open level: while a submenu is open the level it covers (the other items, its toggle) is `inert`, and focus is on its Back button, whose name says which level it is. Back, Escape, closing the panel and a change of menu type all put it back. The panel's "Close menu" button stays exposed and in the Tab cycle (after the open level's controls), so closing the whole menu from a submenu is a Tab away.
 - `aria-expanded` and `inert` are rendered on the server.
 - The default skin gives toggles, back buttons and links at least a 24px target (WCAG 2.5.8).
 

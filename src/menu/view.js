@@ -225,7 +225,16 @@ const trapDrillDown = (context, submenuId, item) => {
 		root: item.closest(SELECTORS.menu),
 	});
 
-	const trap = createFocusTrap(submenu, {
+	// The panel's close control stays in the cycle: it is exposed (it's
+	// outside the menu, in the dialog), so closing the whole menu from a
+	// submenu is a Tab away.
+	const close = item
+		.closest('.matter-panel__content')
+		?.querySelector('.matter-panel__close');
+
+	const trap = createFocusTrap(close ? [submenu, close] : submenu, {
+		// The close control is a container of its own, a button with nothing in it.
+		tabbableOptions: { includeContainer: true },
 		onDeactivate: release,
 		allowOutsideClick: true,
 		escapeDeactivates: false,

@@ -282,6 +282,52 @@ test.describe('drill-down', { tag: '@cross-browser' }, () => {
 		).toBe(true);
 	});
 
+	test("the panel's close button stays in the Tab cycle while a submenu is open", async ({
+		page,
+		browserName,
+	}) => {
+		await open(page);
+
+		const panel = page.locator('#test-nav');
+
+		await panel
+			.locator('.matter-menu__item.has-submenu > .matter-menu__toggle')
+			.first()
+			.click();
+		await expect(
+			panel.getByRole('button', { name: /^Back/ }).first()
+		).toBeFocused();
+
+		// Round the cycle: the close control is in it (WebKit's Tab skips
+		// buttons; Option+Tab reaches them).
+		const visited = new Set();
+
+		for (let i = 0; i < 12; i++) {
+			await page.keyboard.press(
+				'webkit' === browserName ? 'Alt+Tab' : 'Tab'
+			);
+			visited.add(
+				await page.evaluate(
+					() => window.document.activeElement.className
+				)
+			);
+		}
+
+		expect([...visited].join(' ')).toContain('matter-panel__close');
+		// And it never leaves the dialog.
+		expect(
+			await page.evaluate(() =>
+				window.document.activeElement.closest('#test-nav')
+					? 'in'
+					: 'out'
+			)
+		).toBe('in');
+
+		// Activating it closes the whole menu.
+		await panel.locator('.matter-panel__close').click();
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+	});
+
 	test('a breakpoint change with a submenu open leaves nothing inert but the closed submenus', async ({
 		page,
 	}) => {
