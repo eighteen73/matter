@@ -330,17 +330,67 @@ class Scheme {
 
 	/**
 	 * A name as the CSS variable WordPress makes from it: `textMuted` and
-	 * `text_muted` become `text-muted`, `accent2` becomes `accent-2`. The same
-	 * result as core's private `_wp_to_kebab_case()` for names like these.
+	 * `text_muted` become `text-muted`, `accent2` becomes `accent-2`,
+	 * `text2Heading` becomes `text-2-heading`.
+	 *
+	 * Scheme variables are read through `--wp--custom--scheme--*`, and
+	 * WordPress names those with `_wp_to_kebab_case()`, so the names must be
+	 * identical, edge cases included. That is why a function core marks private
+	 * is called here: any other spelling would silently stop matching. If a
+	 * future core removes or renames it, {@see self::kebab_port()} is a port
+	 * of its algorithm.
 	 *
 	 * @param string $name Slug or token.
 	 * @return string
 	 */
 	public static function kebab( string $name ): string {
-		$name = (string) preg_replace( '/([a-z])([A-Z])|([A-Z]+)([A-Z][a-z])/', '$1$3-$2$4', $name );
-		$name = (string) preg_replace( '/([a-zA-Z])(\d)|(\d)([a-zA-Z])/', '$1$3-$2$4', $name );
-		$name = (string) preg_replace( '/[^a-zA-Z0-9]+/', '-', $name );
+		if ( function_exists( '_wp_to_kebab_case' ) ) {
+			return _wp_to_kebab_case( $name );
+		}
 
-		return strtolower( trim( $name, '-' ) );
+		return self::kebab_port( $name );
+	}
+
+	/**
+	 * A port of core's `_wp_to_kebab_case()` (itself a port of lodash's
+	 * `kebabCase`), for a core that no longer has it.
+	 *
+	 * @internal
+	 * @param string $name Slug or token.
+	 * @return string
+	 */
+	public static function kebab_port( string $name ): string {
+		$lower_range = 'a-z\\xdf-\\xf6\\xf8-\\xff';
+		$non_char    = '\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf';
+		$punctuation = '\\x{2000}-\\x{206f}';
+		$space       = ' \\t\\x0b\\f\\xa0\\x{feff}\\n\\r\\x{2028}\\x{2029}\\x{1680}\\x{180e}\\x{2000}\\x{2001}\\x{2002}\\x{2003}\\x{2004}\\x{2005}\\x{2006}\\x{2007}\\x{2008}\\x{2009}\\x{200a}\\x{202f}\\x{205f}\\x{3000}';
+		$upper_range = 'A-Z\\xc0-\\xd6\\xd8-\\xde';
+		$break_range = $non_char . $punctuation . $space;
+		$brk         = '[' . $break_range . ']';
+		$digits      = '\\d+';
+		$lower       = '[' . $lower_range . ']';
+		$misc        = '[^' . $break_range . $digits . $lower_range . $upper_range . ']';
+		$upper       = '[' . $upper_range . ']';
+		$misc_lower  = '(?:' . $lower . '|' . $misc . ')';
+		$misc_upper  = '(?:' . $upper . '|' . $misc . ')';
+		$ord_lower   = '\\d*(?:1st|2nd|3rd|(?![123])\\dth)(?=\\b|[A-Z_])';
+		$ord_upper   = '\\d*(?:1ST|2ND|3RD|(?![123])\\dTH)(?=\\b|[a-z_])';
+
+		$regexp = '/' . implode(
+			'|',
+			[
+				$upper . '?' . $lower . '+(?=' . implode( '|', [ $brk, $upper, '$' ] ) . ')',
+				$misc_upper . '+(?=' . implode( '|', [ $brk, $upper . $misc_lower, '$' ] ) . ')',
+				$upper . '?' . $misc_lower . '+',
+				$upper . '+',
+				$ord_upper,
+				$ord_lower,
+				$digits,
+			]
+		) . '/u';
+
+		preg_match_all( $regexp, str_replace( "'", '', $name ), $matches );
+
+		return strtolower( implode( '-', $matches[0] ) );
 	}
 }

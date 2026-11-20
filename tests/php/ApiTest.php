@@ -47,10 +47,18 @@ class ApiTest extends TestCase {
 				'accent-2'    => 'accent-2',
 				'primaryCTA'  => 'primary-cta',
 				'dark-mode_1' => 'dark-mode-1',
+				'text2Heading' => 'text-2-heading',
+				'color1Dark'  => 'color-1-dark',
+				'a1b2'        => 'a-1-b-2',
+				'dark2mode'   => 'dark-2-mode',
+				'1st'         => '1st',
+				'HTMLText2'   => 'html-text-2',
+				'über'        => 'über',
 			] as $name => $expected
 		) {
 			$this->assertSame( $expected, Scheme::kebab( $name ), $name );
-			$this->assertSame( $expected, _wp_to_kebab_case( $name ), "core agrees on {$name}" );
+			$this->assertSame( _wp_to_kebab_case( $name ), Scheme::kebab( $name ), "equals core on {$name}" );
+			$this->assertSame( _wp_to_kebab_case( $name ), Scheme::kebab_port( $name ), "port equals core on {$name}" );
 		}
 	}
 }
