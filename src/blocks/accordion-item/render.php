@@ -48,7 +48,7 @@ if ( '' === $matter_id ) {
 $matter_level = min( 6, max( 2, (int) ( $block->context['matter/headingLevel'] ?? 3 ) ) );
 
 printf(
-	'<div %1$s %2$s data-wp-class--is-open="state.isItemOpen"><h%3$d class="wp-block-matter-accordion-item__heading"><button type="button" id="%4$s-button" class="wp-block-matter-accordion-item__toggle" aria-expanded="false" aria-controls="%4$s-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemOpen"><span class="wp-block-matter-accordion-item__title">%5$s</span></button></h%3$d><div id="%4$s-panel" class="wp-block-matter-accordion-item__panel" role="region" aria-labelledby="%4$s-button" inert data-wp-bind--inert="!state.isItemOpen"><div class="wp-block-matter-accordion-item__content">%6$s</div></div></div>',
+	'<div %1$s %2$s data-wp-class--is-open="state.isItemOpen"><h%3$d class="wp-block-matter-accordion-item__heading"><button type="button" id="%4$s-button" class="wp-block-matter-accordion-item__toggle" aria-controls="%4$s-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemExpanded"><span class="wp-block-matter-accordion-item__title">%5$s</span></button></h%3$d><div id="%4$s-panel" class="wp-block-matter-accordion-item__panel" role="region" aria-labelledby="%4$s-button" data-wp-bind--hidden="state.isPanelHidden" data-wp-on--beforematch="actions.reveal"><div class="wp-block-matter-accordion-item__content">%6$s</div></div></div>',
 	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( [ 'itemId' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	(int) $matter_level,

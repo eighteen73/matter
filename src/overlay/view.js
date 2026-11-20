@@ -270,13 +270,15 @@ const revealContainers = (dialog) => {
 	let revealed = false;
 
 	for (let el = dialog.parentElement; el; el = el.parentElement) {
-		if (el.matches('.wp-block-matter-tab[hidden]')) {
+		if (el.matches('.wp-block-matter-tab:not(.is-active)')) {
 			window.matter
 				?.tabs?.(el.closest('.wp-block-matter-tabs'))
 				?.select(el.id);
 			revealed = true;
 		} else if (
-			el.matches('.wp-block-matter-accordion-item__panel[inert]')
+			el.matches(
+				'.wp-block-matter-accordion-item:not(.is-open) > .wp-block-matter-accordion-item__panel'
+			)
 		) {
 			const item = el.closest('.wp-block-matter-accordion-item');
 
@@ -285,7 +287,9 @@ const revealContainers = (dialog) => {
 				?.open(item.id);
 			revealed = true;
 		} else if (
-			(el.matches('.wp-block-matter-collapsible__content[hidden]') ||
+			(el.matches(
+				'.wp-block-matter-collapsible__content:not(.is-open)'
+			) ||
 				el.matches('dialog:not([open])')) &&
 			state.items[el.id]
 		) {
@@ -299,14 +303,17 @@ const revealContainers = (dialog) => {
 
 /**
  * Whether an element is rendered: neither it nor an ancestor is
- * `display: none` (a closed dialog's own display doesn't count).
+ * `display: none` or has its content skipped (`content-visibility: hidden`,
+ * a closed `until-found` panel). A closed dialog's own display doesn't count.
  *
  * @param {Element} element Element.
  * @return {boolean} Rendered.
  */
 const isRendered = (element) => {
 	for (let el = element.parentElement; el; el = el.parentElement) {
-		if (window.getComputedStyle(el).display === 'none') {
+		const style = window.getComputedStyle(el);
+
+		if (style.display === 'none' || style.contentVisibility === 'hidden') {
 			return false;
 		}
 	}
@@ -422,6 +429,12 @@ const { state, actions } = store('matter/overlay', {
 	state: {
 		get isOpen() {
 			return !!state.items[getContext().id]?.isOpen;
+		},
+		// A collapsible's closed content is `hidden="until-found"`: find-in-page,
+		// a text fragment or a link inside it opens it (`beforematch`, which
+		// `actions.open` answers). The server leaves it showing.
+		get isHidden() {
+			return state.isOpen ? false : 'until-found';
 		},
 		// "2 / 5" for grouped overlays.
 		get groupPosition() {

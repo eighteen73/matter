@@ -33,14 +33,24 @@ if ( ! empty( $attributes['autoclose'] ) ) {
 	$matter_open = array_slice( $matter_open, 0, 1 );
 }
 
+// What the server renders is what a visitor without JavaScript gets: every
+// panel readable. So the server says an item is open (class and aria-expanded)
+// when it opens by default, and nothing about a closed one; the script hides
+// its panel, and says it's collapsed, once it starts (view.js).
 wp_interactivity_state(
 	'matter/accordion',
 	[
-		'isItemOpen' => function () {
+		'isItemOpen'     => function () {
 			$context = wp_interactivity_get_context();
 
 			return in_array( $context['itemId'] ?? '', $context['openItems'] ?? [], true );
 		},
+		'isItemExpanded' => function () {
+			$context = wp_interactivity_get_context();
+
+			return in_array( $context['itemId'] ?? '', $context['openItems'] ?? [], true ) ? true : null;
+		},
+		'isPanelHidden'  => fn() => false,
 	]
 );
 

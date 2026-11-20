@@ -69,6 +69,19 @@ const { state } = store('matter/accordion', {
 
 			return openItems.includes(itemId);
 		},
+		// The server renders every panel readable and says nothing of a
+		// closed item's state; once the script runs, a closed item's panel is
+		// `hidden="until-found"`, which find-in-page, a text fragment or a
+		// link inside it opens (`beforematch`). A browser that doesn't know
+		// `until-found` just hides it (the CSS then keeps it out of the tab
+		// order and the accessibility tree, as it does an open one's
+		// transition).
+		get isItemExpanded() {
+			return state.isItemOpen;
+		},
+		get isPanelHidden() {
+			return state.isItemOpen ? false : 'until-found';
+		},
 	},
 	actions: {
 		/**
@@ -92,6 +105,17 @@ const { state } = store('matter/accordion', {
 					(id) => id !== context.itemId
 				);
 			} else {
+				context.openItems = context.autoclose
+					? [context.itemId]
+					: [...context.openItems, context.itemId];
+			}
+		},
+		// The browser is about to show a closed panel's text, found in the
+		// page: open the item, as the heading's button would.
+		reveal() {
+			const context = getContext();
+
+			if (!state.isItemOpen) {
 				context.openItems = context.autoclose
 					? [context.itemId]
 					: [...context.openItems, context.itemId];

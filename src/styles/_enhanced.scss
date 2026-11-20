@@ -1,0 +1,21 @@
+// When a block's script is running, or is about to: the CSS that hides content
+// (closed panels, submenus, an off-canvas panel) is only applied then, so a
+// visitor without JavaScript, or whose script failed, gets the content. The
+// head script adds `matter-js` to <html> and, four seconds after the page
+// is parsed, `matter-late`; a block's script adds `is-enhanced` to the block
+// when it starts. "About to" is `matter-js` and not yet `matter-late`: the
+// script has been asked for and has had its allowance, so the content isn't
+// shown only to be hidden a moment later. See "Without JavaScript" in the
+// README.
+// `$enhanced` goes after a block's own selector, for the element that is
+// marked (`.panel#{$enhanced}`); `$in-enhanced` goes in front of a descendant
+// combinator, for anything inside a marked block (`#{$in-enhanced} .item`).
+// Both are specificity-free in :where(), and hold in the block editor
+// (`.editor-styles-wrapper`), which shows the enhanced look without running
+// the scripts. The `-front` forms leave the editor out, for rules the editor's
+// own markup doesn't take part in.
+
+$enhanced: ":is(.is-enhanced, html.matter-js:not(.matter-late) *, .editor-styles-wrapper *)";
+$in-enhanced: ":is(.is-enhanced, html.matter-js:not(.matter-late), .editor-styles-wrapper)";
+$enhanced-front: ":is(.is-enhanced, html.matter-js:not(.matter-late) *)";
+$in-enhanced-front: ":is(.is-enhanced, html.matter-js:not(.matter-late))";

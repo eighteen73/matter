@@ -44,10 +44,13 @@ if ( '' === $matter_id ) {
 	$matter_id = Ids::claim( $matter_parent . '-' . wp_unique_id() );
 }
 
+// Without JavaScript the tab list doesn't work and every panel shows, so each
+// panel names itself (hidden by CSS once the script runs).
 printf(
-	'<div %1$s %2$s role="tabpanel" aria-labelledby="%3$s-tab" tabindex="0" data-wp-bind--hidden="!state.isActive">%4$s</div>',
+	'<div %1$s %2$s role="tabpanel" aria-labelledby="%3$s-tab" tabindex="0" data-wp-class--is-active="state.isActive" data-wp-bind--hidden="state.isPanelHidden">%4$s%5$s</div>',
 	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( [ 'tabId' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	esc_attr( $matter_id ),
+	'' !== $matter_label ? '<div class="wp-block-matter-tab__label">' . wp_kses_post( $matter_label ) . '</div>' : '',
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 );

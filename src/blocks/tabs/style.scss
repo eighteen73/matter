@@ -1,15 +1,40 @@
-// Tabs. Functional rules first, at one class (plus the element's own state,
-// with any context in :where()); then the default skin, all in :where(). The
-// dropdown's breakpoint rules (the list as a menu below the button) are
-// generated: see Blocks\Tabs.
+// Tabs. Without JavaScript the tab list can't switch anything, so it isn't
+// shown and every panel is, each under its label; once the script runs (or is
+// about to: styles/enhanced) it's a tab list and only the active panel shows.
+// Functional rules first, at one class (plus the element's own state, with any
+// context in :where()); then the default skin, all in :where(). The dropdown's
+// breakpoint rules (the list as a menu below the button) are generated: see
+// Blocks\Tabs.
 
 @use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
 
 .wp-block-matter-tabs__list {
 	display: flex;
 }
 
 .wp-block-matter-tab[hidden] {
+	display: none;
+}
+
+// Until the script has started, the active panel only: the server shows them
+// all (and marks the active one `is-active`).
+:where(#{$in-enhanced-front}) .wp-block-matter-tab:not(.is-active) {
+	display: none;
+}
+
+// Not running: no tab list (or the dropdown's button), and a layout without
+// it. Each panel names itself.
+.wp-block-matter-tabs:not(#{$enhanced}) > .wp-block-matter-tabs__list,
+.wp-block-matter-tabs:not(#{$enhanced}) > .wp-block-matter-tabs__nav {
+	display: none;
+}
+
+.wp-block-matter-tabs.is-vertical:not(#{$enhanced}) {
+	display: block;
+}
+
+.wp-block-matter-tabs:is(#{$enhanced}) .wp-block-matter-tab__label {
 	display: none;
 }
 
@@ -62,6 +87,10 @@
 :where(.wp-block-matter-tabs__tab[aria-selected="true"]) {
 	text-decoration: underline 2px;
 	text-underline-offset: 0.375em;
+}
+
+:where(.wp-block-matter-tab__label) {
+	font-weight: 700;
 }
 
 :where(.wp-block-matter-tabs__icon) {

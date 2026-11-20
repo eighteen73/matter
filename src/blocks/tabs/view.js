@@ -102,6 +102,11 @@ const { state, actions } = store('matter/tabs', {
 		get tabIndex() {
 			return state.isActive ? 0 : -1;
 		},
+		// The server shows every panel; once the script runs only the active
+		// one shows.
+		get isPanelHidden() {
+			return !state.isActive;
+		},
 	},
 	actions: {
 		/**

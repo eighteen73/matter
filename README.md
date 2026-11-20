@@ -404,8 +404,13 @@ html:not(.matter-js) .my-block { … } /* Only where there is no JavaScript. */
 
 Per block, with no JavaScript:
 
+- **Accordion:** every answer shows. An item the accordion opens by default says so (`is-open`, `aria-expanded="true"`); the others say nothing about their state, since their answer isn't collapsed. The headings have no caret, since they do nothing.
+- **Collapsible:** the content shows.
+- **Tabs:** every panel shows, each under its tab's name (`.wp-block-matter-tab__label`, which the script hides); the tab list, and the dropdown button, aren't shown, since they can't switch anything. The server marks the active panel `is-active`, as the script does.
 - **Carousel:** the slides scroll natively.
 - **Filters:** a form with an Apply button, which the server filters.
+
+**Closed panels** (an accordion item, a collapsible's content) are `hidden="until-found"` once the script has started: the browser's find-in-page, a text fragment (`#:~:text=`) or a link to something inside opens the item (`beforematch`), in the browsers that support it (Chrome, Firefox and Safari today). Elsewhere the panel is plainly hidden and opens with its button. A panel is closed with `grid-template-rows: 0fr` and, unless it is `until-found`, `visibility: hidden`, which keeps what is in it out of the tab order and the accessibility tree; a theme that restyles the open and closed states does the same for both. The server renders no `inert` or `hidden`.
 
 ## Menus
 

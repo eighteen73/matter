@@ -88,6 +88,9 @@ class Overlay {
 
 					return ! empty( $state['items'][ $context['id'] ?? '' ]['isOpen'] );
 				},
+				// A collapsible's content is only hidden once the script runs
+				// (view.js), so without JavaScript it is readable.
+				'isHidden' => fn() => false,
 			]
 		);
 	}
@@ -163,7 +166,7 @@ class Overlay {
 
 		if ( 'collapsible' === $type ) {
 			return sprintf(
-				'<div %1$s>%2$s<div id="%3$s" class="%4$s__content" %5$s hidden data-wp-bind--hidden="!state.isOpen">%6$s</div></div>',
+				'<div %1$s>%2$s<div id="%3$s" class="%4$s__content" %5$s data-wp-class--is-open="state.isOpen" data-wp-bind--hidden="state.isHidden" data-wp-on--beforematch="actions.open">%6$s</div></div>',
 				get_block_wrapper_attributes( $extra ),
 				$trigger,
 				esc_attr( $id ),
