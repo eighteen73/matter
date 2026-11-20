@@ -113,66 +113,45 @@ class TriggerTest extends TestCase {
 	}
 
 	/**
-	 * A toggle before its panel (the usual order) and one after it both
-	 * control that panel.
+	 * The markup names the ID the panel was asked for, which is all the server
+	 * knows: the panel script pairs the toggle with a panel of that name (or a
+	 * numbered repeat of it) in the page. `aria-controls` starts as the same ID.
 	 *
 	 * @return void
 	 */
-	public function test_toggles_find_their_panel(): void {
-		$before = Trigger::button( 'site-nav' );
+	public function test_the_toggle_names_the_panel_it_was_asked_for(): void {
+		$html = Trigger::button( 'site-nav' );
 
-		Panel::render( 'site-nav', 'x' );
-
-		$this->assertSame( 'site-nav', self::controls( $before ) );
-
-		\Eighteen73\Matter\Ids::reset();
-
-		Panel::render( 'site-nav', 'x' );
-
-		$this->assertSame( 'site-nav', self::controls( Trigger::button( 'site-nav' ) ) );
+		$this->assertStringContainsString( 'data-matter-panel="site-nav"', $html );
+		$this->assertStringContainsString( 'data-wp-init="callbacks.bindToggle"', $html );
+		$this->assertSame( 'site-nav', self::controls( $html ) );
 	}
 
 	/**
-	 * A panel rendered twice (a template part used twice) is renamed the
-	 * second time, and each toggle goes with its own panel, whether the
-	 * toggles come before their panels or after them.
+	 * Toggles on either side of panels, and a panel rendered twice, all name
+	 * the ID they were asked for: the order they render in decides nothing.
 	 *
 	 * @return void
 	 */
-	public function test_a_panel_used_twice_has_a_toggle_each(): void {
-		$first = Trigger::button( 'site-nav' );
-		Panel::render( 'site-nav', 'one' );
-		$second = Trigger::button( 'site-nav' );
-		Panel::render( 'site-nav', 'two' );
+	public function test_repeats_do_not_change_what_a_toggle_names(): void {
+		$html  = Trigger::button( 'site-nav' );
+		$html .= Panel::render( 'site-nav', 'one' );
+		$html .= Trigger::button( 'site-nav' );
+		$html .= Panel::render( 'site-nav', 'two' );
+		$html .= Trigger::button( 'site-nav' );
 
-		$this->assertSame( 'site-nav', self::controls( $first ) );
-		$this->assertSame( 'site-nav-2', self::controls( $second ) );
-
-		// Toggles that come after their panels.
-		\Eighteen73\Matter\Ids::reset();
-
-		Panel::render( 'menu', 'one' );
-		$one = Trigger::button( 'menu' );
-		Panel::render( 'menu', 'two' );
-		$two = Trigger::button( 'menu' );
-
-		$this->assertSame( 'menu', self::controls( $one ) );
-		$this->assertSame( 'menu-2', self::controls( $two ) );
+		$this->assertSame( 3, substr_count( $html, 'data-matter-panel="site-nav"' ) );
+		$this->assertSame( 3, substr_count( $html, 'aria-controls="site-nav"' ) );
+		$this->assertStringContainsString( '<div id="site-nav-2" class="matter-panel', $html );
 	}
 
 	/**
-	 * Toggles with no panel between them share the one panel.
+	 * The ID is made safe in the attribute the script reads as well.
 	 *
 	 * @return void
 	 */
-	public function test_toggles_in_a_row_share_a_panel(): void {
-		$one = Trigger::button( 'site-nav' );
-		$two = Trigger::button( 'site-nav' );
-
-		Panel::render( 'site-nav', 'x' );
-
-		$this->assertSame( 'site-nav', self::controls( $one ) );
-		$this->assertSame( 'site-nav', self::controls( $two ) );
+	public function test_the_named_panel_is_sanitised(): void {
+		$this->assertStringContainsString( 'data-matter-panel="navonclickx"', Trigger::button( 'nav" onclick="x' ) );
 	}
 
 	/**
@@ -185,22 +164,5 @@ class TriggerTest extends TestCase {
 		Panel::render( 'site-nav', 'x', [ 'collapse_below' => 'lg' ] );
 
 		$this->assertStringContainsString( 'is-panel-lg', Trigger::button( 'site-nav' ) );
-	}
-
-	/**
-	 * Each page starts over: the toggles' memory doesn't carry into the next
-	 * render once the ID registry has restarted.
-	 *
-	 * @return void
-	 */
-	public function test_a_new_page_forgets_the_last(): void {
-		Panel::render( 'site-nav', 'x' );
-		Panel::render( 'site-nav', 'y' );
-
-		$this->assertSame( 'site-nav-2', self::controls( Trigger::button( 'site-nav' ) ) );
-
-		\Eighteen73\Matter\Ids::reset();
-
-		$this->assertSame( 'site-nav', self::controls( Trigger::button( 'site-nav' ) ) );
 	}
 }

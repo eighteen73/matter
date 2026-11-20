@@ -123,6 +123,51 @@ add_shortcode(
 	}
 );
 
+// Panels and their toggles in any arrangement, for the browser test of which
+// panel a toggle controls: `layout="t p t"` is a toggle, a panel, a toggle, and
+// `|` starts a new wrapper (a header of its own). Toggles are "Toggle 1",
+// "Toggle 2"...; panels are `.lay-panel-1`... with a link inside.
+add_shortcode(
+	'matter_panel_layout',
+	function ( $atts ) {
+		$atts   = shortcode_atts( [ 'layout' => 't p' ], $atts );
+		$toggle = 0;
+		$panel  = 0;
+		$html   = '';
+
+		foreach ( explode( '|', $atts['layout'] ) as $group ) {
+			$html .= '<div class="lay-group">';
+
+			foreach ( preg_split( '/\s+/', trim( $group ) ) as $item ) {
+				if ( 't' === $item ) {
+					++$toggle;
+					$html .= Eighteen73\Matter\get_panel_toggle(
+						'lay',
+						[
+							'collapse_below' => 'lg',
+							'label'          => 'Toggle ' . $toggle,
+						]
+					);
+				} else {
+					++$panel;
+					$html .= Eighteen73\Matter\get_panel(
+						'lay',
+						'<a href="#lay-link-' . $panel . '">Panel ' . $panel . ' link</a>',
+						[
+							'collapse_below' => 'lg',
+							'class'          => 'lay-panel-' . $panel,
+						]
+					);
+				}
+			}
+
+			$html .= '</div>';
+		}
+
+		return $html;
+	}
+);
+
 // The test section's locked media slot with another block type as its
 // template (a theme changing it after content was saved), switched on by the
 // browser test that checks saved blocks survive.

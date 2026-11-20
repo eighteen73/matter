@@ -40,22 +40,6 @@ class Panel {
 	private static array $panels = [];
 
 	/**
-	 * The IDs each panel was given this request, in render order, by the ID it
-	 * asked for (`site-nav` => `site-nav`, `site-nav-2`), so a toggle can find
-	 * the panel it belongs to when the same panel renders more than once.
-	 *
-	 * @var array<string, string[]>
-	 */
-	private static array $rendered = [];
-
-	/**
-	 * The ID registry `$rendered` belongs to.
-	 *
-	 * @var int
-	 */
-	private static int $generation = -1;
-
-	/**
 	 * Generated CSS already added this request, keyed by instance class.
 	 *
 	 * @var array<string, bool>
@@ -94,11 +78,7 @@ class Panel {
 		);
 
 		// A panel rendered twice (a template part in two places) keeps its IDs unique.
-		$asked = sanitize_html_class( $id );
-		$id    = Ids::claim( $id );
-
-		self::current();
-		self::$rendered[ $asked ][] = $id;
+		$id = Ids::claim( $id );
 
 		$settings = self::settings( $id, (string) $args['collapse_below'] );
 		$position = in_array( $args['position'], [ 'start', 'end', 'top' ], true ) ? $args['position'] : 'end';
@@ -128,30 +108,6 @@ class Panel {
 		);
 
 		return $args['process'] ? wp_interactivity_process_directives( $html ) : $html;
-	}
-
-	/**
-	 * The IDs a panel has been given so far, for the ID it asked for.
-	 *
-	 * @param string $asked The ID passed to `render()`.
-	 * @return string[] In render order.
-	 */
-	public static function rendered( string $asked ): array {
-		self::current();
-
-		return self::$rendered[ sanitize_html_class( $asked ) ] ?? [];
-	}
-
-	/**
-	 * Forget the panels of a page that is over (the ID registry has restarted).
-	 *
-	 * @return void
-	 */
-	private static function current(): void {
-		if ( self::$generation !== Ids::generation() ) {
-			self::$rendered   = [];
-			self::$generation = Ids::generation();
-		}
 	}
 
 	/**

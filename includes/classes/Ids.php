@@ -60,14 +60,6 @@ final class Ids {
 	private static array $labels = [];
 
 	/**
-	 * Counts the registries started, so what is kept per page elsewhere (which
-	 * panel a toggle belongs to) can tell it is out of date.
-	 *
-	 * @var int
-	 */
-	private static int $generation = 0;
-
-	/**
 	 * How many REST requests are being handled (they can be nested).
 	 *
 	 * @var int
@@ -145,30 +137,6 @@ final class Ids {
 	}
 
 	/**
-	 * The ID `claim()` would give next, without claiming it.
-	 *
-	 * @param string $id Requested ID.
-	 * @return string
-	 */
-	public static function peek( string $id ): string {
-		$id = sanitize_html_class( $id );
-
-		if ( '' === $id ) {
-			return '';
-		}
-
-		$candidate = $id;
-		$next      = self::$next[ $id ] ?? 2;
-
-		while ( isset( self::$claimed[ $candidate ] ) ) {
-			$candidate = $id . '-' . $next;
-			++$next;
-		}
-
-		return $candidate;
-	}
-
-	/**
 	 * Claim an accessible name for a landmark, so no two on the page share one
 	 * (axe: landmark-unique): the first keeps it, later ones are numbered,
 	 * "Photos", "Photos (2)". An empty name stays empty.
@@ -224,21 +192,11 @@ final class Ids {
 	}
 
 	/**
-	 * Which registry is current (changes whenever one starts).
-	 *
-	 * @return int
-	 */
-	public static function generation(): int {
-		return self::$generation;
-	}
-
-	/**
 	 * Forget every claim (a new page, or a test).
 	 *
 	 * @return void
 	 */
 	public static function reset(): void {
-		++self::$generation;
 		self::$claimed = [];
 		self::$next    = [];
 		self::$labels  = [];

@@ -1647,6 +1647,68 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 	});
 });
 
+test.describe('panel toggles', () => {
+	test.use({ viewport: MOBILE });
+
+	// Each arrangement of toggles (t) and panels (p) on a page, and the panel
+	// each toggle must open (`|` starts another header).
+	const arrangements = [
+		['toggle, panel, toggle', 't p t', [1, 1]],
+		['two headers, each with a toggle and a panel', 't p|t p', [1, 2]],
+		['two headers, panel then toggle', 'p t|p t', [1, 2]],
+		['panel, toggle', 'p t', [1]],
+		['toggle, panel', 't p', [1]],
+		['panel, toggle, panel', 'p t p', [2]],
+	];
+
+	for (const [name, layout, opens] of arrangements) {
+		test(`${name}: each toggle opens its own panel`, async ({
+			page,
+			requestUtils,
+		}) => {
+			const { link } = await createPage(
+				requestUtils,
+				`Toggles ${layout}`,
+				`<!-- wp:shortcode -->[matter_panel_layout layout="${layout}"]<!-- /wp:shortcode -->`
+			);
+
+			await page.goto(link);
+			await expect(page.locator('html')).toHaveClass(
+				/matter-ready-panel/
+			);
+
+			for (const [index, panelNumber] of opens.entries()) {
+				const toggle = page.getByRole('button', {
+					name: `Toggle ${index + 1}`,
+				});
+				const panel = page.locator(`.lay-panel-${panelNumber}`);
+				const id = (await panel.getAttribute('id')) ?? '';
+
+				await expect(toggle).toHaveAttribute('aria-controls', id);
+				await toggle.click();
+				await expect(panel).toHaveClass(/\bis-open\b/);
+				await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+				// Focus moves into the panel as it opens.
+				await expect(panel.getByRole('link')).toBeFocused();
+				await expect(page.locator('.matter-panel.is-open')).toHaveCount(
+					1
+				);
+				expect(
+					await page.evaluate(
+						(panelId) => window.matter.panel(panelId).isOpen,
+						id
+					)
+				).toBe(true);
+
+				await page.keyboard.press('Escape');
+				await expect(panel).not.toHaveClass(/\bis-open\b/);
+				await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+				await expect(toggle).toBeFocused();
+			}
+		});
+	}
+});
+
 test.describe('blocks rendered twice', () => {
 	test.use({ viewport: DESKTOP });
 

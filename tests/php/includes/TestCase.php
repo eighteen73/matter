@@ -40,7 +40,7 @@ abstract class TestCase extends WP_UnitTestCase {
 	 */
 	protected static function reset_static_caches(): void {
 		foreach ( [
-			Panel::class => [ 'panels', 'printed_css', 'rendered' ],
+			Panel::class => [ 'panels', 'printed_css' ],
 			Menu::class  => [ 'printed_css' ],
 		] as $class => $properties ) {
 			foreach ( $properties as $property ) {

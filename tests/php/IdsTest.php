@@ -307,11 +307,12 @@ class IdsTest extends TestCase {
 
 	/**
 	 * A panel rendered twice, with its toggle before it each time (a template
-	 * part used in two places): each toggle controls its own panel.
+	 * part used in two places): the panels get unique IDs, and the toggles name
+	 * the ID asked for, which the panel script pairs with the nearest panel.
 	 *
 	 * @return void
 	 */
-	public function test_toggles_follow_a_panel_rendered_twice(): void {
+	public function test_a_panel_rendered_twice_keeps_unique_ids_and_each_toggle_names_its_base(): void {
 		$html = '';
 
 		foreach ( [ 1, 2 ] as $ignored ) {
@@ -319,28 +320,34 @@ class IdsTest extends TestCase {
 			$html .= \Eighteen73\Matter\get_panel( 'site-nav', 'Menu', [ 'collapse_below' => 'lg' ] );
 		}
 
-		preg_match_all( '/aria-controls="([^"]+)"/', $html, $controls );
+		preg_match_all( '/data-matter-panel="([^"]+)"/', $html, $named );
 		preg_match_all( '/<div id="([^"]+)" class="matter-panel/', $html, $panels );
 
 		$this->assertSame( [ 'site-nav', 'site-nav-2' ], $panels[1] );
-		$this->assertSame( [ 'site-nav', 'site-nav-2' ], $controls[1] );
+		$this->assertSame( [ 'site-nav', 'site-nav' ], $named[1] );
 	}
 
 	/**
-	 * Toggles with no panel between them share one, and a toggle after its
-	 * panel controls it.
+	 * `isolate()` puts back everything it set aside: a claim, a repeat's counter
+	 * and a landmark name made inside it leave the page's registry as it was.
 	 *
 	 * @return void
 	 */
-	public function test_toggles_share_a_panel_and_can_follow_it(): void {
-		$html  = \Eighteen73\Matter\get_panel_toggle( 'a' );
-		$html .= \Eighteen73\Matter\get_panel_toggle( 'a' );
-		$html .= \Eighteen73\Matter\get_panel( 'a', 'Menu' );
-		$html .= \Eighteen73\Matter\get_panel( 'b', 'Menu' );
-		$html .= \Eighteen73\Matter\get_panel_toggle( 'b' );
+	public function test_isolate_restores_every_part_of_the_registry(): void {
+		Ids::claim( 'a' );
+		Ids::claim( 'a' );
+		Ids::claim_label( 'Photos' );
 
-		preg_match_all( '/aria-controls="([^"]+)"/', $html, $controls );
+		Ids::isolate(
+			function () {
+				Ids::claim( 'a' );
+				Ids::claim( 'b' );
+				Ids::claim_label( 'Photos' );
+			}
+		);
 
-		$this->assertSame( [ 'a', 'a', 'b' ], $controls[1] );
+		$this->assertSame( 'a-3', Ids::claim( 'a' ), 'the repeat counter is the page\'s' );
+		$this->assertSame( 'b', Ids::claim( 'b' ), 'what the preview claimed is not taken' );
+		$this->assertSame( 'Photos (2)', Ids::claim_label( 'Photos' ) );
 	}
 }

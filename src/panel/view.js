@@ -96,9 +96,82 @@ const opensOverlay = (link) =>
 
 const getContent = (panel) => panel.querySelector('.matter-panel__content');
 
-const getToggles = (id) => [
-	...document.querySelectorAll(`.matter-panel-toggle[aria-controls="${id}"]`),
-];
+/**
+ * The panels a toggle could control: the one with the ID it was rendered for,
+ * and the repeats of it that got a number (`site-nav`, `site-nav-2`) when a
+ * template part rendered the panel more than once.
+ *
+ * @param {string} base The ID the panel was asked for.
+ * @return {Element[]} The panels, in document order.
+ */
+const panelsNamed = (base) =>
+	[...document.querySelectorAll('.matter-panel')].filter(
+		(panel) =>
+			panel.id === base ||
+			(panel.id.startsWith(`${base}-`) &&
+				/^\d+$/.test(panel.id.slice(base.length + 1)))
+	);
+
+const depth = (element) => {
+	let levels = 0;
+
+	for (let node = element; node.parentElement; node = node.parentElement) {
+		levels++;
+	}
+
+	return levels;
+};
+
+/**
+ * The panel a toggle controls. The server only knows the ID a panel was asked
+ * for, so the toggle is paired with a panel here, once the page is there: the
+ * only one, or of several the one it shares the closest ancestor with (the
+ * same header), and then the nearest in the document, the one after the
+ * toggle (the usual order) if two are as near.
+ *
+ * @param {Element} toggle Toggle.
+ * @return {Element|null} Panel.
+ */
+const panelFor = (toggle) => {
+	const panels = panelsNamed(
+		toggle.dataset.matterPanel ?? toggle.getAttribute('aria-controls') ?? ''
+	);
+
+	if (panels.length < 2) {
+		return panels[0] ?? null;
+	}
+
+	const shared = (panel) => {
+		let node = toggle.parentElement;
+
+		while (node && !node.contains(panel)) {
+			node = node.parentElement;
+		}
+
+		return node ? depth(node) : -1;
+	};
+	const ordered = [toggle, ...panels].sort((a, b) =>
+		// eslint-disable-next-line no-bitwise
+		a.compareDocumentPosition(b) & window.Node.DOCUMENT_POSITION_FOLLOWING
+			? -1
+			: 1
+	);
+	const at = ordered.indexOf(toggle);
+	const distance = (panel) => Math.abs(ordered.indexOf(panel) - at);
+	const after = (panel) => (ordered.indexOf(panel) > at ? 0 : 1);
+
+	return panels.sort(
+		(a, b) =>
+			shared(b) - shared(a) ||
+			distance(a) - distance(b) ||
+			after(a) - after(b)
+	)[0];
+};
+
+const getToggles = (id) =>
+	[...document.querySelectorAll('.matter-panel-toggle')].filter(
+		(toggle) => panelFor(toggle)?.id === id
+	);
 
 /**
  * Where focus goes when a panel closes: the control that opened it, if it is
@@ -370,6 +443,22 @@ const { state, actions } = store(
 			}),
 		},
 		callbacks: {
+			/**
+			 * Point a toggle at its panel (the markup names the ID the panel
+			 * was asked for), so its state, `aria-controls` and the panel's
+			 * instance all follow the same one.
+			 */
+			bindToggle() {
+				const { ref } = getElement();
+				const panel = panelFor(ref);
+
+				if (!panel) {
+					return;
+				}
+
+				getContext().id = panel.id;
+				ref.setAttribute('aria-controls', panel.id);
+			},
 			init() {
 				const { id, query, label } = getContext();
 				const { ref } = getElement();
