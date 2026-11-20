@@ -905,7 +905,7 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		);
 	});
 
-	test('a modal opened from a link in the panel leaves nothing inert or trapped', async ({
+	test('a modal opened from a link in the panel opens over it, and focus goes back to the link', async ({
 		page,
 	}) => {
 		await page.goto(kitchenSink.link);
@@ -920,30 +920,34 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 
 		const panel = page.locator('#test-nav');
 		const dialog = page.getByRole('dialog', { name: 'Modal in a tab' });
+		const link = page.locator('#panel-modal-link');
 
 		await page.locator('[aria-controls="test-nav"]').click();
 		await expect(panel).toHaveClass(/\bis-open\b/);
-		await page.locator('#panel-modal-link').click();
+		await link.click();
 		await expect(dialog).toBeVisible();
-		await expect(panel).not.toHaveClass(/\bis-open\b/);
-		await expect(page.locator('html')).not.toHaveClass(
-			/\bhas-panel-open\b/
-		);
+		// As with a button: the panel stays open under the modal.
+		await expect(panel).toHaveClass(/\bis-open\b/);
 
-		const close = dialog.getByRole('button', { name: /close/i }).first();
-
-		await close.focus();
-		await expect(close).toBeFocused();
-		await close.click();
+		await page.keyboard.press('Escape');
 		await expect(dialog).toBeHidden();
-		expect(
-			await page.evaluate(
-				() =>
-					document.querySelectorAll(
-						'[inert]:not(.matter-menu__submenu)'
-					).length
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
+		await expect(link).toBeFocused();
+
+		// And the panel still closes as it always did.
+		await page.locator('.matter-panel__close').click();
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						document.querySelectorAll(
+							'[inert]:not(.matter-menu__submenu)'
+						).length
+				)
 			)
-		).toBe(0);
+			.toBe(0);
 	});
 
 	test('a panel opened while a modal is open stays out of its way, and takes focus when the modal closes', async ({

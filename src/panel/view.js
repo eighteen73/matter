@@ -37,6 +37,7 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { focused, isUsable } from '../interactivity/focus';
+import { hashId, isSamePage, opensHere } from '../interactivity/hash';
 import {
 	acquireScrollLock,
 	inertAround,
@@ -78,6 +79,20 @@ const stack = [];
 const openers = new Map();
 
 const isCollapsed = (id) => queries.get(id)?.matches ?? true;
+
+/**
+ * Whether a link opens an overlay on this page (the overlay script's own
+ * test of a trigger: a link here, in this tab, to an overlay that exists).
+ *
+ * @param {HTMLAnchorElement} link Link.
+ * @return {boolean} Whether it does.
+ */
+const opensOverlay = (link) =>
+	link.hash.length > 1 &&
+	!link.hasAttribute('data-wp-on--click') &&
+	opensHere(link) &&
+	isSamePage(link) &&
+	!!window.matter?.overlay?.(hashId(link.hash));
 
 const getContent = (panel) => panel.querySelector('.matter-panel__content');
 
@@ -427,7 +442,14 @@ const { state, actions } = store(
 							event.shiftKey ||
 							link?.target === '_blank';
 
-						if (link && ref.contains(link) && !newTab) {
+						// A link to a modal on this page opens it over the panel, as a
+						// button does: the panel stays, and focus returns to the link.
+						if (
+							link &&
+							ref.contains(link) &&
+							!newTab &&
+							!opensOverlay(link)
+						) {
 							closeOnNavigate();
 						}
 					},

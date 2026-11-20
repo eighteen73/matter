@@ -42,3 +42,32 @@ export const scrollWhenShown = (target, frames = 30) => {
 
 	window.requestAnimationFrame(() => attempt(frames));
 };
+
+/**
+ * Whether a link goes to the page it's on: the same origin, path and query
+ * (so only the hash differs). A link to another page, or the same path with
+ * another query, that happens to end in `#id` is an ordinary link.
+ *
+ * @param {HTMLAnchorElement} link Link.
+ * @return {boolean} Whether it is to this page.
+ */
+export const isSamePage = (link) => {
+	const url = new URL(link.href, window.location.href);
+
+	return (
+		url.origin === window.location.origin &&
+		url.pathname === window.location.pathname &&
+		url.search === window.location.search
+	);
+};
+
+/**
+ * Whether a link opens in this tab. One for a new tab or window, or a download,
+ * isn't a trigger: its own behaviour is the point of it.
+ *
+ * @param {HTMLAnchorElement} link Link.
+ * @return {boolean} Whether it navigates this page.
+ */
+export const opensHere = (link) =>
+	(link.target === '' || link.target === '_self') &&
+	!link.hasAttribute('download');

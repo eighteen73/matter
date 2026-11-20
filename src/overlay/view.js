@@ -56,7 +56,7 @@ import {
 } from '@matter/inert';
 import { createSuspensions } from './suspensions';
 import { focusFirst, focused, isUsable } from '../interactivity/focus';
-import { hashId } from '../interactivity/hash';
+import { hashId, isSamePage, opensHere } from '../interactivity/hash';
 import {
 	afterTransitions,
 	cancelClose,
@@ -233,35 +233,6 @@ const prepareArea = (area) => {
 		}
 	});
 };
-
-/**
- * Whether a link goes to the page it's on: the same origin, path and query
- * (so only the hash differs). A link to another page, or the same path with
- * another query, that happens to end in `#id` is an ordinary link.
- *
- * @param {HTMLAnchorElement} link Link.
- * @return {boolean} Whether it is to this page.
- */
-const isSamePage = (link) => {
-	const url = new URL(link.href, window.location.href);
-
-	return (
-		url.origin === window.location.origin &&
-		url.pathname === window.location.pathname &&
-		url.search === window.location.search
-	);
-};
-
-/**
- * Whether a link opens in this tab. One for a new tab or window, or a download,
- * isn't a trigger: its own behaviour is the point of it.
- *
- * @param {HTMLAnchorElement} link Link.
- * @return {boolean} Whether it navigates this page.
- */
-const opensHere = (link) =>
-	(link.target === '' || link.target === '_self') &&
-	!link.hasAttribute('download');
 
 /**
  * Whether an element that links to or controls an overlay is its trigger.
