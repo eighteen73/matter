@@ -179,4 +179,50 @@ class AccessibilityTest extends TestCase {
 		$this->assertStringContainsString( 'aria-labelledby="join-2-title"', $html );
 		$this->assertStringContainsString( 'id="join-2-title"', $html );
 	}
+
+	/**
+	 * What names a dialog is its own first heading, not one that is not
+	 * shown or is not the dialog's: an accordion item's or a tab's, one in a
+	 * template, a nested dialog, or something hidden or inert.
+	 *
+	 * @return void
+	 */
+	public function test_a_dialog_is_not_named_by_a_heading_that_is_not_its_own(): void {
+		$modal = fn( string $content ) => '<!-- wp:matter/modal {"overlayId":"join"} --><!-- wp:matter/slot {"name":"content"} -->' . $content . '<!-- /wp:matter/slot --><!-- /wp:matter/modal -->';
+		$real  = '<!-- wp:heading --><h2 class="wp-block-heading">Real title</h2><!-- /wp:heading -->';
+
+		// An accordion first: the name comes from the later real heading.
+		$html = $this->render( $modal( $this->accordion( 2 ) . $real ) );
+
+		$this->assertStringContainsString( 'aria-labelledby="join-title"', $html );
+		$this->assertStringContainsString( '<h2 id="join-title" class="wp-block-heading">Real title</h2>', $html );
+		$this->assertStringNotContainsString( 'accordion-item__heading" id=', $html );
+		$this->assertStringNotContainsString( 'id="join-title" class="wp-block-matter-accordion-item__heading"', $html );
+
+		// Only an accordion: it falls back.
+		Ids::reset();
+
+		$html = $this->render( $modal( $this->accordion( 2 ) ) );
+
+		$this->assertStringContainsString( 'aria-label="Dialog"', $html );
+		$this->assertStringNotContainsString( 'aria-labelledby="join-title"', $html );
+
+		// Tab labels, and what is hidden, inert, a template or another dialog.
+		$skipped = [
+			'a tab label'      => '<!-- wp:matter/tabs --><!-- wp:matter/tab {"label":"One"} --><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --><!-- /wp:matter/tab --><!-- /wp:matter/tabs -->',
+			'hidden'           => '<!-- wp:html --><h2 hidden>Hidden</h2><!-- /wp:html -->',
+			'in hidden'        => '<!-- wp:html --><div hidden><h2>In hidden</h2></div><!-- /wp:html -->',
+			'in inert'         => '<!-- wp:html --><div inert><h2>In inert</h2></div><!-- /wp:html -->',
+			'in a template'    => '<!-- wp:html --><template><h2>In template</h2></template><!-- /wp:html -->',
+			'in a dialog'      => '<!-- wp:html --><dialog><h2>In dialog</h2></dialog><!-- /wp:html -->',
+		];
+
+		foreach ( $skipped as $what => $markup ) {
+			Ids::reset();
+
+			$html = $this->render( $modal( $markup . $real ) );
+
+			$this->assertStringContainsString( '<h2 id="join-title" class="wp-block-heading">Real title</h2>', $html, $what );
+		}
+	}
 }

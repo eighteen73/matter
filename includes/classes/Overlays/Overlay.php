@@ -20,6 +20,7 @@ use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Sections\Sections;
 use WP_Block;
+use WP_HTML_Processor;
 use WP_HTML_Tag_Processor;
 
 defined( 'ABSPATH' ) || exit;
@@ -214,7 +215,10 @@ class Overlay {
 
 	/**
 	 * The ID of the first heading in an overlay's content (a `<h1>` to `<h6>`
-	 * or `role="heading"`), giving it one if it has none, to name the dialog.
+	 * or `role="heading"`) that is the dialog's own, giving it one if it has
+	 * none, to name the dialog. Not one that isn't shown or isn't its own: in a
+	 * nested dialog, a template, something hidden or inert, an accordion item's
+	 * heading (a button's wrapper) or a tab's label.
 	 *
 	 * @param string $html    Content.
 	 * @param string $id      Overlay ID.
@@ -223,28 +227,98 @@ class Overlay {
 	 */
 	private static function name_from_heading( string $html, string $id, ?string &$heading ): string {
 		$heading = '';
-		$tags    = new WP_HTML_Tag_Processor( $html );
 
-		while ( $tags->next_tag() ) {
-			if ( ! in_array( $tags->get_tag(), [ 'H1', 'H2', 'H3', 'H4', 'H5', 'H6' ], true ) && 'heading' !== $tags->get_attribute( 'role' ) ) {
-				continue;
+		// The HTML processor knows what a heading sits in. Where it gives up
+		// (markup it doesn't support), the plain scan below checks the
+		// heading's own attributes only.
+		$tags = WP_HTML_Processor::create_fragment( $html );
+
+		if ( null !== $tags ) {
+			$inside = null;
+
+			while ( $tags->next_token() ) {
+				if ( '#tag' !== $tags->get_token_type() || $tags->is_tag_closer() ) {
+					continue;
+				}
+
+				$depth = $tags->get_current_depth();
+
+				if ( null !== $inside && $depth <= $inside ) {
+					$inside = null;
+				}
+
+				if ( null === $inside && self::is_unshown( $tags ) ) {
+					$inside = $depth;
+				}
+
+				if ( null === $inside && self::is_named_by( $tags ) ) {
+					return self::give_id( $tags, $id, $heading );
+				}
 			}
 
-			$existing = $tags->get_attribute( 'id' );
-
-			if ( is_string( $existing ) && '' !== $existing ) {
-				$heading = $existing;
-
+			if ( null === $tags->get_last_error() ) {
 				return $html;
 			}
+		}
 
-			$heading = Ids::claim( $id . '-title' );
-			$tags->set_attribute( 'id', $heading );
+		$tags = new WP_HTML_Tag_Processor( $html );
+
+		while ( $tags->next_tag() ) {
+			if ( ! self::is_unshown( $tags ) && self::is_named_by( $tags ) ) {
+				return self::give_id( $tags, $id, $heading );
+			}
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Whether a tag, and what is in it, is not the dialog's to be named by: a
+	 * nested dialog, a template, something hidden or inert.
+	 *
+	 * @param WP_HTML_Tag_Processor $tags Processor at an opening tag.
+	 * @return bool
+	 */
+	private static function is_unshown( WP_HTML_Tag_Processor $tags ): bool {
+		return in_array( $tags->get_tag(), [ 'DIALOG', 'TEMPLATE' ], true )
+			|| null !== $tags->get_attribute( 'hidden' )
+			|| null !== $tags->get_attribute( 'inert' );
+	}
+
+	/**
+	 * Whether a tag is a heading that can name the dialog: not an accordion
+	 * item's heading or a tab's label.
+	 *
+	 * @param WP_HTML_Tag_Processor $tags Processor at an opening tag.
+	 * @return bool
+	 */
+	private static function is_named_by( WP_HTML_Tag_Processor $tags ): bool {
+		return ( in_array( $tags->get_tag(), [ 'H1', 'H2', 'H3', 'H4', 'H5', 'H6' ], true ) || 'heading' === $tags->get_attribute( 'role' ) )
+			&& ! $tags->has_class( 'wp-block-matter-accordion-item__heading' )
+			&& ! $tags->has_class( 'wp-block-matter-tab__label' );
+	}
+
+	/**
+	 * Give the heading at the processor an ID.
+	 *
+	 * @param WP_HTML_Tag_Processor $tags    Processor at the heading.
+	 * @param string                $id      Overlay ID.
+	 * @param string                $heading Set to the heading's ID.
+	 * @return string The content, with the heading's ID.
+	 */
+	private static function give_id( WP_HTML_Tag_Processor $tags, string $id, ?string &$heading ): string {
+		$existing = $tags->get_attribute( 'id' );
+
+		if ( is_string( $existing ) && '' !== $existing ) {
+			$heading = $existing;
 
 			return $tags->get_updated_html();
 		}
 
-		return $html;
+		$heading = Ids::claim( $id . '-title' );
+		$tags->set_attribute( 'id', $heading );
+
+		return $tags->get_updated_html();
 	}
 
 	/**
