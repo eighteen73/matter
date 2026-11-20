@@ -125,6 +125,77 @@ class SectionsTest extends TestCase {
 	}
 
 	/**
+	 * A slot's HTML past the regex engine's backtrack limit (about 1 MB) comes
+	 * back whole, and the slots after it aren't lost.
+	 *
+	 * @return void
+	 */
+	public function test_a_slot_over_two_megabytes(): void {
+		$big     = str_repeat( '<p>Filler paragraph to make the slot large.</p>', 50000 ) . '<p>End marker</p>';
+		$content = Sections::mark_slot( 'content', $big ) . Sections::mark_slot( 'media', '<img>' );
+
+		$this->assertGreaterThan( 2 * 1024 * 1024, strlen( $content ) );
+
+		$slots = Sections::slots( $content, [ 'content', 'media' ] );
+
+		$this->assertSame( $big, $slots['content'] );
+		$this->assertSame( '<img>', $slots['media'] );
+		$this->assertSame( [ 'content', 'media' ], array_keys( Sections::slots( $content ) ) );
+	}
+
+	/**
+	 * A slot holding a slot of the same name (a section in a slot of the same
+	 * name) ends at its own closing marker, and what is nested stays inside.
+	 *
+	 * @return void
+	 */
+	public function test_nested_slots_of_the_same_name(): void {
+		$inner   = Sections::mark_slot( 'content', '<p>Inner</p>' );
+		$content = Sections::mark_slot( 'content', '<p>Before</p>' . $inner . '<p>After</p>' ) . Sections::mark_slot( 'media', '<img>' );
+
+		$this->assertSame(
+			[
+				'content' => '<p>Before</p>' . $inner . '<p>After</p>',
+				'media'   => '<img>',
+			],
+			Sections::slots( $content )
+		);
+
+		// A different name nested stays inside too, and a marker left open is skipped.
+		$content = '<!--matter-slot:broken--><p>No end</p>' . Sections::mark_slot( 'a', Sections::mark_slot( 'b', 'B' ) );
+
+		$this->assertSame( [ 'a' => Sections::mark_slot( 'b', 'B' ) ], Sections::slots( $content ) );
+	}
+
+	/**
+	 * A slot name other than letters, numbers, hyphens and underscores can't
+	 * be matched by its marker, so declaring one is reported.
+	 *
+	 * @return void
+	 */
+	public function test_invalid_slot_names_are_reported(): void {
+		$this->setExpectedIncorrectUsage( 'matter-test/bad-slot' );
+
+		register_block_type(
+			'matter-test/bad-slot',
+			[
+				'supports' => [
+					'matter' => [
+						'slots' => [
+							'good_name-1' => [],
+							'bad name'    => [],
+						],
+					],
+				],
+			]
+		);
+
+		unregister_block_type( 'matter-test/bad-slot' );
+
+		$this->assertTrue( true );
+	}
+
+	/**
 	 * A slot name is reduced to word characters and hyphens in its marker.
 	 *
 	 * @return void

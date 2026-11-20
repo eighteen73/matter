@@ -8,6 +8,7 @@ const {
 	createArchiveEntry,
 	createCategories,
 	createDuplicatesPage,
+	createLargeSlotPage,
 	deleteArchiveEntries,
 	createMenu,
 	createPage,
@@ -648,6 +649,23 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		await page.keyboard.press('Escape');
 		await expect(panel).not.toHaveClass(/\bis-open\b/);
 		await expect(toggle).toBeFocused();
+	});
+});
+
+test.describe('slots', () => {
+	test.use({ viewport: DESKTOP });
+
+	test('a slot of over 1 MB renders, with the slots after it', async ({
+		page,
+		requestUtils,
+	}) => {
+		const large = await createLargeSlotPage(requestUtils);
+
+		await page.goto(large.link);
+		await expect(page.getByText('End of the large slot')).toBeVisible();
+		await expect(
+			page.getByText('Media slot after the large one')
+		).toBeVisible();
 	});
 });
 

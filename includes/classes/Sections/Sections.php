@@ -76,6 +76,7 @@ class Sections {
 	 */
 	public function setup(): void {
 		add_filter( 'register_block_type_args', [ $this, 'default_render' ], 10, 2 );
+		add_filter( 'register_block_type_args', [ $this, 'check_slot_names' ], 10, 2 );
 		add_filter( 'block_categories_all', [ $this, 'register_category' ] );
 		add_action( 'init', [ $this, 'register_block_support' ], 5 );
 		// Once every block is registered, so a section in a slot's template
@@ -253,6 +254,41 @@ class Sections {
 	}
 
 	/**
+	 * Report slot names a marker can't carry. A slot is matched by its name in
+	 * the markers around its content, which keep letters, numbers, hyphens and
+	 * underscores, so any other name never matches and its slot stays empty.
+	 *
+	 * @param array  $args       Block type args.
+	 * @param string $block_name Block name.
+	 * @return array
+	 */
+	public function check_slot_names( array $args, string $block_name ): array {
+		$slots = $args['supports']['matter']['slots'] ?? null;
+
+		if ( ! is_array( $slots ) ) {
+			return $args;
+		}
+
+		foreach ( array_keys( $slots ) as $name ) {
+			if ( ! preg_match( '/^[A-Za-z0-9_-]+$/', (string) $name ) ) {
+				_doing_it_wrong(
+					esc_html( $block_name ),
+					esc_html(
+						sprintf(
+							/* translators: %s: slot name */
+							__( 'The slot name "%s" must use only letters, numbers, hyphens and underscores.', 'matter' ),
+							$name
+						)
+					),
+					'1.0.0'
+				);
+			}
+		}
+
+		return $args;
+	}
+
+	/**
 	 * Give sections without a render.php the default renderer.
 	 *
 	 * @param array  $args       Block type args.
@@ -408,13 +444,7 @@ class Sections {
 	 */
 	public static function slots( string $content, array $names = [], array $aliases = [] ): array {
 		$slots = array_fill_keys( $names, '' );
-		$found = [];
-
-		preg_match_all( '/<!--matter-slot:([\w-]+)-->(.*?)<!--\/matter-slot:\1-->/s', $content, $matches, PREG_SET_ORDER );
-
-		foreach ( $matches as $match ) {
-			$found[ $match[1] ] ??= $match[2];
-		}
+		$found = self::find_slots( $content );
 
 		if ( ! $names ) {
 			return $found;
@@ -431,6 +461,79 @@ class Sections {
 		}
 
 		return $slots;
+	}
+
+	/**
+	 * The slots in rendered content, outermost only, by name (the first of a
+	 * name wins).
+	 *
+	 * A marker scan, not a regular expression: a pattern with a backreference
+	 * fails past `pcre.backtrack_limit` (about 1 MB of slot HTML) and would
+	 * return nothing. A slot nested in one of the same name ends at its own
+	 * closing marker.
+	 *
+	 * @param string $content Section inner content.
+	 * @return array<string, string> Slot name => HTML.
+	 */
+	private static function find_slots( string $content ): array {
+		$prefix = '<!--matter-slot:';
+		$found  = [];
+		$pos    = 0;
+
+		while ( true ) {
+			$start = strpos( $content, $prefix, $pos );
+
+			if ( false === $start ) {
+				break;
+			}
+
+			$name_at = $start + strlen( $prefix );
+			$end     = strpos( $content, '-->', $name_at );
+
+			if ( false === $end ) {
+				break;
+			}
+
+			$name = substr( $content, $name_at, $end - $name_at );
+			$pos  = $name_at;
+
+			if ( ! preg_match( '/^[\w-]+$/', $name ) ) {
+				continue;
+			}
+
+			$open      = "{$prefix}{$name}-->";
+			$close     = "<!--/matter-slot:{$name}-->";
+			$body_at   = $end + 3;
+			$cursor    = $body_at;
+			$depth     = 1;
+			$next_open = strpos( $content, $open, $cursor );
+
+			while ( true ) {
+				$next_close = strpos( $content, $close, $cursor );
+
+				if ( false === $next_close ) {
+					break;
+				}
+
+				if ( false !== $next_open && $next_open < $next_close ) {
+					++$depth;
+					$cursor    = $next_open + strlen( $open );
+					$next_open = strpos( $content, $open, $cursor );
+					continue;
+				}
+
+				--$depth;
+				$cursor = $next_close + strlen( $close );
+
+				if ( 0 === $depth ) {
+					$found[ $name ] ??= substr( $content, $body_at, $next_close - $body_at );
+					$pos              = $cursor;
+					break;
+				}
+			}
+		}
+
+		return $found;
 	}
 
 	/**
