@@ -8,6 +8,8 @@
 
 namespace Eighteen73\Matter\Tests;
 
+use WP_HTML_Processor;
+
 use Eighteen73\Matter\Ids;
 
 /**
@@ -239,6 +241,57 @@ class AccessibilityTest extends TestCase {
 
 		$this->assertStringContainsString( 'aria-label="Dialog"', $html );
 		$this->assertStringNotContainsString( 'aria-labelledby', $html );
+	}
+
+	/**
+	 * Where the HTML processor gives up on the markup (a formatting element
+	 * closed across a paragraph), the fallback scan still knows what is
+	 * hidden, inert, a template or a dialog, and skips headings inside it.
+	 *
+	 * @return void
+	 */
+	public function test_a_dialog_is_named_by_the_right_heading_where_the_html_processor_bails(): void {
+		$modal = fn( string $content ) => '<!-- wp:matter/modal {"overlayId":"join"} --><!-- wp:matter/slot {"name":"content"} -->' . $content . '<!-- /wp:matter/slot --><!-- /wp:matter/modal -->';
+
+		// Misnested formatting makes WP_HTML_Processor bail.
+		$bails = WP_HTML_Processor::create_fragment( '<b><p>x</b>' );
+
+		while ( $bails && $bails->next_token() ) {
+			continue;
+		}
+
+		$this->assertNotNull( $bails?->get_last_error(), 'the input must make the HTML processor bail' );
+
+		$cases = [
+			'hidden'   => '<div hidden><h2>no</h2></div><b><p>x</b><h2>yes</h2>',
+			'inert'    => '<section inert><h2>no</h2><p>x</p></section><b><p>x</b><h2>yes</h2>',
+			'template' => '<template><h2>no</h2></template><b><p>x</b><h2>yes</h2>',
+			'dialog'   => '<dialog><h2>no</h2></dialog><b><p>x</b><h2>yes</h2>',
+		];
+
+		foreach ( $cases as $name => $html ) {
+			Ids::reset();
+
+			$out = $this->render( $modal( '<!-- wp:html -->' . $html . '<!-- /wp:html -->' ) );
+
+			$this->assertStringContainsString( 'aria-labelledby="join-title"', $out, $name );
+			$this->assertStringContainsString( '<h2 id="join-title">yes</h2>', $out, $name );
+			$this->assertStringNotContainsString( '<h2 id="join-title">no</h2>', $out, $name );
+		}
+	}
+
+	/**
+	 * Content of a great many tokens is not walked by the HTML processor: the
+	 * scan stops at a cap and falls back, and still names the dialog.
+	 *
+	 * @return void
+	 */
+	public function test_naming_a_dialog_from_enormous_content_falls_back(): void {
+		$html = '<div hidden><h2>no</h2></div>' . str_repeat( '<span>a</span>', 12000 ) . '<h2>late</h2>';
+		$out  = $this->render( '<!-- wp:matter/modal {"overlayId":"join"} --><!-- wp:matter/slot {"name":"content"} --><!-- wp:html -->' . $html . '<!-- /wp:html --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->' );
+
+		$this->assertStringContainsString( '<h2 id="join-title">late</h2>', $out );
+		$this->assertStringContainsString( 'aria-labelledby="join-title"', $out );
 	}
 
 	/**

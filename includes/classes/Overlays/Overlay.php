@@ -31,6 +31,12 @@ defined( 'ABSPATH' ) || exit;
 class Overlay {
 
 	/**
+	 * How many tokens of a dialog's content are walked to find its heading with
+	 * the HTML processor, before the plain scan takes over.
+	 */
+	private const NAME_SCAN_LIMIT = 20000;
+
+	/**
 	 * The overlay's base ID: the editor-assigned ID (cleaned as the editor
 	 * cleans it), or a generated fallback. The fallback changes between page
 	 * loads, so only a saved ID can be linked to or remembered (see render()).
@@ -229,14 +235,20 @@ class Overlay {
 		$heading = '';
 
 		// The HTML processor knows what a heading sits in. Where it gives up
-		// (markup it doesn't support), the plain scan below checks the
-		// heading's own attributes only.
-		$tags = WP_HTML_Processor::create_fragment( $html );
+		// (markup it doesn't support), or the content is too long to walk
+		// (a cap on tokens), the plain scan below keeps its own stack of what
+		// is open.
+		$tags   = WP_HTML_Processor::create_fragment( $html );
+		$walked = 0;
 
 		if ( null !== $tags ) {
 			$inside = null;
 
 			while ( $tags->next_token() ) {
+				if ( ++$walked > self::NAME_SCAN_LIMIT ) {
+					break;
+				}
+
 				if ( '#tag' !== $tags->get_token_type() || $tags->is_tag_closer() ) {
 					continue;
 				}
@@ -256,16 +268,54 @@ class Overlay {
 				}
 			}
 
-			if ( null === $tags->get_last_error() ) {
+			if ( $walked <= self::NAME_SCAN_LIMIT && null === $tags->get_last_error() ) {
 				return $html;
 			}
 		}
 
-		$tags = new WP_HTML_Tag_Processor( $html );
+		return self::name_from_heading_plain( $html, $id, $heading );
+	}
 
-		while ( $tags->next_tag() ) {
-			if ( ! self::is_unshown( $tags ) && self::is_named_by( $tags ) ) {
+	/**
+	 * The plain scan for a dialog's heading, where the HTML processor can't be
+	 * used: a stack of the elements that are open tells whether the heading is
+	 * inside something not shown (hidden, inert, a template, a dialog). A close
+	 * tag closes the nearest open element of its name, so misnested markup
+	 * doesn't leave something "open" for good.
+	 *
+	 * @param string $html    Content.
+	 * @param string $id      Overlay ID.
+	 * @param string $heading Set to the heading's ID, or '' if there is none.
+	 * @return string The content, with the heading's ID.
+	 */
+	private static function name_from_heading_plain( string $html, string $id, ?string &$heading ): string {
+		$tags  = new WP_HTML_Tag_Processor( $html );
+		$stack = [];
+		$void  = [ 'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR' ];
+
+		while ( $tags->next_tag( [ 'tag_closers' => 'visit' ] ) ) {
+			$tag = (string) $tags->get_tag();
+
+			if ( $tags->is_tag_closer() ) {
+				for ( $i = count( $stack ) - 1; $i >= 0; $i-- ) {
+					if ( $stack[ $i ][0] === $tag ) {
+						array_splice( $stack, $i );
+						break;
+					}
+				}
+
+				continue;
+			}
+
+			$unshown = self::is_unshown( $tags );
+			$inside  = $unshown || in_array( true, array_column( $stack, 1 ), true );
+
+			if ( ! $inside && self::is_named_by( $tags ) ) {
 				return self::give_id( $tags, $id, $heading );
+			}
+
+			if ( ! in_array( $tag, $void, true ) ) {
+				$stack[] = [ $tag, $unshown ];
 			}
 		}
 
