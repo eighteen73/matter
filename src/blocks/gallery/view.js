@@ -29,6 +29,7 @@ import {
  */
 import {
 	emit,
+	enhance,
 	fromDirective,
 	registerInstance,
 	registerType,
@@ -112,6 +113,8 @@ const { actions } = store('matter/gallery', {
 		init() {
 			const context = getContext();
 			const { ref } = getElement();
+
+			enhance(ref);
 			const step = withScope((offset) => {
 				const count = context.images.length;
 

@@ -38,7 +38,12 @@ import {
 /**
  * Internal dependencies
  */
-import { emit, registerInstance, registerType } from '../interactivity/api';
+import {
+	emit,
+	enhance,
+	registerInstance,
+	registerType,
+} from '../interactivity/api';
 
 const SELECTOR = '.wp-block-matter-filters';
 
@@ -758,6 +763,7 @@ const { state, actions } = store('matter/filters', {
 			const { listing } = getContext();
 			const { ref } = getElement();
 
+			enhance(ref);
 			elements.set(ref, listing);
 
 			registerInstance('filters', ref, {

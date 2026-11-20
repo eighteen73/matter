@@ -25,6 +25,7 @@ import { createTrap as createFocusTrap } from '@matter/focus-trap';
 /**
  * Internal dependencies
  */
+import { enhance } from '../interactivity/api';
 import { suspendTransitions } from '../interactivity/transitions';
 import { clearPlacements, unwatchSubmenu, watchSubmenu } from './positioning';
 
@@ -480,6 +481,7 @@ const { state } = store(
 				const context = getContext();
 				const { ref } = getElement();
 
+				enhance(ref);
 				context.menuType = resolveType(context.types);
 
 				// Follow the active type as the viewport crosses breakpoints.

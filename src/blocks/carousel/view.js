@@ -39,6 +39,7 @@ import Autoplay from 'embla-carousel-autoplay';
  */
 import {
 	emit,
+	enhance,
 	fromDirective,
 	registerInstance,
 	registerType,
@@ -277,6 +278,8 @@ store('matter/carousel', {
 		init() {
 			const context = getContext();
 			const { ref } = getElement();
+
+			enhance(ref);
 			const viewport = own(ref, '.wp-block-matter-carousel__viewport')[0];
 			const track = viewport.querySelector(
 				'.wp-block-matter-carousel__track'

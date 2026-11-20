@@ -214,6 +214,17 @@ export function registerType(type, selector) {
 }
 
 /**
+ * Mark a block as running: `is-enhanced`, which the block's CSS hides content
+ * behind (so a block whose module fails keeps its content showing). Blocks
+ * call it first in `callbacks.init`.
+ *
+ * @param {...Element} elements Block root, and anything else that goes with it.
+ */
+export function enhance(...elements) {
+	elements.forEach((element) => element?.classList.add('is-enhanced'));
+}
+
+/**
  * Register a block's instance and announce it (`matter-{type}-ready`).
  *
  * @param {string}  type     Type.

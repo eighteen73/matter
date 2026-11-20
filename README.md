@@ -392,7 +392,20 @@ Scripts built with the Interactivity API can use the stores instead: `store( 'ma
 
 Blocks clean up when removed (e.g. by the Interactivity API's client-side navigation): carousels destroy their Embla instance, and listeners outside the block are removed.
 
-**Without JavaScript** (a script that fails or is blocked): a carousel's slides scroll natively, and accordions, tabs and overlays show their server-rendered state (closed). Filters are a form with an Apply button, which the server filters. Menus and panels need their scripts: submenus stay closed, and a panel below its breakpoint can't open.
+### Without JavaScript
+
+Content is reachable without JavaScript, and when a block's script fails or is blocked. Nothing is hidden or made `inert` by the server: hiding waits for the script. A small script in the page's head adds `matter-js` to `<html>` (JavaScript is running) and, four seconds after the page is parsed, `matter-late`. A block's script adds `is-enhanced` to the block when it starts (to a collapsible, its content; to a panel, its toggles too). The CSS that hides content applies to a block that is `is-enhanced`, or is about to be (`matter-js` and not yet `matter-late`), so an enhanced page doesn't flash its content before the script starts, and a block whose script never starts shows its content after four seconds. `matter.ready()` and the other scripting are covered above; the classes are for CSS:
+
+```css
+/* Something that should look different until the script has started. */
+.my-block:not(.is-enhanced) { … }
+html:not(.matter-js) .my-block { … } /* Only where there is no JavaScript. */
+```
+
+Per block, with no JavaScript:
+
+- **Carousel:** the slides scroll natively.
+- **Filters:** a form with an Apply button, which the server filters.
 
 ## Menus
 

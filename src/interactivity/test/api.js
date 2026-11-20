@@ -35,7 +35,7 @@ const stubScript = () => {
 		resolvePath(__dirname, '../../../includes/classes/Assets.php'),
 		'utf8'
 	);
-	const [, script] = php.match(/'(\(function\(m\)\{if\(m\.ready\).*?)',\n/s);
+	const [, script] = php.match(/'(\(function\(m\)\{var h=.*?)',\n/s);
 
 	return script.replace('%s', JSON.stringify(['tabs', 'overlay']));
 };
@@ -323,5 +323,42 @@ describe('events', () => {
 		api.emit(element, 'tabs', 'x');
 
 		expect(detail).toEqual({ id: null, instance: null });
+	});
+});
+
+describe('enhance()', () => {
+	it('marks each block it is given', () => {
+		const api = loadApi();
+		const [one, two] = [block('one'), block('two')];
+
+		api.enhance(one, two, null);
+
+		expect(one.classList.contains('is-enhanced')).toBe(true);
+		expect(two.classList.contains('is-enhanced')).toBe(true);
+	});
+});
+
+describe('the head stub marks the page', () => {
+	afterEach(() => {
+		jest.useRealTimers();
+		document.documentElement.className = '';
+		delete window.matter;
+	});
+
+	it('adds matter-js at once, and matter-late four seconds after the page is parsed', () => {
+		jest.useFakeTimers();
+		// eslint-disable-next-line no-eval -- The script PHP prints.
+		window.eval(stubScript());
+
+		const html = document.documentElement;
+
+		expect(html.classList.contains('matter-js')).toBe(true);
+		expect(html.classList.contains('matter-late')).toBe(false);
+
+		document.dispatchEvent(new window.Event('DOMContentLoaded'));
+		jest.advanceTimersByTime(3999);
+		expect(html.classList.contains('matter-late')).toBe(false);
+		jest.advanceTimersByTime(1);
+		expect(html.classList.contains('matter-late')).toBe(true);
 	});
 });

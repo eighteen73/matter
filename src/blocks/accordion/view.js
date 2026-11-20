@@ -25,6 +25,7 @@ import {
  */
 import {
 	emit,
+	enhance,
 	fromDirective,
 	registerInstance,
 	registerType,
@@ -140,6 +141,8 @@ const { state } = store('matter/accordion', {
 		init() {
 			const context = getContext();
 			const { ref } = getElement();
+
+			enhance(ref);
 			// A link to an item, or to anything in one (including an item of
 			// an accordion nested in it), opens this accordion's item that
 			// holds it: on load, and when the address's #hash changes.

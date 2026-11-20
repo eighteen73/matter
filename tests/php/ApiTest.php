@@ -32,6 +32,20 @@ class ApiTest extends TestCase {
 	}
 
 	/**
+	 * The stub is what tells CSS that JavaScript is running.
+	 *
+	 * @return void
+	 */
+	public function test_stub_marks_the_page(): void {
+		$stub = Assets::api_stub();
+
+		$this->assertStringContainsString( 'classList.add("matter-js")', $stub );
+		$this->assertStringContainsString( 'classList.add("matter-late")', $stub );
+		// Before the early return, so a second stub on the page still marks it.
+		$this->assertLessThan( strpos( $stub, 'if(m.ready)return' ), strpos( $stub, 'matter-js' ) );
+	}
+
+	/**
 	 * Names become the variables WordPress makes, without core's private function.
 	 *
 	 * @return void

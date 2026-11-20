@@ -41,7 +41,12 @@ import {
 /**
  * Internal dependencies
  */
-import { emit, registerInstance, registerType } from '../interactivity/api';
+import {
+	emit,
+	enhance,
+	registerInstance,
+	registerType,
+} from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
 import {
 	afterTransitions,
@@ -471,6 +476,7 @@ const { state, actions } = store('matter/overlay', {
 				return;
 			}
 
+			enhance(getElement().ref);
 			elements.set(id, getElement().ref);
 			registerInstance('overlay', getElement().ref, {
 				element: getElement().ref,

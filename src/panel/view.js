@@ -30,7 +30,12 @@ import {
 /**
  * Internal dependencies
  */
-import { emit, registerInstance, registerType } from '../interactivity/api';
+import {
+	emit,
+	enhance,
+	registerInstance,
+	registerType,
+} from '../interactivity/api';
 import { suspendTransitions } from '../interactivity/transitions';
 
 registerType('panel', '.matter-panel');
@@ -169,6 +174,11 @@ const { state, actions } = store(
 			init() {
 				const { id, query, label } = getContext();
 				const { ref } = getElement();
+
+				// The panel and its toggles (the toggles stay hidden until
+				// the panel can open).
+				enhance(ref, ...getToggles(id));
+
 				// Listeners removed with the block (e.g. by client-side
 				// navigation).
 				const listeners = new window.AbortController();
