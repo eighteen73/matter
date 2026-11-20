@@ -1654,3 +1654,75 @@ test.describe('archive entries are not pages, logged out', () => {
 		}
 	});
 });
+
+test.describe('accordion, as it starts, with motion', () => {
+	test.use({
+		viewport: DESKTOP,
+		contextOptions: { reducedMotion: 'no-preference' },
+	});
+
+	let accordionPage;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		accordionPage = await createPage(
+			requestUtils,
+			'Accordion start',
+			'<!-- wp:matter/accordion {"anchor":"start-faq"} --><!-- wp:matter/accordion-item {"title":"Open one","open":true} --><!-- wp:paragraph --><p>Open answer</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item --><!-- wp:matter/accordion-item {"title":"Closed one"} --><!-- wp:paragraph --><p><a id="closed-link" href="https://example.com/">A link in a closed answer</a></p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item --><!-- /wp:matter/accordion -->'
+		);
+	});
+
+	test('a closed answer is never exposed while the script starts, even with motion', async ({
+		page,
+	}) => {
+		// Every frame from the start of the page, until well after the
+		// accordion has started: is the link in the closed answer reachable
+		// (rendered, not `visibility: hidden` or `content-visibility: hidden`)?
+		await page.addInitScript(() => {
+			window.matterExposed = [];
+			window.matterStarted = 0;
+
+			const sample = () => {
+				const link = document.getElementById('closed-link');
+
+				if (link) {
+					if (
+						document.querySelector(
+							'.wp-block-matter-accordion.is-enhanced'
+						) &&
+						!window.matterStarted
+					) {
+						window.matterStarted = performance.now();
+					}
+
+					if (
+						link.checkVisibility({
+							visibilityProperty: true,
+							contentVisibilityAuto: true,
+						})
+					) {
+						window.matterExposed.push(
+							Math.round(performance.now())
+						);
+					}
+				}
+
+				if (
+					!window.matterStarted ||
+					performance.now() - window.matterStarted < 800
+				) {
+					window.requestAnimationFrame(sample);
+				} else {
+					window.matterSampled = true;
+				}
+			};
+
+			window.requestAnimationFrame(sample);
+		});
+
+		await page.goto(accordionPage.link);
+		await page.waitForFunction(() => window.matterSampled === true);
+
+		expect(await page.evaluate(() => window.matterExposed)).toEqual([]);
+		await expect(page.locator('#closed-link')).toBeHidden();
+	});
+});

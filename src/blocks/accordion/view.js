@@ -37,6 +37,7 @@ import { suspendTransitions } from '../../interactivity/transitions';
 const SELECTOR = '.wp-block-matter-accordion';
 const TOGGLE = '.wp-block-matter-accordion-item__toggle';
 const ITEM = '.wp-block-matter-accordion-item';
+const PANEL = '.wp-block-matter-accordion-item__panel';
 
 registerType('accordion', SELECTOR);
 
@@ -181,6 +182,15 @@ const { state } = store('matter/accordion', {
 					(item) => item.closest(SELECTOR) === ref
 				)
 			);
+			// The panels' own hidden state is bound just now (`until-found`),
+			// which would otherwise be animated as a change: a closed answer
+			// held visible and tabbable for the length of the transition.
+			suspendTransitions(
+				[...ref.querySelectorAll(PANEL)].filter(
+					(panel) => panel.closest(SELECTOR) === ref
+				)
+			);
+
 			// A link to an item, or to anything in one (including an item of
 			// an accordion nested in it), opens this accordion's item that
 			// holds it: on load, and when the address's #hash changes.
