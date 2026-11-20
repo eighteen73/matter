@@ -8,6 +8,7 @@ const { createMenu, createPage } = require('./fixtures');
 
 let cards;
 let details;
+let shortPage;
 let panelPage;
 
 const IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
@@ -47,6 +48,11 @@ test.beforeAll(async ({ requestUtils }) => {
 		'Linked cards',
 		card('Spring sale', 'https://example.com/spring/') +
 			card('Summer sale', 'https://example.com/summer/', true)
+	);
+	shortPage = await createPage(
+		requestUtils,
+		'Short page',
+		'<!-- wp:matter/modal {"overlayId":"short-modal"} --><!-- wp:matter/slot {"name":"trigger"} --><!-- wp:paragraph --><p><a href="#short-modal">Open short</a></p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->'
 	);
 	details = await createPage(
 		requestUtils,
@@ -302,20 +308,105 @@ test.describe('scroll lock', () => {
 					.scrollbarGutter
 		);
 
-	test('the scrollbar space is kept only while a dialog is open', async ({
+	// Where the page's content sits across, and the page's width.
+	const layout = (page) =>
+		page.evaluate(() => {
+			const { left, right } = (
+				document.querySelector('header') ?? document.body
+			).getBoundingClientRect();
+
+			return {
+				left,
+				right,
+				width: document.documentElement.getBoundingClientRect().width,
+			};
+		});
+
+	test('on a page that scrolls, the scrollbar space is kept only while a dialog is open', async ({
 		page,
 	}) => {
 		await page.goto(details.link);
+		expect(
+			await page.evaluate(
+				() =>
+					document.documentElement.scrollHeight >
+					document.documentElement.clientHeight
+			)
+		).toBe(true);
 		expect(await gutter(page)).toBe('auto');
+
+		const before = await layout(page);
 
 		await page.getByRole('link', { name: 'Open welcome' }).click();
 		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
+		await expect(page.locator('html')).toHaveClass(
+			/\bhas-overlay-gutter\b/
+		);
 		expect(await gutter(page)).toBe('stable');
+		// The header gives up no more than the scrollbar's own width (this
+		// browser draws none until the lock hides it, then keeps its space).
+		expect(before.right - (await layout(page)).right).toBeLessThanOrEqual(
+			17
+		);
+		expect((await layout(page)).left).toBe(before.left);
 
 		await page.keyboard.press('Escape');
 		await expect(page.locator('html')).not.toHaveClass(
 			/\bhas-overlay-open\b/
 		);
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-overlay-gutter\b/
+		);
 		expect(await gutter(page)).toBe('auto');
+	});
+
+	test("a page too short to scroll keeps no space for a scrollbar it doesn't have", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 1800 });
+		await page.goto(shortPage.link);
+		expect(
+			await page.evaluate(
+				() =>
+					document.documentElement.scrollHeight >
+					document.documentElement.clientHeight
+			)
+		).toBe(false);
+
+		const before = await layout(page);
+
+		await page.getByRole('link', { name: 'Open short' }).click();
+		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-overlay-gutter\b/
+		);
+		expect(await gutter(page)).toBe('auto');
+		expect(await layout(page)).toEqual(before);
+	});
+
+	test("the panel's lock follows the same rule", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 3000 });
+		await page.goto(panelPage.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
+
+		const scrolls = await page.evaluate(
+			() =>
+				document.documentElement.scrollHeight >
+				document.documentElement.clientHeight
+		);
+
+		expect(scrolls).toBe(false);
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-panel-gutter\b/
+		);
+		expect(await gutter(page)).toBe('auto');
+
+		await page.locator('.matter-panel__close').click();
+		await page.setViewportSize({ width: 390, height: 500 });
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-open\b/);
+		await expect(page.locator('html')).toHaveClass(/\bhas-panel-gutter\b/);
+		expect(await gutter(page)).toBe('stable');
 	});
 });

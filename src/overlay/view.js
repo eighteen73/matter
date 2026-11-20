@@ -147,7 +147,21 @@ const syncDocumentClass = () => {
 		([id, element]) => isDialog(id) && element.isConnected && element.open
 	);
 
-	document.documentElement.classList.toggle('has-overlay-open', open);
+	const root = document.documentElement;
+
+	// Keep the scrollbar's space only on a page that has a scrollbar: a short
+	// page would shift sideways for a gutter with nothing in it. Looked at as
+	// the lock starts (the lock itself can't change whether the page scrolls).
+	if (open && !root.classList.contains('has-overlay-open')) {
+		root.classList.toggle(
+			'has-overlay-gutter',
+			root.scrollHeight > root.clientHeight
+		);
+	} else if (!open) {
+		root.classList.remove('has-overlay-gutter');
+	}
+
+	root.classList.toggle('has-overlay-open', open);
 
 	// A dialog taken out of the page while open (by a script, or a
 	// replacement the interactivity runtime never tears down) must release

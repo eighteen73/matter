@@ -10,6 +10,11 @@
 // The page doesn't scroll behind an open modal or drawer (as behind a panel).
 html.has-overlay-open {
 	overflow: hidden;
+}
+
+// Only a page that scrolls keeps its scrollbar's space, so the page doesn't
+// jump sideways as it goes (the script adds the class; a short page has none).
+html.has-overlay-open.has-overlay-gutter {
 	scrollbar-gutter: stable;
 }
 

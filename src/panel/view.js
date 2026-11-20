@@ -43,6 +43,7 @@ import { suspendTransitions } from '../interactivity/transitions';
 registerType('panel', '.matter-panel');
 
 const OPEN_CLASS = 'has-panel-open';
+const GUTTER_CLASS = 'has-panel-gutter';
 const FOCUSABLE =
 	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -173,7 +174,18 @@ const activate = (panel, id) => {
 	// of what can fail, and undone by inertAround() if it does, so a failure
 	// leaves the page as it was.
 	releases.set(id, inertAround(content, { keep: '.matter-panel__backdrop' }));
-	document.documentElement.classList.add(OPEN_CLASS);
+	const root = document.documentElement;
+
+	// Keep the scrollbar's space only on a page that has a scrollbar (see the
+	// overlay script), looked at before the lock starts.
+	if (!root.classList.contains(OPEN_CLASS)) {
+		root.classList.toggle(
+			GUTTER_CLASS,
+			root.scrollHeight > root.clientHeight
+		);
+	}
+
+	root.classList.add(OPEN_CLASS);
 
 	traps.set(id, trap);
 	owners.set(id, panel);
@@ -263,7 +275,7 @@ const deactivate = (
 		}
 
 		if (!traps.size) {
-			document.documentElement.classList.remove(OPEN_CLASS);
+			document.documentElement.classList.remove(OPEN_CLASS, GUTTER_CLASS);
 		}
 	}
 

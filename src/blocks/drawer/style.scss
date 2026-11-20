@@ -9,6 +9,9 @@
 // The page doesn't scroll behind an open modal or drawer (as behind a panel).
 html.has-overlay-open {
 	overflow: hidden;
+}
+
+html.has-overlay-open.has-overlay-gutter {
 	scrollbar-gutter: stable;
 }
 

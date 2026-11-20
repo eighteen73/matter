@@ -9,6 +9,10 @@
 
 html.has-panel-open {
 	overflow: hidden;
+}
+
+// As for modals: only a page that scrolls keeps its scrollbar's space.
+html.has-panel-open.has-panel-gutter {
 	scrollbar-gutter: stable;
 }
 
