@@ -731,7 +731,9 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 			submenu.evaluate((element) => {
 				const active = element.ownerDocument.activeElement;
 
-				return element.contains(active)
+				// The open level, or the panel's close button, which is in its cycle.
+				return element.contains(active) ||
+					active.classList.contains('matter-panel__close')
 					? 'in'
 					: `${active.tagName}.${active.className}`;
 			});
