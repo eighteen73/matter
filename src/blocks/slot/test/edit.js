@@ -4,6 +4,10 @@
 
 const mockNameTree = jest.fn(() => []);
 let mockSlotName = '';
+// The block types at the time of the call: 'late' has none registered the
+// first time (the selector's), and the section's the second (the render's).
+let mockTypeCalls = 0;
+let mockLate = false;
 
 jest.mock('../template', () => ({
 	nameTree: (...args) => mockNameTree(...args),
@@ -13,16 +17,22 @@ jest.mock('../template', () => ({
 jest.mock(
 	'@wordpress/blocks',
 	() => ({
-		getBlockType: () => ({
-			supports: {
-				matter: {
-					slots: {
-						locked: { templateLock: 'all', template: [] },
-						free: {},
+		getBlockType: () =>
+			mockLate && 0 === mockTypeCalls++
+				? undefined
+				: {
+						supports: {
+							matter: {
+								slots: {
+									locked: {
+										templateLock: 'all',
+										template: [],
+									},
+									free: {},
+								},
+							},
+						},
 					},
-				},
-			},
-		}),
 		store: 'core/blocks',
 	}),
 	{ virtual: true }
@@ -72,7 +82,11 @@ jest.mock('@wordpress/i18n', () => ({ __: (text) => text }));
 import Edit from '../edit';
 
 describe('the slot editor', () => {
-	beforeEach(() => mockNameTree.mockClear());
+	beforeEach(() => {
+		mockNameTree.mockClear();
+		mockTypeCalls = 0;
+		mockLate = false;
+	});
 
 	it("doesn't serialise the block tree for a slot that isn't locked", () => {
 		mockSlotName = 'free';
@@ -86,5 +100,14 @@ describe('the slot editor', () => {
 		Edit({ attributes: { name: 'locked' }, clientId: 'slot' });
 
 		expect(mockNameTree).toHaveBeenCalled();
+	});
+
+	it("doesn't throw when the section's block type registers between the store read and the render", () => {
+		mockSlotName = 'locked';
+		mockLate = true;
+
+		expect(() =>
+			Edit({ attributes: { name: 'locked' }, clientId: 'slot' })
+		).not.toThrow();
 	});
 });

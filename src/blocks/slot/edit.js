@@ -51,6 +51,7 @@ export default function Edit({ attributes: { name }, clientId }) {
 		sectionName,
 		hasInnerBlocks,
 		savedTree,
+		isLockedSlot,
 		isFirstWithName,
 	} = useSelect(
 		(select) => {
@@ -61,6 +62,10 @@ export default function Edit({ attributes: { name }, clientId }) {
 				getBlockOrder,
 				getBlockAttributes,
 			} = select(blockEditorStore);
+			// Read so this runs again when block types register (a late
+			// registration changes what is locked).
+			select(blocksStore).getBlockTypes();
+
 			const rootId = getBlockRootClientId(clientId);
 			const sectionType = getBlockType(getBlockName(rootId));
 			const first = getBlockOrder(rootId).find(
@@ -69,7 +74,7 @@ export default function Edit({ attributes: { name }, clientId }) {
 			const blocks = getBlocks(clientId);
 			const slots = sectionType?.supports?.matter?.slots;
 			// As below: an orphaned slot has no configuration.
-			const isLockedSlot =
+			const locked =
 				!!slots &&
 				name in slots &&
 				first === clientId &&
@@ -83,7 +88,8 @@ export default function Edit({ attributes: { name }, clientId }) {
 				// re-renders only when they change. Only a locked slot needs
 				// them (an unlocked one keeps no template in step), so the rest
 				// don't walk their blocks on every change to the store.
-				savedTree: isLockedSlot ? JSON.stringify(nameTree(blocks)) : '',
+				savedTree: locked ? JSON.stringify(nameTree(blocks)) : '',
+				isLockedSlot: locked,
 				isFirstWithName: first === clientId,
 			};
 		},
@@ -116,14 +122,17 @@ export default function Edit({ attributes: { name }, clientId }) {
 			.join(' '),
 	});
 
-	const isLocked = !!config.templateLock;
+	// What the selector decided, which is what `savedTree` was made for: a
+	// block type that registers after it ran must not make this true while
+	// there is no tree (the selector runs again when types register).
+	const isLocked = isLockedSlot && !!config.templateLock;
 
 	// Whether applying the template would keep every saved block, at every
 	// depth (see templateKeepsBlocks).
 	const keepsSavedBlocks = useMemo(
 		() =>
 			!isLocked ||
-			templateKeepsBlocks(JSON.parse(savedTree), config.template),
+			templateKeepsBlocks(JSON.parse(savedTree || '[]'), config.template),
 		[isLocked, savedTree, config.template]
 	);
 
