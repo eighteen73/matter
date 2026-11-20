@@ -94,4 +94,22 @@ describe('suspensions', () => {
 
 		expect(resumed).toBe(1);
 	});
+
+	it('puts back the earlier suspension of a dialog opened again before its close event', () => {
+		const suspensions = createSuspensions();
+		const first = dialog('again');
+
+		suspensions.hold(first, suspendForModal(first));
+		// Shown again before `close` was handled: a second suspension.
+		suspensions.hold(first, suspendForModal(first));
+
+		// One suspension remains, not two: closing it ends the modal.
+		expect(suspensions.size).toBe(1);
+		expect(resumed).toBe(0);
+
+		suspensions.release(first);
+
+		expect(resumed).toBe(1);
+		expect(pausesAgain()).toBe(true);
+	});
 });

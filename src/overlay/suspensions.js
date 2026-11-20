@@ -13,13 +13,21 @@ export const createSuspensions = () => {
 
 	return {
 		/**
-		 * Keep what puts the page back for a dialog.
+		 * Keep what puts the page back for a dialog. A dialog opened again
+		 * before its close event fired still has the suspension of its last
+		 * open: that is put back, so the shared depth doesn't stay raised.
 		 *
 		 * @param {Element}  dialog Dialog.
 		 * @param {Function} resume Puts the page back.
 		 */
 		hold(dialog, resume) {
+			const previous = resumes.get(dialog);
+
 			resumes.set(dialog, resume);
+
+			if (previous && previous !== resume) {
+				previous();
+			}
 		},
 
 		/**
