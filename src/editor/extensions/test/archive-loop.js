@@ -3,6 +3,9 @@
  */
 import { withArchiveLoopOnlyInEntries } from '../archive-loop';
 
+// The editor's data package isn't installed (it's an external of the build).
+jest.mock('@wordpress/data', () => ({ select: jest.fn() }), { virtual: true });
+
 describe('withArchiveLoopOnlyInEntries', () => {
 	const loop = { name: 'matter/archive-loop' };
 

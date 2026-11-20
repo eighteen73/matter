@@ -178,6 +178,42 @@ test.describe('section markup in the editor', () => {
 		).toBeVisible();
 	});
 
+	test('the list view names a section by its heading as plain, short text', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({ name: 'matter-test/section' });
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const store = select('core/block-editor');
+			const [section] = store.getBlocks();
+			const heading = section.innerBlocks
+				.find((slot) => slot.attributes.name === 'content')
+				.innerBlocks.find((block) => block.name === 'core/heading');
+
+			dispatch('core/block-editor').updateBlockAttributes(
+				heading.clientId,
+				{
+					content:
+						'Our <strong>workshop</strong> &amp; its very long story that goes on and on',
+				}
+			);
+		});
+
+		await page.getByRole('button', { name: 'Document Overview' }).click();
+
+		const link = page
+			.getByRole('treegrid', { name: 'Block navigation structure' })
+			.getByRole('link', { name: /^Test section: / });
+		const label = await link.innerText();
+
+		expect(label).toContain('Test section: Our workshop & its very long');
+		expect(label).not.toMatch(/[<>]|&amp;/);
+		expect(label.length).toBeLessThan(70);
+	});
+
 	test("a locked slot's blocks can't be removed, but keep their settings", async ({
 		admin,
 		editor,
@@ -260,6 +296,103 @@ test.describe('allowed blocks when every block is allowed', () => {
 		});
 
 		await deleteArchiveEntries(requestUtils);
+	});
+});
+
+test.describe('a locked slot whose template changes', () => {
+	test.afterAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({
+			matter_test_media_video: false,
+		});
+	});
+
+	test('keeps the blocks saved in it, through a reload and an edit', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		const saved = await createPage(
+			requestUtils,
+			'Template switch',
+			'<!-- wp:matter-test/section --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- wp:matter/slot {"name":"media"} --><!-- wp:image {"alt":"Saved"} --><figure class="wp-block-image"><img src="https://example.com/a.jpg" alt="Saved"/></figure><!-- /wp:image --><!-- /wp:matter/slot --><!-- /wp:matter-test/section -->'
+		);
+		const media = () =>
+			page.evaluate(() =>
+				window.wp.data
+					.select('core/block-editor')
+					.getBlocks()[0]
+					.innerBlocks.find(
+						(slot) => slot.attributes.name === 'media'
+					)
+					.innerBlocks.map((block) => block.name)
+			);
+
+		// The theme's template for the slot is now a video, not an image.
+		await requestUtils.updateSiteSettings({
+			matter_test_media_video: true,
+		});
+		await admin.editPost(saved.id);
+		await expect.poll(media).toEqual(['core/image']);
+
+		// An edit, a save and a reload.
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const image = select('core/block-editor')
+				.getBlocks()[0]
+				.innerBlocks.find((slot) => slot.attributes.name === 'media')
+				.innerBlocks[0];
+
+			dispatch('core/block-editor').updateBlockAttributes(
+				image.clientId,
+				{ alt: 'Edited' }
+			);
+		});
+		await page.evaluate(() =>
+			window.wp.data.dispatch('core/editor').savePost()
+		);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					window.wp.data.select('core/editor').isSavingPost()
+				)
+			)
+			.toBe(false);
+		await page.reload();
+		await expect.poll(media).toEqual(['core/image']);
+		expect(
+			await page.evaluate(
+				() =>
+					window.wp.data
+						.select('core/block-editor')
+						.getBlocks()[0]
+						.innerBlocks.find(
+							(slot) => slot.attributes.name === 'media'
+						).innerBlocks[0].attributes.alt
+			)
+		).toBe('Edited');
+
+		// A new section still starts from the template.
+		await admin.createNewPost();
+		await page.evaluate(() =>
+			window.wp.data
+				.dispatch('core/block-editor')
+				.insertBlock(
+					window.wp.blocks.createBlock('matter-test/section')
+				)
+		);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					window.wp.data
+						.select('core/block-editor')
+						.getBlocks()[0]
+						.innerBlocks.find(
+							(slot) => slot.attributes.name === 'media'
+						)
+						.innerBlocks.map((block) => block.name)
+				)
+			)
+			.toEqual(['core/video']);
 	});
 });
 

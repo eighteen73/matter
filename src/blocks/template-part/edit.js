@@ -5,7 +5,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { Placeholder, SelectControl, Spinner } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
 /**
@@ -137,6 +137,26 @@ export default function Edit({ attributes: { slug }, setAttributes }) {
 									label: part.title,
 									value: part.slug,
 								})),
+								// A part the theme no longer lists: shown as
+								// what it is, not as "Choose a template part".
+								...(slug &&
+								!templateParts().some(
+									(part) => part.slug === slug
+								)
+									? [
+											{
+												label: sprintf(
+													/* translators: %s: part slug. */
+													__(
+														'Unknown part (%s)',
+														'matter'
+													),
+													slug
+												),
+												value: slug,
+											},
+										]
+									: []),
 							]}
 							onChange={(value) =>
 								setAttributes({ slug: value || undefined })

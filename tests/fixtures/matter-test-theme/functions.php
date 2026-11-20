@@ -122,3 +122,33 @@ add_shortcode(
 		return (string) ob_get_clean();
 	}
 );
+
+// The test section's locked media slot with another block type as its
+// template (a theme changing it after content was saved), switched on by the
+// browser test that checks saved blocks survive.
+add_action(
+	'init',
+	fn() => register_setting(
+		'general',
+		'matter_test_media_video',
+		[
+			'type'         => 'boolean',
+			'default'      => false,
+			'show_in_rest' => true,
+		]
+	)
+);
+
+add_filter(
+	'register_block_type_args',
+	function ( $args, $name ) {
+		if ( 'matter-test/section' === $name && get_option( 'matter_test_media_video' ) ) {
+			$args['supports']['matter']['slots']['media']['allowedBlocks'] = [ 'core/video' ];
+			$args['supports']['matter']['slots']['media']['template']      = [ [ 'core/video' ] ];
+		}
+
+		return $args;
+	},
+	10,
+	2
+);

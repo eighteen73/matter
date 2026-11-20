@@ -127,7 +127,9 @@ export default function Edit({ attributes: { name }, clientId }) {
 		layout,
 		// Nothing new goes into an orphaned slot; its content can be moved out.
 		allowedBlocks: isOrphaned ? [] : allowedBlocks,
-		template: isLocked ? config.template : undefined,
+		// Only to fill an empty slot. With blocks saved in it, a template of
+		// another block type (changed since) would replace them.
+		template: isLocked && !hasInnerBlocks ? config.template : undefined,
 		templateLock: isOrphaned ? false : (config.templateLock ?? false),
 		renderAppender:
 			isOrphaned || isLocked || hasInnerBlocks

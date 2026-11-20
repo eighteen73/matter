@@ -32,6 +32,25 @@ describe('firstHeading', () => {
 		).toBe('Filled');
 	});
 
+	it('gives plain, shortened text, not the heading’s HTML', () => {
+		expect(
+			firstHeading([
+				block('core/heading', {
+					content: 'The <strong>perfect</strong> backdrop &amp; more',
+				}),
+			])
+		).toBe('The perfect backdrop & more');
+
+		expect(
+			firstHeading([
+				block('core/heading', {
+					content:
+						'A <em>very</em> long heading that goes on and on and on past any sensible length',
+				}),
+			])
+		).toBe('A very long heading that goes on and on…');
+	});
+
 	it('is empty without a heading', () => {
 		expect(firstHeading([block('core/paragraph', { content: 'A' })])).toBe(
 			''
