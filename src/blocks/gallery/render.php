@@ -250,6 +250,8 @@ printf(
 			'index'       => 0,
 			// The lightbox's image loads only once it's opened.
 			'opened'      => false,
+			// The lightbox's status is filled a frame after it opens.
+			'announcing'  => false,
 			'limit'       => $matter_limit,
 			'counter'     => __( '%1$d / %2$d', 'matter' ), // phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
 			// What the lightbox's live region says on moving to an image.

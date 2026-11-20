@@ -1355,6 +1355,35 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 		await expect(opener).toBeFocused();
 	});
 
+	test('the lightbox status is empty while closed, reads "Image 1 of 3" once open, and is empty again after closing', async ({
+		page,
+	}) => {
+		await page.goto(collectionsPage.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
+
+		const lightbox = page.locator('#photos dialog');
+		const status = lightbox.locator('[role="status"]');
+
+		await expect(status).toHaveText('');
+		await page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 1 of 3' })
+			.click();
+		await expect(lightbox).toBeVisible();
+		await expect(status).toHaveText(/Image 1 of 3/);
+
+		await page.keyboard.press('Escape');
+		await expect(lightbox).toBeHidden();
+		await expect(status).toHaveText('');
+
+		// And the same again on reopening.
+		await page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 2 of 3' })
+			.click();
+		await expect(status).toHaveText(/Image 2 of 3/);
+	});
+
 	test('Home and End in the lightbox go to the first and last image of the gallery', async ({
 		page,
 	}) => {

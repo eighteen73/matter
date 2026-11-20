@@ -77,6 +77,17 @@ const show = (element, context, index) => {
 		emit(element.closest(SELECTOR), 'gallery', 'open', {
 			index: context.index,
 		});
+
+		// The status is filled a frame after the dialog is shown, so it is a
+		// change to a region that is already in the page, which is announced
+		// (text that is there when a dialog opens is not).
+		window.requestAnimationFrame(() => {
+			if (dialog.open) {
+				context.announcing = true;
+			}
+		});
+	} else {
+		context.announcing = true;
 	}
 };
 
@@ -271,10 +282,10 @@ const { actions } = store('matter/gallery', {
 		// What the lightbox's live region says: "Image 2 of 5: the alt text".
 		// Empty until the lightbox opens, so closed it says nothing.
 		get announcement() {
-			const { images, index, opened, announce, announceAlt } =
+			const { images, index, announcing, announce, announceAlt } =
 				getContext();
 
-			if (!opened) {
+			if (!announcing) {
 				return '';
 			}
 
@@ -436,7 +447,13 @@ const { actions } = store('matter/gallery', {
 		}),
 		onClose() {
 			const { ref } = getElement();
-			const { index } = getContext();
+			const context = getContext();
+			const { index } = context;
+
+			// Closed: the image is dropped from the lightbox and the status
+			// goes quiet, so nothing is left to be read.
+			context.opened = false;
+			context.announcing = false;
 
 			emit(ref.closest(SELECTOR), 'gallery', 'close', { index });
 
