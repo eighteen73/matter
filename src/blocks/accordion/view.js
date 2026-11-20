@@ -31,6 +31,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
+import { suspendTransitions } from '../../interactivity/transitions';
 
 const SELECTOR = '.wp-block-matter-accordion';
 const TOGGLE = '.wp-block-matter-accordion-item__toggle';
@@ -111,11 +112,15 @@ const { state } = store('matter/accordion', {
 			}
 		},
 		// The browser is about to show a closed panel's text, found in the
-		// page: open the item, as the heading's button would.
+		// page: open the item, as the heading's button would. Not animated: the
+		// browser scrolls to the match as soon as the panel is shown, and the
+		// panel growing from nothing would leave it scrolled to a point that
+		// moves.
 		reveal() {
 			const context = getContext();
 
 			if (!state.isItemOpen) {
+				suspendTransitions([getElement().ref]);
 				context.openItems = context.autoclose
 					? [context.itemId]
 					: [...context.openItems, context.itemId];

@@ -269,6 +269,38 @@ test.describe('accordion, collapsible and tabs', () => {
 			await expect(page.getByText('First answer')).toBeVisible();
 		});
 
+		test('a match found in a closed answer opens it at once, not growing from nothing', async ({
+			page,
+		}) => {
+			await emulate(page, { reducedMotion: 'no-preference' });
+			await page.goto(kitchenSink.link);
+
+			// A frame after the browser's `beforematch`: the panel is
+			// already as tall as its answer (it animates when its button is
+			// used, over 300 ms).
+			const { height, full } = await page
+				.locator('#faq [id$="-panel"]')
+				.nth(1)
+				.evaluate(async (panel) => {
+					panel.dispatchEvent(
+						new Event('beforematch', { bubbles: true })
+					);
+					await new Promise((resolve) =>
+						window.requestAnimationFrame(() =>
+							window.requestAnimationFrame(resolve)
+						)
+					);
+
+					return {
+						height: panel.getBoundingClientRect().height,
+						full: panel.firstElementChild.scrollHeight,
+					};
+				});
+
+			expect(full).toBeGreaterThan(0);
+			expect(height).toBeGreaterThanOrEqual(full);
+		});
+
 		test('a closed collapsible opens from its link, and from a match', async ({
 			page,
 		}) => {
