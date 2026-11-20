@@ -598,8 +598,8 @@ class Settings {
 	 * An address typed without its scheme (`instagram.com/name`), as people
 	 * copy them, with `https://` added. Relative links and other schemes
 	 * (`mailto:`) are left alone, and so is a bare word or path with no dot in
-	 * its first segment (`contact-us`, `about/team`): a host has a dot, so
-	 * that's a relative page, not `https://contact-us`.
+	 * its first segment (`contact-us`, `about/team`), or one that starts `./` or
+	 * `../`: a host has a dot, so that's a relative page, not `https://contact-us`.
 	 *
 	 * @param string $url Typed address.
 	 * @return string
@@ -620,13 +620,14 @@ class Settings {
 
 	/**
 	 * Whether an address with no scheme is a relative path (`contact-us`,
-	 * `about/team`) rather than a host: no dot or colon in its first segment.
+	 * `about/team`) rather than a host: no dot or colon in its first segment, or a
+	 * dot-relative one (`./x`, `../x`).
 	 *
 	 * @param string $url Address.
 	 * @return bool
 	 */
 	private static function is_bare_path( string $url ): bool {
-		return 1 === preg_match( '#^[^./?\#:]+([/?\#]|$)#', $url );
+		return 1 === preg_match( '#^([^./?\#:]+|\.{1,2})([/?\#]|$)#', $url );
 	}
 
 	/**

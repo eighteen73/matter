@@ -247,7 +247,7 @@ class SettingsTest extends TestCase {
 	 * @return void
 	 */
 	public function test_urls_stay_relative_or_become_safe_absolute_addresses(): void {
-		$kept = [ 'contact-us', 'about/team', '/contact', '/a?b=1&c=2', '#a', '?q', '/%2F%2Fevil.com' ];
+		$kept = [ 'contact-us', 'about/team', './x', '../x', '../../a/b?c=1', './', '..', '/contact', '/a?b=1&c=2', '#a', '?q', '/%2F%2Fevil.com' ];
 
 		foreach ( $kept as $url ) {
 			$this->assertSame( $url, Settings::safe_url( $url ), $url );
