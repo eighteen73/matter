@@ -4,9 +4,11 @@
  * a gallery's or carousel's own "Edit images" / "Add slide".
  *
  * The list is the nearest block above the selection (or the selection itself)
- * that holds one kind of item: it allows a single block type, not a core one
- * (core's lists, like Buttons, have their own inserters), and a new one can be
- * added (a locked slot can't). Core blocks are never the list. A selected
+ * that holds one kind of item: it allows a single block type, or adds one
+ * directly (its `defaultBlock` with `directInsert`: filters, which allow
+ * other blocks between them), not a core one (core's lists, like Buttons,
+ * have their own inserters), and a new one can be added (a locked slot
+ * can't). Core blocks are never the list. A selected
  * section with one such slot (Cards' items) offers it too.
  */
 
@@ -59,17 +61,25 @@ export function findList(select, clientId) {
 		canInsertBlockType,
 	} = select(blockEditorStore);
 
-	// A list of one kind of item (not a core block, not of core blocks).
+	// A list of one kind of item (not a core block, not of core blocks): the
+	// one type it allows, or the one it adds directly.
 	const asList = (id) => {
 		const name = getBlockName(id) ?? '';
-		const allowed = getBlockListSettings(id)?.allowedBlocks;
+		const settings = getBlockListSettings(id);
+		const allowed = settings?.allowedBlocks;
+		let item = null;
 
-		return !name.startsWith('core/') &&
-			Array.isArray(allowed) &&
-			allowed.length === 1 &&
-			!allowed[0].startsWith('core/') &&
-			canInsertBlockType(allowed[0], id)
-			? { id, name, item: allowed[0] }
+		if (Array.isArray(allowed) && allowed.length === 1) {
+			item = allowed[0];
+		} else if (settings?.directInsert && settings?.defaultBlock?.name) {
+			item = settings.defaultBlock.name;
+		}
+
+		return item &&
+			!name.startsWith('core/') &&
+			!item.startsWith('core/') &&
+			canInsertBlockType(item, id)
+			? { id, name, item }
 			: null;
 	};
 

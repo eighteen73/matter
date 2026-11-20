@@ -39,8 +39,15 @@ export default function Edit({
 	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-filters__form' },
+		// Filters are what it holds: its "+" adds one, as "Add filter" does,
+		// and they're first in its quick inserter. It doesn't allow only
+		// filters (a heading or a note can go between them): a block that
+		// does gets its own group above a line at the top of the inserter
+		// while anything in it is selected, as a list does for list items.
 		{
-			allowedBlocks: ['matter/filter'],
+			defaultBlock: { name: 'matter/filter' },
+			directInsert: true,
+			prioritizedInserterBlocks: ['matter/filter'],
 			template: [['matter/filter']],
 			orientation: layout === 'bar' ? 'horizontal' : 'vertical',
 			renderAppender: undefined,

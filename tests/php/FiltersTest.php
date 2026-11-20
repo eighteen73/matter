@@ -406,4 +406,16 @@ class FiltersTest extends TestCase {
 		$this->assertStringNotContainsString( 'popovertarget', $sidebar );
 		$this->assertStringContainsString( 'is-layout-sidebar', $sidebar );
 	}
+
+	/**
+	 * Filters hold other blocks too (a heading, a note), rendered among them.
+	 *
+	 * @return void
+	 */
+	public function test_other_blocks_among_filters(): void {
+		$html = $this->listing( '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">Narrow it down</h3><!-- /wp:heading -->' );
+
+		$this->assertMatchesRegularExpression( '#<form[^>]*wp-block-matter-filters__form[\s\S]*<h3 class="wp-block-heading">Narrow it down</h3>[\s\S]*</form>#', $html );
+		$this->assertSame( 2, $this->option_count( $html, 'news' ), 'The filters still work.' );
+	}
 }
