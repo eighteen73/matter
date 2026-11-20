@@ -97,7 +97,7 @@ class IdsTest extends TestCase {
 		$this->assertStringContainsString( 'id="tabs-abc-2"', $second );
 		$this->assertStringContainsString( 'aria-controls="tabs-abc-2-1"', $second );
 		$this->assertStringContainsString( 'id="tabs-abc-2-1"', $second );
-		$this->assertStringContainsString( 'aria-labelledby="tabs-abc-2-1-tab"', $second );
+		$this->assertStringContainsString( 'id="tabs-abc-2-1-tab"', $second );
 
 		// Not only the same markup twice in a row: an anchor does the same.
 		$anchor = $this->render( $this->tabs( '{"anchor":"tabs-abc"}' ) );

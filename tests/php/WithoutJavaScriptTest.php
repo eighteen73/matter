@@ -79,7 +79,9 @@ class WithoutJavaScriptTest extends TestCase {
 	}
 
 	/**
-	 * Every tab panel is readable and names itself; the active one is marked.
+	 * Every tab panel is readable and names itself, as a heading; the active
+	 * one is marked. With no tab list, a panel isn't a tabpanel, has no tabindex
+	 * and points at no button: the script adds those.
 	 *
 	 * @return void
 	 */
@@ -93,13 +95,36 @@ class WithoutJavaScriptTest extends TestCase {
 
 		// The dropdown's button names the current tab, and that is hidden for
 		// the others; the panels aren't.
-		preg_match_all( '/<div[^>]*role="tabpanel"[^>]*>/', $html, $panels );
+		preg_match_all( '/<div[^>]*class="wp-block-matter-tab[ "][^>]*>/', $html, $panels );
 
 		$this->assertCount( 2, $panels[0] );
 		$this->assertSame( [], $this->hiding( implode( '', $panels[0] ) ) );
 		$this->assertStringContainsString( 'class="wp-block-matter-tab is-active"', $panels[0][0] );
 		$this->assertStringNotContainsString( 'is-active"', str_replace( 'data-wp-class--is-active', '', $panels[0][1] ) );
-		$this->assertStringContainsString( '<div class="wp-block-matter-tab__label">Colour</div>', $html );
+		$this->assertStringContainsString( '<div class="wp-block-matter-tab__label" role="heading" aria-level="3">Colour</div>', $html );
+
+		foreach ( $panels[0] as $panel ) {
+			$this->assertDoesNotMatchRegularExpression( '/\s(role|tabindex|aria-labelledby)="/', $panel );
+			$this->assertStringContainsString( 'data-wp-bind--role="state.panelRole"', $panel );
+			$this->assertStringContainsString( 'data-wp-bind--aria-labelledby="state.panelLabelledBy"', $panel );
+		}
+	}
+
+	/**
+	 * The level of a tab panel's name can be changed.
+	 *
+	 * @return void
+	 */
+	public function test_tab_label_level_is_filterable(): void {
+		$level = fn() => 5;
+
+		add_filter( 'matter_tab_label_level', $level );
+
+		$html = $this->render( '<!-- wp:matter/tabs --><!-- wp:matter/tab {"label":"Size"} --><!-- wp:paragraph --><p>Large</p><!-- /wp:paragraph --><!-- /wp:matter/tab --><!-- /wp:matter/tabs -->' );
+
+		remove_filter( 'matter_tab_label_level', $level );
+
+		$this->assertStringContainsString( 'role="heading" aria-level="5">Size<', $html );
 	}
 
 	/**

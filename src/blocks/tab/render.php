@@ -44,13 +44,29 @@ if ( '' === $matter_id ) {
 	$matter_id = Ids::claim( $matter_parent . '-' . wp_unique_id() );
 }
 
-// Without JavaScript the tab list doesn't work and every panel shows, so each
-// panel names itself (hidden by CSS once the script runs).
+// Without JavaScript the tab list doesn't work and every panel shows, each
+// under its name: so the server renders no tabpanel role, tabindex or
+// aria-labelledby (there is no tablist, and the button it would point to isn't
+// shown). The script adds them (`state.panelRole` and the others), as it does
+// `hidden`. The name is a heading, at level 3 or whatever the filter says; the
+// script hides it (the tab is the name then).
+$matter_level = (int) apply_filters(
+	/**
+	 * Filters the heading level of a tab panel's name, shown without JavaScript.
+	 *
+	 * @param int   $level      Level, 2 to 6. Default 3.
+	 * @param array $attributes The tab's attributes.
+	 */
+	'matter_tab_label_level',
+	3,
+	$attributes
+);
+$matter_level = min( 6, max( 2, $matter_level ) );
+
 printf(
-	'<div %1$s %2$s role="tabpanel" aria-labelledby="%3$s-tab" tabindex="0" data-wp-class--is-active="state.isActive" data-wp-bind--hidden="state.isPanelHidden" data-wp-on--beforematch="actions.reveal">%4$s%5$s</div>',
+	'<div %1$s %2$s data-wp-bind--role="state.panelRole" data-wp-bind--tabindex="state.panelTabIndex" data-wp-bind--aria-labelledby="state.panelLabelledBy" data-wp-class--is-active="state.isActive" data-wp-bind--hidden="state.isPanelHidden" data-wp-on--beforematch="actions.reveal">%3$s%4$s</div>',
 	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( [ 'tabId' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	esc_attr( $matter_id ),
-	'' !== $matter_label ? '<div class="wp-block-matter-tab__label">' . wp_kses_post( $matter_label ) . '</div>' : '',
+	'' !== $matter_label ? sprintf( '<div class="wp-block-matter-tab__label" role="heading" aria-level="%1$d">%2$s</div>', $matter_level, wp_kses_post( $matter_label ) ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 );

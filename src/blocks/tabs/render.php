@@ -31,15 +31,20 @@ if ( ! $matter_tabs ) {
 wp_interactivity_state(
 	'matter/tabs',
 	[
-		'isActive'      => function () {
+		'isActive'        => function () {
 			$context = wp_interactivity_get_context();
 
 			return ( $context['active'] ?? '' ) === ( $context['tabId'] ?? null );
 		},
 		// A panel is only hidden once the script runs (view.js), so without
 		// JavaScript every panel can be read.
-		'isPanelHidden' => fn() => false,
-		'tabIndex'      => function () {
+		'isPanelHidden'   => fn() => false,
+		// Likewise a panel's role, tabindex and label: there is no tab list
+		// without the script, so a panel isn't a tabpanel (view.js).
+		'panelRole'       => fn() => null,
+		'panelTabIndex'   => fn() => null,
+		'panelLabelledBy' => fn() => null,
+		'tabIndex'        => function () {
 			$context = wp_interactivity_get_context();
 
 			return ( $context['active'] ?? '' ) === ( $context['tabId'] ?? null ) ? 0 : -1;

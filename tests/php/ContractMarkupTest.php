@@ -226,9 +226,10 @@ class ContractMarkupTest extends TestCase {
 
 		$this->assertStringNotContainsString( '>Empty<', $html );
 		$this->assertSame( 2, substr_count( $html, 'role="tab"' ) );
-		$this->assertSame( 2, substr_count( $html, 'role="tabpanel"' ) );
+		// The panels get their role from the script (see WithoutJavaScriptTest).
+		$this->assertSame( 2, substr_count( $html, 'data-wp-bind--role="state.panelRole"' ) );
 		$this->assertStringContainsString( 'id="details-2-tab" class="wp-block-matter-tabs__tab" aria-controls="details-2"', $html );
-		$this->assertMatchesRegularExpression( '/id="details-2"[^>]*role="tabpanel"[^>]*>.*More/s', $html );
+		$this->assertMatchesRegularExpression( '/id="details-2"[^>]*data-wp-bind--role[^>]*>.*More/s', $html );
 	}
 
 	/**

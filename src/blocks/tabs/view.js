@@ -109,6 +109,18 @@ const { state, actions } = store('matter/tabs', {
 		get isPanelHidden() {
 			return state.isActive ? false : 'until-found';
 		},
+		// Once the script runs a panel is a tabpanel, named by its tab. (The
+		// server renders none of it: without a tab list there is nothing to
+		// be a panel of.)
+		get panelRole() {
+			return 'tabpanel';
+		},
+		get panelTabIndex() {
+			return 0;
+		},
+		get panelLabelledBy() {
+			return `${getContext().tabId}-tab`;
+		},
 	},
 	actions: {
 		/**

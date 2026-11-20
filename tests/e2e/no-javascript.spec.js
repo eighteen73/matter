@@ -153,8 +153,19 @@ test.describe('accordion, collapsible and tabs', () => {
 			await expect(
 				page.locator('#specs .wp-block-matter-tab__label').nth(1)
 			).toBeVisible();
-			// The tab list can't switch anything, so it isn't offered.
+			// The tab list can't switch anything, so it isn't offered, and
+			// the panels aren't tab panels: each is a section under a heading.
 			await expect(page.getByRole('tablist')).toHaveCount(0);
+			await expect(page.getByRole('tabpanel')).toHaveCount(0);
+			await expect(
+				page.locator('#specs .wp-block-matter-tab[tabindex]')
+			).toHaveCount(0);
+			await expect(page.locator('#specs [aria-labelledby]')).toHaveCount(
+				0
+			);
+			await expect(
+				page.getByRole('heading', { name: 'Colour', level: 3 })
+			).toBeVisible();
 			await expectNothingHidden(
 				page,
 				'#specs .wp-block-matter-tabs__panels'
@@ -417,6 +428,13 @@ test.describe('accordion, collapsible and tabs', () => {
 			await expect(
 				page.locator('#specs .wp-block-matter-tab__label').first()
 			).toBeHidden();
+			// The script made them tab panels, each named by its tab.
+			await expect(
+				page.getByRole('tabpanel', { name: 'Size' })
+			).toHaveAttribute('tabindex', '0');
+			await expect(
+				page.locator('#specs .wp-block-matter-tab').nth(1)
+			).toHaveAttribute('aria-labelledby', 'specs-2-tab');
 			await expect(
 				page.getByRole('tab', { name: 'Colour' })
 			).toBeVisible();
