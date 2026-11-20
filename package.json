@@ -56,7 +56,7 @@
 		"env:stop": "wp-env stop && wp-env --config=.wp-env.tests.json stop && wp-env --config=.wp-env.tests.nowc.json stop",
 		"test:php": "wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit --exclude-group without-plugins",
 		"test:php:nowc": "wp-env --config=.wp-env.tests.nowc.json run cli --env-cwd=wp-content/mu-plugins/matter env MATTER_TESTS_WITHOUT_PLUGINS=1 vendor/bin/phpunit --exclude-group gravity-forms --fail-on-skipped",
-		"test:php:update": "wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter env UPDATE_SNAPSHOTS=1 vendor/bin/phpunit",
+		"test:php:update": "wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter env UPDATE_SNAPSHOTS=1 vendor/bin/phpunit --exclude-group without-plugins",
 		"test:unit": "wp-scripts test-unit-js",
 		"test:e2e": "wp-scripts test-playwright",
 		"test:e2e:nowc": "WP_ENV_CONFIG=.wp-env.tests.nowc.json wp-scripts test-playwright tests/e2e/front-end.spec.js tests/e2e/scaffolding.spec.js tests/e2e/no-javascript.spec.js",
