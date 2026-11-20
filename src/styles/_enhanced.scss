@@ -13,8 +13,12 @@
 // (blocked, failed) never gets `matter-ready-{type}`, so after `matter-late`
 // its blocks are plain content again, whatever other types are doing. See
 // "Without JavaScript" in the README.
-// `enhanced($type)` goes after a block's own selector, for the element that is
-// marked (`.panel#{enhanced(panel)}`). It holds in the block editor
+// `enhanced($type)` goes after a selector, for the element that is marked
+// (`.panel#{enhanced(panel)}`). It is always the element's own mark, never an
+// ancestor's, so a nested block (an accordion in a tab, say) whose script
+// didn't start isn't hidden by an enhanced block around it: a block marks the
+// parts of itself that the CSS hides (an accordion its items, tabs their
+// panels), not those of a block nested in it. It holds in the block editor
 // (`.editor-styles-wrapper`), which shows the enhanced look without running
 // the scripts; `enhanced-front` leaves the editor out, for rules the editor's
 // own markup doesn't take part in.
@@ -25,15 +29,6 @@
 
 @function enhanced($type) {
 	@return ":is(.is-enhanced, #{about-to-be($type)} *, .editor-styles-wrapper *)";
-}
-
-// Temporary: the same for anything inside a marked block.
-@function in-enhanced($type) {
-	@return ":is(.is-enhanced, #{about-to-be($type)}, .editor-styles-wrapper)";
-}
-
-@function in-enhanced-front($type) {
-	@return ":is(.is-enhanced, #{about-to-be($type)})";
 }
 
 @function enhanced-front($type) {

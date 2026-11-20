@@ -19,7 +19,7 @@
 
 // Until the script has started, the active panel only: the server shows them
 // all (and marks the active one `is-active`).
-:where(#{in-enhanced-front(tabs)}) .wp-block-matter-tab:not(.is-active) {
+.wp-block-matter-tab:not(.is-active):where(#{enhanced-front(tabs)}) {
 	display: none;
 }
 
@@ -34,7 +34,7 @@
 	display: block;
 }
 
-.wp-block-matter-tabs:is(#{enhanced(tabs)}) .wp-block-matter-tab__label {
+.wp-block-matter-tab:where(#{enhanced(tabs)}) > .wp-block-matter-tab__label {
 	display: none;
 }
 

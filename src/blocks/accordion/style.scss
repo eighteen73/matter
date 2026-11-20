@@ -20,14 +20,14 @@
 	grid-template-rows: 1fr;
 }
 
-:where(#{in-enhanced(accordion)} .wp-block-matter-accordion-item:not(.is-open)) > .wp-block-matter-accordion-item__panel {
+:where(.wp-block-matter-accordion-item:not(.is-open)#{enhanced(accordion)}) > .wp-block-matter-accordion-item__panel {
 	grid-template-rows: 0fr;
 }
 
 // An `until-found` panel isn't `visibility: hidden`: find-in-page skips hidden
 // text. Its `content-visibility: hidden` (the browser's) keeps it out of the
 // tab order and the accessibility tree instead.
-:where(#{in-enhanced(accordion)} .wp-block-matter-accordion-item:not(.is-open)) > .wp-block-matter-accordion-item__panel:where(:not([hidden="until-found"])) {
+:where(.wp-block-matter-accordion-item:not(.is-open)#{enhanced(accordion)}) > .wp-block-matter-accordion-item__panel:where(:not([hidden="until-found"])) {
 	visibility: hidden;
 }
 
@@ -85,11 +85,11 @@
 
 // Without JavaScript the headings are plain text: nothing to click, nothing
 // folding.
-:where(.wp-block-matter-accordion:not(#{enhanced(accordion)})) .wp-block-matter-accordion-item__toggle {
+:where(.wp-block-matter-accordion-item:not(#{enhanced(accordion)})) > .wp-block-matter-accordion-item__heading .wp-block-matter-accordion-item__toggle {
 	cursor: default;
 }
 
-:where(.wp-block-matter-accordion:not(#{enhanced(accordion)})) .wp-block-matter-accordion-item__toggle::after {
+:where(.wp-block-matter-accordion-item:not(#{enhanced(accordion)})) > .wp-block-matter-accordion-item__heading .wp-block-matter-accordion-item__toggle::after {
 	display: none;
 }
 

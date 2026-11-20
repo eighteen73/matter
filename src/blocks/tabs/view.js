@@ -229,7 +229,15 @@ const { state, actions } = store('matter/tabs', {
 			const context = getContext();
 			const { ref } = getElement();
 
-			enhance('tabs', ref);
+			// The block and its own panels (the CSS hides an inactive panel, and
+			// a nested block's panels are for that block to mark).
+			enhance(
+				'tabs',
+				ref,
+				...[...ref.querySelectorAll(PANEL)].filter(
+					(panel) => panel.closest(SELECTOR) === ref
+				)
+			);
 			// A link to a tab, or to anything in one (including a tab of tabs
 			// nested in it), selects this block's tab that holds it: on load,
 			// and when the address's #hash changes.

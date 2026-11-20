@@ -448,6 +448,89 @@ test.describe('the gate follows the scripts, not the clock', () => {
 	});
 });
 
+// Blocks inside blocks: a block is hidden by its own state, not by an
+// enhanced one around it.
+const NESTED = `<!-- wp:matter/tabs {"anchor":"outer-tabs","label":"Outer"} -->
+<!-- wp:matter/tab {"label":"Outer one"} -->
+<!-- wp:matter/accordion {"anchor":"inner-faq"} -->
+<!-- wp:matter/accordion-item {"title":"Inner question one","open":true} --><!-- wp:paragraph --><p>Inner answer one</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item -->
+<!-- wp:matter/accordion-item {"title":"Inner question two"} --><!-- wp:paragraph --><p>Inner answer two</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item -->
+<!-- /wp:matter/accordion -->
+<!-- /wp:matter/tab -->
+<!-- wp:matter/tab {"label":"Outer two"} --><!-- wp:paragraph --><p>Outer panel two</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->
+<!-- /wp:matter/tabs -->
+<!-- wp:matter/accordion {"anchor":"outer-faq"} -->
+<!-- wp:matter/accordion-item {"title":"Outer question","open":true} -->
+<!-- wp:matter/tabs {"anchor":"inner-tabs","label":"Inner"} -->
+<!-- wp:matter/tab {"label":"Inner one"} --><!-- wp:paragraph --><p>Inner panel one</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->
+<!-- wp:matter/tab {"label":"Inner two"} --><!-- wp:paragraph --><p>Inner panel two</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->
+<!-- /wp:matter/tabs -->
+<!-- /wp:matter/accordion-item -->
+<!-- /wp:matter/accordion -->`;
+
+test.describe('nested blocks', () => {
+	test.use({ viewport: VIEWPORTS.desktop });
+
+	let nested;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		nested = await createPage(requestUtils, 'Nested blocks', NESTED);
+	});
+
+	test('an accordion whose script did not start, in running tabs, stays readable', async ({
+		page,
+	}) => {
+		await page.route(/\/build\/blocks\/accordion\/view\.js/, (route) =>
+			route.abort()
+		);
+		await page.goto(nested.link);
+		await expect(page.locator('#outer-tabs')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-late/, {
+			timeout: 8000,
+		});
+
+		await expect(page.getByText('Inner answer one')).toBeVisible();
+		await expect(page.getByText('Inner answer two')).toBeVisible();
+	});
+
+	test('tabs whose script did not start, in a running accordion, stay readable', async ({
+		page,
+	}) => {
+		await page.route(/\/build\/blocks\/tabs\/view\.js/, (route) =>
+			route.abort()
+		);
+		await page.goto(nested.link);
+		await expect(page.locator('#outer-faq')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-late/, {
+			timeout: 8000,
+		});
+
+		await expect(page.getByText('Inner panel one')).toBeVisible();
+		await expect(page.getByText('Inner panel two')).toBeVisible();
+		await expect(
+			page.locator('#inner-tabs .wp-block-matter-tab__label').nth(1)
+		).toBeVisible();
+	});
+
+	test('with the scripts running, each block works by itself', async ({
+		page,
+	}) => {
+		await page.goto(nested.link);
+		await expect(page.locator('#inner-faq')).toHaveClass(/is-enhanced/);
+
+		// Inner accordion in a tab: its closed item is closed.
+		await expect(page.getByText('Inner answer one')).toBeVisible();
+		await expect(page.getByText('Inner answer two')).toBeHidden();
+		// Inner tabs in an accordion item: only the active panel.
+		await expect(page.getByText('Inner panel one')).toBeVisible();
+		await expect(page.getByText('Inner panel two')).toBeHidden();
+		// Only the outer tabs' panel is inactive.
+		await expect(page.getByText('Outer panel two')).toBeHidden();
+		await page.getByRole('tab', { name: 'Outer two' }).click();
+		await expect(page.getByText('Outer panel two')).toBeVisible();
+	});
+});
+
 test.describe('closed panels degrade @cross-browser', () => {
 	test.use({ viewport: VIEWPORTS.desktop });
 

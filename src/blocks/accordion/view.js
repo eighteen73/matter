@@ -166,7 +166,15 @@ const { state } = store('matter/accordion', {
 			const context = getContext();
 			const { ref } = getElement();
 
-			enhance('accordion', ref);
+			// The block and its own items (the CSS hides an item's panel, and
+			// a nested accordion's items are for that accordion to mark).
+			enhance(
+				'accordion',
+				ref,
+				...[...ref.querySelectorAll(ITEM)].filter(
+					(item) => item.closest(SELECTOR) === ref
+				)
+			);
 			// A link to an item, or to anything in one (including an item of
 			// an accordion nested in it), opens this accordion's item that
 			// holds it: on load, and when the address's #hash changes.
