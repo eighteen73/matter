@@ -1,7 +1,8 @@
 /**
  * Edge-aware placement for dropdown submenus.
  *
- * Flips flyouts that would overflow the inline end, nudges panels back inside
+ * Flips flyouts that would overflow the inline end (the right edge in
+ * left-to-right languages, the left in right-to-left), nudges panels back inside
  * the viewport (or clipping ancestors), caps their height so long menus scroll,
  * and centres megamenus on their parent item or the viewport.
  */
@@ -174,10 +175,19 @@ export const positionSubmenu = (item, navigation) => {
 
 	let rect = submenu.getBoundingClientRect();
 
-	if (rect.right > boundary.right) {
+	// A submenu extends towards the inline end: right in left-to-right
+	// languages, left in right-to-left, so that is the edge it overflows.
+	const isRtl = window.getComputedStyle(submenu).direction === 'rtl';
+	const overflows = isRtl
+		? rect.left < boundary.left
+		: rect.right > boundary.right;
+
+	if (overflows) {
 		const itemRect = item.getBoundingClientRect();
-		const roomStart = itemRect.left - boundary.left;
-		const roomEnd = boundary.right - itemRect.right;
+		const roomLeft = itemRect.left - boundary.left;
+		const roomRight = boundary.right - itemRect.right;
+		const roomEnd = isRtl ? roomLeft : roomRight;
+		const roomStart = isRtl ? roomRight : roomLeft;
 
 		if (!isFlyout || roomStart > roomEnd) {
 			submenu.classList.add(CLASSES.flipped);

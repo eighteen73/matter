@@ -64,8 +64,21 @@ const isEditable = (element) =>
 	!!element.closest?.(
 		'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
 	);
-const NEXT_KEYS = ['ArrowDown', 'ArrowRight'];
-const PREV_KEYS = ['ArrowUp', 'ArrowLeft'];
+// Left and Right follow the screen, so in a right-to-left menu the next item
+// is to the left. The direction is the element's own, not the page's, so a
+// right-to-left menu in a left-to-right page works.
+const nextKeys = (element) => [
+	'ArrowDown',
+	window.getComputedStyle(element).direction === 'rtl'
+		? 'ArrowLeft'
+		: 'ArrowRight',
+];
+const prevKeys = (element) => [
+	'ArrowUp',
+	window.getComputedStyle(element).direction === 'rtl'
+		? 'ArrowRight'
+		: 'ArrowLeft',
+];
 
 // Hover is only meaningful with a precise pointer; touch-capable laptops with a
 // mouse still get hover menus.
@@ -399,8 +412,8 @@ const { state } = store(
 					return;
 				}
 
-				const isNext = NEXT_KEYS.includes(key);
-				const isPrev = PREV_KEYS.includes(key);
+				const isNext = nextKeys(target).includes(key);
+				const isPrev = prevKeys(target).includes(key);
 
 				if (
 					(!isNext && !isPrev && key !== 'Home' && key !== 'End') ||

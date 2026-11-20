@@ -4,9 +4,21 @@
  * and where focus goes.
  */
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
-const { VIEWPORTS, createMenu, createPage } = require('./fixtures');
+const {
+	VIEWPORTS,
+	arabicInstalled,
+	createMenu,
+	createPage,
+	rtl,
+	resetSiteLanguage,
+	setSiteLanguage,
+} = require('./fixtures');
 
 let kitchenSink;
+let rtlPage;
+
+const tab = (label) =>
+	`<!-- wp:matter/tab {"label":"${label}"} --><!-- wp:paragraph --><p>${label}</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->`;
 
 test.beforeAll(async ({ requestUtils }) => {
 	await requestUtils.deleteAllPages();
@@ -15,6 +27,15 @@ test.beforeAll(async ({ requestUtils }) => {
 		requestUtils,
 		'Kitchen sink',
 		'kitchen-sink.html'
+	);
+	// Three tabs, so the wrong direction can't land on the right tab by
+	// wrapping round.
+	rtlPage = await createPage(
+		requestUtils,
+		'RTL tabs',
+		rtl(
+			`<!-- wp:matter/tabs {"anchor":"rtl-tabs","label":"RTL tabs"} -->${tab('One')}${tab('Two')}${tab('Three')}<!-- /wp:matter/tabs -->`
+		)
 	);
 });
 
@@ -157,5 +178,88 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 					: window.document.activeElement.tagName
 			)
 		).toBe('menu');
+	});
+});
+
+test.describe('right to left', { tag: '@cross-browser' }, () => {
+	test.use({ viewport: VIEWPORTS.desktop });
+
+	test('tabs: Left moves to the next tab and Right to the previous in a right-to-left tablist', async ({
+		page,
+	}) => {
+		await page.goto(rtlPage.link);
+		await expect(page.locator('#rtl-tabs')).toHaveClass(/is-enhanced/);
+
+		const tabNamed = (name) => page.getByRole('tab', { name });
+
+		await tabNamed('One').focus();
+		await page.keyboard.press('ArrowLeft');
+		await expect(tabNamed('Two')).toBeFocused();
+		await expect(tabNamed('Two')).toHaveAttribute('aria-selected', 'true');
+		await page.keyboard.press('ArrowLeft');
+		await expect(tabNamed('Three')).toBeFocused();
+		await page.keyboard.press('ArrowRight');
+		await expect(tabNamed('Two')).toBeFocused();
+	});
+
+	test('tabs in a left-to-right page keep Right as next', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#specs')).toHaveClass(/is-enhanced/);
+
+		await page.getByRole('tab', { name: 'Size' }).focus();
+		await page.keyboard.press('ArrowRight');
+		await expect(page.getByRole('tab', { name: 'Colour' })).toBeFocused();
+	});
+});
+
+test.describe('Arabic site', () => {
+	test.use({ viewport: VIEWPORTS.desktop });
+
+	let restore;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		if (arabicInstalled()) {
+			restore = await setSiteLanguage(requestUtils, 'ar');
+		}
+	});
+
+	test.afterAll(async ({ requestUtils }) => {
+		if (restore) {
+			await restore();
+		} else {
+			await resetSiteLanguage(requestUtils);
+		}
+	});
+
+	test('the menu: Left moves to the next item, and a submenu opens inside the screen', async ({
+		page,
+	}) => {
+		test.skip(!arabicInstalled(), 'The Arabic language pack is missing.');
+
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+
+		const menu = page.locator('nav.matter-menu--primary.opens-on-click');
+		const toggle = menu.getByRole('button', { name: /Services/ });
+
+		await expect(menu).toHaveClass(/is-enhanced/);
+		await toggle.focus();
+		await page.keyboard.press('ArrowLeft');
+		await expect(menu.getByRole('link', { name: 'Contact' })).toBeFocused();
+		await page.keyboard.press('ArrowRight');
+		await expect(toggle).toBeFocused();
+
+		await page.keyboard.press('Enter');
+		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+		const box = await menu
+			.locator('.matter-menu__submenu')
+			.first()
+			.boundingBox();
+
+		expect(box.x).toBeGreaterThanOrEqual(0);
+		expect(box.x + box.width).toBeLessThanOrEqual(1280);
 	});
 });

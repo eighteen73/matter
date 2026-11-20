@@ -203,14 +203,21 @@ const { state, actions } = store('matter/tabs', {
 			const next = tabs[(index + 1) % tabs.length];
 			const previous = tabs[(index - 1 + tabs.length) % tabs.length];
 
+			// Left and Right follow the screen: in a right-to-left tablist the
+			// next tab is on the left. Read from the tab, not the page, so a
+			// right-to-left section in a left-to-right page works.
+			const isRtl = window.getComputedStyle(ref).direction === 'rtl';
+			const forwards = isRtl ? 'ArrowLeft' : 'ArrowRight';
+			const backwards = isRtl ? 'ArrowRight' : 'ArrowLeft';
+
 			// The open dropdown is a vertical list: move focus; Enter/Space
 			// (the button's click) choose.
 			if (context.isMenuOpen) {
 				const targets = {
 					ArrowDown: next,
-					ArrowRight: next,
+					[forwards]: next,
 					ArrowUp: previous,
-					ArrowLeft: previous,
+					[backwards]: previous,
 					Home: tabs[0],
 					End: tabs[tabs.length - 1],
 				};
@@ -232,8 +239,8 @@ const { state, actions } = store('matter/tabs', {
 				ref.parentElement.getAttribute('aria-orientation') ===
 				'vertical';
 			const targets = {
-				[vertical ? 'ArrowDown' : 'ArrowRight']: next,
-				[vertical ? 'ArrowUp' : 'ArrowLeft']: previous,
+				[vertical ? 'ArrowDown' : forwards]: next,
+				[vertical ? 'ArrowUp' : backwards]: previous,
 				Home: tabs[0],
 				End: tabs[tabs.length - 1],
 			};
