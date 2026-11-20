@@ -35,10 +35,11 @@ html.has-overlay-open.has-scroll-gutter {
 // The same layouts cap children at the content width
 // (`.is-layout-constrained > :where(...)`, 0,1,0), which beats the skin's
 // `:where()` cap and leaves a 40rem modal wider than a phone, with its close
-// button off screen. So the fit to the viewport is a functional rule here.
+// button off screen. So the fit to the viewport is a functional rule here,
+// which a theme's full-screen variant lifts with `--modal-max-inline-size`.
 :root dialog.wp-block-matter-modal {
 	margin: auto;
-	max-inline-size: calc(100vw - 2rem);
+	max-inline-size: var(--modal-max-inline-size, calc(100vw - 2rem));
 }
 
 // Without JavaScript, a link to the dialog's #ID shows it in the page.

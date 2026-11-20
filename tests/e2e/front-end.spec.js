@@ -394,6 +394,26 @@ test.describe('overlays on a phone', { tag: '@cross-browser' }, () => {
 	}
 });
 
+test.describe('a full-screen modal variant', () => {
+	test.use({ viewport: { width: 375, height: 700 } });
+
+	test('can lift the cap on the modal width with --modal-max-inline-size', async ({
+		page,
+	}) => {
+		await page.goto(constrainedPage.link);
+		await page.addStyleTag({
+			content:
+				'.wp-block-matter-modal { --modal-max-inline-size: 100vw; width: 100vw; }',
+		});
+		await page.getByRole('link', { name: 'Open modal' }).click();
+
+		const dialog = page.getByRole('dialog', { name: 'Wide modal' });
+
+		await expect(dialog).toBeVisible();
+		expect((await dialog.boundingBox()).width).toBe(375);
+	});
+});
+
 test.describe('overlays, with motion', () => {
 	test.use({
 		viewport: DESKTOP,

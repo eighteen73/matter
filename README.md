@@ -953,6 +953,7 @@ On the modal's dialog.
 
 | Variable | Default | |
 |---|---|---|
+| `--modal-max-inline-size` | `calc(100vw - 2rem)` | Theme setting: the most the dialog's width can be, so it fits the screen whatever its `width`. A full-screen variant sets it to `100vw`. |
 | `--modal-switch` | `1` | Runtime, while moving between grouped modals: `1` for next, `-1` for previous. |
 
 ### Images
