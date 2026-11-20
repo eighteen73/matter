@@ -167,6 +167,10 @@ class IntegrationsTest extends TestCase {
 		$this->assertContains( 'gravityforms/form', Registry::hidden_blocks() );
 		$this->assertTrue( apply_filters( 'matter_register_block', false, 'matter/gravity-form', '' ) );
 		$this->assertFalse( apply_filters( 'matter_register_block', false, 'matter/carousel', '' ) );
+
+		// An earlier filter that returns something else (null) isn't a type error.
+		$this->assertFalse( ( new GravityForms() )->register_form_block( null, 'matter/carousel' ) );
+		$this->assertTrue( ( new GravityForms() )->register_form_block( null, 'matter/gravity-form' ) );
 	}
 
 	/**
