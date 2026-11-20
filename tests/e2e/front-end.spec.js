@@ -988,6 +988,85 @@ test.describe('blocks rendered twice', () => {
 	});
 });
 
+test.describe('links inside a trigger area', () => {
+	test.use({ viewport: DESKTOP });
+
+	const modal = (id, trigger) =>
+		`<!-- wp:matter/modal {"overlayId":"${id}","label":"${id}"} -->` +
+		`<!-- wp:matter/slot {"name":"trigger"} --><!-- wp:paragraph -->${trigger}<!-- /wp:paragraph --><!-- /wp:matter/slot -->` +
+		`<!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Inside ${id}</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->` +
+		'<!-- /wp:matter/modal -->';
+
+	test("a link to another modal in one modal's trigger opens that modal", async ({
+		page,
+		requestUtils,
+	}) => {
+		const created = await createPage(
+			requestUtils,
+			'Trigger slot links',
+			modal(
+				'slot-host',
+				'<p><a href="#slot-host">Open host</a> <button type="button" aria-controls="slot-other">Open other</button></p>'
+			) +
+				modal(
+					'slot-other',
+					'<p><a href="#slot-other">Open other too</a></p>'
+				)
+		);
+
+		await page.goto(created.link);
+		await page
+			.getByRole('button', { name: 'Open other', exact: true })
+			.click();
+
+		await expect(page.locator('dialog#slot-other')).toHaveJSProperty(
+			'open',
+			true
+		);
+		await expect(page.locator('dialog#slot-host')).toHaveJSProperty(
+			'open',
+			false
+		);
+		await expect(page.locator('dialog:modal')).toHaveCount(1);
+	});
+
+	test("the saved link in a copy's trigger opens only the copy", async ({
+		page,
+		requestUtils,
+	}) => {
+		const pattern = await requestUtils.rest({
+			path: '/wp/v2/blocks',
+			method: 'POST',
+			data: {
+				title: `Trigger copies ${Date.now()}`,
+				status: 'publish',
+				content: modal(
+					'copy-modal',
+					'<p><a href="#copy-modal">Open copy</a></p>'
+				),
+			},
+		});
+		const use = `<!-- wp:block {"ref":${pattern.id}} /-->`;
+		const created = await createPage(
+			requestUtils,
+			'Trigger copies',
+			use + use
+		);
+
+		await page.goto(created.link);
+		await page.getByRole('link', { name: 'Open copy' }).nth(1).click();
+
+		await expect(page.locator('dialog#copy-modal-2')).toHaveJSProperty(
+			'open',
+			true
+		);
+		await expect(page.locator('dialog#copy-modal')).toHaveJSProperty(
+			'open',
+			false
+		);
+	});
+});
+
 test.describe('author and date archives', () => {
 	test.use({ viewport: DESKTOP });
 

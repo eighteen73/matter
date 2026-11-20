@@ -120,7 +120,8 @@ class Overlay {
 		$base  = self::id( $attributes, $type );
 		// Inside a Query Loop each post gets its own overlay.
 		$post_id = Instances::in_query_loop() ? (int) ( $block->context['postId'] ?? 0 ) : 0;
-		$id      = Ids::claim( $post_id ? $base . '-' . $post_id : $base );
+		$wanted  = $post_id ? $base . '-' . $post_id : $base;
+		$id      = Ids::claim( $wanted );
 		$class   = 'wp-block-matter-' . $type;
 
 		// Modals in a Query Loop form a group automatically; others can share a group name.
@@ -149,7 +150,15 @@ class Overlay {
 		);
 
 		$trigger = '' !== trim( $slots['trigger'] )
-			? sprintf( '<div class="%1$s__trigger" data-matter-trigger="%2$s">%3$s</div>', esc_attr( $class ), esc_attr( $id ), $slots['trigger'] )
+			? sprintf(
+				// A repeat is renamed (`x-2`); its trigger area remembers the saved ID
+				// its links still say, so they aren't taken for the original's.
+				'<div class="%1$s__trigger" data-matter-trigger="%2$s"%4$s>%3$s</div>',
+				esc_attr( $class ),
+				esc_attr( $id ),
+				$slots['trigger'],
+				$id !== $wanted ? ' data-matter-from="' . esc_attr( $wanted ) . '"' : ''
+			)
 			: '';
 
 		if ( 'collapsible' === $type ) {

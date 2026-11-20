@@ -173,12 +173,13 @@ const findTriggers = (id) => {
 			`a[href$="#${escaped}"], [aria-controls="${escaped}"]`
 		),
 	].filter((element) => {
-		// A control in an overlay's own trigger area belongs to that overlay
-		// alone, whatever its link says (a copy of a block keeps the saved
-		// `#id` in its link, though its own overlay's ID has changed).
+		// A copy of a block keeps its saved `#id` in the link of its trigger
+		// area, though its own overlay's ID was renamed (`x-2`): that link is
+		// the copy's, not the original's. The area says which ID it was
+		// renamed from. A link to any other overlay is an ordinary one.
 		const area = element.closest('[data-matter-trigger]');
 
-		if (area && area.dataset.matterTrigger !== id) {
+		if (area && area.dataset.matterFrom === id) {
 			return false;
 		}
 
