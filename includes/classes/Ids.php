@@ -130,6 +130,26 @@ final class Ids {
 	}
 
 	/**
+	 * Claim the `id` in a wrapper attribute string (what
+	 * `get_block_wrapper_attributes()` returns, where core's anchor support put
+	 * the block's HTML anchor), so a repeated block's wrapper is unique too.
+	 *
+	 * @param string $attributes Attribute string.
+	 * @return string
+	 */
+	public static function claim_wrapper( string $attributes ): string {
+		return (string) preg_replace_callback(
+			'/(^|\s)id="([^"]*)"/',
+			function ( $found ) {
+				$id = self::claim( html_entity_decode( $found[2] ) );
+
+				return '' === $id ? $found[0] : $found[1] . 'id="' . esc_attr( $id ) . '"';
+			},
+			$attributes
+		);
+	}
+
+	/**
 	 * An ID as the editor saves it: lowercase letters, numbers, hyphens and
 	 * underscores (the same rule as the editor's `sanitizeId`).
 	 *

@@ -20,6 +20,7 @@ namespace Eighteen73\Matter\Overlays;
 
 use Eighteen73\Matter\Assets;
 use Eighteen73\Matter\Breakpoints;
+use Eighteen73\Matter\Ids;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -73,7 +74,8 @@ class Panel {
 			]
 		);
 
-		$id       = sanitize_html_class( $id );
+		// A panel rendered twice (a template part in two places) keeps its IDs unique.
+		$id       = Ids::claim( $id );
 		$settings = self::settings( $id, (string) $args['collapse_below'] );
 		$position = in_array( $args['position'], [ 'start', 'end', 'top' ], true ) ? $args['position'] : 'end';
 

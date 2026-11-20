@@ -25,6 +25,7 @@
 
 use Eighteen73\Matter\AspectRatio;
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Variants;
 
 $matter_options  = Variants::get( 'matter/gallery', $attributes );
@@ -238,7 +239,7 @@ $matter_wrapper = [
 
 printf(
 	'<div %1$s data-wp-interactive="matter/gallery" %2$s data-wp-init--api="callbacks.init" data-wp-init--rows="callbacks.fitRows" data-wp-watch="callbacks.announce">%3$s%4$s</div>',
-	get_block_wrapper_attributes( array_filter( $matter_wrapper ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	Ids::claim_wrapper( get_block_wrapper_attributes( array_filter( $matter_wrapper ) ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
 			'images'  => $matter_images,

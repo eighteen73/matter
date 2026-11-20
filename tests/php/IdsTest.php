@@ -8,6 +8,7 @@
 namespace Eighteen73\Matter\Tests;
 
 use Eighteen73\Matter\Ids;
+use Eighteen73\Matter\Overlays\Panel;
 
 /**
  * IDs.
@@ -276,5 +277,31 @@ class IdsTest extends TestCase {
 		setup_postdata( $post );
 
 		$this->assertSame( 'kept-2', Ids::claim( 'kept' ) );
+	}
+
+	/**
+	 * The anchor on a carousel or gallery, and a panel's ID, are claimed too.
+	 *
+	 * @return void
+	 */
+	public function test_anchors_and_panels_are_claimed(): void {
+		$slide    = '<!-- wp:paragraph --><p>Slide</p><!-- /wp:paragraph -->';
+		$carousel = '<!-- wp:matter/carousel {"anchor":"spotlight"} -->' . $slide . '<!-- /wp:matter/carousel -->';
+		$html     = $this->render( $carousel ) . $this->render( $carousel );
+
+		$this->assertSame( 1, substr_count( $html, 'id="spotlight"' ) );
+		$this->assertSame( 1, substr_count( $html, 'id="spotlight-2"' ) );
+
+		$image   = '<!-- wp:image --><figure class="wp-block-image"><img src="https://example.com/one.jpg" alt="One"/></figure><!-- /wp:image -->';
+		$gallery = '<!-- wp:matter/gallery {"anchor":"photos"} -->' . $image . '<!-- /wp:matter/gallery -->';
+		$html    = $this->render( $gallery ) . $this->render( $gallery );
+
+		$this->assertSame( 1, substr_count( $html, 'id="photos"' ) );
+		$this->assertSame( 1, substr_count( $html, 'id="photos-2"' ) );
+
+		$panel = Panel::render( 'site-nav', 'Menu' ) . Panel::render( 'site-nav', 'Menu' );
+
+		$this->assertSame( 1, substr_count( $panel, 'id="site-nav"' ) );
+		$this->assertSame( 1, substr_count( $panel, 'id="site-nav-2"' ) );
 	}
 }

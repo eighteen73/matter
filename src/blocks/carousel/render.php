@@ -16,6 +16,7 @@
 use Eighteen73\Matter\AspectRatio;
 use Eighteen73\Matter\Blocks\Carousel;
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Variants;
 
 $matter_options = Variants::get( 'matter/carousel', $attributes );
@@ -47,12 +48,15 @@ $matter_classes  = array_filter(
 $matter_html = Carousel::render(
 	$content,
 	$matter_options,
-	get_block_wrapper_attributes(
-		array_filter(
-			[
-				'class' => implode( ' ', $matter_classes ),
-				'style' => $matter_style,
-			]
+	// The HTML anchor is a saved ID, so a copy of the block keeps its IDs unique.
+	Ids::claim_wrapper(
+		get_block_wrapper_attributes(
+			array_filter(
+				[
+					'class' => implode( ' ', $matter_classes ),
+					'style' => $matter_style,
+				]
+			)
 		)
 	),
 	trim( (string) ( $attributes['label'] ?? '' ) ),
