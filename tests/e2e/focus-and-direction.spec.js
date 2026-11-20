@@ -171,14 +171,25 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 		await expect(page.locator('html')).not.toHaveClass(/has-panel-open/);
 		await expect.poll(() => inertElements(page)).toEqual(before);
 
-		// Still where it was: the menu is inline now, not the toggle.
-		expect(
-			await page.evaluate(() =>
-				window.document.activeElement.closest('#test-nav')
-					? 'menu'
-					: window.document.activeElement.tagName
-			)
-		).toBe('menu');
+		// Still where it was: the menu is inline now, not the toggle. Let
+		// the browser finish the layout change (two frames) and any focus
+		// work the panel queued, then wait on where focus is, not on time.
+		await page.evaluate(
+			() =>
+				new Promise((resolve) =>
+					window.requestAnimationFrame(() =>
+						window.requestAnimationFrame(() =>
+							window.setTimeout(resolve, 0)
+						)
+					)
+				)
+		);
+		await expect(
+			page.locator('#test-nav .matter-menu__toggle').first()
+		).toBeFocused();
+		await expect(
+			page.locator('[aria-controls="test-nav"]')
+		).not.toBeFocused();
 	});
 
 	test('Escape in a modal opened from a button in the panel closes the modal, and focus goes back to the button', async ({
