@@ -556,6 +556,11 @@ const { state } = store(
 				enhance('menu', ref);
 				context.menuType = resolveType(context.types);
 
+				// Everything below ends with the menu (it was taken out of the
+				// page, e.g. by client-side navigation).
+				const controller = new window.AbortController();
+				const { signal } = controller;
+
 				// Follow the active type as the viewport crosses breakpoints.
 				const sync = withScope(() => {
 					const type = resolveType(context.types);
@@ -578,14 +583,29 @@ const { state } = store(
 					.forEach(({ query }) =>
 						window
 							.matchMedia(query)
-							.addEventListener('change', sync)
+							.addEventListener('change', sync, { signal })
 					);
 
 				// Reset when a containing panel closes.
 				ref.closest(SELECTORS.panel)?.addEventListener(
 					'matter-panel-close',
-					withScope(() => closeAll(context, ref))
+					withScope(() => closeAll(context, ref)),
+					{ signal }
 				);
+
+				return () => {
+					controller.abort();
+					closeAll(context, ref);
+
+					// Whatever closeAll() didn't reach (a submenu whose state
+					// was lost): timers, placement watchers, drill-down traps
+					// and the inert they hold.
+					ref.querySelectorAll(SELECTORS.parent).forEach((item) => {
+						cancelHoverClose(item);
+						unwatchSubmenu(item);
+						deactivateTrap(item);
+					});
+				};
 			},
 		},
 	},
