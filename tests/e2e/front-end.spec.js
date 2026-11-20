@@ -914,6 +914,26 @@ test.describe('deep links', () => {
 		);
 		await expect(page.locator('#heading-in-tab-2')).toBeInViewport();
 	});
+
+	test('a link to something in a hidden tab, followed on the page, selects the tab and scrolls to it once it shows', async ({
+		page,
+	}) => {
+		await page.goto(deepTabsPage.link);
+		await expect(page.getByRole('tab', { name: 'One' })).toHaveAttribute(
+			'aria-selected',
+			'true'
+		);
+		await expect(page.locator('#heading-in-tab-2')).toBeHidden();
+
+		await page.evaluate(() => {
+			window.location.hash = 'heading-in-tab-2';
+		});
+		await expect(page.getByRole('tab', { name: 'Two' })).toHaveAttribute(
+			'aria-selected',
+			'true'
+		);
+		await expect(page.locator('#heading-in-tab-2')).toBeInViewport();
+	});
 });
 
 test.describe('theme styles', () => {

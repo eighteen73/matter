@@ -36,7 +36,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
-import { hashId } from '../../interactivity/hash';
+import { hashId, scrollWhenShown } from '../../interactivity/hash';
 
 const SELECTOR = '.wp-block-matter-tabs';
 const PANEL = '.wp-block-matter-tab';
@@ -279,9 +279,7 @@ const { state, actions } = store('matter/tabs', {
 				if (panel && context.active !== panel.id) {
 					context.active = panel.id;
 					// The browser couldn't scroll to it while its tab was hidden.
-					window.requestAnimationFrame(() =>
-						target.scrollIntoView({ block: 'start' })
-					);
+					scrollWhenShown(target);
 				}
 			});
 

@@ -1,7 +1,7 @@
 /**
  * The hash as an ID: decoded, and not thrown on by invalid percent-encoding.
  */
-import { hashId } from '../hash';
+import { hashId, scrollWhenShown } from '../hash';
 
 describe('hashId', () => {
 	it('decodes an encoded hash', () => {
@@ -21,5 +21,43 @@ describe('hashId', () => {
 		expect(hashId()).toBe('%E0%A4%A');
 
 		window.location.hash = '';
+	});
+});
+
+describe('scrollWhenShown', () => {
+	beforeEach(() => {
+		jest.useFakeTimers();
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
+	});
+
+	it('waits until the element is rendered, then scrolls once', () => {
+		let shown = false;
+		const target = {
+			checkVisibility: () => shown,
+			scrollIntoView: jest.fn(),
+		};
+
+		scrollWhenShown(target);
+		jest.advanceTimersByTime(16);
+		expect(target.scrollIntoView).not.toHaveBeenCalled();
+
+		shown = true;
+		jest.advanceTimersByTime(16);
+		expect(target.scrollIntoView).toHaveBeenCalledTimes(1);
+		expect(target.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+	});
+
+	it('gives up waiting after a while, and scrolls anyway', () => {
+		const target = {
+			checkVisibility: () => false,
+			scrollIntoView: jest.fn(),
+		};
+
+		scrollWhenShown(target, 3);
+		jest.advanceTimersByTime(200);
+		expect(target.scrollIntoView).toHaveBeenCalledTimes(1);
 	});
 });

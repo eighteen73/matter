@@ -14,3 +14,31 @@ export const hashId = (hash = window.location.hash) => {
 		return id;
 	}
 };
+
+/**
+ * Scroll to an element that is about to be shown (its tab was just selected,
+ * its accordion item just opened). The Interactivity API applies the change
+ * after the state is set, so the element can still be hidden in the next
+ * frame, where a scroll does nothing: wait, for a few frames, until it is
+ * rendered.
+ *
+ * @param {Element} target Element to scroll to.
+ * @param {number}  frames Most frames to wait.
+ */
+export const scrollWhenShown = (target, frames = 30) => {
+	const isShown = () =>
+		typeof target.checkVisibility === 'function'
+			? target.checkVisibility()
+			: target.getClientRects().length > 0;
+
+	const attempt = (left) => {
+		if (isShown() || left <= 0) {
+			target.scrollIntoView({ block: 'start' });
+			return;
+		}
+
+		window.requestAnimationFrame(() => attempt(left - 1));
+	};
+
+	window.requestAnimationFrame(() => attempt(frames));
+};

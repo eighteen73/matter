@@ -31,7 +31,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
-import { hashId } from '../../interactivity/hash';
+import { hashId, scrollWhenShown } from '../../interactivity/hash';
 import { suspendTransitions } from '../../interactivity/transitions';
 
 const SELECTOR = '.wp-block-matter-accordion';
@@ -202,9 +202,7 @@ const { state } = store('matter/accordion', {
 				context.openItems = context.autoclose
 					? [item.id]
 					: [...context.openItems, item.id];
-				window.requestAnimationFrame(() =>
-					target.scrollIntoView({ block: 'start' })
-				);
+				scrollWhenShown(target);
 			});
 
 			// Removed with the block (e.g. by client-side navigation).

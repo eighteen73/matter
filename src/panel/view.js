@@ -46,6 +46,11 @@ const FOCUSABLE =
 
 const traps = new Map();
 const queries = new Map();
+
+// The panel element that owns each ID's trap and registration, so one that is
+// replaced by another with the same ID doesn't tear the new one down.
+const owners = new Map();
+const registered = new Map();
 const watchers = new Map();
 
 const isCollapsed = (id) => queries.get(id)?.matches ?? true;
@@ -112,6 +117,7 @@ const activate = (panel, id) => {
 	});
 
 	traps.set(id, trap);
+	owners.set(id, panel);
 
 	// A panel taken out of the page while open (by a script, or a replacement
 	// the interactivity runtime never tears down) must let go of the scroll
@@ -131,7 +137,8 @@ const activate = (panel, id) => {
 };
 
 const deactivate = (panel, id, { silent = false } = {}) => {
-	if (!traps.has(id)) {
+	// Only the panel that holds the trap lets go of it.
+	if (!traps.has(id) || owners.get(id) !== panel) {
 		return;
 	}
 
@@ -140,6 +147,7 @@ const deactivate = (panel, id, { silent = false } = {}) => {
 	releaseTrapsWithin(panel);
 	traps.get(id).deactivate();
 	traps.delete(id);
+	owners.delete(id);
 	watchers.get(id)?.disconnect();
 	watchers.delete(id);
 
@@ -206,6 +214,8 @@ const { state, actions } = store(
 
 				// Listeners removed with the block (e.g. by client-side
 				// navigation).
+				registered.set(id, ref);
+
 				const listeners = new window.AbortController();
 				const { signal } = listeners;
 
@@ -288,7 +298,13 @@ const { state, actions } = store(
 
 				return () => {
 					listeners.abort();
-					queries.delete(id);
+
+					// Only if it's still this element's: a replacement with the
+					// same ID may have started already.
+					if (registered.get(id) === ref) {
+						registered.delete(id);
+						queries.delete(id);
+					}
 
 					// Removed while open (client-side navigation): let go of the
 					// focus trap and the scroll lock, which nothing else would.
