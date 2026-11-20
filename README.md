@@ -51,7 +51,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 
 **Opening overlays.**
 - The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
-- Any link to `#id`, or element with `aria-controls="id"`, anywhere on the page also opens it. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup`. So does the address changing to `#id` after the page loads.
+- Any link to `#id` on the same page (same address and query; a link to another page ending in `#id` just goes there), or element with `aria-controls="id"`, anywhere on the page also opens it. One click listener serves the page, so triggers added later (live filter results, a lazy-loaded section) work; a click with a modifier key or a button other than the primary one is left to the browser. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup` to the triggers present when the overlay starts, and to later ones the next time the overlay opens or closes. So does the address changing to `#id` after the page loads.
 - **Where it sits:** a modal or drawer inside an inactive tab, a closed accordion item, a closed collapsible or another closed dialog opens those first, then itself. If it still can't be seen (e.g. the theme hides its container), it isn't opened, and a console warning says why.
 - **Query Loops:** an overlay inside a post template gets one instance per post, with the ID `{id}-{postId}`. Modals in a Query Loop are grouped automatically.
 - **Groups:** modals with the same group get previous/next buttons and an "n / N" position, cycling in page order.

@@ -46,6 +46,7 @@ const FOCUSABLE =
 
 const traps = new Map();
 const queries = new Map();
+const watchers = new Map();
 
 const isCollapsed = (id) => queries.get(id)?.matches ?? true;
 
@@ -112,12 +113,24 @@ const activate = (panel, id) => {
 
 	traps.set(id, trap);
 
+	// A panel taken out of the page while open (by a script, or a replacement
+	// the interactivity runtime never tears down) must let go of the scroll
+	// lock and the trap.
+	const watcher = new window.MutationObserver(() => {
+		if (!panel.isConnected) {
+			deactivate(panel, id, { silent: true });
+		}
+	});
+
+	watcher.observe(document.body, { childList: true, subtree: true });
+	watchers.set(id, watcher);
+
 	// Wait a frame so the panel is visible before moving focus into it.
 	window.requestAnimationFrame(() => trap.activate());
 	emit(panel, 'panel', 'open');
 };
 
-const deactivate = (panel, id) => {
+const deactivate = (panel, id, { silent = false } = {}) => {
 	if (!traps.has(id)) {
 		return;
 	}
@@ -127,12 +140,16 @@ const deactivate = (panel, id) => {
 	releaseTrapsWithin(panel);
 	traps.get(id).deactivate();
 	traps.delete(id);
+	watchers.get(id)?.disconnect();
+	watchers.delete(id);
 
 	if (!traps.size) {
 		document.documentElement.classList.remove(OPEN_CLASS);
 	}
 
-	emit(panel, 'panel', 'close');
+	if (!silent) {
+		emit(panel, 'panel', 'close');
+	}
 };
 
 const { state, actions } = store(
@@ -163,6 +180,14 @@ const { state, actions } = store(
 			},
 			onKeydown: withSyncEvent((event) => {
 				if (event.key !== 'Escape' || !state.isOpen) {
+					return;
+				}
+
+				// Escape in a modal inside the panel closes the modal (the
+				// browser does it), not the panel behind it.
+				const dialog = event.target.closest?.('dialog[open]');
+
+				if (dialog && getElement().ref.contains(dialog)) {
 					return;
 				}
 
@@ -264,6 +289,10 @@ const { state, actions } = store(
 				return () => {
 					listeners.abort();
 					queries.delete(id);
+
+					// Removed while open (client-side navigation): let go of the
+					// focus trap and the scroll lock, which nothing else would.
+					deactivate(ref, id, { silent: true });
 				};
 			},
 			sync() {

@@ -36,6 +36,7 @@ const violations = async (page) =>
 
 let kitchenSink;
 let ageGate;
+let triggersPage;
 
 test.beforeAll(async ({ requestUtils }) => {
 	await requestUtils.deleteAllPages();
@@ -45,6 +46,12 @@ test.beforeAll(async ({ requestUtils }) => {
 		requestUtils,
 		'Kitchen sink',
 		'kitchen-sink.html'
+	);
+	triggersPage = await createPage(
+		requestUtils,
+		'Overlay triggers',
+		'<!-- wp:paragraph --><p><a href="#offer">Same page</a> <a href="https://example.com/#offer">External</a> <a href="?other=1#offer">Other query</a></p><!-- /wp:paragraph -->' +
+			'<!-- wp:matter/modal {"overlayId":"offer","label":"Offer"} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>The offer</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->'
 	);
 	ageGate = await createPage(
 		requestUtils,
@@ -649,6 +656,128 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		await page.keyboard.press('Escape');
 		await expect(panel).not.toHaveClass(/\bis-open\b/);
 		await expect(toggle).toBeFocused();
+	});
+});
+
+test.describe('overlay triggers and teardown', () => {
+	test.use({ viewport: DESKTOP });
+
+	test('a link to another page with the same hash navigates away', async ({
+		page,
+	}) => {
+		await page.route('https://example.com/**', (route) =>
+			route.fulfill({ contentType: 'text/html', body: 'External' })
+		);
+		await page.goto(triggersPage.link);
+		await page.getByRole('link', { name: 'External' }).click();
+		await expect(page).toHaveURL(/^https:\/\/example\.com\//);
+
+		// The same path with another query is another page too.
+		await page.goto(triggersPage.link);
+		await page.getByRole('link', { name: 'Other query' }).click();
+		await expect(page).toHaveURL(/other=1/);
+		await expect(page.getByRole('dialog', { name: 'Offer' })).toBeHidden();
+	});
+
+	test('a link to this page opens the modal', async ({ page }) => {
+		await page.goto(triggersPage.link);
+		await page.getByRole('link', { name: 'Same page' }).click();
+		await expect(page.getByRole('dialog', { name: 'Offer' })).toBeVisible();
+	});
+
+	test('a Ctrl or Cmd click is left to the browser', async ({
+		page,
+		context,
+	}) => {
+		await page.goto(triggersPage.link);
+
+		const opened = context.waitForEvent('page');
+
+		await page
+			.getByRole('link', { name: 'Same page' })
+			.click({ modifiers: ['ControlOrMeta'] });
+		await opened;
+		await expect(page.getByRole('dialog', { name: 'Offer' })).toBeHidden();
+	});
+
+	test('a trigger added after load works, and is kept in step', async ({
+		page,
+	}) => {
+		await page.goto(triggersPage.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+		await page.evaluate(() => {
+			const link = document.createElement('a');
+
+			link.href = '#offer';
+			link.id = 'late';
+			link.textContent = 'Late trigger';
+			document.body.prepend(link);
+		});
+		await page.locator('#late').click();
+		await expect(page.getByRole('dialog', { name: 'Offer' })).toBeVisible();
+		await expect(page.locator('#late')).toHaveAttribute(
+			'aria-expanded',
+			'true'
+		);
+		await expect(page.locator('#late')).toHaveAttribute(
+			'aria-controls',
+			'offer'
+		);
+	});
+
+	test('a modal taken out of the page while open releases the scroll lock', async ({
+		page,
+	}) => {
+		await page.goto(triggersPage.link);
+		await page.getByRole('link', { name: 'Same page' }).click();
+		await expect(page.locator('html')).toHaveClass(/has-overlay-open/);
+
+		await page.evaluate(() =>
+			document.querySelector('dialog#offer').remove()
+		);
+		await expect(page.locator('html')).not.toHaveClass(/has-overlay-open/);
+		expect(
+			await page.evaluate(
+				() => window.getComputedStyle(document.documentElement).overflow
+			)
+		).not.toBe('hidden');
+	});
+
+	test('a panel taken out of the page while open releases the scroll lock', async ({
+		page,
+	}) => {
+		await page.setViewportSize(MOBILE);
+		await page.goto(kitchenSink.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('html')).toHaveClass(/has-panel-open/);
+
+		await page.evaluate(() => document.querySelector('#test-nav').remove());
+		await expect(page.locator('html')).not.toHaveClass(/has-panel-open/);
+	});
+
+	test('Escape in a modal inside the panel closes only the modal', async ({
+		page,
+	}) => {
+		await page.setViewportSize(MOBILE);
+		await page.goto(kitchenSink.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page.evaluate(() => {
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.append(document.querySelector('dialog#in-tab'));
+			window.matter.overlay('in-tab').open();
+		});
+
+		const modal = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await expect(modal).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(modal).toBeHidden();
+		await expect(panel).toHaveClass(/\bis-open\b/);
 	});
 });
 

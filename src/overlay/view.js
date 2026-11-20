@@ -1,8 +1,9 @@
 /**
  * Overlays (store: matter/overlay): modals, drawers and collapsibles.
  *
- * Anything that links to `#id` or has `aria-controls="id"` opens the overlay
- * with that ID, so editors use ordinary buttons and links as triggers. A
+ * Anything that links to `#id` on this page or has `aria-controls="id"` opens
+ * the overlay with that ID (one click listener for the page, so triggers added
+ * later work; modified and non-primary clicks are left to the browser), so editors use ordinary buttons and links as triggers. A
  * block's own trigger area (`data-matter-trigger`) opens it too: its first
  * link or button, or the whole area when it has neither.
  *
@@ -64,7 +65,6 @@ const STORAGE_PREFIX = 'matter_overlay_dismissed_';
 const DAY = 24 * 60 * 60 * 1000;
 
 const elements = new Map();
-const triggers = new Map();
 const lastStates = new Map();
 
 const isDialog = (id) => elements.get(id)?.tagName === 'DIALOG';
@@ -119,39 +119,63 @@ const rememberDismissal = (id, days) => {
 	}
 };
 
-const syncTriggers = (id, isOpen) =>
-	triggers
-		.get(id)
-		?.forEach((trigger) =>
-			trigger.setAttribute('aria-expanded', String(isOpen))
-		);
+let removalWatcher = null;
 
 const syncDocumentClass = () => {
-	document.documentElement.classList.toggle(
-		'has-overlay-open',
-		[...elements.entries()].some(
-			([id, element]) => isDialog(id) && element.open
-		)
+	const open = [...elements.entries()].some(
+		([id, element]) => isDialog(id) && element.isConnected && element.open
 	);
+
+	document.documentElement.classList.toggle('has-overlay-open', open);
+
+	// A dialog taken out of the page while open (by a script, or a
+	// replacement the interactivity runtime never tears down) must release
+	// the scroll lock: watch the page for it while one is open.
+	if (open && !removalWatcher) {
+		removalWatcher = new window.MutationObserver(syncDocumentClass);
+		removalWatcher.observe(document.body, {
+			childList: true,
+			subtree: true,
+		});
+	} else if (!open && removalWatcher) {
+		removalWatcher.disconnect();
+		removalWatcher = null;
+	}
 };
 
+const preparedAreas = new WeakSet();
+
 /**
- * The control inside a block's trigger area: its first link or button (a
- * button block with no link gets `#id`), or the area itself (made into a
- * button) when it has neither.
+ * The control inside a block's trigger area: its first link or button, or the
+ * area itself when it has neither.
  *
  * @param {HTMLElement} area Trigger area.
  * @return {HTMLElement} Trigger element.
  */
-const areaTrigger = (area) => {
-	const control = area.querySelector('a, button');
+const areaControl = (area) => area.querySelector('a, button') ?? area;
 
-	if (control) {
+/**
+ * Make a block's trigger area work as a trigger: a link without an address
+ * (a button block with no link) gets `#id`, and an area with no control
+ * becomes a button. Once per area.
+ *
+ * @param {HTMLElement} area Trigger area.
+ */
+const prepareArea = (area) => {
+	if (preparedAreas.has(area)) {
+		return;
+	}
+
+	preparedAreas.add(area);
+
+	const control = areaControl(area);
+
+	if (control !== area) {
 		if (control.tagName === 'A' && !control.hasAttribute('href')) {
 			control.setAttribute('href', `#${area.dataset.matterTrigger}`);
 		}
 
-		return control;
+		return;
 	}
 
 	area.setAttribute('role', 'button');
@@ -162,45 +186,177 @@ const areaTrigger = (area) => {
 			area.click();
 		}
 	});
-
-	return area;
 };
 
+/**
+ * Whether a link goes to the page it's on: the same origin, path and query
+ * (so only the hash differs). A link to another page, or the same path with
+ * another query, that happens to end in `#id` is an ordinary link.
+ *
+ * @param {HTMLAnchorElement} link Link.
+ * @return {boolean} Whether it is to this page.
+ */
+const isSamePage = (link) => {
+	const url = new URL(link.href, window.location.href);
+
+	return (
+		url.origin === window.location.origin &&
+		url.pathname === window.location.pathname &&
+		url.search === window.location.search
+	);
+};
+
+/**
+ * Whether an element that links to or controls an overlay is its trigger.
+ *
+ * @param {Element} element Link or element with `aria-controls`.
+ * @param {string}  id      Overlay ID.
+ * @return {boolean} Whether it triggers the overlay.
+ */
+const isTriggerFor = (element, id) => {
+	// A Matter widget's own control (its close or next button) has its own
+	// action.
+	if (element.hasAttribute('data-wp-on--click')) {
+		return false;
+	}
+
+	// A copy of a block keeps its saved `#id` in the link of its trigger
+	// area, though its own overlay's ID was renamed (`x-2`): that link is
+	// the copy's, not the original's. The area says which ID it was renamed
+	// from. A link to any other overlay is an ordinary one.
+	if (element.closest('[data-matter-trigger]')?.dataset.matterFrom === id) {
+		return false;
+	}
+
+	if (element.getAttribute('aria-controls') === id) {
+		return true;
+	}
+
+	return (
+		element.tagName === 'A' &&
+		element.hash === `#${id}` &&
+		isSamePage(element)
+	);
+};
+
+/**
+ * The elements that trigger an overlay now: its blocks' trigger areas, links
+ * to it and elements controlling it. Queried each time, so triggers added
+ * after load (live filter results, a lazy-loaded section) are found too.
+ *
+ * @param {string} id Overlay ID.
+ * @return {HTMLElement[]} Trigger elements.
+ */
 const findTriggers = (id) => {
 	const escaped = window.CSS?.escape ? window.CSS.escape(id) : id;
 
 	const areas = [
 		...document.querySelectorAll(`[data-matter-trigger="${escaped}"]`),
-	].map(areaTrigger);
+	].map(areaControl);
 
 	const links = [
 		...document.querySelectorAll(
 			`a[href$="#${escaped}"], [aria-controls="${escaped}"]`
 		),
-	].filter((element) => {
-		// A copy of a block keeps its saved `#id` in the link of its trigger
-		// area, though its own overlay's ID was renamed (`x-2`): that link is
-		// the copy's, not the original's. The area says which ID it was
-		// renamed from. A link to any other overlay is an ordinary one.
-		const area = element.closest('[data-matter-trigger]');
-
-		if (area && area.dataset.matterFrom === id) {
-			return false;
-		}
-
-		if (element.tagName !== 'A') {
-			return true;
-		}
-
-		const url = new URL(element.href, window.location.href);
-
-		return (
-			url.hash === `#${id}` && url.pathname === window.location.pathname
-		);
-	});
+	].filter((element) => isTriggerFor(element, id));
 
 	return [...new Set([...areas, ...links])];
 };
+
+/**
+ * Tell the triggers whether their overlay is open (`aria-expanded`) and what
+ * they control. Triggers are queried at each change, so a trigger added later
+ * is told at the overlay's next open or close; one present when the overlay
+ * starts is told at once.
+ *
+ * @param {string}  id     Overlay ID.
+ * @param {boolean} isOpen Whether it's open.
+ */
+const syncTriggers = (id, isOpen) => {
+	findTriggers(id).forEach((trigger) => {
+		trigger.setAttribute('aria-controls', id);
+		trigger.setAttribute('aria-expanded', String(isOpen));
+
+		if (isDialog(id)) {
+			trigger.setAttribute('aria-haspopup', 'dialog');
+		}
+	});
+};
+
+/**
+ * The overlay a click is a trigger of, if any.
+ *
+ * @param {Element} target Click target.
+ * @return {string|undefined} Overlay ID.
+ */
+const triggeredId = (target) => {
+	const area = target.closest('[data-matter-trigger]');
+	const areaId = area?.dataset.matterTrigger;
+
+	// A block's trigger area: its control (a click elsewhere in the area
+	// isn't a trigger, so its other links keep working).
+	if (areaId && elements.has(areaId) && areaControl(area).contains(target)) {
+		return areaId;
+	}
+
+	const element = target.closest('a[href], [aria-controls]');
+
+	if (!element) {
+		return undefined;
+	}
+
+	const controls = element.getAttribute('aria-controls');
+
+	if (controls && elements.has(controls) && isTriggerFor(element, controls)) {
+		return controls;
+	}
+
+	if (element.tagName === 'A' && element.hash.length > 1) {
+		let id = element.hash.slice(1);
+
+		try {
+			id = decodeURIComponent(id);
+		} catch {
+			// Not an ID of ours.
+		}
+
+		return elements.has(id) && isTriggerFor(element, id) ? id : undefined;
+	}
+
+	return undefined;
+};
+
+// One listener for the page, so triggers that arrive later work too.
+document.addEventListener('click', (event) => {
+	if (
+		event.defaultPrevented ||
+		event.button !== 0 ||
+		event.metaKey ||
+		event.ctrlKey ||
+		event.shiftKey ||
+		event.altKey ||
+		!(event.target instanceof window.Element)
+	) {
+		return;
+	}
+
+	const id = triggeredId(event.target);
+	const item = id ? state.items[id] : undefined;
+
+	if (!item) {
+		return;
+	}
+
+	event.preventDefault();
+
+	// Opening by hand isn't an automatic open; closing an automatic one
+	// (e.g. an age gate's own link) dismisses it.
+	if (!item.isOpen) {
+		item.autoOpened = false;
+	}
+
+	actions.toggle(id);
+});
 
 /**
  * IDs of the overlays in a group, in page order (the server registers them in
@@ -489,10 +645,12 @@ const { state, actions } = store('matter/overlay', {
 				return;
 			}
 
-			enhance('overlay', getElement().ref);
-			elements.set(id, getElement().ref);
-			registerInstance('overlay', getElement().ref, {
-				element: getElement().ref,
+			const { ref } = getElement();
+
+			enhance('overlay', ref);
+			elements.set(id, ref);
+			registerInstance('overlay', ref, {
+				element: ref,
 				id,
 				get isOpen() {
 					return !!state.items[id]?.isOpen;
@@ -514,34 +672,16 @@ const { state, actions } = store('matter/overlay', {
 			const later = (callback, delay) =>
 				timers.push(window.setTimeout(callback, delay));
 
-			// Wire up triggers: links to #id and elements controlling the ID.
-			const found = findTriggers(id);
-
-			triggers.set(id, found);
-			found.forEach((trigger) => {
-				trigger.setAttribute('aria-controls', id);
-				trigger.setAttribute('aria-expanded', 'false');
-
-				if (isDialog(id)) {
-					trigger.setAttribute('aria-haspopup', 'dialog');
-				}
-
-				trigger.addEventListener(
-					'click',
-					(event) => {
-						event.preventDefault();
-
-						// Opening by hand isn't an automatic open; closing an
-						// automatic one (e.g. an age gate's own link) dismisses it.
-						if (!item.isOpen) {
-							item.autoOpened = false;
-						}
-
-						actions.toggle(id);
-					},
-					{ signal }
-				);
-			});
+			// Triggers: a block's trigger areas are made into controls here;
+			// clicks are handled for the whole page (above).
+			document
+				.querySelectorAll(
+					`[data-matter-trigger="${
+						window.CSS?.escape ? window.CSS.escape(id) : id
+					}"]`
+				)
+				.forEach(prepareArea);
+			syncTriggers(id, false);
 
 			// A matching hash always opens (deep links), on load and when the
 			// address changes to it later (trigger links don't change it).
@@ -560,6 +700,15 @@ const { state, actions } = store('matter/overlay', {
 			return () => {
 				controller.abort();
 				timers.forEach((timer) => window.clearTimeout(timer));
+
+				// Only if it's still this element's: a replaced overlay with the
+				// same ID may have started already.
+				if (elements.get(id) === ref) {
+					elements.delete(id);
+					lastStates.delete(id);
+				}
+
+				syncDocumentClass();
 			};
 		},
 
