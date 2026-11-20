@@ -190,11 +190,16 @@ final class TemplatePart {
 				$slug  = substr( str_replace( '\\', '/', substr( $file->getPathname(), strlen( $directory ) + 1 ) ), 0, -4 );
 				$title = get_file_data( $file->getPathname(), [ 'title' => 'Title' ] )['title'];
 
-				if ( '' !== $title && self::is_valid_slug( $slug ) ) {
+				// The child's file is the one that renders, so it decides the
+				// title: an untitled one makes the slug no part, whatever the
+				// parent's file says.
+				if ( self::is_valid_slug( $slug ) ) {
 					$parts[ $slug ] = $title;
 				}
 			}
 		}
+
+		$parts = array_filter( $parts, fn( $title ) => '' !== $title );
 
 		/**
 		 * Filters the template parts offered in the editor, and the only ones
@@ -204,7 +209,7 @@ final class TemplatePart {
 		 */
 		$parts = array_filter(
 			(array) apply_filters( 'matter_template_parts', $parts ),
-			fn( $title, $slug ) => ! str_starts_with( (string) $slug, 'megamenu/' ),
+			fn( $title, $slug ) => ! str_starts_with( strtolower( (string) $slug ), 'megamenu/' ),
 			ARRAY_FILTER_USE_BOTH
 		);
 

@@ -1343,7 +1343,7 @@ test.describe('template part', () => {
 	}) => {
 		await admin.createNewPost();
 
-		for (const slug of ['megamenu/x', 'nothing-here']) {
+		for (const slug of ['megamenu/x', 'nothing-here', 'unlisted']) {
 			await editor.insertBlock({
 				name: 'matter/template-part',
 				attributes: { slug },
@@ -1359,7 +1359,8 @@ test.describe('template part', () => {
 
 		await expect(
 			canvas.getByText("This template part couldn't be shown.")
-		).toHaveCount(2);
+		).toHaveCount(3);
+		await expect(canvas.getByText('Not a part')).toHaveCount(0);
 		await expect(canvas.getByText('Listed part')).toBeVisible();
 		await expect(canvas.getByText('Panel')).toHaveCount(0);
 		expect(await page.locator('.components-spinner').count()).toBe(0);

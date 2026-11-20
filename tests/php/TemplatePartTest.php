@@ -69,6 +69,36 @@ class TemplatePartTest extends TestCase {
 	}
 
 	/**
+	 * A child theme's file is the one that renders, so its header decides:
+	 * an untitled file of the same slug unlists the parent's part, and a
+	 * megamenu folder is left out however it's cased.
+	 *
+	 * @return void
+	 */
+	public function test_the_child_themes_file_decides_the_listing(): void {
+		$child = get_temp_dir() . 'matter-child-' . uniqid();
+
+		wp_mkdir_p( $child . '/template-parts/Megamenu' );
+		// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Test fixture.
+		file_put_contents( $child . '/template-parts/note.php', "<?php\n// Not a part.\n" );
+		file_put_contents( $child . '/template-parts/Megamenu/panel.php', "<?php\n/**\n * Title: Panel\n */\n" );
+		file_put_contents( $child . '/template-parts/extra.php', "<?php\n/**\n * Title: Extra\n */\necho 'Child extra';\n" );
+		// phpcs:enable
+
+		add_filter( 'stylesheet', fn() => 'matter-child' );
+		add_filter( 'stylesheet_directory', fn() => $child );
+
+		$slugs = array_column( TemplatePart::all(), 'slug' );
+
+		$this->assertNotContains( 'note', $slugs, 'the parent titled it, the child that renders it did not' );
+		$this->assertSame( '', TemplatePart::render( 'note' ) );
+		$this->assertContains( 'extra', $slugs );
+		$this->assertStringContainsString( 'Child extra', TemplatePart::render( 'extra' ) );
+		$this->assertNotContains( 'Megamenu/panel', $slugs );
+		$this->assertSame( '', TemplatePart::render( 'Megamenu/panel' ) );
+	}
+
+	/**
 	 * The list is found once per request, for the active stylesheet.
 	 *
 	 * @return void

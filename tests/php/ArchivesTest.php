@@ -763,6 +763,8 @@ class ArchivesTest extends TestCase {
 	public function test_entries_are_not_published_to_visitors(): void {
 		$published = $this->entry( 'date' );
 
+		// The type isn't `public`, so core never offers it to the sitemap: this
+		// checks the filter kept as defence in depth, should that change.
 		$this->assertArrayNotHasKey( Archives::POST_TYPE, apply_filters( 'wp_sitemaps_post_types', [ Archives::POST_TYPE => get_post_type_object( Archives::POST_TYPE ) ] ) );
 
 		do_action( 'rest_api_init' );
