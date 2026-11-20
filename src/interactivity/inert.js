@@ -52,6 +52,8 @@ const pausers = new Set();
 // paused.
 let modals = 0;
 let resumes = [];
+// The first modal of those open now: what a pauser registered late is given.
+let firstModal = null;
 const suspended = new Set();
 
 /**
@@ -216,11 +218,7 @@ export function suspendForModal(dialog, opener = null) {
 			})
 	);
 
-	if (first) {
-		resumes = [...pausers].map((pause) => pause(dialog, opener));
-	}
-
-	return () => {
+	const finish = () => {
 		if (ended) {
 			return;
 		}
@@ -231,6 +229,7 @@ export function suspendForModal(dialog, opener = null) {
 			return;
 		}
 
+		firstModal = null;
 		resumes.forEach((resume) => resume?.());
 		resumes = [];
 		suspended.forEach((element) => {
@@ -241,6 +240,25 @@ export function suspendForModal(dialog, opener = null) {
 		});
 		suspended.clear();
 	};
+
+	if (first) {
+		resumes = [];
+		firstModal = { dialog, opener };
+
+		// A pauser that throws must not leave the depth raised (nothing would
+		// ever resume, and later modals would pause nothing): undo, and let
+		// the error through.
+		try {
+			[...pausers].forEach((pause) =>
+				resumes.push(pause(dialog, opener))
+			);
+		} catch (error) {
+			finish();
+			throw error;
+		}
+	}
+
+	return finish;
 }
 
 /**
@@ -248,10 +266,17 @@ export function suspendForModal(dialog, opener = null) {
  * what would fight it (a focus trap).
  *
  * @param {Function} pause Called with the dialog and the control that opened
- *                         it; returns a function that resumes.
+ *                         it (at once, if a modal is open already); returns
+ *                         a function that resumes.
  * @return {Function} Stops being told.
  */
 export function onModal(pause) {
+	// One that comes while a modal is open (a panel opened over it) is paused
+	// at once, for the same modal, and resumed with the last.
+	if (modals > 0 && firstModal) {
+		resumes.push(pause(firstModal.dialog, firstModal.opener));
+	}
+
 	pausers.add(pause);
 
 	return () => pausers.delete(pause);

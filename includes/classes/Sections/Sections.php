@@ -496,7 +496,7 @@ class Sections {
 				esc_html(
 					sprintf(
 						/* translators: %s: the regular expression error. */
-						__( 'Finding slots with a regular expression failed (%s), so they were found by a slower scan. Check the content for a stray slot marker.', 'matter' ),
+						__( 'Finding slots with a regular expression failed (%s), so they were found by a plain scan. Check the content for a stray slot marker.', 'matter' ),
 						preg_last_error_msg()
 					)
 				),

@@ -382,3 +382,53 @@ describe('inertAround', () => {
 		});
 	});
 });
+
+describe('onModal while a modal is open, and a pauser that throws', () => {
+	const dialog = () => {
+		const element = document.createElement('dialog');
+
+		document.body.append(element);
+
+		return element;
+	};
+
+	it('pauses at once a pauser registered while a modal is already open, and resumes it with the last', () => {
+		const first = dialog();
+		const second = dialog();
+		const pause = jest.fn(() => resume);
+		const resume = jest.fn();
+		const endFirst = suspendForModal(first);
+		const endSecond = suspendForModal(second);
+
+		const stop = onModal(pause);
+
+		expect(pause).toHaveBeenCalledTimes(1);
+		expect(pause).toHaveBeenCalledWith(first, null);
+
+		endFirst();
+		expect(resume).not.toHaveBeenCalled();
+		endSecond();
+		expect(resume).toHaveBeenCalledTimes(1);
+
+		stop();
+	});
+
+	it("doesn't stick the shared depth when a pauser throws", () => {
+		const bad = jest.fn(() => {
+			throw new Error('pauser');
+		});
+		const stopBad = onModal(bad);
+		const good = jest.fn();
+		const stopGood = onModal(good);
+
+		expect(() => suspendForModal(dialog())).toThrow('pauser');
+		stopBad();
+
+		// The depth is back to 0: this is the first modal again, and pauses.
+		const end = suspendForModal(dialog());
+
+		expect(good).toHaveBeenCalled();
+		end();
+		stopGood();
+	});
+});
