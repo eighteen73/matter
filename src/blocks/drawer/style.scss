@@ -132,20 +132,17 @@ html.has-overlay-open.has-overlay-gutter {
 }
 
 // Forced colours drop the background and the backdrop's tint, so the drawer
-// would have no edge against the page: the side it opens towards gets one.
+// would have no edge against the page: the side it opens towards gets one. It
+// is placed with logical offsets, so the edge facing the page is logical too:
+// no direction-specific rules.
 @media (forced-colors: active) {
 	:where(.wp-block-matter-drawer) {
 		border-inline-start: 1px solid canvastext;
 	}
 
-	:where(.wp-block-matter-drawer.is-position-start, .wp-block-matter-drawer:dir(rtl)) {
+	:where(.wp-block-matter-drawer.is-position-start) {
 		border-inline-end: 1px solid canvastext;
 		border-inline-start: 0;
-	}
-
-	:where(.wp-block-matter-drawer.is-position-start:dir(rtl)) {
-		border-inline-end: 0;
-		border-inline-start: 1px solid canvastext;
 	}
 }
 

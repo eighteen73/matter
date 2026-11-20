@@ -300,6 +300,91 @@ test.describe('forced colours', () => {
 	});
 });
 
+test.describe('forced colours, either direction', () => {
+	test.use({ viewport: { width: 390, height: 800 } });
+
+	// Which physical sides have a border.
+	const sides = (locator) =>
+		locator.evaluate((element) => {
+			const style = window.getComputedStyle(element);
+
+			return ['Top', 'Right', 'Bottom', 'Left'].filter(
+				(side) => style[`border${side}Width`] !== '0px'
+			);
+		});
+
+	// The edge towards the page is the one opposite where it opens from: its
+	// inline-start for one that opens from the end, so on the right in
+	// left-to-right and the left in right-to-left (the placement flips too).
+	const towardsPage = {
+		ltr: { end: 'Left', start: 'Right' },
+		rtl: { end: 'Right', start: 'Left' },
+	};
+
+	test('the edge of a drawer and of the panel is on the side facing the page, in both directions', async ({
+		page,
+	}) => {
+		await page.emulateMedia({ forcedColors: 'active' });
+		await page.goto(details.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
+		await page.getByRole('link', { name: 'Open drawer' }).click();
+
+		const drawer = page.getByRole('dialog', { name: 'Browse the shop' });
+
+		await expect(drawer).toBeVisible();
+		await page.waitForTimeout(500);
+
+		for (const dir of ['ltr', 'rtl']) {
+			for (const position of ['start', 'end']) {
+				await drawer.evaluate(
+					(element, [direction, where]) => {
+						document.documentElement.dir = direction;
+						element.classList.remove(
+							'is-position-start',
+							'is-position-end'
+						);
+						element.classList.add(`is-position-${where}`);
+					},
+					[dir, position]
+				);
+				expect(
+					await sides(drawer),
+					`drawer ${position} ${dir}`
+				).toEqual([towardsPage[dir][position]]);
+			}
+		}
+
+		await page.goto(panelPage.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+		const content = panel.locator('.matter-panel__content');
+
+		await expect(content).toBeVisible();
+		await page.waitForTimeout(500);
+
+		for (const dir of ['ltr', 'rtl']) {
+			for (const position of ['start', 'end']) {
+				await panel.evaluate(
+					(element, [direction, where]) => {
+						document.documentElement.dir = direction;
+						element.classList.remove(
+							'is-from-start',
+							'is-from-end'
+						);
+						element.classList.add(`is-from-${where}`);
+					},
+					[dir, position]
+				);
+				expect(
+					await sides(content),
+					`panel ${position} ${dir}`
+				).toEqual([towardsPage[dir][position]]);
+			}
+		}
+	});
+});
+
 test.describe('scroll lock', () => {
 	const gutter = (page) =>
 		page.evaluate(

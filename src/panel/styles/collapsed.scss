@@ -113,14 +113,9 @@
 		border-inline-start: 1px solid canvastext;
 	}
 
-	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content, .matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content:dir(rtl)) {
+	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content) {
 		border-inline-end: 1px solid canvastext;
 		border-inline-start: 0;
-	}
-
-	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content:dir(rtl)) {
-		border-inline-end: 0;
-		border-inline-start: 1px solid canvastext;
 	}
 
 	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-top .matter-panel__content) {
