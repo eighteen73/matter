@@ -38,6 +38,12 @@ import {
 import { isBackdropClick } from '../../interactivity/backdrop';
 import { format } from '../../interactivity/format';
 import { cancelClose, closeDialog } from '../../interactivity/dialog';
+import { focused } from '../../interactivity/focus';
+import {
+	acquireScrollLock,
+	releaseScrollLock,
+	suspendForModal,
+} from '@matter/inert';
 
 const SELECTOR = '.wp-block-matter-gallery';
 
@@ -46,6 +52,52 @@ registerType('gallery', SELECTOR);
 // Gallery element => instance; last announced image.
 const instances = new WeakMap();
 const announced = new WeakMap();
+
+// What a lightbox holds while it is open as a modal: it lets go of what a
+// panel holds inert (so it can be used), pauses the panel's focus trap, and
+// locks the page's scroll, all shared with modals and panels. Dialog => the
+// function that puts them back.
+const holds = new WeakMap();
+
+const release = (dialog) => {
+	const put = holds.get(dialog);
+
+	holds.delete(dialog);
+	put?.();
+};
+
+/**
+ * Show the lightbox as a modal, with what that needs from the page.
+ *
+ * @param {HTMLDialogElement} dialog Lightbox.
+ */
+const showModal = (dialog) => {
+	release(dialog);
+
+	const resume = suspendForModal(dialog, focused());
+
+	try {
+		acquireScrollLock('has-overlay-open');
+	} catch (error) {
+		resume();
+		throw error;
+	}
+
+	holds.set(dialog, () => {
+		try {
+			resume();
+		} finally {
+			releaseScrollLock('has-overlay-open');
+		}
+	});
+
+	try {
+		dialog.showModal();
+	} catch (error) {
+		release(dialog);
+		throw error;
+	}
+};
 
 const getDialog = (element) =>
 	element
@@ -74,7 +126,7 @@ const show = (element, context, index) => {
 	cancelClose(dialog);
 
 	if (!dialog.open) {
-		dialog.showModal();
+		showModal(dialog);
 		emit(element.closest(SELECTOR), 'gallery', 'open', {
 			index: context.index,
 		});
@@ -201,6 +253,13 @@ const { actions } = store('matter/gallery', {
 			return () => {
 				controller.abort();
 				instances.delete(ref);
+
+				// Taken out of the page while open: let go of the page.
+				const dialog = getDialog(ref);
+
+				if (dialog) {
+					release(dialog);
+				}
 			};
 		},
 		// Announce moving between images while the lightbox is open.
@@ -455,6 +514,7 @@ const { actions } = store('matter/gallery', {
 			// goes quiet, so nothing is left to be read.
 			context.opened = false;
 			context.announcing = false;
+			release(ref);
 
 			emit(ref.closest(SELECTOR), 'gallery', 'close', { index });
 

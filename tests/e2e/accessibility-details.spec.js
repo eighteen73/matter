@@ -338,6 +338,58 @@ test.describe('lightbox announcement', () => {
 	});
 });
 
+test.describe('lightbox over the panel', () => {
+	test.use({ viewport: { width: 390, height: 500 } });
+
+	const held = (page) =>
+		page.evaluate(
+			() =>
+				document.querySelectorAll('[inert]:not(.matter-menu__submenu)')
+					.length
+		);
+
+	test('is a modal like any other: usable, locking the page, and nothing left behind', async ({
+		page,
+	}) => {
+		await page.goto(details.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+
+		const html = page.locator('html');
+		const panel = page.locator('#test-nav');
+		const lightbox = page.locator('#photos dialog');
+
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect.poll(() => held(page)).toBeGreaterThan(0);
+
+		// Opened by a script: the panel holds the rest of the page inert.
+		await page.evaluate(() => window.matter.gallery('photos').open(0));
+		await expect(lightbox).toHaveAttribute('open', '');
+		await expect(html).toHaveClass(/\bhas-overlay-open\b/);
+		await expect(html).toHaveClass(/\bhas-panel-open\b/);
+
+		// The lightbox can be used: the panel's hold on the page let go of it.
+		await expect(
+			lightbox.getByRole('button', { name: /next/i })
+		).toBeVisible();
+		expect(
+			await lightbox.evaluate((element) => !element.closest('[inert]'))
+		).toBe(true);
+
+		await page.keyboard.press('Escape');
+		await expect(lightbox).not.toHaveAttribute('open', '');
+		await expect(html).not.toHaveClass(/\bhas-overlay-open\b/);
+		await expect(html).toHaveClass(/\bhas-panel-open\b/);
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect.poll(() => held(page)).toBeGreaterThan(0);
+
+		await page.locator('.matter-panel__close').click();
+		await expect(html).not.toHaveClass(/has-panel-open/);
+		await expect.poll(() => held(page)).toBe(0);
+	});
+});
+
 test.describe('dialog names', () => {
 	test('a modal and a drawer without a label are named by their first heading', async ({
 		page,

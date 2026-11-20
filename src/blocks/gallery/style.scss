@@ -8,6 +8,16 @@
 
 @use "../../styles/icon" as *;
 
+// The page doesn't scroll behind the open lightbox (as behind a modal: the
+// shared lock adds the class, and the gutter class on a page that scrolls).
+html.has-overlay-open {
+	overflow: hidden;
+}
+
+html.has-overlay-open.has-scroll-gutter {
+	scrollbar-gutter: stable;
+}
+
 // Two classes: core's `.wp-block-image` margins would otherwise tie.
 .wp-block-matter-gallery__items .wp-block-image {
 	margin: 0;
