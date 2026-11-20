@@ -136,4 +136,36 @@ class SchemeTest extends TestCase {
 		$this->assertStringContainsString( '--scheme--text:#abcdef;', $css );
 		$this->assertStringContainsString( '--scheme--background:var(--wp--custom--scheme--brand--background);', $css );
 	}
+
+	/**
+	 * A value that could comment out, fetch, or swallow what follows is
+	 * dropped; ordinary colours are kept.
+	 *
+	 * @return void
+	 */
+	public function test_literal_values(): void {
+		$literal = new \ReflectionMethod( Scheme::class, 'literal' );
+
+		foreach ( [ '/\\*', 'url(x)', 'URL( "x" )', 'image-set(a 1x)', '"', "'", 'var(--x', 'red)', 'red</style>', '@import x', 'a */ b', 'red; } * { display: none' ] as $bad ) {
+			$result = $literal->invoke( null, $bad );
+
+			$this->assertNotSame( 1, preg_match( '/url\s*\(|\/\*|\*\/|[@"\'<>]/i', $result ), "{$bad} gives {$result}" );
+		}
+
+		foreach ( [ '/\\*', 'url(x)', '"', 'var(--x', 'red</style>', 'red)' ] as $dropped ) {
+			$this->assertSame( '', $literal->invoke( null, $dropped ), $dropped );
+		}
+
+		foreach (
+			[
+				'#112233'                                     => '#112233',
+				'rgb(0 0 0 / 50%)'                            => 'rgb(0 0 0 / 50%)',
+				'oklch(0.7 0.1 200)'                          => 'oklch(0.7 0.1 200)',
+				'color-mix(in oklch, var(--a) 50%, white)'    => 'color-mix(in oklch, var(--a) 50%, white)',
+				'var:preset|color|base'                       => 'var(--wp--preset--color--base)',
+			] as $value => $expected
+		) {
+			$this->assertSame( $expected, $literal->invoke( null, $value ), $value );
+		}
+	}
 }

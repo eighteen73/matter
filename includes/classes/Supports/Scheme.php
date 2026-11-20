@@ -307,14 +307,20 @@ class Scheme {
 
 	/**
 	 * A token's value as CSS: theme.json's `var:preset|color|slug` shorthand
-	 * becomes its variable, and anything that could end the declaration or
-	 * the rule is dropped.
+	 * becomes its variable, and anything that could end the declaration or the
+	 * rule, or fetch something, makes the value empty (the declaration is
+	 * dropped).
+	 *
+	 * Characters are stripped until the value stops changing (removing one can
+	 * join the neighbours into another: `/\*`), then what is left is checked
+	 * rather than trusted.
 	 *
 	 * @param mixed $value Value.
 	 * @return string
 	 */
 	private static function literal( mixed $value ): string {
-		if ( ! is_string( $value ) ) {
+		// Markup is never a colour: don't "clean" it into something that passes.
+		if ( ! is_string( $value ) || str_contains( $value, '<' ) ) {
 			return '';
 		}
 
@@ -323,9 +329,33 @@ class Scheme {
 			fn( $found ) => 'var(--wp--' . $found[1] . '--' . str_replace( '|', '--', $found[2] ) . ')',
 			$value
 		);
-		$value = wp_strip_all_tags( $value );
 
-		return trim( str_replace( [ ';', '{', '}', '/*', '*/', '\\' ], '', $value ) );
+		do {
+			$before = $value;
+			$value  = wp_strip_all_tags( str_replace( [ ';', '{', '}', '\\' ], '', $value ) );
+		} while ( $value !== $before );
+
+		$value = trim( $value );
+
+		if (
+			'' === $value
+			|| preg_match( '/url\s*\(|image-set\s*\(|image\s*\(|src\s*\(|cross-fade\s*\(|element\s*\(|[@"\'<>`]|\/\*|\*\//i', $value )
+		) {
+			return '';
+		}
+
+		// Parentheses must close, and never before they open.
+		$depth = 0;
+
+		foreach ( str_split( $value ) as $char ) {
+			if ( '(' === $char ) {
+				++$depth;
+			} elseif ( ')' === $char && --$depth < 0 ) {
+				return '';
+			}
+		}
+
+		return 0 === $depth ? $value : '';
 	}
 
 	/**
