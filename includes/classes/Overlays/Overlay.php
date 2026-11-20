@@ -186,8 +186,8 @@ class Overlay {
 			);
 		}
 
-		$label       = trim( (string) ( $attributes['label'] ?? '' ) );
-		$name        = '';
+		$label = trim( (string) ( $attributes['label'] ?? '' ) );
+		$name  = '';
 
 		// The dialog's name: its label if the author set one, else its first
 		// heading (which is what a sighted visitor reads first), else "Dialog".
