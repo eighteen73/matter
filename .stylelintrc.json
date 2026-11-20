@@ -43,8 +43,15 @@
 			{
 				"ignoreProperties": [
 					"position-area",
-					"position-try-fallbacks",
-					"interpolate-size"
+					"position-try-fallbacks"
+				]
+			}
+		],
+		"selector-pseudo-element-no-unknown": [
+			true,
+			{
+				"ignorePseudoElements": [
+					"details-content"
 				]
 			}
 		]

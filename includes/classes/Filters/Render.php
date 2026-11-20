@@ -256,7 +256,8 @@ final class Render {
 	 * summary is its name and how many are chosen. Whether it's open is the
 	 * listing's state (`open`, from the block's "Open at first"), so it stays
 	 * as the shopper left it when the listing changes. The filter's own label
-	 * stays, for screen readers, naming its group of options.
+	 * stays, for screen readers, naming its group of options. The options
+	 * are wrapped twice so they open and close as an accordion item's do.
 	 *
 	 * @param Listing $listing Listing.
 	 * @param string  $id      Filter ID.
@@ -280,7 +281,7 @@ final class Render {
 		}
 
 		return sprintf(
-			'<details class="wp-block-matter-filter__group" data-wp-interactive="matter/filters" %1$s data-wp-bind--open="state.isOpen" data-wp-on--toggle="actions.toggleOpen"><summary class="wp-block-matter-filter__summary"><span class="wp-block-matter-filter__summary-label">%2$s</span> <span class="wp-block-matter-filter__chosen" data-wp-bind--hidden="!state.chosenCount"><span data-wp-text="state.chosenCount"></span><span class="screen-reader-text"> %3$s</span></span></summary>%4$s</details>',
+			'<details class="wp-block-matter-filter__group" data-wp-interactive="matter/filters" %1$s data-wp-bind--open="state.isOpen" data-wp-on--toggle="actions.toggleOpen"><summary class="wp-block-matter-filter__summary"><span class="wp-block-matter-filter__summary-label">%2$s</span> <span class="wp-block-matter-filter__chosen" data-wp-bind--hidden="!state.chosenCount"><span data-wp-text="state.chosenCount"></span><span class="screen-reader-text"> %3$s</span></span></summary><div class="wp-block-matter-filter__group-body"><div class="wp-block-matter-filter__group-content">%4$s</div></div></details>',
 			wp_interactivity_data_wp_context(
 				[
 					'listing' => $listing->key(),

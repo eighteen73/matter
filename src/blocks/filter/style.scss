@@ -127,9 +127,46 @@
 	display: none;
 }
 
-// Collapsible: its name opens and closes its options (a disclosure).
+// Collapsible: its name opens and closes its options (a disclosure), which
+// slide as an accordion item's panel does (accordion/style.scss): grid rows
+// from 0fr to 1fr, in every browser. Opening starts from 0fr (the options
+// weren't rendered while closed); closing keeps them shown until the slide
+// ends (the details' content stays visible through the transition).
+.wp-block-matter-filter__group-body {
+	display: grid;
+	grid-template-rows: 0fr;
+}
+
+:where(.wp-block-matter-filter__group[open]) > .wp-block-matter-filter__group-body {
+	grid-template-rows: 1fr;
+
+	@starting-style {
+		grid-template-rows: 0fr;
+	}
+}
+
+.wp-block-matter-filter__group-content {
+	min-height: 0;
+	overflow: hidden;
+}
+
 :where(.wp-block-matter-filter__summary) {
 	cursor: pointer;
+}
+
+:where(.wp-block-matter-filter__group-body) {
+	transition: grid-template-rows 300ms;
+}
+
+:where(.wp-block-matter-filter__group)::details-content {
+	transition: content-visibility 300ms allow-discrete;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:where(.wp-block-matter-filter__group-body),
+	:where(.wp-block-matter-filter__group)::details-content {
+		transition: none;
+	}
 }
 
 :where(.wp-block-matter-filter__chosen)::before {
