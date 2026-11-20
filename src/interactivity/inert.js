@@ -272,13 +272,18 @@ export function suspendForModal(dialog, opener = null) {
 
 		// A pauser that throws must not leave the depth raised (nothing would
 		// ever resume, and later modals would pause nothing): undo, and let
-		// the error through.
+		// the pauser's error through, not one from undoing it.
 		try {
 			[...pausers].forEach((pause) =>
 				resumes.push(pause(dialog, opener))
 			);
 		} catch (error) {
-			finish();
+			try {
+				finish();
+			} catch {
+				// The original error is the one to report.
+			}
+
 			throw error;
 		}
 	}

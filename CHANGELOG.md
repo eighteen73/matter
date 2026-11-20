@@ -80,7 +80,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 
 **Tooling**
 
-- **Requirements:** WordPress 7.1 (from 7.1 beta 1, so an alpha build is refused) and PHP 8.3, checked before anything loads: an older one gets an admin notice, not a fatal error. WooCommerce 11 for its integration; an older one switches it off, with a notice for users who can activate plugins.
+- **Requirements:** WordPress 7.1 (from 7.1 beta 1, so an alpha build is refused) and PHP 8.3, checked before anything loads: an older one gets an admin notice (naming "WordPress 7.1 beta 1"), not a fatal error. WooCommerce 11 for its integration; an older one switches it off, with a notice for users who can activate plugins.
 - **Tests:** PHPUnit with contract markup snapshots (menus, panel, gallery, scheme CSS, links, slots and more), PHPUnit for megamenu saves, the walker, triggers, both bindings sources and every REST route's permissions, JavaScript unit tests and a Playwright and axe browser suite (Chromium, and Firefox and WebKit for dialogs, focus, panels and menus), run in CI against wp-env, also on a site without WooCommerce or Gravity Forms, and weekly against WordPress nightly and the latest WooCommerce.
 - **Translation:** `languages/matter.pot` (`npm run make-pot`) and the languages folder passed to `wp_set_script_translations()`. Sentences are one translatable string each, translated nouns aren't lowercased, and labels with counts read `%d`, `%s` and numbered placeholders.
 - **Release:** the shared release and lint workflows are referenced by commit, so a change to their repository can't change Matter's release.

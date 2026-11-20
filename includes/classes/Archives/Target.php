@@ -276,9 +276,9 @@ final readonly class Target {
 		// The blog's entry can also show on the author and date archives.
 		if ( 'post' === $this->name ) {
 			/* translators: an archive kind in a list, in the middle of a sentence: "Include category, tag, author, and date pages". Lowercase in English. */
-			$names[] = __( 'author', 'matter' );
+			$names[] = _x( 'author', 'archive name in a sentence', 'matter' );
 			/* translators: an archive kind in a list, in the middle of a sentence: "Include category, tag, author, and date pages". Lowercase in English. */
-			$names[] = __( 'date', 'matter' );
+			$names[] = _x( 'date', 'archive name in a sentence', 'matter' );
 		}
 
 		/* translators: %l: archive names, e.g. "category and tag". */

@@ -433,6 +433,26 @@ describe('onModal while a modal is open, and a pauser that throws', () => {
 	});
 });
 
+describe('a pauser that throws after another that can only resume with an error', () => {
+	it("reports the pauser's error, not the resume's", () => {
+		const dialog = document.createElement('dialog');
+
+		document.body.append(dialog);
+
+		const stopFirst = onModal(() => () => {
+			throw new Error('resume');
+		});
+		const stopSecond = onModal(() => {
+			throw new Error('pauser');
+		});
+
+		expect(() => suspendForModal(dialog)).toThrow('pauser');
+
+		stopFirst();
+		stopSecond();
+	});
+});
+
 describe('supports', () => {
 	it('tells a selector the browser knows from one that would throw', () => {
 		expect(supports('dialog[open]')).toBe(true);
