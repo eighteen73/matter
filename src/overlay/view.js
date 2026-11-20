@@ -142,8 +142,18 @@ const rememberDismissal = (id, days) => {
 let removalWatcher = null;
 
 const syncDocumentClass = () => {
-	// A dialog removed while open is no longer holding anything back.
-	suspensions.prune();
+	// A dialog removed while open is no longer holding anything back. One that
+	// can't be closed, and was closed by the browser (Chromium on a repeated
+	// Escape), is shown again by its close event: it keeps its suspension.
+	suspensions.prune((dialog) => {
+		const id = [...elements].find(([, element]) => element === dialog)?.[0];
+
+		return (
+			!!id &&
+			!!state.items[id]?.isOpen &&
+			state.items[id].dismissible === false
+		);
+	});
 
 	const open = [...elements.entries()].some(
 		([id, element]) => isDialog(id) && element.isConnected && element.open

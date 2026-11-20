@@ -36,6 +36,7 @@ const violations = async (page) =>
 
 let kitchenSink;
 let ageGate;
+let gatePage;
 let triggersPage;
 let deepTabsPage;
 
@@ -63,6 +64,11 @@ test.beforeAll(async ({ requestUtils }) => {
 		'Overlay triggers',
 		'<!-- wp:paragraph --><p><a href="#offer">Same page</a> <a href="https://example.com/#offer">External</a> <a href="?other=1#offer">Other query</a> <a href="#offer" target="_blank">New tab</a> <a href="#offer" download>Download</a></p><!-- /wp:paragraph -->' +
 			'<!-- wp:matter/modal {"overlayId":"offer","label":"Offer"} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>The offer</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->'
+	);
+	gatePage = await createPage(
+		requestUtils,
+		'Gate',
+		'<!-- wp:matter/modal {"overlayId":"gate","label":"Gate","dismissible":false} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Stay <a href="#gate">here</a></p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->'
 	);
 	ageGate = await createPage(
 		requestUtils,
@@ -939,6 +945,76 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		await expect(dialog).toBeHidden();
 		await expect(panel).toHaveClass(/\bis-open\b/);
 		await expect.poll(inPanel).toBe(true);
+	});
+
+	test("a modal that can't be closed, over the panel, keeps the panel at rest when Chromium reopens it", async ({
+		page,
+	}) => {
+		await page.goto(gatePage.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page.evaluate(() => {
+			window.matter.overlay('gate').open();
+
+			// Something changes the page in the moment between the dialog
+			// closing and its close event (a script, the runtime): as it does,
+			// what holds the page back is looked at.
+			document.addEventListener(
+				'close',
+				() => {
+					document.body.append(document.createElement('i'));
+				},
+				true
+			);
+		});
+
+		const gate = page.getByRole('dialog', { name: 'Gate' });
+		const state = () =>
+			page.evaluate(() => {
+				const dialog = document.querySelector('dialog#gate');
+				const content = document.querySelector(
+					'#test-nav .matter-panel__content'
+				);
+
+				return {
+					open: dialog.open,
+					inInertPage: !!dialog.closest('[inert]'),
+					focusInPanel: content.contains(
+						dialog.ownerDocument.activeElement
+					),
+				};
+			});
+
+		await expect(gate).toBeVisible();
+
+		// Escape is ignored; where the browser closes it anyway on a repeat
+		// (Chromium: a cancel that can't be prevented), Matter shows it
+		// again. A close from the page is the same event.
+		await page.keyboard.press('Escape');
+		await page.keyboard.press('Escape');
+		await page.evaluate(() =>
+			document.querySelector('dialog#gate').close()
+		);
+		await page.evaluate(
+			() => new Promise((resolve) => setTimeout(resolve, 300))
+		);
+
+		expect(await state()).toMatchObject({
+			open: true,
+			inInertPage: false,
+			focusInPanel: false,
+		});
+
+		// The panel's trap is still at rest: Tab doesn't pull focus into it.
+		for (let step = 0; step < 4; step++) {
+			await page.keyboard.press('Tab');
+			expect((await state()).focusInPanel).toBe(false);
+		}
 	});
 
 	test('a change of hash closes the panel', async ({ page }) => {

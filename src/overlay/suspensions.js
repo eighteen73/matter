@@ -45,10 +45,20 @@ export const createSuspensions = () => {
 		/**
 		 * Put the page back for every dialog that is gone or closed without
 		 * anyone saying so (removed from the page while open).
+		 *
+		 * @param {Function} keep Called with a dialog that is closed or gone:
+		 *                        true if it is about to be shown again (a
+		 *                        dialog that can't be closed, between the
+		 *                        browser closing it and its close event), so
+		 *                        its suspension stays.
 		 */
-		prune() {
+		prune(keep = () => false) {
 			[...resumes.keys()]
-				.filter((dialog) => !dialog.isConnected || !dialog.open)
+				.filter(
+					(dialog) =>
+						(!dialog.isConnected || !dialog.open) &&
+						!(dialog.isConnected && keep(dialog))
+				)
 				.forEach((dialog) => this.release(dialog));
 		},
 

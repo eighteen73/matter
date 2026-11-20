@@ -112,4 +112,22 @@ describe('suspensions', () => {
 		expect(resumed).toBe(1);
 		expect(pausesAgain()).toBe(true);
 	});
+
+	it('keeps the suspension of a closed dialog that is about to be shown again', () => {
+		const suspensions = createSuspensions();
+		const first = dialog('gate');
+
+		suspensions.hold(first, suspendForModal(first));
+		first.removeAttribute('open');
+		suspensions.prune((candidate) => candidate === first);
+
+		expect(resumed).toBe(0);
+		expect(suspensions.size).toBe(1);
+
+		// Not if it was removed meanwhile.
+		first.remove();
+		suspensions.prune(() => true);
+
+		expect(resumed).toBe(1);
+	});
 });
