@@ -807,7 +807,8 @@ class Archives {
 	 * Entries never reach the front end's main query, so they can't reach a
 	 * feed or a loop in a theme's 404 or search template. A 404 only resets
 	 * the query's flags: its posts stay, and `do_feed()` runs after the
-	 * redirects. An entry someone may preview is kept.
+	 * redirects. An entry someone may preview, or an entry's own address (which
+	 * redirects to its archive), is kept.
 	 *
 	 * @param WP_Post[] $posts Results.
 	 * @param WP_Query  $query The query.
@@ -815,6 +816,11 @@ class Archives {
 	 */
 	public function keep_entries_out_of_the_page( $posts, $query ) {
 		if ( is_admin() || ! $query instanceof WP_Query || ! $query->is_main_query() || ! is_array( $posts ) || null !== $this->requested_entry() ) {
+			return $posts;
+		}
+
+		// An entry's own address stays (it redirects to its archive), but not as a feed.
+		if ( $query->is_singular() && ! $query->is_feed() ) {
 			return $posts;
 		}
 
