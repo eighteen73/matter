@@ -62,18 +62,28 @@ export default function Edit({ attributes: { name }, clientId }) {
 				getBlockAttributes,
 			} = select(blockEditorStore);
 			const rootId = getBlockRootClientId(clientId);
+			const sectionType = getBlockType(getBlockName(rootId));
 			const first = getBlockOrder(rootId).find(
 				(id) => getBlockAttributes(id)?.name === name
 			);
 			const blocks = getBlocks(clientId);
+			const slots = sectionType?.supports?.matter?.slots;
+			// As below: an orphaned slot has no configuration.
+			const isLockedSlot =
+				!!slots &&
+				name in slots &&
+				first === clientId &&
+				!!slots[name]?.templateLock;
 
 			return {
 				parentId: rootId,
 				sectionName: getBlockName(rootId),
 				hasInnerBlocks: blocks.length > 0,
 				// The block types at every depth, as a string so the slot
-				// re-renders only when they change.
-				savedTree: JSON.stringify(nameTree(blocks)),
+				// re-renders only when they change. Only a locked slot needs
+				// them (an unlocked one keeps no template in step), so the rest
+				// don't walk their blocks on every change to the store.
+				savedTree: isLockedSlot ? JSON.stringify(nameTree(blocks)) : '',
 				isFirstWithName: first === clientId,
 			};
 		},
@@ -111,8 +121,10 @@ export default function Edit({ attributes: { name }, clientId }) {
 	// Whether applying the template would keep every saved block, at every
 	// depth (see templateKeepsBlocks).
 	const keepsSavedBlocks = useMemo(
-		() => templateKeepsBlocks(JSON.parse(savedTree), config.template),
-		[savedTree, config.template]
+		() =>
+			!isLocked ||
+			templateKeepsBlocks(JSON.parse(savedTree), config.template),
+		[isLocked, savedTree, config.template]
 	);
 
 	// "Posts carousel", "Posts accordion" and "Posts tabs" are query blocks,
