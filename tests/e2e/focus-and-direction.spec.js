@@ -270,6 +270,67 @@ test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
 		await expect(panel).not.toHaveClass(/\bis-open\b/);
 	});
 
+	test('a modal taken out of the page while open puts the panel back as it was', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		await page.evaluate(() => {
+			const holder = document.createElement('div');
+			holder.id = 'modal-holder';
+			holder.append(document.querySelector('dialog#in-tab'));
+			document.body.prepend(holder);
+
+			const button = document.createElement('button');
+
+			button.type = 'button';
+			button.id = 'open-modal-from-panel';
+			button.textContent = 'Open the modal';
+			button.setAttribute('aria-controls', 'in-tab');
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.append(button);
+		});
+
+		const panel = page.locator('#test-nav');
+		const modal = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect.poll(() => isLive(page, 'h1')).toBe(false);
+		await page.locator('#open-modal-from-panel').focus();
+		await page.keyboard.press('Enter');
+		await expect(modal).toBeVisible();
+
+		// A script removes it while it is open.
+		await page.evaluate(() =>
+			document.querySelector('#modal-holder').remove()
+		);
+
+		// The page behind the panel is held again, and Tab stays in the panel.
+		await expect.poll(() => isLive(page, 'h1')).toBe(false);
+		await expect(panel).toHaveClass(/\bis-open\b/);
+
+		for (let i = 0; i < 6; i++) {
+			await page.keyboard.press('Tab');
+			expect(
+				await page.evaluate(() =>
+					Boolean(
+						window.document.activeElement.closest(
+							'#test-nav .matter-panel__content'
+						)
+					)
+				)
+			).toBe(true);
+		}
+
+		// And it closes as usual.
+		await page.keyboard.press('Escape');
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+	});
+
 	test('a modal opened from a modal over the panel leaves the first usable when it closes', async ({
 		page,
 	}) => {

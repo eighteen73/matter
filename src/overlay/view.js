@@ -50,6 +50,7 @@ import {
 } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
 import { suspendForModal } from '@matter/inert';
+import { createSuspensions } from './suspensions';
 import { focusFirst, focused, isUsable } from '../interactivity/focus';
 import { hashId } from '../interactivity/hash';
 import {
@@ -80,13 +81,10 @@ let epoch = 0;
 document.addEventListener('matter-panel-open', () => ++epoch);
 
 // Puts back what let go for a dialog opened over an inert page (see
-// suspendForModal()), once it closes.
-const resumes = new Map();
-
-const resumeAfter = (id) => {
-	resumes.get(id)?.();
-	resumes.delete(id);
-};
+// suspendForModal()), once it closes. By the dialog's element, not its ID, so
+// it is put back for a dialog that is replaced by one with the same ID, or
+// removed from the page while open.
+const suspensions = createSuspensions();
 
 const isDialog = (id) => elements.get(id)?.tagName === 'DIALOG';
 
@@ -143,6 +141,9 @@ const rememberDismissal = (id, days) => {
 let removalWatcher = null;
 
 const syncDocumentClass = () => {
+	// A dialog removed while open is no longer holding anything back.
+	suspensions.prune();
+
 	const open = [...elements.entries()].some(
 		([id, element]) => isDialog(id) && element.isConnected && element.open
 	);
@@ -606,13 +607,13 @@ const showDialog = (dialog, id) => {
 		openers.set(id, focused());
 	}
 
-	resumes.set(id, resume);
+	suspensions.hold(dialog, resume);
 	++epoch;
 
 	try {
 		dialog.showModal();
 	} catch (error) {
-		resumeAfter(id);
+		suspensions.release(dialog);
 		openers.delete(id);
 		throw error;
 	}
@@ -826,9 +827,11 @@ const { state, actions } = store('matter/overlay', {
 					elements.delete(id);
 					lastStates.delete(id);
 					openers.delete(id);
-					resumeAfter(id);
 				}
 
+				// This element's own, whether or not it is still the one for
+				// its ID (a same-ID replacement starts before this runs).
+				suspensions.release(ref);
 				syncDocumentClass();
 			};
 		},
@@ -899,7 +902,7 @@ const { state, actions } = store('matter/overlay', {
 				item.autoOpened = false;
 			}
 
-			resumeAfter(id);
+			suspensions.release(ref);
 			syncDocumentClass();
 			restoreFocus(id);
 			emit(ref, 'overlay', 'close');
