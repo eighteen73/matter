@@ -650,14 +650,16 @@ const { state, actions } = store('matter/overlay', {
 		init() {
 			const { id } = getContext();
 			const item = state.items[id];
+			const { ref } = getElement();
+
+			// Marked even with no item for it (so its `matter-ready-overlay`
+			// still counts: the script did start).
+			enhance('overlay', ref);
 
 			if (!item) {
 				return;
 			}
 
-			const { ref } = getElement();
-
-			enhance('overlay', ref);
 			elements.set(id, ref);
 			registerInstance('overlay', ref, {
 				element: ref,
