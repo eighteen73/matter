@@ -91,6 +91,23 @@ test.use({ storageState: { cookies: [], origins: [] } });
 // space a real one takes (Firefox and WebKit ignore the flag).
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
 
+test.describe('the new-tab cue', () => {
+	test('stays hidden when a theme styles every span', async ({ page }) => {
+		await page.goto(cards.link);
+		await page.addStyleTag({
+			content: 'span, .has-link > * { display: inline; }',
+		});
+
+		const cues = page.locator('.matter-link__cue');
+
+		expect(await cues.count()).toBeGreaterThan(0);
+
+		for (const cue of await cues.all()) {
+			await expect(cue).toBeHidden();
+		}
+	});
+});
+
 test.describe('carousel and gallery semantics (axe, best practice)', () => {
 	test.use({ viewport: { width: 1280, height: 900 } });
 

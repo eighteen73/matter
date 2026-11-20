@@ -62,7 +62,7 @@ class LinkTest extends TestCase {
 		$html = $this->render( '<!-- wp:' . self::BLOCK . ' {"matterLink":{"url":"https://example.com/page/","opensInNewTab":true}} /-->' );
 
 		$this->assertStringContainsString( 'has-link', $html );
-		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/" target="_blank" rel="noopener" aria-describedby="matter-link-new-tab">Title</a></h3><span id="matter-link-new-tab" hidden>(opens in a new tab)</span>', $html );
+		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/" target="_blank" rel="noopener" aria-describedby="matter-link-new-tab">Title</a></h3><span id="matter-link-new-tab" class="matter-link__cue" hidden>(opens in a new tab)</span>', $html );
 	}
 
 	/**
@@ -228,8 +228,8 @@ class LinkTest extends TestCase {
 		$heading = $this->link( '<div><h3>Title</h3></div>', 'https://example.com/page/', true ) . $this->link( '<div><h3>Other</h3></div>', 'https://example.com/other/', true );
 
 		$this->assertStringContainsString( '<h3><a class="matter-link"', $heading );
-		$this->assertStringContainsString( '>Title</a></h3><span id="matter-link-new-tab" hidden>', $heading );
-		$this->assertStringContainsString( '>Other</a></h3><span id="matter-link-new-tab-2" hidden>', $heading );
+		$this->assertStringContainsString( '>Title</a></h3><span id="matter-link-new-tab" class="matter-link__cue" hidden>', $heading );
+		$this->assertStringContainsString( '>Other</a></h3><span id="matter-link-new-tab-2" class="matter-link__cue" hidden>', $heading );
 		$this->assertStringContainsString( 'aria-describedby="matter-link-new-tab-2"', $heading );
 		$this->assertStringNotContainsString( 'opens in a new tab', $this->link( '<div><p>Offers</p></div>' ) );
 	}
@@ -247,5 +247,19 @@ class LinkTest extends TestCase {
 		$this->assertStringContainsString( 'Offers now', $this->link( '<div><p>Offers</p></div>' ) );
 
 		remove_filter( 'matter_link_label', $filter );
+	}
+
+	/**
+	 * The new-tab cue stays hidden whatever a theme says about spans: the
+	 * link's stylesheet keeps `[hidden]` effective on it.
+	 *
+	 * @return void
+	 */
+	public function test_the_new_tab_cue_is_kept_hidden_by_the_stylesheet(): void {
+		$this->link( '<div><h3>Title</h3></div>', 'https://example.com/page/', true );
+
+		$css = wp_styles()->registered['matter-link']->extra['after'] ?? [];
+
+		$this->assertStringContainsString( ':where(.matter-link__cue[hidden]){display:none!important}', implode( '', $css ) );
 	}
 }

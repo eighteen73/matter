@@ -135,6 +135,9 @@ class Link {
 			. ':where(.has-link .matter-link){color:inherit;text-decoration:none}'
 			. ':where(.has-link:has(.matter-link:focus-visible)){outline:2px solid currentcolor;outline-offset:2px}'
 			. ':where(.has-link .matter-link:focus-visible){outline:none}'
+			// The new-tab cue is the link's description, never on screen: a
+			// theme's rule for spans can't show it.
+			. ':where(.matter-link__cue[hidden]){display:none!important}'
 		);
 	}
 
@@ -180,7 +183,7 @@ class Link {
 				// by it.
 				$cue_id = Ids::claim( 'matter-link-new-tab' );
 				$link  .= ' aria-describedby="' . esc_attr( $cue_id ) . '"';
-				$cue    = '<span id="' . esc_attr( $cue_id ) . '" hidden>' . esc_html__( '(opens in a new tab)', 'matter' ) . '</span>';
+				$cue    = '<span id="' . esc_attr( $cue_id ) . '" class="matter-link__cue" hidden>' . esc_html__( '(opens in a new tab)', 'matter' ) . '</span>';
 			}
 
 			$linked = $match[1][0] . '<a ' . $link . '>' . $match[3][0] . '</a>' . $match[4][0] . $cue;
