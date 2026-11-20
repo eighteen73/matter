@@ -448,34 +448,58 @@ test.describe('accordion, collapsible and tabs', () => {
 			// The test config prefers reduced motion; this checks the motion.
 			await emulate(page, { reducedMotion: 'no-preference' });
 			await page.goto(kitchenSink.link);
+			await expect(page.locator('#faq')).toHaveClass(/is-enhanced/);
 
 			const button = page.getByRole('button', { name: 'First question' });
 			const panel = page.locator('#faq [id$="-panel"]').first();
-			const height = () =>
-				panel.evaluate((el) => el.getBoundingClientRect().height);
+			// The panel's height on every frame for a second (nothing waits
+			// on a fixed time to catch it part way).
+			const frames = () =>
+				panel.evaluate(
+					(element) =>
+						new Promise((resolve) => {
+							const heights = [];
+							const start = window.performance.now();
+							const tick = () => {
+								heights.push(
+									element.getBoundingClientRect().height
+								);
+
+								if (window.performance.now() - start < 1000) {
+									window.requestAnimationFrame(tick);
+								} else {
+									resolve(heights);
+								}
+							};
+
+							window.requestAnimationFrame(tick);
+						})
+				);
+
+			let recorded = frames();
 
 			await button.click();
 
+			const opening = await recorded;
+			const open = opening.at(-1);
+
+			expect(open).toBeGreaterThan(0);
 			// Part way through: neither closed nor fully open.
-			await page.waitForTimeout(120);
-			const partway = await height();
+			expect(opening.some((height) => height > 0 && height < open)).toBe(
+				true
+			);
 
-			await expect.poll(height).toBeGreaterThan(partway - 1);
-			const open = await height();
-
-			expect(partway).toBeGreaterThan(0);
-			expect(partway).toBeLessThanOrEqual(open);
-
+			recorded = frames();
 			await button.click();
-			await page.waitForTimeout(120);
 
-			const closing = await height();
+			const closing = await recorded;
 
-			// It's still taking up room part way through closing (the
-			// `until-found` panel keeps its content until the rows collapse).
-			expect(closing).toBeGreaterThan(0);
-			expect(closing).toBeLessThan(open);
-			await expect.poll(height).toBe(0);
+			expect(closing.at(-1)).toBe(0);
+			// And it took room while it closed (the `until-found` panel keeps
+			// its content until the rows collapse).
+			expect(closing.some((height) => height > 0 && height < open)).toBe(
+				true
+			);
 		});
 	});
 });
@@ -667,26 +691,45 @@ test.describe('nested blocks', () => {
 test.describe('closed panels degrade @cross-browser', () => {
 	test.use({ viewport: VIEWPORTS.desktop });
 
-	// Firefox and Safari may not know `hidden="until-found"` yet: the panel
-	// is then plain hidden, and still opens with its button.
+	// Chromium, Firefox and WebKit (the builds Playwright installs) all know
+	// `hidden="until-found"`; where a browser doesn't, the panel is plain
+	// hidden and still opens with its button, which is what this checks in
+	// each of them.
 	test('an answer is closed, and opens and closes with its button', async ({
 		page,
+		browserName,
 	}) => {
 		await page.goto(kitchenSink.link);
+		await expect(page.locator('#faq')).toHaveClass(/is-enhanced/);
 
 		const button = page.getByRole('button', { name: 'Second question' });
 
 		await expect(page.getByText('Second answer')).toBeHidden();
 		await expect(button).toHaveAttribute('aria-expanded', 'false');
-		// Not reachable by Tab while closed.
+		// Not reachable by Tab while closed: a link in the closed answer is
+		// the next thing after its button, and Tab goes past it.
+		// Not by role: a closed one isn't in the accessibility tree.
+		const link = page.locator('a', { hasText: 'Closed answer link' });
+
 		await page.getByRole('button', { name: 'First question' }).focus();
 		await page.keyboard.press('Tab');
 		await expect(button).toBeFocused();
 		await page.keyboard.press('Tab');
 		await expect(button).not.toBeFocused();
+		await expect(link).not.toBeFocused();
+		await expect(link).toBeHidden();
 
 		await button.click();
 		await expect(page.getByText('Second answer')).toBeVisible();
+
+		// Open, the link is in the tab order (not in WebKit, where Tab
+		// skips links).
+		if ('webkit' !== browserName) {
+			await button.focus();
+			await page.keyboard.press('Tab');
+			await expect(link).toBeFocused();
+		}
+
 		await button.click();
 		await expect(page.getByText('Second answer')).toBeHidden();
 	});

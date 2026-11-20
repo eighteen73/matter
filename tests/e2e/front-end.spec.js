@@ -396,6 +396,8 @@ test.describe('keyboard', { tag: '@cross-browser' }, () => {
 		page,
 	}) => {
 		await page.goto(kitchenSink.link);
+		// Keys go nowhere until the script has started.
+		await expect(page.locator('#specs')).toHaveClass(/is-enhanced/);
 
 		const size = page.getByRole('tab', { name: 'Size' });
 		const colour = page.getByRole('tab', { name: 'Colour' });
@@ -415,6 +417,7 @@ test.describe('keyboard', { tag: '@cross-browser' }, () => {
 		page,
 	}) => {
 		await page.goto(kitchenSink.link);
+		await expect(page.locator('#faq')).toHaveClass(/is-enhanced/);
 
 		const first = page.getByRole('button', { name: 'First question' });
 		const second = page.getByRole('button', { name: 'Second question' });
@@ -444,6 +447,7 @@ test.describe('keyboard', { tag: '@cross-browser' }, () => {
 		const menu = page.locator('nav.matter-menu--primary.opens-on-click');
 		const toggle = menu.getByRole('button', { name: /Services/ });
 
+		await expect(menu).toHaveClass(/is-enhanced/);
 		await toggle.focus();
 		await page.keyboard.press('ArrowRight');
 		await expect(menu.getByRole('link', { name: 'Contact' })).toBeFocused();
@@ -838,6 +842,7 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 		page,
 	}) => {
 		await page.goto(collectionsPage.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
 
 		const opener = page
 			.locator('#photos')
@@ -865,6 +870,7 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 		page,
 	}) => {
 		await page.goto(collectionsPage.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
 
 		const lightbox = page.locator('#photos + dialog, #photos dialog');
 		const image = lightbox.locator('.wp-block-matter-gallery__figure img');
@@ -912,6 +918,8 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 		page,
 	}) => {
 		await page.goto(collectionsPage.link);
+		await expect(page.locator('#steps')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('#posts-tabs')).toHaveClass(/is-enhanced/);
 
 		await page.getByRole('tab', { name: 'Plan' }).focus();
 		await page.keyboard.press('ArrowDown');
