@@ -66,7 +66,7 @@ foreach ( $matter_tabs as $matter_index => $matter_tab ) {
 		'<span class="wp-block-matter-tabs__current" %1$s data-wp-bind--hidden="!state.isActive">%2$s<span class="wp-block-matter-tabs__label">%3$s</span></span>',
 		wp_interactivity_data_wp_context( [ 'tabId' => $matter_tab_id ] ),
 		$matter_icon,
-		wp_kses_post( $matter_tab_label )
+		Instances::label( $matter_tab_label )
 	);
 
 	$matter_buttons .= sprintf(
@@ -74,7 +74,7 @@ foreach ( $matter_tabs as $matter_index => $matter_tab ) {
 		esc_attr( $matter_tab_id ),
 		wp_interactivity_data_wp_context( [ 'tabId' => $matter_tab_id ] ),
 		$matter_icon,
-		wp_kses_post( $matter_tab_label )
+		Instances::label( $matter_tab_label )
 	);
 }
 

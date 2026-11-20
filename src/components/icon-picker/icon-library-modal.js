@@ -92,8 +92,8 @@ export function IconLibraryModal({ value, title, onSelect, onRequestClose }) {
 					{tabs.length > 1 && (
 						<div
 							className="matter-icon-library-modal__collections"
-							role="tablist"
-							aria-orientation="vertical"
+							role="group"
+							aria-label={__('Collections', 'matter')}
 						>
 							{tabs.map((tab) => {
 								const isActive = collection === tab.slug;
@@ -104,8 +104,7 @@ export function IconLibraryModal({ value, title, onSelect, onRequestClose }) {
 										className={`matter-icon-library-modal__collection${
 											isActive ? ' is-active' : ''
 										}`}
-										role="tab"
-										aria-selected={isActive}
+										aria-pressed={isActive}
 										onClick={() => setCurrent(tab.slug)}
 									>
 										{tab.label}

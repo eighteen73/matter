@@ -141,7 +141,14 @@ const { state } = store('matter/accordion', {
 			instanceFor(target)?.closeAll();
 		},
 		onKeydown: withSyncEvent((event) => {
-			if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+			// Alt+Arrow is the browser's back and forward, Ctrl+Home and
+			// Ctrl+End scroll the page: not ours.
+			if (
+				event.altKey ||
+				event.ctrlKey ||
+				event.metaKey ||
+				!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)
+			) {
 				return;
 			}
 

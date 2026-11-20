@@ -179,14 +179,27 @@ class Overlay {
 
 		$dismissible = ! isset( $attributes['dismissible'] ) || ! empty( $attributes['dismissible'] );
 		$label       = trim( (string) ( $attributes['label'] ?? '' ) );
+		$name        = '';
+
+		// The dialog's name: its label if the author set one, else its first
+		// heading (which is what a sighted visitor reads first), else "Dialog".
+		// On the server, so a dialog shown without JavaScript is named too.
+		if ( '' !== $label ) {
+			$name = sprintf( 'aria-label="%s"', esc_attr( $label ) );
+		} else {
+			$slots['content'] = self::name_from_heading( $slots['content'], $id, $heading );
+			$name             = '' !== $heading
+				? sprintf( 'aria-labelledby="%s"', esc_attr( $heading ) )
+				: sprintf( 'aria-label="%s"', esc_attr__( 'Dialog', 'matter' ) );
+		}
 
 		// `closedby="none"`: browsers that support it ignore Escape and light
 		// dismiss for a dialog that can't be closed (view.js also reopens it).
 		$dialog = sprintf(
-			'<dialog %1$s %2$s aria-label="%3$s"%8$s data-wp-on--close="callbacks.onClose" data-wp-on--cancel="callbacks.onCancel" data-wp-on--click="callbacks.onBackdropClick">%4$s<div class="%5$s__content">%6$s%7$s</div></dialog>',
+			'<dialog %1$s %2$s %3$s%8$s data-wp-on--close="callbacks.onClose" data-wp-on--cancel="callbacks.onCancel" data-wp-on--click="callbacks.onBackdropClick">%4$s<div class="%5$s__content">%6$s%7$s</div></dialog>',
 			get_block_wrapper_attributes( array_merge( [ 'id' => $id ], $extra ) ),
 			self::directives( $id ),
-			esc_attr( '' !== $label ? $label : __( 'Dialog', 'matter' ) ),
+			$name,
 			$dismissible ? self::close_button( $class ) : '',
 			esc_attr( $class ),
 			$slots['content'],
@@ -197,6 +210,41 @@ class Overlay {
 		return '' !== $trigger
 			? sprintf( '<div class="%1$s-host">%2$s%3$s</div>', esc_attr( $class ), $trigger, $dialog )
 			: $dialog;
+	}
+
+	/**
+	 * The ID of the first heading in an overlay's content (a `<h1>` to `<h6>`
+	 * or `role="heading"`), giving it one if it has none, to name the dialog.
+	 *
+	 * @param string $html    Content.
+	 * @param string $id      Overlay ID.
+	 * @param string $heading Set to the heading's ID, or '' if there is none.
+	 * @return string The content, with the heading's ID.
+	 */
+	private static function name_from_heading( string $html, string $id, ?string &$heading ): string {
+		$heading = '';
+		$tags    = new WP_HTML_Tag_Processor( $html );
+
+		while ( $tags->next_tag() ) {
+			if ( ! in_array( $tags->get_tag(), [ 'H1', 'H2', 'H3', 'H4', 'H5', 'H6' ], true ) && 'heading' !== $tags->get_attribute( 'role' ) ) {
+				continue;
+			}
+
+			$existing = $tags->get_attribute( 'id' );
+
+			if ( is_string( $existing ) && '' !== $existing ) {
+				$heading = $existing;
+
+				return $html;
+			}
+
+			$heading = Ids::claim( $id . '-title' );
+			$tags->set_attribute( 'id', $heading );
+
+			return $tags->get_updated_html();
+		}
+
+		return $html;
 	}
 
 	/**

@@ -336,4 +336,28 @@ class Instances {
 		return '' === trim( wp_strip_all_tags( $content ) )
 			&& ! preg_match( '/<(img|picture|video|audio|iframe|svg|canvas|object|embed|form|input|select|textarea|button)\b/i', $content );
 	}
+
+	/**
+	 * An accordion item's title or a tab's label as it is output: inline
+	 * formatting only. It sits in a `<button>` (and a heading), where a link or
+	 * a block element would be invalid and confusing to assistive technology.
+	 *
+	 * @param string $label Label as saved.
+	 * @return string
+	 */
+	public static function label( string $label ): string {
+		return wp_kses(
+			$label,
+			[
+				'strong' => [],
+				'em'     => [],
+				'span'   => [],
+				'br'     => [],
+				'code'   => [],
+				'abbr'   => [ 'title' => true ],
+				'sub'    => [],
+				'sup'    => [],
+			]
+		);
+	}
 }

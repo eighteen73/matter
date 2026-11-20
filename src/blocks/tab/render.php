@@ -67,6 +67,6 @@ printf(
 	'<div %1$s %2$s data-wp-bind--role="state.panelRole" data-wp-bind--tabindex="state.panelTabIndex" data-wp-bind--aria-labelledby="state.panelLabelledBy" data-wp-class--is-active="state.isActive" data-wp-bind--hidden="state.isPanelHidden" data-wp-on--beforematch="actions.reveal">%3$s%4$s</div>',
 	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( [ 'tabId' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	'' !== $matter_label ? sprintf( '<div class="wp-block-matter-tab__label" role="heading" aria-level="%1$d">%2$s</div>', $matter_level, wp_kses_post( $matter_label ) ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	'' !== $matter_label ? sprintf( '<div class="wp-block-matter-tab__label" role="heading" aria-level="%1$d">%2$s</div>', $matter_level, Instances::label( $matter_label ) ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 );

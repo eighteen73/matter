@@ -23,6 +23,17 @@ if ( ! $matter_items ) {
 	return;
 }
 
+// Panels are region landmarks only while there are few: a long FAQ of them
+// floods a screen reader's landmark list. Items (rendered first, so counted by
+// now, a Query Loop's posts included) left a placeholder, and a nested
+// accordion has already resolved its own. A panel without the role is still
+// named by its button (`aria-controls`).
+$content = preg_replace_callback(
+	'/ data-matter-region="([^"]*)"/',
+	fn( $found ) => count( $matter_items ) <= 6 ? ' role="region" aria-labelledby="' . $found[1] . '"' : '',
+	$content
+);
+
 foreach ( $matter_items as $matter_index => $matter_item ) {
 	if ( ! empty( $matter_item['open'] ) || ( 0 === $matter_index && ! empty( $attributes['openFirst'] ) ) ) {
 		$matter_open[] = $matter_item['id'] ?? $matter_id . '-' . ( $matter_index + 1 );

@@ -40,6 +40,11 @@ $matter_id = Instances::add(
 	]
 );
 
+// A panel is a region landmark only in a short accordion; the accordion
+// decides, once it has counted its items (it has the placeholder to replace).
+// Outside an accordion there's nothing to count: it is a region.
+$matter_region = '' === $matter_id ? 'role="region" aria-labelledby="%s"' : 'data-matter-region="%s"';
+
 // Outside an accordion there's nothing to record or number.
 if ( '' === $matter_id ) {
 	$matter_id = Ids::claim( $matter_parent . '-' . wp_unique_id() );
@@ -48,11 +53,12 @@ if ( '' === $matter_id ) {
 $matter_level = min( 6, max( 2, (int) ( $block->context['matter/headingLevel'] ?? 3 ) ) );
 
 printf(
-	'<div %1$s %2$s data-wp-class--is-open="state.isItemOpen"><h%3$d class="wp-block-matter-accordion-item__heading"><button type="button" id="%4$s-button" class="wp-block-matter-accordion-item__toggle" aria-controls="%4$s-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemExpanded"><span class="wp-block-matter-accordion-item__title">%5$s</span></button></h%3$d><div id="%4$s-panel" class="wp-block-matter-accordion-item__panel" role="region" aria-labelledby="%4$s-button" data-wp-bind--hidden="state.isPanelHidden" data-wp-on--beforematch="actions.reveal"><div class="wp-block-matter-accordion-item__content">%6$s</div></div></div>',
+	'<div %1$s %2$s data-wp-class--is-open="state.isItemOpen"><h%3$d class="wp-block-matter-accordion-item__heading"><button type="button" id="%4$s-button" class="wp-block-matter-accordion-item__toggle" aria-controls="%4$s-panel" data-wp-on--click="actions.toggle" data-wp-bind--aria-expanded="state.isItemExpanded"><span class="wp-block-matter-accordion-item__title">%5$s</span></button></h%3$d><div id="%4$s-panel" class="wp-block-matter-accordion-item__panel" %7$s data-wp-bind--hidden="state.isPanelHidden" data-wp-on--beforematch="actions.reveal"><div class="wp-block-matter-accordion-item__content">%6$s</div></div></div>',
 	get_block_wrapper_attributes( [ 'id' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( [ 'itemId' => $matter_id ] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	(int) $matter_level,
 	esc_attr( $matter_id ),
-	wp_kses_post( $matter_title ),
-	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	Instances::label( $matter_title ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Inline formatting only, through wp_kses().
+	$content, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	sprintf( $matter_region, esc_attr( $matter_id . '-button' ) ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- A fixed template and an escaped ID.
 );

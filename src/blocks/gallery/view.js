@@ -268,6 +268,23 @@ const { actions } = store('matter/gallery', {
 				.replace('%1$d', index + 1)
 				.replace('%2$d', images.length);
 		},
+		// What the lightbox's live region says: "Image 2 of 5: the alt text".
+		// Empty until the lightbox opens, so closed it says nothing.
+		get announcement() {
+			const { images, index, opened, announce, announceAlt } =
+				getContext();
+
+			if (!opened) {
+				return '';
+			}
+
+			const alt = images[index]?.alt ?? '';
+
+			return (alt ? announceAlt : announce)
+				.replace('%1$d', index + 1)
+				.replace('%2$d', images.length)
+				.replace('%3$s', () => alt);
+		},
 	},
 	actions: {
 		/**

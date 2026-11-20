@@ -849,6 +849,10 @@ Themes restyle Matter with plain class selectors, wherever their stylesheet load
 - Reduced motion turns off the skin's transitions (rules at the end of each stylesheet, so they win over the skin's own).
 - Icons are masks painted in the text colour with `forced-color-adjust: none`, so they stay visible in forced colours (Windows high contrast). So are the carousel's dots, progress and timer, and the panel toggle's bars.
 - Buttons in the skin are at least 24px to tap or click (WCAG 2.5.8).
+- A modal or drawer is named by its `label`, else by its first heading (the server gives the heading an ID and the dialog `aria-labelledby`, so it works without JavaScript), else "Dialog".
+- Accordion panels are `role="region"` (named by their button) only in an accordion of six or fewer items; a longer one would flood a screen reader's landmark list. A Query Loop accordion counts its posts. Accordion titles and tab labels keep inline formatting only (`strong`, `em`, `span`, `br`, `code`, `abbr`, `sub`, `sup`), as they sit in a button.
+- Tabs and accordions leave keys pressed with Alt, Ctrl or Meta to the browser (Alt+Left is Back).
+- The gallery lightbox has one polite live region that says "Image 2 of 5: the image's description" as the image changes.
 
 **CSS variables**
 - Colours come from the scheme (`--scheme--{role}`) and other values from theme.json (`--wp--preset--…`, `--wp--custom--…`). The skin's colours fall back to system colours (`Canvas`, `CanvasText`), so Matter works on a theme without schemes.

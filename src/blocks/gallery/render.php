@@ -171,6 +171,7 @@ if ( $matter_lightbox && $matter_images ) {
 				<img data-wp-bind--src="state.image.src" data-wp-bind--srcset="state.image.srcset" data-wp-bind--alt="state.image.alt" sizes="100vw" alt="" />
 				<figcaption data-wp-text="state.image.caption" data-wp-bind--hidden="!state.image.caption"></figcaption>
 			</figure>
+			<div class="screen-reader-text" role="status" aria-live="polite" aria-atomic="true" data-wp-text="state.announcement"></div>
 			<div class="wp-block-matter-gallery__nav">
 				<button type="button" class="wp-block-matter-gallery__prev" data-wp-on--click="actions.prev"><span class="screen-reader-text">%3$s</span></button>
 				<span class="wp-block-matter-gallery__counter" style="--gallery-counter-width:%5$s" data-wp-text="state.counter"></span>
@@ -245,12 +246,17 @@ printf(
 	Ids::claim_wrapper( get_block_wrapper_attributes( array_filter( $matter_wrapper ) ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[
-			'images'  => $matter_images,
-			'index'   => 0,
+			'images'      => $matter_images,
+			'index'       => 0,
 			// The lightbox's image loads only once it's opened.
-			'opened'  => false,
-			'limit'   => $matter_limit,
-			'counter' => __( '%1$d / %2$d', 'matter' ), // phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
+			'opened'      => false,
+			'limit'       => $matter_limit,
+			'counter'     => __( '%1$d / %2$d', 'matter' ), // phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
+			// What the lightbox's live region says on moving to an image.
+			/* translators: 1: image number, 2: number of images */
+			'announce'    => __( 'Image %1$d of %2$d', 'matter' ),
+			/* translators: 1: image number, 2: number of images, 3: the image's description */
+			'announceAlt' => __( 'Image %1$d of %2$d: %3$s', 'matter' ),
 		]
 	),
 	$matter_items, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

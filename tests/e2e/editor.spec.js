@@ -2128,3 +2128,45 @@ test.describe('focal point preview', () => {
 		expect(await styles()).toEqual([]);
 	});
 });
+
+test.describe('icon library', () => {
+	test('collections are toggle buttons, not a tab list', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'core/buttons',
+			innerBlocks: [{ name: 'core/button', attributes: { text: 'Go' } }],
+		});
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [buttons] = select('core/block-editor').getBlocks();
+
+			dispatch('core/block-editor').selectBlock(
+				buttons.innerBlocks[0].clientId
+			);
+		});
+		await page
+			.getByRole('toolbar', { name: 'Block tools' })
+			.getByRole('button', { name: 'Add icon' })
+			.click();
+
+		const library = page.getByRole('dialog', { name: 'Icon library' });
+
+		await expect(library).toBeVisible();
+		await expect(library.getByRole('tab')).toHaveCount(0);
+
+		const collections = library.getByRole('group', {
+			name: 'Collections',
+		});
+
+		expect(await collections.getByRole('button').count()).toBeGreaterThan(
+			1
+		);
+		await expect(collections.locator('[aria-pressed="true"]')).toHaveCount(
+			1
+		);
+	});
+});

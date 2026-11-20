@@ -175,6 +175,10 @@ const { state, actions } = store('matter/tabs', {
 			focusToggle(getElement().ref);
 		},
 		onToggleKeydown: withSyncEvent((event) => {
+			if (event.altKey || event.ctrlKey || event.metaKey) {
+				return;
+			}
+
 			const context = getContext();
 
 			if (event.key === 'Escape' && context.isMenuOpen) {
@@ -194,6 +198,12 @@ const { state, actions } = store('matter/tabs', {
 			}
 		},
 		onKeydown: withSyncEvent((event) => {
+			// Alt+Arrow is the browser's back and forward, Ctrl+Home and
+			// Ctrl+End scroll the page: not ours.
+			if (event.altKey || event.ctrlKey || event.metaKey) {
+				return;
+			}
+
 			const context = getContext();
 			const { ref } = getElement();
 			const tabs = [
