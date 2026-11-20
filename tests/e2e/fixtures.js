@@ -1,5 +1,7 @@
 /**
- * Shared set-up for the browser tests: a primary menu and fixture pages.
+ * Shared set-up for the browser tests: a primary menu, fixture pages, and
+ * helpers for the conditions a visitor can be in (no JavaScript, reduced
+ * motion, forced colours, a narrow screen, another language).
  */
 const fs = require('fs');
 const path = require('path');
@@ -237,11 +239,317 @@ const collections = (postIds) =>
 		),
 	].join('\n\n');
 
+/**
+ * Visitor conditions
+ *
+ * `test.use( NO_JAVASCRIPT )` in a describe block loads its pages without
+ * scripts, to check what a visitor gets when JavaScript is off or fails.
+ */
+const NO_JAVASCRIPT = { javaScriptEnabled: false };
+
+/**
+ * Viewports either side of the breakpoints the fixture theme uses (`lg` is
+ * 1024 px), so a test can start in one and resize into another.
+ */
+const VIEWPORTS = {
+	mobile: { width: 390, height: 800 },
+	belowLg: { width: 1023, height: 800 },
+	atLg: { width: 1024, height: 800 },
+	desktop: { width: 1280, height: 900 },
+};
+
+/**
+ * Media features to emulate, e.g. `{ reducedMotion: 'reduce' }`,
+ * `{ forcedColors: 'active' }`, `{ colorScheme: 'dark' }`. Takes effect at
+ * once, including on a page that's already loaded.
+ *
+ * @param {Object} page    Page.
+ * @param {Object} options Playwright `emulateMedia()` options.
+ * @return {Promise<void>}
+ */
+const emulate = (page, options) => page.emulateMedia(options);
+
+/**
+ * Resize the viewport through a sequence of sizes, with the page left as it
+ * is each time (so something open stays open while a breakpoint is crossed).
+ *
+ * @param {Object}   page  Page.
+ * @param {Object[]} sizes `{ width, height }` for each step.
+ * @param {Function} after Called after each step with the size and index.
+ * @return {Promise<void>}
+ */
+async function resizeThrough(page, sizes, after = async () => {}) {
+	for (const [index, size] of sizes.entries()) {
+		await page.setViewportSize(size);
+		await after(size, index);
+	}
+}
+
+/**
+ * Pages
+ */
+
+/**
+ * A fixture file's markup.
+ *
+ * @param {string} file File name in `fixtures/`.
+ * @return {string} Block markup.
+ */
+const fixture = (file) => read(file);
+
+/**
+ * Wrap block markup in a right-to-left group. The `dir` is in the saved
+ * markup, as an author's HTML would have it, so `:dir( rtl )` rules and
+ * direction-aware code run in a left-to-right site.
+ *
+ * @param {string} content Block markup.
+ * @return {string} Block markup.
+ */
+const rtl = (content) =>
+	`<!-- wp:group {"className":"is-rtl-fixture"} --><div class="wp-block-group is-rtl-fixture" dir="rtl">${content}</div><!-- /wp:group -->`;
+
+/**
+ * The kitchen sink in a right-to-left group.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @return {Promise<Object>} The page.
+ */
+const createRtlPage = (requestUtils) =>
+	createPage(
+		requestUtils,
+		'Kitchen sink RTL',
+		rtl(fixture('kitchen-sink.html'))
+	);
+
+/**
+ * A page that renders the same widgets twice: a synced pattern holding tabs
+ * and a modal, used two times. (The fixture theme's header already renders
+ * its primary menu twice, in the panel and as the hover menu.)
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @return {Promise<Object>} The page.
+ */
+async function createDuplicatesPage(requestUtils) {
+	const pattern = await requestUtils.rest({
+		path: '/wp/v2/blocks',
+		method: 'POST',
+		data: {
+			title: `Duplicated widgets ${Date.now()}`,
+			status: 'publish',
+			content: fixture('duplicates.html'),
+		},
+	});
+	const use = `<!-- wp:block {"ref":${pattern.id}} /-->`;
+
+	return createPage(
+		requestUtils,
+		'Duplicates',
+		`<!-- wp:heading {"level":1} --><h1 class="wp-block-heading">Duplicates</h1><!-- /wp:heading -->${use}${use}`
+	);
+}
+
+/**
+ * A page whose section holds over 1 MB of slot HTML, ending in a paragraph
+ * that only shows if every block before it was kept.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @param {number} bytes        Minimum size of the slot's content.
+ * @return {Promise<Object>} The page.
+ */
+function createLargeSlotPage(requestUtils, bytes = 1.2 * 1024 * 1024) {
+	const filler = (i) =>
+		`<!-- wp:paragraph --><p>Filler paragraph ${i} to make the slot large.</p><!-- /wp:paragraph -->`;
+	const count = Math.ceil(bytes / filler(0).length);
+	const body = Array.from({ length: count }, (_, i) => filler(i)).join('');
+
+	return createPage(
+		requestUtils,
+		'Large slot',
+		'<!-- wp:matter-test/section -->' +
+			`<!-- wp:matter/slot {"name":"content"} -->${body}<!-- wp:paragraph --><p>End of the large slot</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->` +
+			'<!-- wp:matter/slot {"name":"media"} --><!-- wp:paragraph --><p>Media slot after the large one</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->' +
+			'<!-- /wp:matter-test/section -->'
+	);
+}
+
+/**
+ * Archive entries
+ */
+
+/**
+ * Create a published archive entry for a target, as the editor saves one.
+ * Takes the stored target string (`post_type:post`, `term:category:3`,
+ * `search`, `404`, and any type added later), so a new target type needs no
+ * change here.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @param {string} target       Stored target.
+ * @param {Object} options      Optional `title`, `content` and `cascade`.
+ * @return {Promise<Object>} The entry.
+ */
+function createArchiveEntry(requestUtils, target, options = {}) {
+	const { title = `Archive: ${target}`, content, cascade = false } = options;
+
+	return requestUtils.rest({
+		path: '/wp/v2/matter_archive',
+		method: 'POST',
+		data: {
+			title,
+			status: 'publish',
+			content:
+				content ??
+				`<!-- wp:paragraph --><p>Intro for ${target}</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->`,
+			meta: {
+				_matter_archive_target: target,
+				_matter_archive_cascade: cascade,
+			},
+		},
+	});
+}
+
+/**
+ * Delete every archive entry.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @return {Promise<void>}
+ */
+async function deleteArchiveEntries(requestUtils) {
+	const entries = await requestUtils.rest({
+		path: '/wp/v2/matter_archive',
+		params: { per_page: 100, status: 'any' },
+	});
+
+	await Promise.all(
+		entries.map(({ id }) =>
+			requestUtils.rest({
+				path: `/wp/v2/matter_archive/${id}`,
+				method: 'DELETE',
+				params: { force: true },
+			})
+		)
+	);
+}
+
+/**
+ * One entry for each target type that exists, each saying which target it
+ * is. Pass `extra` target strings for types added since (`author`, `date`).
+ *
+ * @param {Object}   requestUtils WordPress request utils.
+ * @param {string[]} extra        More stored targets.
+ * @return {Promise<Object>} Entries, keyed by target.
+ */
+async function createArchiveEntries(requestUtils, extra = []) {
+	await deleteArchiveEntries(requestUtils);
+
+	const [categoryId] = await createCategories(requestUtils, [
+		'Archive fixture',
+	]);
+	const targets = [
+		'post_type:post',
+		'taxonomy:category',
+		`term:category:${categoryId}`,
+		'search',
+		'404',
+		...extra,
+	];
+	const entries = {};
+
+	for (const target of targets) {
+		entries[target] = await createArchiveEntry(requestUtils, target);
+	}
+
+	return entries;
+}
+
+/**
+ * Users and languages
+ */
+
+const EDITOR = { username: 'editor-test', password: 'editor-test-password' };
+
+/**
+ * Ensure the `editor-test` user exists with the Editor role.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @return {Promise<void>}
+ */
+async function ensureEditorUser(requestUtils) {
+	const found = await requestUtils.rest({
+		path: '/wp/v2/users',
+		params: { search: EDITOR.username, context: 'edit', roles: 'editor' },
+	});
+
+	if (found.some(({ username }) => username === EDITOR.username)) {
+		return;
+	}
+
+	await requestUtils.rest({
+		path: '/wp/v2/users',
+		method: 'POST',
+		data: {
+			username: EDITOR.username,
+			email: 'editor-test@example.com',
+			password: EDITOR.password,
+			roles: ['editor'],
+		},
+	});
+}
+
+/**
+ * Whether global setup installed the Arabic language pack. A test needing it
+ * should `test.skip( ! arabicInstalled(), ... )`.
+ */
+const arabicInstalled = () => process.env.MATTER_E2E_ARABIC === '1';
+
+/**
+ * Switch the site's language, returning a function that puts it back. Call it
+ * in `beforeAll`, and the function in `afterAll`, so other specs stay in
+ * English.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @param {string} locale       Locale, e.g. `ar`.
+ * @return {Promise<Function>} Restores the previous language.
+ */
+async function setSiteLanguage(requestUtils, locale) {
+	const { language } = await requestUtils.rest({
+		path: '/wp/v2/settings',
+	});
+
+	await requestUtils.rest({
+		path: '/wp/v2/settings',
+		method: 'POST',
+		data: { language: locale },
+	});
+
+	return () =>
+		requestUtils.rest({
+			path: '/wp/v2/settings',
+			method: 'POST',
+			data: { language },
+		});
+}
+
 module.exports = {
+	EDITOR,
+	NO_JAVASCRIPT,
+	VIEWPORTS,
+	arabicInstalled,
 	collections,
+	createArchiveEntries,
+	createArchiveEntry,
 	createCategories,
+	createDuplicatesPage,
+	createLargeSlotPage,
 	createMenu,
 	createPage,
 	createPosts,
+	createRtlPage,
+	deleteArchiveEntries,
+	emulate,
+	ensureEditorUser,
+	fixture,
+	resizeThrough,
+	rtl,
+	setSiteLanguage,
 	termsCarousel,
 };
