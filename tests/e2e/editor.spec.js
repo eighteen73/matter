@@ -1,6 +1,9 @@
 /**
  * Block editor: content integrity fixed before 1.0.
  */
+const fs = require('fs');
+const os = require('os');
+const nodePath = require('path');
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
 const {
 	createArchiveEntry,
@@ -2126,6 +2129,54 @@ test.describe('focal point preview', () => {
 			editor.canvas.locator('.wp-block-post-featured-image')
 		).toBeVisible();
 		expect(await styles()).toEqual([]);
+	});
+});
+
+test.describe('featured image URL', () => {
+	test('is read without a deprecation warning, and the panel for it appears', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		const file = nodePath.join(
+			os.tmpdir(),
+			`matter-focal-${Date.now()}.png`
+		);
+
+		// A 1 x 1 PNG.
+		fs.writeFileSync(
+			file,
+			Buffer.from(
+				'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+				'base64'
+			)
+		);
+
+		const media = await requestUtils.uploadMedia(file);
+		const post = await requestUtils.rest({
+			path: '/wp/v2/posts',
+			method: 'POST',
+			data: {
+				title: 'With image',
+				status: 'draft',
+				featured_media: media.id,
+			},
+		});
+		const warnings = [];
+
+		page.on('console', (message) => {
+			if (/deprecated/i.test(message.text())) {
+				warnings.push(message.text());
+			}
+		});
+
+		await admin.editPost(post.id);
+
+		// The panel for the featured image's point appears once its URL is read.
+		await expect(
+			page.getByRole('button', { name: 'Featured image focal point' })
+		).toBeVisible();
+		expect(warnings).toEqual([]);
 	});
 });
 

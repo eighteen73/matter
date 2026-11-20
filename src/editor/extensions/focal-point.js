@@ -180,7 +180,11 @@ function FeaturedImageFocalPoint() {
 		return {
 			postType: getCurrentPostType(),
 			featuredImageUrl: mediaId
-				? select('core').getMedia(mediaId)?.source_url
+				? select('core').getEntityRecord(
+						'postType',
+						'attachment',
+						mediaId
+					)?.source_url
 				: null,
 		};
 	}, []);
