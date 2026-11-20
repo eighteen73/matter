@@ -83,7 +83,7 @@ class Archives {
 		// After the theme's list (AllowedBlocks, 10) and the query blocks (20).
 		add_filter( 'allowed_block_types_all', [ $this, 'allow_archive_loop' ], 30, 2 );
 		// Addresses are worked out once a request (Target::url()).
-		foreach ( [ 'update_option_page_for_posts', 'update_option_show_on_front', 'update_option_permalink_structure', 'switch_blog' ] as $hook ) {
+		foreach ( [ 'update_option_page_for_posts', 'update_option_show_on_front', 'update_option_permalink_structure', 'update_option_home', 'update_option_siteurl', 'update_option_category_base', 'update_option_tag_base', 'update_option_rewrite_rules', 'switch_blog', 'edited_term', 'created_term', 'delete_term', 'post_updated' ] as $hook ) {
 			add_action( $hook, [ Target::class, 'flush_urls' ] );
 		}
 

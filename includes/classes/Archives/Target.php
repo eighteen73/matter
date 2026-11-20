@@ -302,11 +302,20 @@ final readonly class Target {
 		$cache = &self::url_cache();
 		$key   = $this->key();
 
-		if ( ! array_key_exists( $key, $cache ) ) {
-			$cache[ $key ] = $this->work_out_url();
+		if ( array_key_exists( $key, $cache ) ) {
+			return $cache[ $key ];
 		}
 
-		return $cache[ $key ];
+		$url = $this->work_out_url();
+
+		// A long-running command sees changes nothing announces, and no
+		// address yet (a type or taxonomy not registered so far) may have one
+		// a moment later: neither is remembered.
+		if ( null !== $url && ! ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+			$cache[ $key ] = $url;
+		}
+
+		return $url;
 	}
 
 	/**

@@ -988,6 +988,60 @@ class ArchivesTest extends TestCase {
 	}
 
 	/**
+	 * Changes to a term's slug or to the pages (a slug, a new term, a deleted
+	 * one) are seen in the same request, and an address that isn't known yet
+	 * isn't remembered.
+	 *
+	 * @return void
+	 */
+	public function test_addresses_follow_terms_and_pages_within_a_request(): void {
+		$this->set_permalink_structure( '/%postname%/' );
+		add_filter( 'term_link', fn( $link, $term ) => home_url( '/topics/' . $term->slug . '/' ), 10, 2 );
+		Target::flush_urls();
+
+		$term   = new Target( 'term', 'category', $this->terms['child'] );
+		$before = $term->url();
+
+		wp_update_term( $this->terms['child'], 'category', [ 'slug' => 'renamed-child' ] );
+
+		$this->assertNotSame( $before, $term->url() );
+		$this->assertStringContainsString( 'renamed-child', (string) $term->url() );
+
+		// Not known yet, then known: the first answer isn't kept.
+		$late = new Target( 'post_type', 'matter_late' );
+
+		$this->assertNull( $late->url() );
+
+		register_post_type( 'matter_late', [ 'public' => true, 'has_archive' => true ] ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+
+		$this->assertNotNull( $late->url() );
+
+		unregister_post_type( 'matter_late' );
+		Target::flush_urls();
+
+		$page = self::factory()->post->create(
+			[
+				'post_type'  => 'page',
+				'post_title' => 'Journal',
+			]
+		);
+
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_for_posts', $page );
+
+		$posts = new Target( 'post_type', 'post' );
+
+		$this->assertStringContainsString( '/journal/', (string) $posts->url() );
+		wp_update_post(
+			[
+				'ID'        => $page,
+				'post_name' => 'news',
+			]
+		);
+		$this->assertStringContainsString( '/news/', (string) $posts->url() );
+	}
+
+	/**
 	 * The editor's search preview lists matching posts, a page at a time.
 	 *
 	 * @return void
