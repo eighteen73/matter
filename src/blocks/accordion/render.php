@@ -73,10 +73,10 @@ if ( ! empty( $attributes['faqSchema'] ) ) {
 		'mainEntity' => array_map(
 			fn( $item ) => [
 				'@type'          => 'Question',
-				'name'           => $item['title'],
+				'name'           => html_entity_decode( $item['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 				'acceptedAnswer' => [
 					'@type' => 'Answer',
-					'text'  => $item['text'],
+					'text'  => html_entity_decode( $item['text'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 				],
 			],
 			array_values( array_filter( $matter_items, fn( $item ) => '' !== $item['title'] && '' !== $item['text'] ) )

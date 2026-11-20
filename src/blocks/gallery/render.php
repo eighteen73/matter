@@ -63,10 +63,13 @@ foreach ( $block->inner_blocks as $matter_inner ) {
 	// The image's own caption, else its media library caption.
 	$matter_caption = preg_match( '/<figcaption\b[^>]*>(.*?)<\/figcaption>/is', (string) $matter_inner->inner_html, $matter_match ) ? $matter_match[1] : '';
 	$matter_caption = trim( wp_strip_all_tags( $matter_caption ) ) ?: ( $matter_attachment ? (string) wp_get_attachment_caption( $matter_attachment ) : '' );
+	// The lightbox sets it as text, so `&amp;` would show as typed.
+	$matter_caption = html_entity_decode( $matter_caption, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
 	$matter_images[] = [
-		'src'     => $matter_full ? $matter_full[0] : '',
-		'srcset'  => $matter_attachment ? (string) wp_get_attachment_image_srcset( $matter_attachment, 'full' ) : '',
+		// An image that isn't in the media library opens as itself.
+		'src'     => $matter_full ? $matter_full[0] : esc_url_raw( (string) $matter_img->get_attribute( 'src' ) ),
+		'srcset'  => $matter_attachment ? (string) wp_get_attachment_image_srcset( $matter_attachment, 'full' ) : (string) $matter_img->get_attribute( 'srcset' ),
 		'alt'     => $matter_alt,
 		'caption' => 'hidden' === $matter_captions ? '' : $matter_caption,
 	];
@@ -238,7 +241,7 @@ $matter_wrapper = [
 ];
 
 printf(
-	'<div %1$s data-wp-interactive="matter/gallery" %2$s data-wp-init--api="callbacks.init" data-wp-init--rows="callbacks.fitRows" data-wp-watch="callbacks.announce">%3$s%4$s</div>',
+	'<div %1$s data-wp-interactive="matter/gallery" %2$s data-wp-init---api="callbacks.init" data-wp-init---rows="callbacks.fitRows" data-wp-watch="callbacks.announce">%3$s%4$s</div>',
 	Ids::claim_wrapper( get_block_wrapper_attributes( array_filter( $matter_wrapper ) ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	wp_interactivity_data_wp_context( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		[

@@ -49,6 +49,7 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
+import { hashId } from '../interactivity/hash';
 import {
 	afterTransitions,
 	cancelClose,
@@ -312,13 +313,7 @@ const triggeredId = (target) => {
 	}
 
 	if (element.tagName === 'A' && element.hash.length > 1) {
-		let id = element.hash.slice(1);
-
-		try {
-			id = decodeURIComponent(id);
-		} catch {
-			// Not an ID of ours.
-		}
+		const id = hashId(element.hash);
 
 		return elements.has(id) && isTriggerFor(element, id) ? id : undefined;
 	}

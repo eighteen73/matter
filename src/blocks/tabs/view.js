@@ -36,6 +36,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
+import { hashId } from '../../interactivity/hash';
 
 const SELECTOR = '.wp-block-matter-tabs';
 const PANEL = '.wp-block-matter-tab';
@@ -265,7 +266,7 @@ const { state, actions } = store('matter/tabs', {
 			// nested in it), selects this block's tab that holds it: on load,
 			// and when the address's #hash changes.
 			const selectFromHash = withScope(() => {
-				const hash = decodeURIComponent(window.location.hash.slice(1));
+				const hash = hashId();
 				const target = hash ? document.getElementById(hash) : null;
 				const panel =
 					target &&
@@ -277,6 +278,10 @@ const { state, actions } = store('matter/tabs', {
 
 				if (panel && context.active !== panel.id) {
 					context.active = panel.id;
+					// The browser couldn't scroll to it while its tab was hidden.
+					window.requestAnimationFrame(() =>
+						target.scrollIntoView({ block: 'start' })
+					);
 				}
 			});
 

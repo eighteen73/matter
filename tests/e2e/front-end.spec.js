@@ -37,6 +37,7 @@ const violations = async (page) =>
 let kitchenSink;
 let ageGate;
 let triggersPage;
+let deepTabsPage;
 
 test.beforeAll(async ({ requestUtils }) => {
 	await requestUtils.deleteAllPages();
@@ -46,6 +47,16 @@ test.beforeAll(async ({ requestUtils }) => {
 		requestUtils,
 		'Kitchen sink',
 		'kitchen-sink.html'
+	);
+	deepTabsPage = await createPage(
+		requestUtils,
+		'Deep tabs',
+		'<!-- wp:matter/tabs {"anchor":"deep-tabs","label":"Deep"} --><!-- wp:matter/tab {"label":"One"} --><!-- wp:paragraph --><p>First</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->' +
+			'<!-- wp:matter/tab {"label":"Two"} -->' +
+			'<!-- wp:spacer {"height":"1500px"} --><div style="height:1500px" aria-hidden="true" class="wp-block-spacer"></div><!-- /wp:spacer -->' +
+			'<!-- wp:heading {"anchor":"heading-in-tab-2"} --><h2 class="wp-block-heading" id="heading-in-tab-2">Heading in tab two</h2><!-- /wp:heading -->' +
+			'<!-- /wp:matter/tab --><!-- /wp:matter/tabs -->' +
+			'<!-- wp:spacer {"height":"2000px"} --><div style="height:2000px" aria-hidden="true" class="wp-block-spacer"></div><!-- /wp:spacer -->'
 	);
 	triggersPage = await createPage(
 		requestUtils,
@@ -812,6 +823,37 @@ test.describe('deep links', () => {
 
 		await page.evaluate(() => (window.location.hash = '#faq-2'));
 		await expect(page.locator('#faq-2')).toHaveClass(/\bis-open\b/);
+	});
+	test('an invalid #hash does not throw, in tabs or an accordion', async ({
+		page,
+	}) => {
+		const errors = [];
+
+		page.on('pageerror', (error) => errors.push(error.message));
+		await page.goto(`${kitchenSink.link}#%E0%A4%A`);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-tabs/);
+		await expect(page.locator('html')).toHaveClass(
+			/matter-ready-accordion/
+		);
+
+		await page.evaluate(() => (window.location.hash = '#%E0%A4%A'));
+		await page.evaluate(() => window.matter.tabs('specs').select(1));
+		await expect(page.getByRole('tab', { name: 'Colour' })).toHaveAttribute(
+			'aria-selected',
+			'true'
+		);
+		expect(errors).toEqual([]);
+	});
+
+	test('a link to a heading in a hidden tab opens the tab and scrolls to it', async ({
+		page,
+	}) => {
+		await page.goto(`${deepTabsPage.link}#heading-in-tab-2`);
+		await expect(page.getByRole('tab', { name: 'Two' })).toHaveAttribute(
+			'aria-selected',
+			'true'
+		);
+		await expect(page.locator('#heading-in-tab-2')).toBeInViewport();
 	});
 });
 

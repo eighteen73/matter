@@ -31,6 +31,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
+import { hashId } from '../../interactivity/hash';
 import { suspendTransitions } from '../../interactivity/transitions';
 
 const SELECTOR = '.wp-block-matter-accordion';
@@ -184,7 +185,7 @@ const { state } = store('matter/accordion', {
 			// an accordion nested in it), opens this accordion's item that
 			// holds it: on load, and when the address's #hash changes.
 			const openFromHash = withScope(() => {
-				const hash = decodeURIComponent(window.location.hash.slice(1));
+				const hash = hashId();
 				const target = hash ? document.getElementById(hash) : null;
 				const item =
 					target &&
