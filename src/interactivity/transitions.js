@@ -1,4 +1,10 @@
 /**
+ * Each suspended element's original inline value, and how many suspensions
+ * hold it, so overlapping ones restore it once, when the last ends.
+ */
+const holds = new WeakMap();
+
+/**
  * Switch off transitions while a layout changes mode.
  *
  * When the viewport crosses a breakpoint, an element can swap one layout for
@@ -11,13 +17,21 @@
  */
 export const suspendTransitions = (elements) => {
 	const list = [...elements].filter(Boolean);
-	// Any transition set inline before (by a theme script), to put back.
-	const previous = new Map(
-		list.map((element) => [element, element.style.transition])
-	);
 
-	// Inline, so it outranks stylesheet rules without !important.
 	list.forEach((element) => {
+		const held = holds.get(element);
+
+		if (held) {
+			++held.count;
+			return;
+		}
+
+		// Any transition set inline before (by a theme script), to put
+		// back. Only the first suspension records it: a later one would see
+		// the 'none' of the first.
+		holds.set(element, { count: 1, value: element.style.transition });
+
+		// Inline, so it outranks stylesheet rules without !important.
 		element.style.transition = 'none';
 	});
 
@@ -25,7 +39,12 @@ export const suspendTransitions = (elements) => {
 	window.requestAnimationFrame(() =>
 		window.requestAnimationFrame(() =>
 			list.forEach((element) => {
-				element.style.transition = previous.get(element);
+				const held = holds.get(element);
+
+				if (held && --held.count <= 0) {
+					element.style.transition = held.value;
+					holds.delete(element);
+				}
 			})
 		)
 	);
