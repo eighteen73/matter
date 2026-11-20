@@ -89,15 +89,33 @@ final class WooCommerce implements Integration {
 			return false;
 		}
 
-		$version = defined( 'WC_VERSION' ) ? (string) WC_VERSION : '0';
+		return $this->supported_or_notice(
+			defined( 'WC_VERSION' ) ? (string) WC_VERSION : '0',
+			class_exists( Params::class )
+		);
+	}
 
-		if ( self::supports( $version, class_exists( Params::class ) ) ) {
+	/**
+	 * Whether the integration can run on this WooCommerce, and if not, a notice
+	 * for those who can do something about it: the people who manage plugins.
+	 *
+	 * @param string $version    WooCommerce version.
+	 * @param bool   $has_params Whether the product filters' Params class exists.
+	 * @return bool
+	 */
+	public function supported_or_notice( string $version, bool $has_params ): bool {
+		if ( self::supports( $version, $has_params ) ) {
 			return true;
 		}
 
 		add_action(
 			'admin_notices',
 			static function () use ( $version ): void {
+				// Not for an editor, who can't update WooCommerce.
+				if ( ! current_user_can( 'activate_plugins' ) ) {
+					return;
+				}
+
 				printf(
 					'<div class="notice notice-warning"><p><strong>%1$s</strong>: %2$s</p></div>',
 					esc_html__( 'Matter', 'matter' ),

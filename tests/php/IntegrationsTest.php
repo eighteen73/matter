@@ -348,4 +348,36 @@ class IntegrationsTest extends TestCase {
 
 		$this->assertMatchesRegularExpression( '/<ul class="[^"]*\bwp-block-post-template\b[^"]*\b' . Instances::LIST_CLASS . '\b/', $html );
 	}
+
+	/**
+	 * An old WooCommerce switches the integration off, and says so, to the people
+	 * who can update plugins only.
+	 *
+	 * @return void
+	 */
+	public function test_old_woocommerce_notice_is_for_those_who_manage_plugins(): void {
+		remove_all_actions( 'admin_notices' );
+
+		$this->assertFalse( ( new WooCommerce() )->supported_or_notice( '10.9.0', true ) );
+		$this->assertNotFalse( has_action( 'admin_notices' ) );
+
+		$notice = static function (): string {
+			ob_start();
+			do_action( 'admin_notices' );
+
+			return (string) ob_get_clean();
+		};
+
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'editor' ] ) );
+		$this->assertSame( '', $notice() );
+
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+		$this->assertStringContainsString( 'need WooCommerce 11.0 or later (this site has 10.9.0)', $notice() );
+
+		remove_all_actions( 'admin_notices' );
+		wp_set_current_user( 0 );
+
+		$this->assertTrue( ( new WooCommerce() )->supported_or_notice( '11.0.0-beta.1', true ) );
+		$this->assertFalse( has_action( 'admin_notices' ) );
+	}
 }
