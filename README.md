@@ -854,7 +854,7 @@ Themes restyle Matter with plain class selectors, wherever their stylesheet load
 - Tabs and accordions leave keys pressed with Alt, Ctrl or Meta to the browser (Alt+Left is Back).
 - The gallery lightbox has one polite live region that says "Image 2 of 5: the image's description" as the image changes.
 - In forced colours (Windows high contrast), a modal, drawer, off-canvas panel and lightbox get a border, as the dialog's background and backdrop tint aren't shown (in `:where()`, so a theme restyles it).
-- While a modal, drawer or panel is open the page's scrollbar space is kept (`scrollbar-gutter: stable`, set by `has-overlay-gutter` or `has-panel-gutter`, which the scripts add only when the page scrolls), so the page doesn't shift sideways when it stops scrolling, and a page too short to scroll reserves nothing.
+- While a modal, drawer or panel is open the page's scrollbar space is kept (`scrollbar-gutter: stable`, set by `has-overlay-gutter` or `has-panel-gutter`, which the scripts add only when the page scrolls), so the page doesn't shift sideways when it stops scrolling, and a page too short to scroll reserves nothing. The kept space also keeps fixed headers steady, which would otherwise widen when the scrollbar goes; the backdrop stops at the reserved gutter, so a strip the width of the scrollbar stays uncovered beside it.
 
 **CSS variables**
 - Colours come from the scheme (`--scheme--{role}`) and other values from theme.json (`--wp--preset--…`, `--wp--custom--…`). The skin's colours fall back to system colours (`Canvas`, `CanvasText`), so Matter works on a theme without schemes.
