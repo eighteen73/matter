@@ -19,6 +19,8 @@ describe('withScheme', () => {
 			'mailto:shop@example.com',
 			'/contact/',
 			'#top',
+			'contact-us',
+			'about/team',
 			'',
 		].forEach((value) => expect(withScheme(value)).toBe(value));
 	});

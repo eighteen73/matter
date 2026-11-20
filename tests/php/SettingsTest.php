@@ -223,6 +223,53 @@ class SettingsTest extends TestCase {
 	}
 
 	/**
+	 * Something that isn't a number says so; a number that is too large says
+	 * that instead.
+	 *
+	 * @return void
+	 */
+	public function test_the_number_error_says_what_is_wrong(): void {
+		$settings = Settings::instance();
+		$words    = $settings->validate( [ 'contact' => [ 'count' => 'abc' ] ] );
+		$large    = $settings->validate( [ 'contact' => [ 'count' => '1e999' ] ] );
+
+		$this->assertInstanceOf( \WP_Error::class, $words );
+		$this->assertStringContainsString( 'needs a number', $words->get_error_message() );
+		$this->assertStringNotContainsString( 'too large', $words->get_error_message() );
+		$this->assertStringContainsString( 'too large', $large->get_error_message() );
+	}
+
+	/**
+	 * A relative address stays relative, one that a browser would read as
+	 * another site (after the tabs and backslashes it ignores) isn't kept as
+	 * it is, and a typed address is saved the way it is bound.
+	 *
+	 * @return void
+	 */
+	public function test_urls_stay_relative_or_become_safe_absolute_addresses(): void {
+		$kept = [ 'contact-us', 'about/team', '/contact', '/a?b=1&c=2', '#a', '?q', '/%2F%2Fevil.com' ];
+
+		foreach ( $kept as $url ) {
+			$this->assertSame( $url, Settings::safe_url( $url ), $url );
+			$this->assertSame( $url, Settings::instance()->save( [ 'contact' => [ 'site' => $url ] ] )['contact']['site'], 'saved ' . $url );
+		}
+
+		// Not relative after cleaning, or not relative at all.
+		foreach ( [ "/\\evil.com", "/\t/evil.com", '//evil.com', '\\\\evil.com', 'javascript:alert(1)' ] as $url ) {
+			$safe = Settings::safe_url( $url );
+
+			$this->assertDoesNotMatchRegularExpression( '#^(//|/\\\\|\\\\)#', $safe, $url );
+			$this->assertStringNotContainsString( 'javascript', $safe, $url );
+			$this->assertTrue( '' === $safe || '/' === $safe[0] && '/' !== ( $safe[1] ?? '' ) || str_starts_with( $safe, 'https://' ), "{$url} gave {$safe}" );
+		}
+
+		$this->assertSame( 'https://evil.com', Settings::safe_url( "/\t/evil.com" ) );
+		$this->assertSame( 'https://evil.com', Settings::safe_url( '//evil.com' ) );
+		$this->assertSame( '', Settings::safe_url( 'javascript:alert(1)' ) );
+		$this->assertSame( 'https://instagram.com/shop', Settings::safe_url( 'instagram.com/shop' ) );
+	}
+
+	/**
 	 * A save that leaves a field out keeps what is stored; null clears it.
 	 *
 	 * @return void

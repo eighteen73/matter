@@ -365,8 +365,11 @@ class Settings {
 
 		return new WP_Error(
 			'matter_settings_invalid_number',
-			/* translators: %s: field label. */
-			sprintf( __( '“%s” needs a number that isn’t too large.', 'matter' ), $field['label'] ),
+			is_numeric( $value ) && ! is_nan( (float) $value )
+				/* translators: %s: field label. */
+				? sprintf( __( '“%s” needs a number that isn’t too large.', 'matter' ), $field['label'] )
+				/* translators: %s: field label. */
+				: sprintf( __( '“%s” needs a number.', 'matter' ), $field['label'] ),
 			[ 'status' => 400 ]
 		);
 	}
@@ -594,7 +597,9 @@ class Settings {
 	/**
 	 * An address typed without its scheme (`instagram.com/name`), as people
 	 * copy them, with `https://` added. Relative links and other schemes
-	 * (`mailto:`) are left alone.
+	 * (`mailto:`) are left alone, and so is a bare word or path with no dot in
+	 * its first segment (`contact-us`, `about/team`): a host has a dot, so
+	 * that's a relative page, not `https://contact-us`.
 	 *
 	 * @param string $url Typed address.
 	 * @return string
@@ -606,25 +611,53 @@ class Settings {
 			return str_starts_with( $url, '//' ) ? 'https:' . $url : $url;
 		}
 
+		if ( self::is_bare_path( $url ) ) {
+			return $url;
+		}
+
 		return 'https://' . $url;
 	}
 
 	/**
-	 * A URL setting made safe for a bound attribute: a relative address (a
-	 * path, `#anchor` or `?query`, which the settings page accepts as typed)
-	 * is kept as it is, anything else must be a safe absolute address (no
-	 * `javascript:`). Not HTML-encoded: the block sets the attribute, which
-	 * escapes it once.
+	 * Whether an address with no scheme is a relative path (`contact-us`,
+	 * `about/team`) rather than a host: no dot or colon in its first segment.
 	 *
-	 * @param string $url Stored address.
+	 * @param string $url Address.
+	 * @return bool
+	 */
+	private static function is_bare_path( string $url ): bool {
+		return 1 === preg_match( '#^[^./?\#:]+([/?\#]|$)#', $url );
+	}
+
+	/**
+	 * A URL setting made safe: a relative address (a path, `#anchor`, `?query`
+	 * or `contact-us`, which the settings page accepts as typed) is kept
+	 * relative, anything else must be a safe absolute address (no
+	 * `javascript:`). The address is cleaned first (`esc_url_raw` drops the
+	 * tabs and backslashes a browser would skip, so `/<TAB>/evil.com` can't
+	 * become `//evil.com`), and a relative one that is then protocol-relative is
+	 * treated as an absolute address. Not HTML-encoded: the block sets the
+	 * attribute, which escapes it once.
+	 *
+	 * @param string $url Stored or typed address.
 	 * @return string
 	 */
 	public static function safe_url( string $url ): string {
 		$url = trim( $url );
 
-		// One slash, not `//host`, which is another site.
-		if ( preg_match( '#^(/(?!/)|[\#?])#', $url ) ) {
-			return $url;
+		if ( preg_match( '#^[/?\#]#', $url ) || self::is_bare_path( $url ) ) {
+			$bare  = ! preg_match( '#^[/?\#]#', $url );
+			$clean = esc_url_raw( $bare ? '/' . $url : $url );
+			$clean = $bare ? substr( $clean, 1 ) : $clean;
+
+			// What a browser would read as `//host` is another site's address.
+			if ( str_starts_with( $clean, '//' ) ) {
+				return esc_url_raw( 'https:' . $clean );
+			}
+
+			if ( '' !== $clean && ! preg_match( '#^[a-z][a-z0-9+.-]*:#i', $clean ) ) {
+				return $clean;
+			}
 		}
 
 		return esc_url_raw( self::with_scheme( $url ) );
@@ -648,7 +681,7 @@ class Settings {
 			case 'email':
 				return sanitize_email( (string) $value );
 			case 'url':
-				return esc_url_raw( self::with_scheme( (string) $value ) );
+				return self::safe_url( (string) $value );
 			case 'number':
 				return $this->is_finite_number( $value ) ? $value + 0 : null;
 			case 'toggle':
