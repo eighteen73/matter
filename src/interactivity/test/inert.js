@@ -259,4 +259,40 @@ describe('inertAround', () => {
 			expect(inert()).toEqual([]);
 		});
 	});
+
+	describe('modal and top-layer UI', () => {
+		it("doesn't make a modal or an open dialog inert", () => {
+			const content = build();
+
+			document
+				.getElementById('main')
+				.insertAdjacentHTML(
+					'afterend',
+					'<div id="consent" role="dialog" aria-modal="true"></div><dialog id="notice" open></dialog><dialog id="closed"></dialog>'
+				);
+
+			inertAround(content);
+
+			// A closed dialog isn't shown, so it's held like anything else.
+			expect(inert().sort()).toEqual([
+				'backdrop',
+				'closed',
+				'header',
+				'main',
+			]);
+		});
+
+		it('leaves a modal inside a sibling that holds one alone too', () => {
+			const content = build();
+
+			document.getElementById('main').innerHTML =
+				'<p id="text"></p><div id="wrap"><div id="cookie" aria-modal="true"></div></div>';
+
+			inertAround(content);
+
+			expect(
+				document.getElementById('cookie').closest('[inert]')
+			).toBeNull();
+		});
+	});
 });

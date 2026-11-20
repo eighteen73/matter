@@ -11,14 +11,35 @@
  * Live regions keep announcing: an element that is, or sits in, a live region
  * (`aria-live`, `role` status, alert or log) is never made inert, and a
  * sibling that only holds one is entered, so the rest of it is inert and the
- * path to the region is not.
+ * path to the region is not. The same goes for what is on top of the page
+ * already: a modal (`:modal`, `aria-modal="true"`) or an open dialog, such as a
+ * cookie banner. A banner that is neither (a plain element) is inert while the
+ * panel is open, as it would be behind a native modal dialog.
  */
 
 // Nothing to make inert, or that mustn't be.
 const SKIPPED = ['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT'];
 
-// What announces changes to assistive technology, which inert would silence.
-const LIVE = '[aria-live], [role="status"], [role="alert"], [role="log"]';
+// What announces changes to assistive technology, which inert would silence,
+// and what is on top of the page already (a cookie banner, an open dialog):
+// neither is made inert. `:modal` isn't known to every browser.
+const supports = (selector) => {
+	try {
+		document.querySelector(selector);
+		return true;
+	} catch {
+		return false;
+	}
+};
+const LEFT_ALONE = [
+	'[aria-live]',
+	'[role="status"]',
+	'[role="alert"]',
+	'[role="log"]',
+	'[aria-modal="true"]',
+	'dialog[open]',
+	...(supports(':modal') ? [':modal'] : []),
+].join(', ');
 
 // What each holder made inert, while it holds, and how many holders have each
 // element: the first sets `inert` and the last removes it, in whatever order
@@ -62,13 +83,13 @@ function hold(element, changed) {
 function silence(element, changed) {
 	if (
 		SKIPPED.includes(element.tagName) ||
-		element.matches(LIVE) ||
+		element.matches(LEFT_ALONE) ||
 		(element.hasAttribute('inert') && !counts.has(element))
 	) {
 		return;
 	}
 
-	if (element.querySelector(LIVE)) {
+	if (element.querySelector(LEFT_ALONE)) {
 		[...element.children].forEach((child) => silence(child, changed));
 		return;
 	}
