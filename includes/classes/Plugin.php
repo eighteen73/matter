@@ -42,6 +42,9 @@ class Plugin {
 	public function setup(): void {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
 
+		// IDs are unique within a page: say when a page starts.
+		Ids::setup();
+
 		// Blocks.
 		Registry::instance()->setup();
 		Instances::instance()->setup();

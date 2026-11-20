@@ -205,4 +205,76 @@ class IdsTest extends TestCase {
 		$this->assertCount( 1, $generated );
 		$this->assertSame( 0, $items[ reset( $generated ) ]['dismissDays'] );
 	}
+
+	/**
+	 * A block theme renders its template before wp_head, so the registry starts
+	 * empty just before the template is included.
+	 *
+	 * @return void
+	 */
+	public function test_registry_resets_before_the_template_renders(): void {
+		Ids::claim( 'offer' );
+
+		do_action( 'wp_before_include_template', ABSPATH . WPINC . '/template-canvas.php' );
+
+		$this->assertSame( 'offer', Ids::claim( 'offer' ) );
+	}
+
+	/**
+	 * Each item of a REST collection is numbered as on its own page: the same
+	 * synced pattern in two pages gets the same, unsuffixed IDs in both.
+	 *
+	 * @return void
+	 */
+	public function test_rest_collection_items_have_their_own_registry(): void {
+		$pattern = self::factory()->post->create(
+			[
+				'post_type'    => 'wp_block',
+				'post_status'  => 'publish',
+				'post_content' => $this->tabs( '{"matterId":"tabs-abc"}' ),
+			]
+		);
+		$pages   = self::factory()->post->create_many(
+			2,
+			[
+				'post_type'    => 'page',
+				'post_content' => '<!-- wp:block {"ref":' . $pattern . '} /-->',
+			]
+		);
+
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+		$request = new \WP_REST_Request( 'GET', '/wp/v2/pages' );
+		$request->set_query_params(
+			[
+				'include'  => $pages,
+				'per_page' => 10,
+			]
+		);
+
+		$items = rest_do_request( $request )->get_data();
+
+		$this->assertCount( 2, $items );
+
+		foreach ( $items as $item ) {
+			$html = $item['content']['rendered'];
+
+			$this->assertStringContainsString( 'id="tabs-abc"', $html );
+			$this->assertStringNotContainsString( 'tabs-abc-2', $html );
+		}
+	}
+
+	/**
+	 * Outside a REST request, setting up posts does not reset the registry.
+	 *
+	 * @return void
+	 */
+	public function test_the_post_outside_rest_does_not_reset(): void {
+		$post = self::factory()->post->create_and_get();
+
+		Ids::claim( 'kept' );
+		setup_postdata( $post );
+
+		$this->assertSame( 'kept-2', Ids::claim( 'kept' ) );
+	}
 }

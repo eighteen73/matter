@@ -11,6 +11,21 @@
  *
  * A saved ID is the only stable one: a repeat's suffix depends on render order.
  *
+ * When the registry starts empty:
+ *
+ * - A block theme renders its whole template before `wp_head()` runs (see
+ *   `template-canvas.php`), so it is reset on `wp_before_include_template`,
+ *   immediately before that render.
+ * - A REST collection renders every item's `content.rendered` in one request;
+ *   each item is a page of its own, so it is reset as the controller sets up
+ *   each post. A synced pattern used in two pages gets the same IDs in both,
+ *   as it does on the front end.
+ * - Classic themes have no such ordering guarantee: a plugin that renders
+ *   block content in `wp_head` (a header script, a banner) has claimed its IDs
+ *   before the template runs, and an ID in the body can then be suffixed.
+ *   There is deliberately no reset at the end of `wp_head`: a block theme's
+ *   footer would then be able to reuse an ID from the body.
+ *
  * @package Eighteen73\Matter
  */
 
@@ -36,6 +51,57 @@ final class Ids {
 	 * @var array<string, int>
 	 */
 	private static array $next = [];
+
+	/**
+	 * How many REST requests are being handled (they can be nested).
+	 *
+	 * @var int
+	 */
+	private static int $rest_depth = 0;
+
+	/**
+	 * Hook the points where a new page starts.
+	 *
+	 * @return void
+	 */
+	public static function setup(): void {
+		add_action( 'wp_before_include_template', [ self::class, 'reset' ], PHP_INT_MAX );
+
+		add_filter(
+			'rest_request_before_callbacks',
+			static function ( $response ) {
+				++self::$rest_depth;
+
+				return $response;
+			},
+			PHP_INT_MIN
+		);
+		add_filter(
+			'rest_request_after_callbacks',
+			static function ( $response ) {
+				self::$rest_depth = max( 0, self::$rest_depth - 1 );
+
+				return $response;
+			},
+			PHP_INT_MAX
+		);
+		add_action( 'the_post', [ self::class, 'reset_for_rest_item' ], 10, 2 );
+	}
+
+	/**
+	 * Start a new registry as a REST controller sets up an item, so each item
+	 * is numbered as it would be on its own page. Only the main query's posts
+	 * count: a query block's loop inside a response is one render.
+	 *
+	 * @param mixed $post  Post.
+	 * @param mixed $query Query that set it up.
+	 * @return void
+	 */
+	public static function reset_for_rest_item( $post = null, $query = null ): void {
+		if ( self::$rest_depth > 0 && isset( $GLOBALS['wp_query'] ) && $query === $GLOBALS['wp_query'] ) {
+			self::reset();
+		}
+	}
 
 	/**
 	 * Claim an ID.
