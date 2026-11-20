@@ -73,6 +73,12 @@ const lastStates = new Map();
 // The control that opened each dialog.
 const openers = new Map();
 
+// Counts what takes focus and the page: a dialog opening, a panel opening. A
+// close that gives focus back checks it didn't change meanwhile.
+let epoch = 0;
+
+document.addEventListener('matter-panel-open', () => ++epoch);
+
 // Puts back what let go for a dialog opened over an inert page (see
 // suspendForModal()), once it closes.
 const resumes = new Map();
@@ -520,18 +526,27 @@ const isRendered = (element) => {
  */
 const restoreFocus = (id) => {
 	const opener = openers.get(id);
+	const dialog = elements.get(id);
+	const startedAt = epoch;
 
 	openers.delete(id);
 
 	// A frame later, once the browser has finished moving focus (Safari
 	// does it after the close event).
 	window.requestAnimationFrame(() => {
+		// Another overlay or a panel opened since: focus is theirs.
+		if (epoch !== startedAt) {
+			return;
+		}
+
 		const current = focused();
 
-		// Lost: on the page, on something in the closed dialog, or on a
-		// container that only takes focus as a fallback (tabindex="-1", as
-		// a panel's content does when the trap holding it finds none).
-		if (!isUsable(current) || current.getAttribute('tabindex') === '-1') {
+		// Lost: on the page, or on something in the closed dialog (the browser
+		// leaves focus on a container only the dialog gave one, such as a
+		// `tabindex="-1"` one). Anything else that has focus was given it on
+		// purpose (a link's target section takes focus the same way), and keeps
+		// it.
+		if (!isUsable(current) || dialog?.contains(current)) {
 			focusFirst([opener, ...findTriggers(id)]);
 		}
 	});
@@ -552,7 +567,7 @@ const showDialog = (dialog, id) => {
 
 	// Over something that holds the page inert (an open panel), the holds
 	// around it let go until it closes, so it can be used.
-	const resume = suspendForModal(dialog);
+	const resume = suspendForModal(dialog, openers.get(id) ?? focused());
 
 	if (!isRendered(dialog) || dialog.closest('[inert]')) {
 		resume();
@@ -571,6 +586,7 @@ const showDialog = (dialog, id) => {
 	}
 
 	resumes.set(id, resume);
+	++epoch;
 
 	try {
 		dialog.showModal();

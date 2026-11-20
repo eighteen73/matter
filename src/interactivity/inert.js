@@ -187,10 +187,11 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
  * and asks what else is paused for it (e.g. a focus trap), until it closes: the
  * browser itself keeps everything outside a modal dialog inert meanwhile.
  *
- * @param {Element} dialog The dialog about to be shown.
+ * @param {Element}      dialog The dialog about to be shown.
+ * @param {Element|null} opener The control that opened it, if known.
  * @return {Function} Puts back what is still held, and resumes what was paused.
  */
-export function suspendForModal(dialog) {
+export function suspendForModal(dialog, opener = null) {
 	const suspended = new Set();
 
 	holders.forEach((changed) =>
@@ -202,7 +203,7 @@ export function suspendForModal(dialog) {
 			})
 	);
 
-	const resumes = [...pausers].map((pause) => pause(dialog));
+	const resumes = [...pausers].map((pause) => pause(dialog, opener));
 
 	return () => {
 		resumes.forEach((resume) => resume?.());
@@ -219,8 +220,8 @@ export function suspendForModal(dialog) {
  * Be told when a modal dialog is about to open over the page, to pause
  * what would fight it (a focus trap).
  *
- * @param {Function} pause Called with the dialog; returns a function that
- *                         resumes.
+ * @param {Function} pause Called with the dialog and the control that opened
+ *                         it; returns a function that resumes.
  * @return {Function} Stops being told.
  */
 export function onModal(pause) {

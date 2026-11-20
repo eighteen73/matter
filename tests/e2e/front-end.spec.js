@@ -220,6 +220,51 @@ test.describe('overlays', { tag: '@cross-browser' }, () => {
 		await expect(link).toBeFocused();
 	});
 
+	test("a dialog's link to a section that takes focus keeps focus there when it closes", async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		// What a link to a heading does: focus lands on the target (it has
+		// tabindex="-1") as the dialog closes.
+		await page.evaluate(() => {
+			document.body.insertAdjacentHTML(
+				'beforeend',
+				'<section id="skip-target" tabindex="-1"><h2>Target</h2></section>'
+			);
+			document
+				.getElementById('in-collapsible')
+				.addEventListener('close', () =>
+					document.getElementById('skip-target').focus()
+				);
+		});
+
+		const link = page.getByRole('link', {
+			name: 'Open the modal in the collapsible',
+		});
+		const dialog = page.getByRole('dialog', {
+			name: 'Modal in a collapsible',
+		});
+
+		await link.focus();
+		await page.keyboard.press('Enter');
+		await expect(dialog).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+
+		// Past the frame the dialog uses to give focus back.
+		await page.evaluate(
+			() =>
+				new Promise((resolve) =>
+					window.requestAnimationFrame(() =>
+						window.requestAnimationFrame(resolve)
+					)
+				)
+		);
+		await expect(page.locator('#skip-target')).toBeFocused();
+	});
+
 	test('a drag ending on the backdrop leaves a modal open', async ({
 		page,
 	}) => {

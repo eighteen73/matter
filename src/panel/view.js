@@ -128,9 +128,9 @@ const activate = (panel, id) => {
 
 	openers.delete(id);
 
-	// Set when the trap resumes after a modal dialog: focus is where that dialog
-	// gave it back (the control that opened it), and stays there.
-	let resumed = false;
+	// Set when the trap resumes after a modal dialog: focus goes back to the
+	// control that opened it (or stays where the dialog gave it back).
+	let resumed = null;
 
 	const trap = createFocusTrap([content], {
 		allowOutsideClick: true,
@@ -139,13 +139,18 @@ const activate = (panel, id) => {
 		// Called after the page is live again (see deactivate()).
 		setReturnFocus: () => returnTarget(id, opener, previous),
 		initialFocus: () => {
-			const active = focused();
-
 			if (resumed) {
-				resumed = false;
+				const target = [resumed.opener, focused()].find(
+					(element) =>
+						element &&
+						content.contains(element) &&
+						isUsable(element)
+				);
 
-				if (active && content.contains(active)) {
-					return active;
+				resumed = null;
+
+				if (target) {
+					return target;
 				}
 			}
 
@@ -178,11 +183,11 @@ const activate = (panel, id) => {
 	// until that dialog closes.
 	modalWatchers.set(
 		id,
-		onModal(() => {
+		onModal((dialog, control) => {
 			trap.pause();
 
 			return () => {
-				resumed = true;
+				resumed = { opener: control };
 				trap.unpause();
 			};
 		})
