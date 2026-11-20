@@ -75,14 +75,14 @@ Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScrip
 
 **IDs are unique on a page.** The same block can render twice (a synced pattern used twice, a template part in two places). The first keeps its ID; later ones get `-2`, `-3` (tabs, accordions, overlays, menus and panels, a carousel's or gallery's HTML anchor, and their items' IDs), so `aria-controls` and links never point at the wrong copy. Only a saved ID (`matterId`, `overlayId`, an HTML anchor) is stable: a repeat's suffix depends on render order, and a modal without a saved ID has a generated one, so it can't be linked to and its "remember dismissal" is off. A saved overlay ID is cleaned as the editor cleans it (lowercase, letters, numbers, hyphens and underscores), so links to it must be lowercase too: `#promo`, not `#Promo`; a URL parameter trigger's name is matched in any case. A menu's items are `{menu ID}-item-{menu item ID}`. A tabs or accordion block with nothing to show outputs nothing. Each page starts with no IDs claimed (block themes: just before the template renders; each item of a REST collection counts as a page of its own). A classic theme whose plugin renders block content in `wp_head` can see its body IDs suffixed. IDs the Filters blocks output are not claimed this way.
 
-Opt out of a block with `add_filter( 'matter_register_{slug}', '__return_false' )`.
+Opt out of a block with the `matter_register_block` filter (see [Hooks](#hooks)): `add_filter( 'matter_register_block', fn( $register, $name ) => 'matter/tabs' === $name ? false : $register, 10, 2 );`.
 
 ## Loop items
 
 Every loop shows the same design for a post type: the shop, a category, related products and a carousel of products all use one loop item, and changing it changes them all, including carousels already placed in content.
 
 - The theme registers a pattern per post type, `{namespace}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{namespace}/loop-item` for any other post type. Give the patterns `Inserter: false` so they stay out of the Patterns panel.
-- `{namespace}` is the theme's folder name (a child theme's, then its parent's), unless the theme names it, so renaming the folder doesn't break anything: `add_filter( 'matter_theme_namespace', fn() => 'pulsar' );`. It's also the theme's icon collection.
+- `{namespace}` is the theme's folder name (a child theme's, then its parent's), unless the theme names it, so renaming the folder doesn't break anything: `add_filter( 'matter_theme_namespaces', fn() => 'pulsar' );`. It's also the theme's icon collection.
 - **In a carousel, accordion or tabs of posts** ([below](#posts-as-carousels-accordions-or-tabs)) the block can have its own patterns, named after it. The first that exists is used, most specific first, like WordPress's template hierarchy (child theme first at each step):
 
   | In | Patterns, in order |
@@ -596,10 +596,10 @@ A block a section's slot allows (`allowedBlocks`) doesn't need to be on the list
 
 ## Theme icons
 
-The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's namespace (`matter_theme_namespace`, see [Loop items](#loop-items)); icon names are saved in content (`pulsar/arrow-right`), so a theme whose folder may change should name its namespace. The label, and the collection itself, can be set too:
+The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's namespace (`matter_theme_namespaces`, see [Loop items](#loop-items)); icon names are saved in content (`pulsar/arrow-right`), so a theme whose folder may change should name its namespace. The label, and the collection itself, can be set too:
 
 ```php
-add_filter( 'matter_theme_icons', fn( $icons ) => [ ...$icons, 'label' => 'Theme icons' ] );
+add_filter( 'matter_icon_theme_collection', fn( $icons ) => [ ...$icons, 'label' => 'Theme icons' ] );
 ```
 
 `directories` changes the folders.
@@ -811,7 +811,7 @@ The hooks they use are open to a project's own code, or its own integration:
 | `matter_archive_post_type_title` | A post type archive's title (null to work it out). |
 | `matter_archive_term_image_id` | A term archive's image, an attachment ID (core terms have none). |
 | `matter_hidden_blocks` | Blocks hidden from the inserter because Matter replaces them. |
-| `matter_register_{$block_slug}` | Whether one of Matter's blocks registers. Blocks for another plugin's content (`gravity-form`) start off. |
+| `matter_register_block` | `$register, $name, $folder`: whether one of Matter's blocks registers. Blocks for another plugin's content (`matter/gravity-form`) start off. |
 
 In the editor, an integration's script loads after Matter's (`matter-editor` is its dependency) and adds to it with these `wp.hooks` filters: `matter.queryDisplay.carouselTemplate` (a new carousel of a query block's items), `matter.queryDisplay.displayAttributes` (the attributes that mark a displayed query as Matter's) and `matter.carousel.queryOptions` (the carousel picker's query options). `window.matterEditor.queryDisplay` has the helpers they need (`ATTRIBUTE`, `ITEMS`, `isPostEditor()`, `queryExample()`).
 
@@ -921,6 +921,83 @@ add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'l
 
 `config/breakpoints.json` is the fallback.
 
+## Hooks
+
+Every hook Matter fires, with its arguments, except the [Filters](#filters), [Live blocks](#live-blocks) and [Prerendered loop items](#prerendered-loop-items) hooks, which are listed with their features. Names follow `matter_{area}_{thing}`: the area is the feature or block (`menu`, `archive`, `settings`, `icon`, `loop_item`…). Filters return the (possibly changed) first argument; the arguments after it are context. A hook not listed here is internal and may change in any release.
+
+**Blocks**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter_register_block` | `bool $register, string $name, string $folder`: whether a block registers. `$name` is the block's name (`matter/carousel`), `$folder` its build folder. The Gravity Form block starts off, and its integration turns it on. Use one callback to opt out of several blocks. |
+| `matter_hidden_blocks` | `string[] $blocks`: block names hidden from the inserter because Matter replaces them. |
+| `matter_allowed_blocks` | `string[] $blocks, WP_Block_Editor_Context $editor_context`: the blocks content editors can add (`namespace/*` allowed). Called per editor, so the list can depend on the post type. |
+| `matter_template_parts` | `array<string,string> $parts`: slug => title of the theme's template parts the block offers and renders. |
+| `matter_carousel_slides` | `array $types`: block name => label, or `[ 'label', 'variant', 'within' ]`, the carousel's slide types. |
+| `matter_query_blocks` | `array<string,string[]> $blocks`: query block name => the displays it can be shown as. |
+| `matter_query_loops` | `array<string,string> $loops`: loop template block name => `post` or `term`. |
+| `matter_query_display_post_types` | `array $types`: the post types a posts carousel, accordion or tabs can list (`[ 'name', 'label' ]` each). |
+| `matter_loop_item_pattern` | `?string $slug, string $post_type, string $block, string $variant`: the loop item's pattern for a post. |
+| `matter_loop_item_term_pattern` | `?string $slug, string $taxonomy, string $block, string $variant`: the same for a term. |
+| `matter_link_label` | `string $label, array $block`: the hidden label of a whole-block link without a heading (default "Read more"). `$block` is the parsed block. |
+| `matter_tab_label_level` | `int $level, array $attributes`: the heading level (2 to 6) of a tab panel's name, shown without JavaScript. `$attributes` are the tab's. |
+| `matter_gallery_view_all_text` | `string $text, int $total`: the gallery's "View all" button text. |
+| `matter_overlay_close_label` | `string $label, string $block_class`: the hidden label of an overlay's close button (default "Close"). `$block_class` is the block's class, e.g. `wp-block-matter-modal`. |
+
+**Theme, schemes, variants, breakpoints, icons**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter_theme_namespaces` | `string[] $namespaces`: the theme's namespace(s), most specific first; a string is fine. Prefix of its pattern slugs and its icon collection. The same list as `theme_namespaces()` returns. |
+| `matter_schemes` | `array $schemes`: colour schemes keyed by slug. |
+| `matter_default_scheme` | `string $default, array $schemes`: the default scheme's slug. |
+| `matter_scheme_labels` | `array $labels`: scheme slug => label shown in the editor. |
+| `matter_variants` | `array $variants`: variants keyed by block name, then slug. |
+| `matter_breakpoints` | `array $breakpoints`: name => min-width. |
+| `matter_icon_theme_collection` | `array $args`: the theme's icon collection: `collection` (slug), `label`, `directories`. |
+| `matter_icon_collections` | `string[] $collections`: collections editors can choose icons from; empty allows all. |
+
+**Menus**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter_menu_args` | `array $args`: the arguments `Matter\menu()` renders with. |
+| `matter_menu_back_text` | `string $text, array $context`: the drill-down back button. `$context` is the parent item's label and url. |
+| `matter_menu_view_all_text` | `string $text, array $context`: the drill-down "View all" link; same `$context`. |
+| `matter_megamenu_panels` | `array<string,string> $panels`: slug => title of the panels a menu item can show. |
+
+**Settings**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter_settings_fields` | `array $sections`: the site settings' fields, in sections keyed by slug. |
+| `matter_settings_capability` | `string $capability`: who can edit them (default `edit_theme_options`). |
+| `matter_settings_page_title` | `string $title`: the page's and menu item's title. |
+| `matter_settings_parent` | `string $parent`: the admin menu it sits under (default `themes.php`; empty for a top-level item). |
+| `matter_settings_saved` (action) | `array $clean`: after the settings are saved. |
+
+**Archives**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter_archive_default_content` | `string $content, Target $target`: the content of an archive without an entry. `Target` is `Eighteen73\Matter\Archives\Target`. |
+| `matter_archive_term_image_id` | `int $image, ?WP_Term $term`: a term archive's image (attachment ID). |
+| `matter_archive_post_type_title` | `?string $title, string $post_type`: a post type archive's title; null works it out. |
+
+**Integrations**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter_integrations` | `array $classes`: integration class names. |
+
+**Editor (`wp.hooks` filters)**
+
+| Hook | Arguments and what it does |
+| --- | --- |
+| `matter.queryDisplay.carouselTemplate` | `?array $template, string $name, string $style`: the blocks of a new carousel of a query block's items. |
+| `matter.queryDisplay.displayAttributes` | `object $changes, string $name, object $attributes, object $display`: attributes that mark a displayed query as Matter's. |
+| `matter.carousel.queryOptions` | `array $options, object $theme`: query blocks the carousel picker offers (`{ name, title, description }`). |
+
 ## Theme contract
 
 What a theme's files and saved content depend on. Each project's theme is its own copy and isn't updated with Matter, so these change only in a major version, with a changelog entry. When a change affects saved content, the release that makes it adds a `wp matter migrate` WP-CLI command (with `--dry-run`) to convert existing content. No such change has been made yet, so the command doesn't exist yet. Everything else (editor internals, PHP classes, JavaScript modules) can change in any release.
@@ -929,7 +1006,7 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries (Query Loop, Product Collection, and `core/terms-query` as a carousel), the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
 - **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{namespace}/loop-item-{post_type}`, `{namespace}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, with `-{variant}` after those for a variant; for terms `{namespace}/loop-item-term-{taxonomy}`, `{namespace}/loop-item-term` and their `-carousel` ones; in the order under [Loop items](#loop-items)).
-- **Filters and functions** in this README (`matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
+- **Hooks and functions** in this README (the [Hooks](#hooks) list and the Filters, Live blocks and Prerendered sections: `matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
 - **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track, whose list has the class `matter-query-list` (`.matter-query-list > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list, `.matter-query-list`), state classes (`is-*`, `has-*`), live block placeholders (`.matter-live.is-{block}`, `data-matter-live`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
 

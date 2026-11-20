@@ -388,7 +388,7 @@ final class LoopItem {
 
 	/**
 	 * The loop item pattern for a post type, in a block if any (see the
-	 * hierarchy above), in the theme's namespace (`matter_theme_namespace`),
+	 * hierarchy above), in the theme's namespace (`matter_theme_namespaces`),
 	 * most specific first at each step.
 	 *
 	 * @param string $post_type Post type.

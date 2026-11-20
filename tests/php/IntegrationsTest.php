@@ -165,7 +165,8 @@ class IntegrationsTest extends TestCase {
 		$this->boot( new GravityForms() );
 
 		$this->assertContains( 'gravityforms/form', Registry::hidden_blocks() );
-		$this->assertTrue( apply_filters( 'matter_register_gravity-form', false, '' ) );
+		$this->assertTrue( apply_filters( 'matter_register_block', false, 'matter/gravity-form', '' ) );
+		$this->assertFalse( apply_filters( 'matter_register_block', false, 'matter/carousel', '' ) );
 	}
 
 	/**

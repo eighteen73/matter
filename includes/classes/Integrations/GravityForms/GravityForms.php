@@ -38,12 +38,23 @@ final class GravityForms implements Integration {
 	}
 
 	/**
+	 * Turn on Matter's Gravity Form block, which is off without this plugin.
+	 *
+	 * @param bool   $register Whether the block registers.
+	 * @param string $name     Block name.
+	 * @return bool
+	 */
+	public function register_form_block( bool $register, string $name ): bool {
+		return 'matter/gravity-form' === $name ? true : $register;
+	}
+
+	/**
 	 * Setup hooks.
 	 *
 	 * @return void
 	 */
 	public function boot(): void {
-		add_filter( 'matter_register_gravity-form', '__return_true' );
+		add_filter( 'matter_register_block', [ $this, 'register_form_block' ], 10, 2 );
 		add_filter( 'matter_hidden_blocks', [ $this, 'hide_form_block' ] );
 		add_action( 'enqueue_block_editor_assets', [ $this, 'localize_editor_script' ] );
 		add_filter( 'gform_get_form_filter', [ $this, 'isolate_from_interactivity_api' ], 10, 2 );

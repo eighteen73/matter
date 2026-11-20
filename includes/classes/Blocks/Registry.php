@@ -141,7 +141,7 @@ class Registry {
 	 * Register blocks from the metadata collection, with per-block opt-out filters.
 	 *
 	 * Uses the same performant manifest flow as wp_register_block_types_from_metadata_collection(),
-	 * but allows individual blocks to be skipped via apply_filters().
+	 * but allows individual blocks to be skipped via the `matter_register_block` filter.
 	 *
 	 * @return void
 	 */
@@ -170,13 +170,14 @@ class Registry {
 			$block_folder = trailingslashit( $blocks_path ) . $block_slug;
 
 			/**
-			 * Allow blocks to be conditionally registered. Blocks for another
+			 * Filters whether a Matter block is registered. Blocks for another
 			 * plugin's content start off, and their integration turns them on.
 			 *
-			 * Usage:
-			 * add_filter( 'matter_register_{$block_slug}', function( $should_register, $block_folder ) { ... }, 10, 2 );
+			 * @param bool   $register Whether to register the block.
+			 * @param string $name     Block name, e.g. `matter/carousel`.
+			 * @param string $folder   The block's build folder.
 			 */
-			$should_register = apply_filters( "matter_register_{$block_slug}", ! in_array( $block_slug, self::INTEGRATION_BLOCKS, true ), $block_folder );
+			$should_register = apply_filters( 'matter_register_block', ! in_array( $block_slug, self::INTEGRATION_BLOCKS, true ), "matter/{$block_slug}", $block_folder );
 
 			if ( ! $should_register ) {
 				continue;

@@ -5,7 +5,7 @@
  *
  * The theme's own SVGs (`assets/svg/icons/*.svg`, child theme overriding the
  * parent) are registered as an icon collection, named after the theme's
- * folder unless the theme names it (`matter_theme_icons`). An icon's name is
+ * folder unless the theme names it (`matter_icon_theme_collection`). An icon's name is
  * stored in content (e.g. `pulsar/arrow-right`), so a theme should name its
  * collection explicitly if its folder may be renamed.
  *
@@ -58,7 +58,7 @@ class Icons {
 		 * }
 		 */
 		$args = (array) apply_filters(
-			'matter_theme_icons',
+			'matter_icon_theme_collection',
 			[
 				// The theme's namespace (its parent's, for a child theme).
 				'collection'  => (string) ( array_slice( theme_namespaces(), -1 )[0] ?? sanitize_key( get_template() ) ),

@@ -65,7 +65,7 @@ class LoopItemTest extends TestCase {
 				'content' => '<!-- wp:post-date /-->',
 			]
 		);
-		add_filter( 'matter_theme_namespace', fn() => 'acme' );
+		add_filter( 'matter_theme_namespaces', fn() => 'acme' );
 
 		$this->assertSame( [ 'acme' ], \Eighteen73\Matter\theme_namespaces() );
 		$this->assertSame( 'acme/loop-item', LoopItem::pattern( 'post' ) );

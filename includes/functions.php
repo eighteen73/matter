@@ -14,10 +14,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The prefixes of the theme's pattern slugs and icon names, most specific
  * first: by default the active theme's folder, then its parent's. A theme
- * names its own with the `matter_theme_namespace` filter, so a renamed
+ * names its own with the `matter_theme_namespaces` filter, so a renamed
  * folder or a child theme keeps working:
  *
- *     add_filter( 'matter_theme_namespace', fn() => 'pulsar' );
+ *     add_filter( 'matter_theme_namespaces', fn() => 'pulsar' );
  *
  * @return string[]
  */
@@ -29,7 +29,7 @@ function theme_namespaces(): array {
 	 *
 	 * @param string[] $namespaces Default: the theme's folder, then its parent's.
 	 */
-	$namespaces = apply_filters( 'matter_theme_namespace', array_values( array_unique( [ get_stylesheet(), get_template() ] ) ) );
+	$namespaces = apply_filters( 'matter_theme_namespaces', array_values( array_unique( [ get_stylesheet(), get_template() ] ) ) );
 
 	return array_values( array_unique( array_filter( array_map( 'sanitize_key', (array) $namespaces ) ) ) );
 }
