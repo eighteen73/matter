@@ -26,6 +26,7 @@ import { createTrap as createFocusTrap } from '@matter/focus-trap';
  * Internal dependencies
  */
 import { enhance } from '../interactivity/api';
+import { inertAround } from '../interactivity/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 import { clearPlacements, unwatchSubmenu, watchSubmenu } from './positioning';
 
@@ -64,6 +65,7 @@ const isEditable = (element) =>
 	!!element.closest?.(
 		'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
 	);
+
 // Left and Right follow the screen, so in a right-to-left menu the next item
 // is to the left. The direction is the element's own, not the page's, so a
 // right-to-left menu in a left-to-right page works.
@@ -215,7 +217,16 @@ const trapDrillDown = (context, submenuId, item) => {
 		return;
 	}
 
+	// Only the open level is exposed: the level it covers (the other items,
+	// its own toggle) is inert until the submenu closes. Released as the trap
+	// lets go, before focus goes back to the toggle, which can't take it
+	// while inert.
+	const release = inertAround(submenu, {
+		root: item.closest(SELECTORS.menu),
+	});
+
 	const trap = createFocusTrap(submenu, {
+		onDeactivate: release,
 		allowOutsideClick: true,
 		escapeDeactivates: false,
 		returnFocusOnDeactivate: true,
@@ -469,14 +480,35 @@ const { state } = store(
 
 				if (
 					event.key !== 'Escape' ||
-					context.menuType !== DROPDOWN ||
 					!context.openSubmenus.length ||
 					ref.contains(getTarget(event))
 				) {
 					return;
 				}
 
-				closeAll(context, ref);
+				if (context.menuType === DROPDOWN) {
+					closeAll(context, ref);
+					return;
+				}
+
+				// Escape in a dialog opened from the menu closes the dialog.
+				if (getTarget(event)?.closest('dialog[open]')) {
+					return;
+				}
+
+				// A drill-down closes one level, the innermost, even when
+				// focus hasn't reached the submenu yet or is on the page
+				// itself (a click doesn't focus a button in Safari).
+				const item = getItemForSubmenuId(
+					ref,
+					context.openSubmenus[context.openSubmenus.length - 1]
+				);
+
+				if (item) {
+					event.preventDefault();
+					closeSubmenu(context, getSubmenuId(item), item);
+					item.querySelector(`:scope > ${SELECTORS.toggle}`)?.focus();
+				}
 			}),
 			onDocumentClick: withSyncEvent((event) => {
 				const context = getContext();

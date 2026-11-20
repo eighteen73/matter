@@ -11,6 +11,7 @@ const {
 	createPage,
 	rtl,
 	resetSiteLanguage,
+	resizeThrough,
 	setSiteLanguage,
 } = require('./fixtures');
 
@@ -178,6 +179,102 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 					: window.document.activeElement.tagName
 			)
 		).toBe('menu');
+	});
+});
+
+test.describe('drill-down', { tag: '@cross-browser' }, () => {
+	test.use({ viewport: VIEWPORTS.mobile });
+
+	const open = async (page) => {
+		await openPanel(page);
+		await expect.poll(() => isLive(page, 'h1')).toBe(false);
+	};
+
+	test('while a submenu is open the level it covers is inert; Back and Escape restore it', async ({
+		page,
+	}) => {
+		await open(page);
+
+		const panel = page.locator('#test-nav');
+		const parent = panel.locator('.matter-menu__item.has-submenu').first();
+		const before = await inertElements(page);
+
+		await parent.locator(':scope > .matter-menu__toggle').click();
+		await expect(parent).toHaveClass(/\bis-open\b/);
+
+		// Only the open level is exposed: its own controls, not the other
+		// items or the parent's toggle.
+		expect(
+			await isLive(page, '.matter-menu__submenu .matter-menu__back')
+		).toBe(true);
+		expect(
+			await isLive(
+				page,
+				'.matter-menu__item.has-submenu > .matter-menu__toggle'
+			)
+		).toBe(false);
+		expect(
+			await isLive(
+				page,
+				'.matter-menu__items > .matter-menu__item:last-child'
+			)
+		).toBe(false);
+
+		// Focus is in the open level, on Back (its name says which level).
+		await expect(
+			panel.getByRole('button', { name: /^Back/ }).first()
+		).toBeFocused();
+
+		// Back restores it, and focus goes to the toggle it came from.
+		await panel.getByRole('button', { name: /^Back/ }).first().click();
+		await expect(parent).not.toHaveClass(/\bis-open\b/);
+		await expect.poll(() => inertElements(page)).toEqual(before);
+		await expect(
+			parent.locator(':scope > .matter-menu__toggle')
+		).toBeFocused();
+
+		// And Escape does the same.
+		await parent.locator(':scope > .matter-menu__toggle').click();
+		await expect(parent).toHaveClass(/\bis-open\b/);
+		await page.keyboard.press('Escape');
+		await expect(parent).not.toHaveClass(/\bis-open\b/);
+		await expect(
+			parent.locator(':scope > .matter-menu__toggle')
+		).toBeFocused();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		expect(
+			await isLive(
+				page,
+				'.matter-menu__item.has-submenu > .matter-menu__toggle'
+			)
+		).toBe(true);
+	});
+
+	test('a breakpoint change with a submenu open leaves nothing inert but the closed submenus', async ({
+		page,
+	}) => {
+		await open(page);
+
+		const panel = page.locator('#test-nav');
+		const parent = panel.locator('.matter-menu__item.has-submenu').first();
+		const closedSubmenus = () =>
+			page.evaluate(
+				() =>
+					[...document.querySelectorAll('[inert]')].filter(
+						(element) =>
+							!element.classList.contains('matter-menu__submenu')
+					).length
+			);
+
+		await parent.locator(':scope > .matter-menu__toggle').click();
+		await expect(parent).toHaveClass(/\bis-open\b/);
+		expect(await closedSubmenus()).toBeGreaterThan(0);
+
+		await resizeThrough(page, [VIEWPORTS.atLg]);
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+		await expect(parent).not.toHaveClass(/\bis-open\b/);
+		expect(await closedSubmenus()).toBe(0);
+		await expect(page.locator('html')).not.toHaveClass(/has-panel-open/);
 	});
 });
 
