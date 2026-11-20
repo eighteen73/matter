@@ -104,6 +104,15 @@ class Instances {
 	private static array $totals = [];
 
 	/**
+	 * How many loop templates were rendering around each posts display when it
+	 * started, so its own post template (one level in) can be told from one an
+	 * item holds.
+	 *
+	 * @var array<string, int>
+	 */
+	private static array $depths = [];
+
+	/**
 	 * Started containers: block object ID => [ container ID, container name ].
 	 *
 	 * @var array<int, array{0: string, 1: string}>
@@ -123,10 +132,12 @@ class Instances {
 
 	/**
 	 * A query has its posts (`the_posts`, not `found_posts`, which a cached
-	 * query skips): if it is the Query Loop of a posts
-	 * display (the first query inside it, not one inside an item), remember
-	 * the total, so what depends on the number of items (an accordion's
-	 * landmarks) decides the same on every page of the query.
+	 * query skips): if it is the Query Loop of a posts display (the query of
+	 * its own post template, not one inside an item), remember the total, so
+	 * what depends on the number of items (an accordion's landmarks) decides
+	 * the same on every page of the query. A Query Loop that inherits the
+	 * page's query makes none: its total is read from the main query when the
+	 * display starts (see start()).
 	 *
 	 * @param \WP_Post[]|int[] $posts Posts.
 	 * @param \WP_Query|null   $query The query.
@@ -135,7 +146,14 @@ class Instances {
 	public function found( $posts, $query = null ) {
 		$id = self::current( 'matter/accordion' );
 
-		if ( null !== $id && ! empty( self::$queries[ $id ] ) && ! isset( self::$totals[ $id ] ) && self::in_query_loop() ) {
+		if (
+			null !== $id
+			&& ! empty( self::$queries[ $id ] )
+			&& ! isset( self::$totals[ $id ] )
+			&& self::in_query_loop()
+			// Its own post template is one level inside the display.
+			&& count( self::$loops ) === ( self::$depths[ $id ] ?? 0 ) + 1
+		) {
 			self::$totals[ $id ] = (int) $query?->found_posts;
 		}
 
@@ -206,6 +224,16 @@ class Instances {
 
 		if ( ! in_array( $parent_block->name, self::CONTAINERS, true ) ) {
 			self::$queries[ $id ] = true;
+			// The post template that started this (when it is the first child)
+			// is one of the loops now rendering, and is the display's own.
+			self::$depths[ $id ] = count( self::$loops ) - ( 'post' === $loop ? 1 : 0 );
+
+			// An inherited query is the page's: its posts were counted before
+			// the display started (`the_posts` has fired), and the Query Loop
+			// asks for no query of its own.
+			if ( ! empty( $parent_block->attributes['query']['inherit'] ) && isset( $GLOBALS['wp_query'] ) && $GLOBALS['wp_query'] instanceof \WP_Query ) {
+				self::$totals[ $id ] = (int) $GLOBALS['wp_query']->found_posts;
+			}
 		}
 
 		return $parsed_block;
@@ -231,7 +259,7 @@ class Instances {
 			[ $id, $name ] = self::$active[ $key ];
 
 			array_pop( self::$stack[ $name ] );
-			unset( self::$items[ $id ], self::$settings[ $id ], self::$active[ $key ], self::$queries[ $id ], self::$totals[ $id ] );
+			unset( self::$items[ $id ], self::$settings[ $id ], self::$active[ $key ], self::$queries[ $id ], self::$totals[ $id ], self::$depths[ $id ] );
 		}
 
 		return $block_content;

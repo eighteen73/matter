@@ -100,6 +100,60 @@ class AccessibilityTest extends TestCase {
 	}
 
 	/**
+	 * A posts accordion that inherits the page's query (an archive) counts the
+	 * archive's posts, so page 1 and page 2 decide the same: no regions.
+	 *
+	 * @return void
+	 */
+	public function test_an_inherited_posts_accordion_counts_the_archives_posts(): void {
+		$this->assertCount( 8, self::factory()->post->create_many( 8 ) );
+		update_option( 'posts_per_page', 3 );
+
+		$markup = '<!-- wp:query {"queryId":13,"query":{"inherit":true},"matterDisplay":{"type":"accordion"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/accordion-item --><!-- wp:paragraph --><p>Text</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item --><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->';
+
+		foreach ( [ '/', '/?paged=2', '/?paged=3' ] as $url ) {
+			Ids::reset();
+			$this->go_to( $url );
+
+			$html = $this->render( $markup );
+
+			$this->assertGreaterThan( 1, substr_count( $html, 'wp-block-matter-accordion-item__heading' ), $url );
+			$this->assertStringNotContainsString( 'role="region"', $html, "No regions on {$url}: the archive has 8 posts" );
+		}
+	}
+
+	/**
+	 * A posts accordion whose items hold a Query Loop of their own takes its
+	 * total from its own query, not the nested one.
+	 *
+	 * @return void
+	 */
+	public function test_a_nested_query_does_not_set_the_accordions_total(): void {
+		$this->assertCount( 3, self::factory()->post->create_many( 3 ) );
+		update_option( 'posts_per_page', 3 );
+
+		// An inherited outer loop (three posts on the page, three in all),
+		// with a nested Query Loop of 10 in each item: the nested one's
+		// total (10 posts, which would clear the regions) must not count.
+		self::factory()->post->create_many( 7, [ 'post_type' => 'page' ] );
+
+		$markup = '<!-- wp:query {"queryId":14,"query":{"inherit":true},"matterDisplay":{"type":"accordion"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/accordion-item -->'
+			. '<!-- wp:query {"queryId":15,"query":{"perPage":10,"postType":"page","inherit":false}} --><div class="wp-block-query"><!-- wp:post-template --><!-- wp:paragraph --><p>Nested</p><!-- /wp:paragraph --><!-- /wp:post-template --></div><!-- /wp:query -->'
+			. '<!-- /wp:matter/accordion-item --><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->';
+
+		$this->go_to( '/' );
+
+		$html = $this->render( $markup );
+
+		$this->assertSame( 3, substr_count( $html, 'wp-block-matter-accordion-item__heading' ) );
+		$this->assertSame( 3, substr_count( $html, 'role="region"' ), 'three posts in all: regions' );
+	}
+
+	/**
 	 * A posts accordion of few posts in all has regions.
 	 *
 	 * @return void
