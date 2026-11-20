@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run Lint Suite
-        uses: eighteen73/github-actions/.github/actions/lint@main
+        uses: eighteen73/github-actions/.github/actions/lint@3387d9757c92b88919c82432cd65b9800ec99b82 # main on 20 Nov 2026; bump deliberately
         with:
           node-version-file: .nvmrc
 
