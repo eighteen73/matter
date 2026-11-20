@@ -52,4 +52,56 @@ describe('inertAround', () => {
 		release();
 		expect(inert()).toEqual(['main']);
 	});
+
+	describe('live regions', () => {
+		it('never makes a live region inert', () => {
+			const content = build();
+
+			document
+				.getElementById('main')
+				.insertAdjacentHTML(
+					'afterend',
+					'<div id="cart" aria-live="polite"></div><p id="status" role="status"></p><p id="alert" role="alert"></p><p id="log" role="log"></p>'
+				);
+
+			inertAround(content);
+
+			expect(inert().sort()).toEqual(['backdrop', 'header', 'main']);
+		});
+
+		it('makes inert the rest of a sibling that holds a live region', () => {
+			const content = build();
+			const main = document.getElementById('main');
+
+			main.innerHTML = `
+				<article id="article"><p id="text"></p></article>
+				<section id="wrap"><div id="announcer" aria-live="polite"></div><p id="more"></p></section>
+				<div id="loose"></div>`;
+
+			inertAround(content);
+
+			// The live region, and the chain down to it, stay live.
+			expect(inert().sort()).toEqual([
+				'article',
+				'backdrop',
+				'header',
+				'loose',
+				'more',
+			]);
+			expect(
+				document.getElementById('announcer').closest('[inert]')
+			).toBeNull();
+		});
+
+		it('releases what it made inert inside such a sibling', () => {
+			const content = build();
+
+			document.getElementById('main').innerHTML =
+				'<p id="a"></p><div role="status"></div>';
+
+			inertAround(content)();
+
+			expect(inert()).toEqual([]);
+		});
+	});
 });

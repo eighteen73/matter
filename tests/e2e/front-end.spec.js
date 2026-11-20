@@ -652,6 +652,41 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		}
 	});
 
+	test('a live region outside the panel keeps announcing while it is open', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		// Present before it opens, as a cart's or a router's are: one beside the
+		// page's content, one inside it.
+		await page.evaluate(() => {
+			document.body.insertAdjacentHTML(
+				'beforeend',
+				'<div id="live-outside" aria-live="polite"></div>'
+			);
+			document
+				.querySelector('main')
+				.insertAdjacentHTML(
+					'beforeend',
+					'<p id="live-in-main" role="status"></p>'
+				);
+		});
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
+
+		const inertIds = await page.evaluate(() =>
+			['live-outside', 'live-in-main'].map(
+				(id) => !!document.getElementById(id).closest('[inert]')
+			)
+		);
+
+		expect(inertIds).toEqual([false, false]);
+		// The rest of the page is still inert.
+		await expect(
+			page.locator('main > :not(#live-in-main)').first()
+		).toHaveJSProperty('inert', true);
+	});
+
 	test('a change of hash closes the panel', async ({ page }) => {
 		await page.goto(kitchenSink.link);
 		await page.locator('[aria-controls="test-nav"]').click();

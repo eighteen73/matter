@@ -7,10 +7,43 @@
  * `inert`. Only those that weren't inert already are touched, and releasing
  * removes exactly what was added, so an element someone else made inert stays
  * so.
+ *
+ * Live regions keep announcing: an element that is, or sits in, a live region
+ * (`aria-live`, `role` status, alert or log) is never made inert, and a
+ * sibling that only holds one is entered, so the rest of it is inert and the
+ * path to the region is not.
  */
 
 // Nothing to make inert, or that mustn't be.
 const SKIPPED = ['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT'];
+
+// What announces changes to assistive technology, which inert would silence.
+const LIVE = '[aria-live], [role="status"], [role="alert"], [role="log"]';
+
+/**
+ * Make an element inert, except live regions: one is left alone, and an
+ * element that holds one is entered, so what is around the region is inert.
+ *
+ * @param {Element}   element Element to make inert.
+ * @param {Element[]} changed Collects what was made inert.
+ */
+function silence(element, changed) {
+	if (
+		SKIPPED.includes(element.tagName) ||
+		element.hasAttribute('inert') ||
+		element.matches(LIVE)
+	) {
+		return;
+	}
+
+	if (element.querySelector(LIVE)) {
+		[...element.children].forEach((child) => silence(child, changed));
+		return;
+	}
+
+	element.setAttribute('inert', '');
+	changed.push(element);
+}
 
 /**
  * Make the surroundings of an element inert.
@@ -34,17 +67,9 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
 		}
 
 		[...parent.children].forEach((sibling) => {
-			if (
-				sibling === node ||
-				SKIPPED.includes(sibling.tagName) ||
-				sibling.hasAttribute('inert') ||
-				(keep && sibling.matches(keep))
-			) {
-				return;
+			if (sibling !== node && !(keep && sibling.matches(keep))) {
+				silence(sibling, changed);
 			}
-
-			sibling.setAttribute('inert', '');
-			changed.push(sibling);
 		});
 
 		node = parent;
