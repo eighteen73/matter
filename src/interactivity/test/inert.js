@@ -154,9 +154,10 @@ describe('inertAround', () => {
 			const pause = jest.fn(() => resumeTrap);
 			const stop = onModal(pause);
 			const dialog = withDialog() && document.getElementById('dialog');
-			const resume = suspendForModal(dialog);
+			const opener = document.getElementById('toggle');
+			const resume = suspendForModal(dialog, opener);
 
-			expect(pause).toHaveBeenCalledWith(dialog);
+			expect(pause).toHaveBeenCalledWith(dialog, opener);
 			expect(resumeTrap).not.toHaveBeenCalled();
 			resume();
 			expect(resumeTrap).toHaveBeenCalled();
