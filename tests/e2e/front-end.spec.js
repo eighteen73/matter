@@ -861,6 +861,31 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 		await expect(opener).toBeFocused();
 	});
 
+	test('Home and End in the lightbox go to the first and last image of the gallery', async ({
+		page,
+	}) => {
+		await page.goto(collectionsPage.link);
+
+		const lightbox = page.locator('#photos + dialog, #photos dialog');
+		const image = lightbox.locator('.wp-block-matter-gallery__figure img');
+
+		await page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 1 of 3' })
+			.click();
+		await expect(image).toHaveAttribute('alt', 'Photo one');
+
+		// Three images, two of them in the page: End is the one that isn't.
+		await page.keyboard.press('End');
+		await expect(image).toHaveAttribute('alt', 'Photo three');
+		await page.keyboard.press('ArrowLeft');
+		await expect(image).toHaveAttribute('alt', 'Photo two');
+		await page.keyboard.press('Home');
+		await expect(image).toHaveAttribute('alt', 'Photo one');
+		await page.keyboard.press('End');
+		await expect(image).toHaveAttribute('alt', 'Photo three');
+	});
+
 	test('"View all" without a lightbox shows the rest and moves focus to them', async ({
 		page,
 	}) => {

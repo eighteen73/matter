@@ -401,6 +401,13 @@ const { actions } = store('matter/gallery', {
 			} else if (event.key === 'ArrowRight') {
 				event.preventDefault();
 				actions.next();
+			} else if (event.key === 'Home' || event.key === 'End') {
+				// The first and last image of the gallery.
+				const context = getContext();
+
+				event.preventDefault();
+				context.index =
+					event.key === 'Home' ? 0 : context.images.length - 1;
 			}
 		}),
 		onBackdropClick: withSyncEvent((event) => {
