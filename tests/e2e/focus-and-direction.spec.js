@@ -152,6 +152,23 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 		await expect(toggle).toBeFocused();
 	});
 
+	test('opening an inline panel from a script does nothing, so narrowing leaves it closed', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+
+		await page.evaluate(() => window.matter.panel('test-nav').open());
+		await page.setViewportSize({ width: 760, height: 900 });
+		await expect(page.locator('#test-nav')).not.toHaveClass(/\bis-open\b/);
+		expect(
+			await page.evaluate(() => window.matter.panel('test-nav').isOpen)
+		).toBe(false);
+		await expect(page.locator('html')).not.toHaveClass(/has-panel-open/);
+	});
+
 	test('resizing to the inline layout with the panel open lets go without moving focus', async ({
 		page,
 	}) => {

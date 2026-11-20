@@ -294,6 +294,10 @@ const { state, actions } = store(
 				const { id } = getContext();
 
 				if (!state.panels[id].isOpen) {
+					if (!isCollapsed(id)) {
+						return;
+					}
+
 					openers.set(id, getElement().ref);
 				}
 
@@ -301,6 +305,10 @@ const { state, actions } = store(
 			},
 			open() {
 				const { id } = getContext();
+
+				if (!isCollapsed(id)) {
+					return;
+				}
 
 				openers.set(id, getElement().ref);
 				state.panels[id].isOpen = true;
@@ -388,6 +396,12 @@ const { state, actions } = store(
 				applyMode(ref, id, label);
 
 				const setOpen = (isOpen) => {
+					// An inline panel is always showing: opening it would only
+					// leave it half open when the viewport narrows.
+					if (isOpen && !isCollapsed(id)) {
+						return;
+					}
+
 					if (state.panels[id]) {
 						state.panels[id].isOpen = isOpen;
 					}
