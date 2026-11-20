@@ -97,11 +97,8 @@
 	object-position: var(--image-focal-point);
 }
 
-// (The featured image's is set by a rule from its edit component, as the
-// block isn't given the post's point.)
-.wp-block-post-featured-image img {
-	object-position: var(--image-focal-point, 50% 50%);
-}
+// (The featured image's is set by a rule from its edit component, only for a
+// post that has a point, as the block isn't given it.)
 
 // Slot labels (e.g. an overlay's "Trigger" and "Content" areas).
 .wp-block-matter-slot__label {

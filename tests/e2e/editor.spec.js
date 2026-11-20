@@ -1959,3 +1959,49 @@ test.describe('filters in the editor', () => {
 			.toBe('taxonomy:post_tag');
 	});
 });
+
+test.describe('focal point preview', () => {
+	test("the featured image block previews the post's point, and sets no position without one", async ({
+		admin,
+		editor,
+		requestUtils,
+	}) => {
+		const post = await requestUtils.rest({
+			path: '/wp/v2/posts',
+			method: 'POST',
+			data: {
+				title: 'Focal',
+				status: 'draft',
+				meta: { _thumbnail_focal_point: { x: 0.2, y: 0.8 } },
+			},
+		});
+		const styles = () =>
+			editor.canvas
+				.locator('style')
+				.evaluateAll((nodes) =>
+					nodes
+						.map((node) => node.textContent)
+						.filter((css) => css.includes('object-position'))
+				);
+
+		await admin.editPost(post.id);
+		await editor.insertBlock({ name: 'core/post-featured-image' });
+		await expect
+			.poll(styles)
+			.toEqual([expect.stringContaining('object-position:20% 80%')]);
+
+		// A post with no point has no such rule.
+		const plain = await requestUtils.rest({
+			path: '/wp/v2/posts',
+			method: 'POST',
+			data: { title: 'No focal', status: 'draft' },
+		});
+
+		await admin.editPost(plain.id);
+		await editor.insertBlock({ name: 'core/post-featured-image' });
+		await expect(
+			editor.canvas.locator('.wp-block-post-featured-image')
+		).toBeVisible();
+		expect(await styles()).toEqual([]);
+	});
+});
