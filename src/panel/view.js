@@ -36,6 +36,8 @@ import {
 	registerInstance,
 	registerType,
 } from '../interactivity/api';
+import { focused, isUsable } from '../interactivity/focus';
+import { inertAround } from '../interactivity/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 
 registerType('panel', '.matter-panel');
@@ -53,6 +55,16 @@ const owners = new Map();
 const registered = new Map();
 const watchers = new Map();
 
+// What makes everything around an open panel inert, to release on close.
+const releases = new Map();
+
+// The panels that are open, the last one on top: Escape closes that one.
+const stack = [];
+
+// The control that opened each panel, so focus can go back to it even where a
+// click doesn't focus a button (Safari), or the opener was made inert.
+const openers = new Map();
+
 const isCollapsed = (id) => queries.get(id)?.matches ?? true;
 
 const getContent = (panel) => panel.querySelector('.matter-panel__content');
@@ -60,6 +72,19 @@ const getContent = (panel) => panel.querySelector('.matter-panel__content');
 const getToggles = (id) => [
 	...document.querySelectorAll(`.matter-panel-toggle[aria-controls="${id}"]`),
 ];
+
+/**
+ * Where focus goes when a panel closes: the control that opened it, if it is
+ * still there; else the element focused before it opened; else the first
+ * visible toggle.
+ *
+ * @param {string}       id       Panel ID.
+ * @param {Element|null} opener   Control that opened it.
+ * @param {Element|null} previous Element focused before the panel opened.
+ * @return {Element|false} Element to focus.
+ */
+const returnTarget = (id, opener, previous) =>
+	[opener, previous, ...getToggles(id)].find(isUsable) || false;
 
 /**
  * Dialog semantics only apply while the panel is off-canvas.
@@ -96,15 +121,23 @@ const activate = (panel, id) => {
 
 	document.documentElement.classList.add(OPEN_CLASS);
 
-	const trap = createFocusTrap([content, ...getToggles(id)], {
+	// Where focus was when it opened, if not on the page itself.
+	const previous = focused();
+	const opener = openers.get(id) ?? null;
+
+	openers.delete(id);
+
+	// Only the dialog is exposed while it's open: the rest of the page (the
+	// toggle included; the close control is in the dialog) is inert. The
+	// backdrop stays live, as it takes the click that closes the panel.
+	releases.set(id, inertAround(content, { keep: '.matter-panel__backdrop' }));
+
+	const trap = createFocusTrap([content], {
 		allowOutsideClick: true,
 		escapeDeactivates: false,
 		returnFocusOnDeactivate: true,
-		setReturnFocus: (previous) =>
-			getToggles(id).includes(previous)
-				? previous
-				: getToggles(id).find((toggle) => toggle.checkVisibility?.()) ||
-					previous,
+		// Called after the page is live again (see deactivate()).
+		setReturnFocus: () => returnTarget(id, opener, previous),
 		initialFocus: () =>
 			[...content.querySelectorAll(FOCUSABLE)].find(
 				(element) =>
@@ -118,6 +151,7 @@ const activate = (panel, id) => {
 
 	traps.set(id, trap);
 	owners.set(id, panel);
+	stack.push(id);
 
 	// A panel taken out of the page while open (by a script, or a replacement
 	// the interactivity runtime never tears down) must let go of the scroll
@@ -132,24 +166,54 @@ const activate = (panel, id) => {
 	watchers.set(id, watcher);
 
 	// Wait a frame so the panel is visible before moving focus into it.
-	window.requestAnimationFrame(() => trap.activate());
+	window.requestAnimationFrame(() => {
+		if (traps.get(id) === trap) {
+			trap.activate();
+		}
+	});
 	emit(panel, 'panel', 'open');
 };
 
-const deactivate = (panel, id, { silent = false } = {}) => {
+/**
+ * @param {Element} panel                Panel element.
+ * @param {string}  id                   Panel ID.
+ * @param {Object}  options
+ * @param {boolean} options.silent       Don't announce the close.
+ * @param {boolean} options.restoreFocus Move focus back to what opened it.
+ *                                       Not when the panel goes inline: it
+ *                                       is still there, so focus stays.
+ */
+const deactivate = (
+	panel,
+	id,
+	{ silent = false, restoreFocus = true } = {}
+) => {
 	// Only the panel that holds the trap lets go of it.
 	if (!traps.has(id) || owners.get(id) !== panel) {
 		return;
 	}
 
-	// Traps inside (e.g. a drill-down menu's) let go first, without moving
-	// focus, so focus goes back to the toggle, not into the closing panel.
-	releaseTrapsWithin(panel);
-	traps.get(id).deactivate();
+	// Traps inside its content (e.g. a drill-down menu's) let go first,
+	// without moving focus, so focus goes back to the toggle, not into the
+	// closing panel.
+	releaseTrapsWithin(getContent(panel) ?? panel);
+
+	// The page is live again before focus goes back to the toggle: an inert
+	// element can't take it.
+	releases.get(id)?.();
+	releases.delete(id);
+
+	traps.get(id).deactivate({ returnFocus: restoreFocus });
 	traps.delete(id);
 	owners.delete(id);
 	watchers.get(id)?.disconnect();
 	watchers.delete(id);
+
+	const position = stack.lastIndexOf(id);
+
+	if (position > -1) {
+		stack.splice(position, 1);
+	}
 
 	if (!traps.size) {
 		document.documentElement.classList.remove(OPEN_CLASS);
@@ -174,11 +238,16 @@ const { state, actions } = store(
 			toggle() {
 				const { id } = getContext();
 
+				if (!state.panels[id].isOpen) {
+					openers.set(id, getElement().ref);
+				}
+
 				state.panels[id].isOpen = !state.panels[id].isOpen;
 			},
 			open() {
 				const { id } = getContext();
 
+				openers.set(id, getElement().ref);
 				state.panels[id].isOpen = true;
 			},
 			close() {
@@ -187,7 +256,15 @@ const { state, actions } = store(
 				state.panels[id].isOpen = false;
 			},
 			onKeydown: withSyncEvent((event) => {
-				if (event.key !== 'Escape' || !state.isOpen) {
+				const { id } = getContext();
+
+				// Only the topmost open panel answers Escape.
+				if (
+					event.key !== 'Escape' ||
+					event.defaultPrevented ||
+					!state.isOpen ||
+					stack[stack.length - 1] !== id
+				) {
 					return;
 				}
 
@@ -196,6 +273,15 @@ const { state, actions } = store(
 				const dialog = event.target.closest?.('dialog[open]');
 
 				if (dialog && getElement().ref.contains(dialog)) {
+					return;
+				}
+
+				// Nor does it close with a submenu open in it: the menu closes
+				// that first (its own Escape handling), then the next Escape
+				// closes the panel.
+				if (
+					getElement().ref.querySelector('.matter-menu__item.is-open')
+				) {
 					return;
 				}
 
@@ -318,7 +404,9 @@ const { state, actions } = store(
 				if (state.panels[id]?.isOpen && isCollapsed(id)) {
 					activate(ref, id);
 				} else {
-					deactivate(ref, id);
+					// Closed because the viewport went inline: nothing to go
+					// back to, and focus isn't moved.
+					deactivate(ref, id, { restoreFocus: isCollapsed(id) });
 				}
 			},
 		},
