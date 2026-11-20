@@ -376,6 +376,31 @@ describe('the head stub marks the page', () => {
 		expect(html.classList.contains('matter-late')).toBe(true);
 	});
 
+	it('waits for the page to be parsed while it is loading: no matter-late before DOMContentLoaded plus four seconds', () => {
+		jest.useFakeTimers();
+
+		const state = jest
+			.spyOn(document, 'readyState', 'get')
+			.mockReturnValue('loading');
+
+		// eslint-disable-next-line no-eval -- The script PHP prints.
+		window.eval(stubScript());
+
+		const html = document.documentElement;
+
+		// However long the parse takes, the clock hasn't started.
+		jest.advanceTimersByTime(60000);
+		expect(html.classList.contains('matter-late')).toBe(false);
+
+		document.dispatchEvent(new window.Event('DOMContentLoaded'));
+		jest.advanceTimersByTime(3999);
+		expect(html.classList.contains('matter-late')).toBe(false);
+		jest.advanceTimersByTime(1);
+		expect(html.classList.contains('matter-late')).toBe(true);
+
+		state.mockRestore();
+	});
+
 	it('starts the four seconds at once when the page has already been parsed', () => {
 		jest.useFakeTimers();
 		// No DOMContentLoaded is coming: the script is running after it.

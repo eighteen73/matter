@@ -65,6 +65,34 @@ class ContractMarkupTest extends TestCase {
 	}
 
 	/**
+	 * Each tab button is named by its panel's ID plus `-tab` and controls that
+	 * panel (the script's `aria-labelledby` for the panel is built from the same
+	 * ID), so the pair can't drift apart.
+	 *
+	 * @return void
+	 */
+	public function test_tab_and_panel_ids_pair_up(): void {
+		$html = $this->render(
+			'<!-- wp:matter/tabs {"anchor":"pairs","label":"Pairs"} -->'
+			. '<!-- wp:matter/tab {"label":"Size"} --><!-- wp:paragraph --><p>Large</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->'
+			. '<!-- wp:matter/tab {"label":"Colour"} --><!-- wp:paragraph --><p>Blue</p><!-- /wp:paragraph --><!-- /wp:matter/tab -->'
+			. '<!-- /wp:matter/tabs -->'
+		);
+
+		preg_match_all( '/<button[^>]*role="tab"[^>]*id="([^"]+)-tab"[^>]*aria-controls="([^"]+)"/', $html, $tabs, PREG_SET_ORDER );
+
+		$this->assertCount( 2, $tabs );
+
+		foreach ( $tabs as $tab ) {
+			$this->assertSame( $tab[1], $tab[2], 'the tab controls the panel it is named for' );
+			$this->assertStringContainsString( 'id="' . $tab[1] . '"', $html, 'and that panel exists' );
+			$this->assertStringContainsString( '"tabId":"' . $tab[1] . '"', $html, 'with the tab ID the script pairs them by' );
+		}
+
+		$this->assertNotSame( $tabs[0][1], $tabs[1][1] );
+	}
+
+	/**
 	 * Carousel with the default variant, and a moving one (play button added).
 	 *
 	 * @return void

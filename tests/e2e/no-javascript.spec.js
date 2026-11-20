@@ -599,7 +599,9 @@ test.describe('the gate follows the scripts, not the clock', () => {
 		});
 		await expect(page.locator('html')).toHaveClass(/matter-js/);
 		await expect(page.locator('html')).not.toHaveClass(/matter-late/);
-		await page.clock.fastForward(5000);
+		await page.clock.fastForward(3500);
+		await expect(page.locator('html')).not.toHaveClass(/matter-late/);
+		await page.clock.fastForward(1500);
 		await expect(page.locator('html')).toHaveClass(/matter-late/);
 		await expect(page.getByText('Second answer')).toBeVisible();
 	});
