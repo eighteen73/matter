@@ -14,11 +14,13 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 
 ## Requirements
 
-- WordPress 7.1+
+- WordPress 7.1+ (from 7.1 beta 1: an alpha build of 7.1 may not have the icon registry Matter uses, so it is refused like an older version; betas, release candidates and later versions' alphas are fine)
 - PHP 8.3+
-- WooCommerce 11+, only for the WooCommerce integration (older versions switch it off, with an admin notice)
+- WooCommerce 11+, only for the WooCommerce integration (an older version switches it off, with a notice for users who can activate plugins)
 
-On an older PHP or WordPress, Matter loads nothing and shows an admin notice. Its Composer package turns off Composer's platform check (`config.platform-check`), so that this notice appears instead of a fatal error from the autoloader.
+On an older PHP or WordPress, Matter loads nothing and shows an admin notice. The check runs before anything else loads, and Matter's Composer package turns off Composer's platform check (`config.platform-check`), so that this notice appears instead of a fatal error from the autoloader.
+
+**Who can do what.** Matter adds no roles. Editing content needs `edit_posts` (Contributors and up), and so do the editor's REST routes (`matter/v1/template-part`, `loop-items`, `query-display`). Archive entries and their picker (`matter/v1/archive-targets`) need an Editor (`edit_pages`). **Site details** and the megamenu fields in Appearance › Menus need `edit_theme_options` (`matter_settings_capability` changes the first): Administrators have it, Editors don't, unless the project gives it to them. `matter/v1/live` is public, and answers for the visitor asking.
 
 ## Installing
 
@@ -35,6 +37,15 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 ### Upgrading from 0.x
 
 1.0 is not compatible with 0.x content: blocks were merged, renamed or removed. Keep existing sites on 0.x (`"eighteen73/matter": "^0.7"` does not resolve to 1.0).
+
+### Upgrading within 1.x
+
+Updating Matter within 1.x (`^1.0`) doesn't break a theme or saved content: what the [theme contract](#theme-contract) lists stays as it is. A minor or patch release may:
+- **add** blocks, options, hooks, classes, CSS variables and editor features (a new element or state class in existing markup, a new argument at the end of a hook);
+- **fix bugs**, accessibility failures included, and change markup or the default skin to do it. The skin (everything in `:where()`) otherwise changes only in a major version, and every change to it, in any release, is listed under **Visual changes** in the [changelog](CHANGELOG.md): read that list when updating, as a theme that relies on the skin sees it;
+- **change anything the contract doesn't list**: editor internals, PHP classes, script modules (`matter/inert`, `matter/focus-trap`), hooks that aren't in the [Hooks](#hooks) list, the carousel's `embla` and `reInit()`, and generated names such as `is-types-{hash}`.
+
+It may not rename or remove anything the contract lists (a block, attribute, hook, function, class, variable or stored key a theme or content uses), change a hook's arguments or a stored format, or change saved content so that it needs migrating. Those wait for 2.0, with a changelog entry, and a migration command if saved content is affected.
 
 ## Blocks
 
@@ -211,9 +222,10 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 **Supports options:**
 - `scheme`: adds the colour scheme control.
 - `align: "full"`: full-width band (`alignfull`).
-- `tagName`: element for the default renderer.
+- `tagName`: element for the default renderer (`section` by default). It is the section's choice, and a custom `render.php` may use another, so theme CSS should select the block's class (`.wp-block-pulsar-hero`), not `section.…`.
 - `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card), saved in the block's `matterLink` attribute (`{ url, opensInNewTab }`). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable (they get `position: relative; z-index: 2` at zero specificity: a theme positioning its own, such as a wishlist button in a corner, keeps a `z-index` above 1). Without a heading, a visually hidden link is added, named after the block's first paragraph (shortened) or first image description, else "Read more" (`matter_link_label` filter). A link that opens in a new tab says so: the hidden link has it in its name, and a heading link is described by a `<span class="matter-link__cue" hidden>` right after the heading (`aria-describedby`), so the heading's own text stays clean. The cue stays hidden whatever a theme's rules for `span` or `> *` say (`:where(.matter-link__cue[hidden]){display:none!important}`), but it is an element of the block, so a theme's `:last-child` or `:nth-child` rules on the block's children count it (it follows the heading, and is the block's last child when the heading is). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
 - `slots`: per slot (named with letters, numbers, hyphens and underscores only: another name is reported as incorrect usage when the block registers, and never matches its content), `allowedBlocks`, `template`, `templateLock`, `previously` (old names, for a renamed slot) and `alignments`.
+  - `allowedBlocks` limits what the editor offers in the slot, and nothing else: content already saved, a pattern or template inserted into it, or a post written through the REST API isn't filtered on the server.
   - `alignments` lists the alignments blocks in the slot offer on their toolbar, for blocks that support them, e.g. `[ "wide", "full" ]` (a carousel, gallery, tabs, accordion, image or video wider than the text around it). Without it they offer left, centre and right. The theme styles them in the slot (`.wp-block-{section}__{slot} > .alignwide`); a slot isn't a WordPress layout, so core's alignment styles don't apply.
 
 **Variants.** A section's variants are block styles, `styles` in its `block.json` (or `register_block_style()` in PHP), styled as `.is-style-{name}`. Don't register a variant only in JavaScript (`registerBlockStyle`). The server doesn't know about it, so the front end treats it as a variant that no longer exists and adds the default's class as well:
@@ -232,7 +244,7 @@ The default (`isDefault`) gets its class too, `is-style-default`, on the front e
 - **Rename** a slot by listing its old name: `"image": { "previously": [ "media" ] }`. Content saved under the old name shows in the slot at once, and moves to the new name when the page is next edited and saved.
 - **Remove** a slot and its content stops showing on the site. The editor keeps the content, marked as no longer shown, so the client can move it into another slot or remove it.
 
-An unlocked slot is filled from its `template` when it's created; if the client empties it, it stays empty. A slot with `templateLock` keeps its template's blocks.
+An unlocked slot is filled from its `template` when it's created; if the client empties it, it stays empty. A slot with `templateLock` keeps its template's blocks. What a locked slot does when its template changes after content was saved: a block the template **adds** is added to existing content the next time it is edited; but a template that would replace a saved block with one of another type (or a saved block's inner blocks with fewer) is not applied, so saved blocks are never overwritten. The slot keeps what was saved, and the new template applies to new sections.
 
 **Locking a slot.** Use `"all"` to fix a slot's blocks (exactly one image, say) or `"insert"` to fix their number but allow reordering. Both leave the blocks' own settings in place. Avoid `"contentOnly"`: core then hides the blocks' settings (an image's focal point, its menu) behind an "Edit pattern" button that clients don't find, and the slot's `allowedBlocks` already limits what goes in.
 
@@ -387,12 +399,16 @@ document.addEventListener( 'matter-tabs-change', ( event ) => {
 | Accordion | `accordion` | `open( item )`, `close( item )`, `toggle( item )` (index or item ID), `openAll()`, `closeAll()`, `isOpen( item )` | `items` (`{ index, id, title, isOpen }`) | `accordion-open`, `accordion-close` (`itemId`, `index`) |
 | Gallery | `gallery` | `open( index )`, `close()`, `next()`, `prev()` (the lightbox) | `isOpen`, `index`, `count` | `gallery-open`, `gallery-change`, `gallery-close` (`index`) |
 | Modal, drawer, collapsible | `overlay` | `open()`, `close()`, `toggle()`, `next()`, `prev()` (grouped modals), `closeAll()` (every overlay on the page) | `id`, `isOpen` | `overlay-open`, `overlay-close` |
-| Panel | `panel` | `open()`, `close()`, `toggle()` | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
+| Panel | `panel` | `open()`, `close()`, `toggle()` (`open()` and `toggle()` do nothing while the panel is inline, above its breakpoint: it is always showing, and would be left half open when the screen narrows) | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
 | Filters | `filters` | `set( filterId, values )`, `clear()` | `id` (the listing's `queryId`), `selection` (each filter's `values`, `min`, `max`, `operator`) | `filters-change` (`url`) |
 
 Every instance also has `element` and `id`, and every block dispatches `matter-{block}-ready` when it starts. Events bubble from the block's element, and every one has `detail.id` (the element's ID, or `null`) and `detail.instance` (the block's instance; `null` only before it has started), plus the details in the table. A dialog's `overlay-open` fires once it is shown (including an open from the URL hash on load), and `overlay-close` once it is closed; a collapsible's when it opens and closes. Panels and overlays dispatch like every other block.
 
-**Not part of the API:** the carousel's Embla instance (`embla`) and `reInit( options )` are available for now but may change with the carousel library; and nothing on `window.matter` starts with an underscore (Matter keeps its own state out of reach).
+**Not part of the API:**
+- The carousel's Embla instance (`embla`) and `reInit( options )` are available for now but may change with the carousel library.
+- Anything else on `window.matter` that isn't in the tables above. Matter's own state (the stub's queue, the shared registry of instances) is kept under `window.matter[ Symbol.for( 'matter' ) ]`, so nothing on `window.matter` itself starts with an underscore, and a theme that enumerates it sees only the API.
+- The other globals, which are for Matter's editor and admin screens: `window.matterEditor` (only `queryDisplay` is for integrations, see [Integrations](#integrations)), `window.matterSettings`, `window.matterGravityForm` and `window.matterActiveTabContext`.
+- The script modules Matter registers for its own blocks to share (`matter/focus-trap`, `matter/inert`, and the others loaded by their blocks): one copy each per page, so a modal can tell an open panel to let go of the page. A theme script shouldn't import them. (`matter/filters`' `registerProvider()` and `matter/live` are documented with their features.)
 
 Scripts built with the Interactivity API can use the stores instead: `store( 'matter/carousel' ).actions.goTo( 'hero', 2 )` (and `reInit( target, options )`), and likewise `matter/tabs` (`select`, `next`, `prev`), `matter/accordion` (`open`, `close`, `toggle`, `openAll`, `closeAll`), `matter/gallery` (`open`, `close`, `next`, `prev`) and `matter/overlay` (`open`, `close`, `toggle`, `next`, `prev`, `closeAll`), each taking the target (an ID or element) first. (The carousel store's `reInit( target, options )` is as unstable as the method.)
 
@@ -494,7 +510,7 @@ The panel sits in `.matter-menu__panel`; give it a width beside the columns, e.g
 **Accessibility:**
 - Arrow, Home and End keys move between items (not inside a field, such as a search in a megamenu panel); Escape closes the innermost submenu, and closes open dropdowns wherever focus is. Left and Right follow the screen: in a right-to-left menu (the direction is the menu's own, so a right-to-left section in a left-to-right page works) Left is the next item. A dropdown that would run off the inline end of the screen (the right edge, or the left in a right-to-left menu) opens the other way.
 - Drill-down panels trap focus, and expose only the open level: while a submenu is open the level it covers (the other items, its toggle) is `inert`, and focus is on its Back button, whose name says which level it is. Back, Escape, closing the panel and a change of menu type all put it back. The panel's "Close menu" button stays exposed and in the Tab cycle (after the open level's controls), so closing the whole menu from a submenu is a Tab away.
-- `aria-expanded` and `inert` are rendered on the server.
+- `aria-expanded` is rendered on the server. A closed submenu is `inert` once the script has started, not before (see [Without JavaScript](#without-javascript)).
 - The default skin gives toggles, back buttons and links at least a 24px target (WCAG 2.5.8).
 
 Filters: `matter_menu_args`, `matter_menu_back_text`, `matter_menu_view_all_text`, `matter_megamenu_panels`.
@@ -512,7 +528,7 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 
 - **A panel rendered twice** (a template part used in two places) gets `site-nav`, then `site-nav-2`, and each toggle controls its own: the panel rendered after it (toggle then panel, as above) or, when the panel is already on the page, the latest one. Toggles that follow each other with no panel between them share a panel. An extra toggle for a panel, rendered after that panel's own toggle and the panel, points at the next repeat: render it next to the first toggle, or give the panel its own ID.
 - **Arguments** (both functions): `collapse_below` (a breakpoint; empty for always off-canvas); for `panel()`, `position` (`end`, the default, `start` or `top`: where it comes in from; start and end are the left and right in left-to-right languages), `label`, `close_label` and `class`.
-- **Off-canvas:** a dialog (`role="dialog"`, `aria-modal`) with a focus trap, Escape to close, backdrop, scroll lock and a close button, which is inside the dialog, not part of the page. It sits below the admin bar. While it is open the rest of the page is `inert` (its toggle included), so only the dialog is exposed to assistive technology; what was inert before stays so, and Matter's `inert` comes off exactly where it went on. Following a link inside it (except into a new tab, or a link to a modal on the page, which opens over the panel as a button does), or a `#hash` change, closes it. Escape closes a submenu open in it first, a modal opened from it, then the panel, and with several panels open only the topmost. When it closes, focus returns to the control that opened it (its toggle, even in Safari, where a click doesn't focus a button), even with a drill-down submenu open. When the screen grows past the breakpoint with it open, it closes and focus stays where it was.
+- **Off-canvas:** a dialog (`role="dialog"`, `aria-modal`) with a focus trap, Escape to close, backdrop, scroll lock and a close button, which is inside the dialog, not part of the page. It sits below the admin bar. While it is open the rest of the page is `inert` (its toggle included), so only the dialog is exposed to assistive technology; what was inert before stays so, and Matter's `inert` comes off exactly where it went on. Live regions keep announcing (`aria-live` other than `off`, `role="status"`, `alert` or `log`): an element that is, or sits in, one isn't made inert, nor is a modal or an open dialog already on the page (a cookie banner that is a dialog or a live region), while a banner that is a plain element is inert behind the panel, as it would be behind a native modal dialog; a modal opened from the panel (a button or a link in it) works as usual, and the panel's trap rests until it closes. The same holds for a drill-down menu's open level (`matter/inert` holds both). Following a link inside it (except into a new tab, or a link to a modal on the page, which opens over the panel as a button does), or a `#hash` change, closes it. Escape closes a submenu open in it first, a modal opened from it, then the panel, and with several panels open only the topmost. When it closes, focus returns to the control that opened it (its toggle, even in Safari, where a click doesn't focus a button), even with a drill-down submenu open. When the screen grows past the breakpoint with it open, it closes and focus stays where it was.
 - **Inside a panel:** `.is-panel-only` and `.is-inline-only` show content in one mode only.
 - **Events:** `matter-panel-open` and `matter-panel-close`, with `detail.id` and `detail.instance`.
 
@@ -539,8 +555,8 @@ add_filter( 'matter_settings_fields', fn() => [
 - `repeater` (with `fields`)
 
 **Reading values:**
-- In PHP: `Eighteen73\Matter\setting( 'contact.phone' )`.
-- In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links.
+- In PHP: `Eighteen73\Matter\setting( 'contact.phone' )`. The value is as stored, **not escaped** (a `textarea` keeps its line breaks and any characters typed): escape it where you print it (`esc_html()`, `esc_url()`, `esc_attr()`). An unknown path, or an empty value, gives the default you pass.
+- In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Bound values are escaped for you (a `textarea` keeps its line breaks), and an unknown key, or a repeater, gives nothing, so the block keeps its own content. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links, and a `url` field is made safe (relative addresses stay relative).
 
 Hooks:
 - `matter_settings_page_title`: the page and menu title (default "Site details").
@@ -614,6 +630,8 @@ add_filter( 'matter_icon_theme_collection', fn( $icons ) => [ ...$icons, 'label'
 ```
 
 `directories` changes the folders.
+
+The icons are registered on `init`, on every request, so core's Icon block and `wp_get_icon()` find them too. WordPress cleans each SVG as it registers it: only `svg`, `path` and `polygon` elements survive, with a handful of attributes (`class`, `viewBox`, `width`, `height`, `fill`, `fill-rule`, `d`, `points`, `transform`), so draw icons as filled paths (outline strokes, circles, rectangles, groups, gradients and `style` are dropped). An icon has no size or colour of its own: Matter renders the SVG with its own `width` and `height`, and the theme sets size and colour in CSS (`.wp-block-button__icon`, `.wp-block-matter-tabs__icon`, with `fill: currentColor`).
 
 ## Core block extensions
 
@@ -873,6 +891,28 @@ Themes restyle Matter with plain class selectors, wherever their stylesheet load
 - Private helpers a block computes for itself are `--_{block}-{name}` (`--_gallery-columns`). Themes don't set these.
 - A value used once is written as a property, not a variable.
 
+## CSS classes
+
+The classes a theme styles, by block (the markup is checked by snapshot tests: see the [theme contract](#theme-contract)). Elements are `.wp-block-matter-{block}__{element}`; a class that is only on while something is true (`is-open`) is a state, set by PHP or the script. Anything not listed here (the editor's own classes, `is-types-{hash}` on a responsive menu, the `is-collapsed` and `is-expanded` placeholders in a component's generated CSS, `is-initialised` and `is-measuring`) is internal and may change in any release. [Filters](#filters), [Live blocks](#live-blocks) and the [CSS variables](#css-variables) are listed with their features.
+
+| Block | Elements | On the block, and states |
+| --- | --- | --- |
+| Accordion | The item is `.wp-block-matter-accordion-item`, with `__heading`, `__toggle` (the button), `__title`, `__panel` and `__content` | Item: `is-open`. An item the accordion opens by default has it before the script runs. |
+| Tabs | `__nav`, `__list` (the tab list), `__tab` (a button, `aria-selected`), `__label` (in a tab button, and in the dropdown's `__current`), `__toggle` and `__current` (the dropdown button and the tab it shows), `__icon`, `__panels`; a panel is `.wp-block-matter-tab` with `__label` (its name without JavaScript) | `is-vertical`, `has-dropdown`, `has-dropdown-below-{breakpoint}`, `is-menu-open` (dropdown open). Panel: `is-active`. |
+| Carousel | `__stage`, `__viewport`, `__track`, `__controls` (`.is-before`, `.is-stage` or `.is-after`) and its parts (see [Variants](#variants)): `__prev`, `__next`, `__dots` and `__dot`, `__progress` and `__progress-bar`, `__timer` and `__timer-bar`, `__counter` (`-current`, `-separator`, `-total`), `__play`, `__thumbnails` and `__thumbnail`, `__expand` | `is-style-{variant}`, `is-query` (the slides are a query's items), `has-image-aspect-ratio`, and the state classes under [Variants](#variants). |
+| Gallery | `__items`, `__open` (a figure's enlarge button), `__more` ("View all"), `__caption-toggle`, and the lightbox: `__lightbox` (the dialog), `__close`, `__figure`, `__nav`, `__prev`, `__counter`, `__next` | `is-grid` or `is-carousel`; `has-columns` and `has-columns-{n}`; `has-captions-{tooltip,overlay,hidden}`. Lightbox: `[open]`, `is-closing`. |
+| Modal | `.wp-block-matter-modal` is the `<dialog>`; around it `.wp-block-matter-modal-host` holds the trigger area `__trigger` (and the dialog); in the dialog `__close`, `__content` and, for a group, `__group-nav`, `__previous`, `__position`, `__next` | `[open]`, `is-closing`, `is-switching-in` and `is-switching-out` (between grouped modals). |
+| Drawer | The same: `.wp-block-matter-drawer`, `-host`, `__trigger`, `__close`, `__content` | `is-position-start` or `is-position-end`; `[open]`, `is-closing`. |
+| Collapsible | `.wp-block-matter-collapsible`, `__trigger`, `__content` | `is-open`. |
+| Section | `.wp-block-{section}__inner`, and each slot `.wp-block-matter-slot.wp-block-{section}__{slot}` | `is-section`, `has-scheme` and `has-scheme-{slug}`, `is-style-{variant}` (the default's too), `alignfull`; slot: `is-empty`. |
+| Whole-block link | `.matter-link` (the link), `.matter-link__cue` (the new-tab description) | `has-link`. |
+| Button icon | `.wp-block-button__icon` in the link | `has-icon` on the link. |
+| Menu | `.matter-menu` (the `<nav>`), `__items`, `__item` (each `<li>`), `__link` (`is-label` for an item with no address), `__toggle` and `__toggle-text`, `__submenu`, `__submenu-header`, `__back` and `__back-text`, `__parent-label`, `__view-all`, `__submenu-items`, `__description`, and in a megamenu `__columns`, `__column-items` and `__panel` | `matter-menu--{location}`; `is-horizontal` or `is-vertical`; `opens-on-hover` or `opens-on-click`; `is-type-{dropdown,accordion,drill-down}` (a responsive menu has `is-type-responsive` instead). Item: `has-submenu`, `is-open`, `is-column`, `is-megamenu` with `is-megamenu-{content,wide,full}`. Dropdown submenus: `is-positioned`, `is-flipped` (opened the other way) and `is-scrollable` (taller than the room, so it scrolls). |
+| Panel | `.matter-panel` (the container), `__backdrop`, `__content` (the dialog), `__close` and `__close-label`; toggle: `.matter-panel-toggle`, `__icon` (the three bars) and `__label` | Panel: `is-panel-{breakpoint}` (`is-panel-always` without one), `is-from-{start,end,top}`, `is-open`. Toggle: `is-panel-{breakpoint}`, `has-hamburger`, `has-hidden-label`, `is-active` while its panel is open. Inside a panel: `is-panel-only`, `is-inline-only`. |
+| Page | | `<html>`: `matter-js`, `matter-late`, `matter-ready-{type}`, `has-overlay-open` (a modal or drawer is open), `has-panel-open`, `has-scroll-gutter` (see Accessibility under [CSS conventions](#css-conventions)). |
+
+Any interactive block also gets `is-enhanced` once its script has started (see [Without JavaScript](#without-javascript)).
+
 ## CSS variables
 
 ### Menu
@@ -1025,9 +1065,24 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 
 - **Block names and attributes** saved in templates and content: `matter/*` blocks, `matterDisplay` (`type`, `style`, `scheme` and the block's settings) on queries (Query Loop, Product Collection, and `core/terms-query` as a carousel), the posts variations' `namespace` (`matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`) and the products carousel's `collection: matter/product-collection/carousel`.
 - **Theme files Matter looks for:** `template-parts/{slug}.php` (with `Title:` headers, and the block's context as `$args`), `template-parts/megamenu/*.php`, `assets/svg/icons/*.svg`, and the loop item patterns (`{namespace}/loop-item-{post_type}`, `{namespace}/loop-item`, and `-carousel`, `-accordion` and `-tabs` ones, with `-{variant}` after those for a variant; for terms `{namespace}/loop-item-term-{taxonomy}`, `{namespace}/loop-item-term` and their `-carousel` ones; in the order under [Loop items](#loop-items)).
-- **Hooks and functions** in this README (the [Hooks](#hooks) list and the Filters, Live blocks and Prerendered sections: `matter_*`, and `menu()`, `panel()`, `panel_toggle()`, `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
-- **Markup theme CSS targets:** the block classes and BEM elements named in this README (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track, whose list has the class `matter-query-list` (`.matter-query-list > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list, `.matter-query-list`), state classes (`is-*`, `has-*`), live block placeholders (`.matter-live.is-{block}`, `data-matter-live`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
+- **Hooks and functions** in this README (the [Hooks](#hooks) list and the Filters, Live blocks and Prerendered sections: `matter_*`, and `menu()`, `panel()`, `panel_toggle()` (with `get_menu()`, `get_panel()` and `get_panel_toggle()`, which return the HTML), `setting()`, `slots()` and `theme_namespaces()` in the `Eighteen73\Matter` namespace), and the `matter/setting` and `matter/archive` bindings sources.
+- **Markup theme CSS targets:** the block classes and BEM elements in [CSS classes](#css-classes) and the other sections (e.g. `.wp-block-matter-carousel__viewport` and `__track`; in a posts, products or terms carousel the slides are the items of the post, product or term template inside the track, whose list has the class `matter-query-list` (`.matter-query-list > li.wp-block-term` for terms); in an accordion or tabs of posts the items are inside the post template's list, `.matter-query-list`), state classes (`is-*`, `has-*`), live block placeholders (`.matter-live.is-{block}`, `data-matter-live`), the `--scheme--*` roles, the `--wp--custom--scheme--{slug}--{role}` variables they're read from (for schemes in `theme.json`) and the variables under [CSS variables](#css-variables).
 - **Icon names** (`{collection}/{icon}`), saved in content (a button's `matterIcon`, a tab's `icon`).
+- **Stored data**, which content and the database hold and a theme may read:
+
+  | Where | Key | Value |
+  | --- | --- | --- |
+  | Block attributes (saved in content) | `matterId` (tabs, accordions, query displays), `overlayId` (modals, drawers, collapsibles), `matterLink` (`{ url, opensInNewTab }`), `matterIcon` (button), `icon` (tab), `matterDisplay` (queries), `scheme`; and the HTML anchor | An ID or name as described with each block; the only IDs that stay the same (see [IDs are unique on a page](#blocks)). |
+  | Post meta on posts with a featured image | `_thumbnail_focal_point` | `{ "x": 0.2, "y": 0.8 }`, each 0 to 1: the featured image's focal point. Registered, with REST access, for post types that support thumbnails. |
+  | Post meta on menu items | `_matter_megamenu` | `1` when the top-level item is a megamenu (absent otherwise). |
+  | | `_matter_megamenu_width` | `content`, `wide` (the default) or `full`. |
+  | | `_matter_megamenu_panel` | A panel's slug, a file in `template-parts/megamenu/` (the file name without `.php`). |
+  | Archive entries (post type `matter_archive`) | `_matter_archive_target` | Which archive the entry is for: `post_type:{name}` (`post_type:product`), `taxonomy:{name}` (all terms), `term:{taxonomy}:{id}` (`term:product_cat:42`), `author`, `date`, `search` or `404`. |
+  | | `_matter_archive_cascade` | `1` when it also shows further down: a term's on its child terms, a post type's on its category and tag pages (and, for the blog, author and date archives). |
+  | Option | `matter_site_settings` | The site details, `{ section: { field: value } }` as the settings fields declare them, sanitised on save and merged over what is stored (a save leaves out nothing it isn't sent). |
+  | Browser `localStorage` | `matter_overlay_dismissed_{overlayId}` | A time in milliseconds (`Date.now()`) until which a dismissed overlay stays closed after its automatic open ("stay closed for N days"). Only for an overlay with a saved ID. |
+
+  A change to any of these is a breaking change, so it waits for a major version.
 
 **The default skin** (everything in `:where()`) is minimal: what a block needs to be usable and accessible on a theme with no styles for it (unstyled buttons, icons, the scheme's background and text colours, a backdrop, spacing, motion). It isn't a design: no radii, shadows, font weights or decorative borders. Themes are expected to style every Matter block they use (Pulsar ships base styles for each), and not to rely on the skin.
 
@@ -1071,4 +1126,6 @@ PHPUnit never loads WooCommerce (its tables have their own prefix, where no plug
 
 CI runs the linters and all three suites on pushes to `next` and pull requests (with PHPUnit and the browser smoke specs again on the site without WooCommerce), and weekly against WordPress nightly and the latest WooCommerce (`.github/workflows/compatibility.yml`).
 
-Lefthook runs the linters on commit. `npm install` sets up the hook only in Matter's own repository (`bin/install-hooks.js`, using lefthook from npx), so building Matter inside a project leaves the project's hooks alone. If commits stop running the linters ("Can't find lefthook"), run `npm run prepare`. Pushing to `main` builds and tags a release (see `.github/workflows/release.yml`). See [CHANGELOG.md](CHANGELOG.md).
+Lefthook runs the linters on commit. `npm install` sets up the hook only in Matter's own repository (`bin/install-hooks.js`, using lefthook from npx), so building Matter inside a project leaves the project's hooks alone. If commits stop running the linters ("Can't find lefthook"), run `npm run prepare`. **Dependencies are locked** by `package-lock.json` and `composer.lock` (CI installs with `npm ci`), and the shared GitHub workflows (`release.yml`, `lint.yml`) are referenced by commit, not branch, so a change to their repository can't change Matter's release: bump the commit deliberately.
+
+**Releasing.** Pushing to `main` runs the shared release workflow (`.github/workflows/release.yml`), which builds with Node 26, installs Composer's production dependencies (`--no-dev --optimize-autoloader`) and updates the built `release` branch, with `build/` and `vendor/` committed, and tags the release. Before merging one, run `npm run make-pot` and complete the [changelog](CHANGELOG.md): new hooks, renames and every change to the skin.

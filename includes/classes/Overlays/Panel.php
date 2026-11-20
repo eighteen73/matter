@@ -7,10 +7,13 @@
  * a drawer on mobile and part of the header on desktop:
  *
  *     Trigger::button( 'site-nav', [ 'collapse_below' => 'lg' ] );
- *     Panel::render( 'site-nav', fn() => matter_menu( [ … ] ), [ 'collapse_below' => 'lg' ] );
+ *     Panel::render( 'site-nav', fn() => \Eighteen73\Matter\menu( [ … ] ), [ 'collapse_below' => 'lg' ] );
  *
- * Both modes are applied by generated media queries, so the right layout shows
- * before JavaScript runs. Inside the panel, `is-panel-only` and
+ * Both modes are applied by generated media queries, so the layout is right
+ * as the page paints. The off-canvas mode, though, needs the script (it is
+ * gated on `is-enhanced`, or about to be): without JavaScript, or when the
+ * panel's script fails, the panel is inline at every width, with no toggle, so
+ * its content is reachable. Inside the panel, `is-panel-only` and
  * `is-inline-only` show content in one mode only.
  *
  * @package Eighteen73\Matter
