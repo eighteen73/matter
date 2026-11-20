@@ -27,6 +27,10 @@
 	@return "html.matter-js:is(:not(.matter-late), .matter-ready-#{$type})";
 }
 
+// Themes copy this string (Pulsar's `matter-enhanced()`, in
+// `src/css/tools/mixins/_matter.scss`): a theme's build can't count on Matter's
+// source being there to `@use`. Change it only with the CHANGELOG line and the
+// Jest test in `src/styles/test/enhanced-gate.js`, and change the copies too.
 @function enhanced($type) {
 	@return ":is(.is-enhanced, #{about-to-be($type)} *, .editor-styles-wrapper *)";
 }
