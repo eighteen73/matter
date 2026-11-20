@@ -123,31 +123,37 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
 		});
 	};
 
-	holders.forEach((others) =>
-		others
-			.filter((other) => other.contains(element))
-			.forEach((other) => {
-				other.removeAttribute('inert');
-				lifted.add(other);
-			})
-	);
+	// Recorded as it goes, so a failure part-way releases what was done.
+	try {
+		holders.forEach((others) =>
+			others
+				.filter((other) => other.contains(element))
+				.forEach((other) => {
+					other.removeAttribute('inert');
+					lifted.add(other);
+				})
+		);
 
-	holders.add(changed);
+		holders.add(changed);
 
-	for (let node = element; node && node !== root; ) {
-		const parent = node.parentElement;
+		for (let node = element; node && node !== root; ) {
+			const parent = node.parentElement;
 
-		if (!parent) {
-			break;
-		}
-
-		[...parent.children].forEach((sibling) => {
-			if (sibling !== node && !(keep && sibling.matches(keep))) {
-				silence(sibling, changed);
+			if (!parent) {
+				break;
 			}
-		});
 
-		node = parent;
+			[...parent.children].forEach((sibling) => {
+				if (sibling !== node && !(keep && sibling.matches(keep))) {
+					silence(sibling, changed);
+				}
+			});
+
+			node = parent;
+		}
+	} catch (error) {
+		release();
+		throw error;
 	}
 
 	return release;

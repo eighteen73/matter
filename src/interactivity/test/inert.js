@@ -240,4 +240,23 @@ describe('inertAround', () => {
 			expect(inert()).toEqual([]);
 		});
 	});
+
+	describe('a failure part-way', () => {
+		it('releases what it had made inert, and throws', () => {
+			const content = build();
+			const main = document.getElementById('main');
+
+			main.setAttribute = () => {
+				throw new Error('boom');
+			};
+
+			expect(() => inertAround(content)).toThrow('boom');
+			expect(inert()).toEqual([]);
+
+			// Nothing is left counted: a later hold works.
+			delete main.setAttribute;
+			inertAround(content)();
+			expect(inert()).toEqual([]);
+		});
+	});
 });

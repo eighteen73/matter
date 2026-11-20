@@ -122,18 +122,11 @@ const activate = (panel, id) => {
 		return;
 	}
 
-	document.documentElement.classList.add(OPEN_CLASS);
-
 	// Where focus was when it opened, if not on the page itself.
 	const previous = focused();
 	const opener = openers.get(id) ?? null;
 
 	openers.delete(id);
-
-	// Only the dialog is exposed while it's open: the rest of the page (the
-	// toggle included; the close control is in the dialog) is inert. The
-	// backdrop stays live, as it takes the click that closes the panel.
-	releases.set(id, inertAround(content, { keep: '.matter-panel__backdrop' }));
 
 	// Set when the trap resumes after a modal dialog: focus is where that dialog
 	// gave it back (the control that opened it), and stays there.
@@ -168,6 +161,14 @@ const activate = (panel, id) => {
 		// The panel is still sliding in: don't scroll anything to reveal it.
 		preventScroll: true,
 	});
+
+	// Only the dialog is exposed while it's open: the rest of the page (the
+	// toggle included; the close control is in the dialog) is inert. The
+	// backdrop stays live, as it takes the click that closes the panel. Last
+	// of what can fail, and undone by inertAround() if it does, so a failure
+	// leaves the page as it was.
+	releases.set(id, inertAround(content, { keep: '.matter-panel__backdrop' }));
+	document.documentElement.classList.add(OPEN_CLASS);
 
 	traps.set(id, trap);
 	owners.set(id, panel);
@@ -227,33 +228,38 @@ const deactivate = (
 		return;
 	}
 
-	// Traps inside its content (e.g. a drill-down menu's) let go first,
-	// without moving focus, so focus goes back to the toggle, not into the
-	// closing panel.
-	releaseTrapsWithin(getContent(panel) ?? panel);
+	// The page is live again before focus goes back to the toggle (an inert
+	// element can't take it), and whatever goes wrong, the page is released.
+	try {
+		// Traps inside its content (e.g. a drill-down menu's) let go first,
+		// without moving focus, so focus goes back to the toggle, not into the
+		// closing panel.
+		try {
+			releaseTrapsWithin(getContent(panel) ?? panel);
+		} finally {
+			releases.get(id)?.();
+			releases.delete(id);
+		}
 
-	// The page is live again before focus goes back to the toggle: an inert
-	// element can't take it.
-	releases.get(id)?.();
-	releases.delete(id);
+		modalWatchers.get(id)?.();
+		modalWatchers.delete(id);
 
-	modalWatchers.get(id)?.();
-	modalWatchers.delete(id);
+		traps.get(id).deactivate({ returnFocus: restoreFocus });
+	} finally {
+		traps.delete(id);
+		owners.delete(id);
+		watchers.get(id)?.disconnect();
+		watchers.delete(id);
 
-	traps.get(id).deactivate({ returnFocus: restoreFocus });
-	traps.delete(id);
-	owners.delete(id);
-	watchers.get(id)?.disconnect();
-	watchers.delete(id);
+		const position = stack.lastIndexOf(id);
 
-	const position = stack.lastIndexOf(id);
+		if (position > -1) {
+			stack.splice(position, 1);
+		}
 
-	if (position > -1) {
-		stack.splice(position, 1);
-	}
-
-	if (!traps.size) {
-		document.documentElement.classList.remove(OPEN_CLASS);
+		if (!traps.size) {
+			document.documentElement.classList.remove(OPEN_CLASS);
+		}
 	}
 
 	if (!silent) {
