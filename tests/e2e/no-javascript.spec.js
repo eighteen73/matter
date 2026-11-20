@@ -669,8 +669,14 @@ test.describe('overlays', () => {
 
 		test('the link shows the dialog in the page', async ({ page }) => {
 			await page.route(BLOCK_SCRIPTS, (route) => route.abort());
+			await page.clock.install();
 			await page.goto(overlays.link);
 			await page.getByRole('link', { name: 'Get the offer' }).click();
+
+			// About to start: the dialog stays closed rather than show in
+			// the page and then move.
+			await expect(page.getByText('Offer details')).toBeHidden();
+			await page.clock.fastForward(5000);
 
 			await expect(page.getByText('Offer details')).toBeVisible();
 			await expect(page.locator('#offer')).not.toHaveAttribute(
@@ -682,6 +688,54 @@ test.describe('overlays', () => {
 
 	test.describe('with JavaScript', () => {
 		test.use({ viewport: VIEWPORTS.desktop });
+
+		test('a link to the dialog opens it over the page, with no frame of it in the page first', async ({
+			page,
+		}) => {
+			// Every frame, until the dialog is open: is it showing?
+			await page.addInitScript(() => {
+				window.frames = [];
+				const watch = () => {
+					const dialog = document.getElementById('offer');
+
+					if (dialog && !dialog.open) {
+						const style = window.getComputedStyle(dialog);
+
+						window.frames.push(
+							`${style.display} ${style.position}`
+						);
+					}
+
+					if (!dialog?.open) {
+						window.requestAnimationFrame(watch);
+					}
+				};
+
+				window.requestAnimationFrame(watch);
+			});
+			// Slow, so hydration is a long way off.
+			const client = await page.context().newCDPSession(page);
+
+			await client.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+			await page.goto(`${overlays.link}#offer`);
+
+			await expect(page.locator('#offer')).toHaveAttribute('open', '');
+			expect(
+				await page.evaluate(() => window.frames.length)
+			).toBeGreaterThan(0);
+			expect(
+				(await page.evaluate(() => window.frames)).filter(
+					(frame) => !frame.startsWith('none')
+				)
+			).toEqual([]);
+			expect(
+				await page
+					.locator('#offer')
+					.evaluate(
+						(element) => window.getComputedStyle(element).position
+					)
+			).not.toBe('static');
+		});
 
 		test('the trigger opens the dialog over the page, and the address stays', async ({
 			page,

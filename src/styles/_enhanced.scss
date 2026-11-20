@@ -35,11 +35,19 @@
 	@return ":is(.is-enhanced, #{about-to-be($type)} *)";
 }
 
+// The page is without JavaScript, or a type's script has had its allowance
+// and never started (what `enhanced()` is not, for a block that isn't marked).
+@function without-script($type) {
+	@return ":where(html:not(.matter-js), html.matter-late:not(.matter-ready-#{$type}))";
+}
+
 // A dialog (modal or drawer) that nothing has opened: a link to its #ID, with
 // JavaScript off or a script that didn't start, shows it in the page where it
-// is, as content, instead of leaving the link with nothing to do.
+// is, as content, instead of leaving the link with nothing to do. Only then:
+// while the script is about to start it opens the dialog itself, and the
+// dialog shown in the page first would flash (and scroll the page to it).
 @mixin shown-in-place($block) {
-	.#{$block}:not(.is-enhanced):target {
+	#{without-script(overlay)} .#{$block}:not(.is-enhanced):target {
 		display: block;
 		height: auto;
 		inset: auto;
@@ -55,7 +63,7 @@
 	}
 
 	// Their buttons need the script.
-	.#{$block}:not(.is-enhanced):target :is(.#{$block}__close, .#{$block}__group-nav) {
+	#{without-script(overlay)} .#{$block}:not(.is-enhanced):target :is(.#{$block}__close, .#{$block}__group-nav) {
 		display: none;
 	}
 }
