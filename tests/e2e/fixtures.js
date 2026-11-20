@@ -432,7 +432,7 @@ async function deleteArchiveEntries(requestUtils) {
 
 /**
  * One entry for each target type that exists, each saying which target it
- * is. Pass `extra` target strings for types added since (`author`, `date`).
+ * is. Pass `extra` target strings for types added since.
  *
  * @param {Object}   requestUtils WordPress request utils.
  * @param {string[]} extra        More stored targets.
@@ -448,6 +448,8 @@ async function createArchiveEntries(requestUtils, extra = []) {
 		'post_type:post',
 		'taxonomy:category',
 		`term:category:${categoryId}`,
+		'author',
+		'date',
 		'search',
 		'404',
 		...extra,

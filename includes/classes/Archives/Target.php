@@ -1,11 +1,12 @@
 <?php
 /**
  * An archive that can have its own content: a post type archive, a taxonomy
- * (the default for its terms), a term, search results or the 404 page.
+ * (the default for its terms), a term, every author archive, every date
+ * archive, search results or the 404 page.
  *
  * Stored as a string on an archive content entry:
  * `post_type:product`, `taxonomy:product_cat`, `term:product_cat:42`,
- * `search`, `404`.
+ * `author`, `date`, `search`, `404`.
  *
  * @package Eighteen73\Matter
  */
@@ -24,7 +25,7 @@ final readonly class Target {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $type    post_type, taxonomy, term, search or 404.
+	 * @param string $type    post_type, taxonomy, term, author, date, search or 404.
 	 * @param string $name    Post type or taxonomy name.
 	 * @param int    $term_id Term ID (terms only).
 	 */
@@ -44,20 +45,21 @@ final readonly class Target {
 		$parts = explode( ':', $value );
 
 		return match ( $parts[0] ) {
-			'search', '404' => new self( $parts[0] ),
-			'post_type'     => isset( $parts[1] ) && post_type_exists( $parts[1] ) ? new self( 'post_type', $parts[1] ) : null,
-			'taxonomy'      => isset( $parts[1] ) && taxonomy_exists( $parts[1] ) ? new self( 'taxonomy', $parts[1] ) : null,
-			'term'          => isset( $parts[1], $parts[2] ) && get_term( (int) $parts[2], $parts[1] ) instanceof WP_Term
+			'author', 'date', 'search', '404' => new self( $parts[0] ),
+			'post_type'                       => isset( $parts[1] ) && post_type_exists( $parts[1] ) ? new self( 'post_type', $parts[1] ) : null,
+			'taxonomy'                        => isset( $parts[1] ) && taxonomy_exists( $parts[1] ) ? new self( 'taxonomy', $parts[1] ) : null,
+			'term'                            => isset( $parts[1], $parts[2] ) && get_term( (int) $parts[2], $parts[1] ) instanceof WP_Term
 				? new self( 'term', $parts[1], (int) $parts[2] )
 				: null,
-			default         => null,
+			default                           => null,
 		};
 	}
 
 	/**
 	 * The archive being viewed.
 	 *
-	 * Author and date archives count as the blog (`post_type:post`).
+	 * Author archives and date archives are one archive each (`author`,
+	 * `date`); the blog's entry shows on them only if it's set to cascade.
 	 *
 	 * @return self|null Null when the request isn't an archive, search or 404.
 	 */
@@ -83,7 +85,15 @@ final readonly class Target {
 			return $post_type ? new self( 'post_type', (string) $post_type ) : null;
 		}
 
-		if ( is_home() || is_author() || is_date() ) {
+		if ( is_author() ) {
+			return new self( 'author' );
+		}
+
+		if ( is_date() ) {
+			return new self( 'date' );
+		}
+
+		if ( is_home() ) {
 			return new self( 'post_type', 'post' );
 		}
 
@@ -121,7 +131,7 @@ final readonly class Target {
 			$chain[] = new self( 'taxonomy', $this->name );
 		}
 
-		if ( in_array( $this->type, [ 'term', 'taxonomy' ], true ) && $this->post_type() ) {
+		if ( in_array( $this->type, [ 'term', 'taxonomy', 'author', 'date' ], true ) && $this->post_type() ) {
 			$chain[] = new self( 'post_type', (string) $this->post_type() );
 		}
 
@@ -136,6 +146,11 @@ final readonly class Target {
 	public function post_type(): ?string {
 		if ( 'post_type' === $this->type ) {
 			return $this->name;
+		}
+
+		// Posts are what authors and dates list.
+		if ( in_array( $this->type, [ 'author', 'date' ], true ) ) {
+			return 'post';
 		}
 
 		if ( in_array( $this->type, [ 'term', 'taxonomy' ], true ) ) {
@@ -197,6 +212,8 @@ final readonly class Target {
 				$this->short_label(),
 				(string) ( $taxonomy->labels->name ?? $this->name )
 			),
+			'author'    => __( 'Author archives', 'matter' ),
+			'date'      => __( 'Date archives', 'matter' ),
 			'search'    => __( 'Search results', 'matter' ),
 			'404'       => __( 'Page not found (404)', 'matter' ),
 			default     => $this->key(),
@@ -220,6 +237,8 @@ final readonly class Target {
 			'taxonomy'  => sprintf( __( 'Each of the %s, unless it has its own', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->name ?? $this->name ) ) ),
 			/* translators: %s: taxonomy singular name, e.g. "category". */
 			'term'      => sprintf( __( 'This %s’s page', 'matter' ), mb_strtolower( (string) ( $taxonomy->labels->singular_name ?? $this->name ) ) ),
+			'author'    => __( 'Each author’s page, unless it’s the blog’s to share', 'matter' ),
+			'date'      => __( 'The year, month and day archives, unless it’s the blog’s to share', 'matter' ),
 			'search'    => __( 'Shown when someone searches the site', 'matter' ),
 			'404'       => __( 'Shown when a page can’t be found', 'matter' ),
 			default     => '',
@@ -295,6 +314,8 @@ final readonly class Target {
 		}
 
 		return match ( $this->type ) {
+			'author' => $this->sample_author() ? get_author_posts_url( $this->sample_author() ) : null,
+			'date'   => get_year_link( $this->sample_year() ),
 			'search' => add_query_arg( 's', '', home_url( '/' ) ),
 			'404'    => home_url( '/page-not-found-preview/' ),
 			default  => null,
@@ -357,6 +378,8 @@ final readonly class Target {
 
 		return match ( $this->type ) {
 			'post_type' => 'post' === $this->name ? [ 'home', 'index' ] : [ "archive-{$this->name}", 'archive', 'index' ],
+			'author'    => [ 'author', 'archive', 'index' ],
+			'date'      => [ 'date', 'archive', 'index' ],
 			'search'    => [ 'search', 'index' ],
 			'404'       => [ '404', 'index' ],
 			default     => [ 'index' ],
@@ -387,6 +410,48 @@ final readonly class Target {
 			}
 		}
 
+		if ( 'author' === $this->type ) {
+			$args['author'] = $this->sample_author();
+		}
+
+		if ( 'date' === $this->type ) {
+			$args['year'] = $this->sample_year();
+		}
+
 		return '404' === $this->type ? null : $args;
+	}
+
+	/**
+	 * An author to show an author archive with: the first with published posts.
+	 *
+	 * @return int User ID, 0 if no one has posted.
+	 */
+	private function sample_author(): int {
+		$users = get_users(
+			[
+				'has_published_posts' => [ 'post' ],
+				'number'              => 1,
+				'fields'              => 'ID',
+			]
+		);
+
+		return $users ? (int) $users[0] : 0;
+	}
+
+	/**
+	 * A year to show a date archive with: the newest post's.
+	 *
+	 * @return int
+	 */
+	private function sample_year(): int {
+		$posts = get_posts(
+			[
+				'numberposts'   => 1,
+				'fields'        => 'ids',
+				'no_found_rows' => true,
+			]
+		);
+
+		return $posts ? (int) get_the_date( 'Y', $posts[0] ) : (int) wp_date( 'Y' );
 	}
 }

@@ -514,8 +514,8 @@ class Admin {
 	}
 
 	/**
-	 * Archives editors can customise: post type archives, taxonomies, search
-	 * and 404.
+	 * Archives editors can customise: post type archives, taxonomies, author
+	 * and date archives, search and 404.
 	 *
 	 * @return Target[]
 	 */
@@ -547,6 +547,8 @@ class Admin {
 			}
 		}
 
+		$targets[] = new Target( 'author' );
+		$targets[] = new Target( 'date' );
 		$targets[] = new Target( 'search' );
 		$targets[] = new Target( '404' );
 
@@ -969,6 +971,16 @@ class Admin {
 				'link'     => current_user_can( $taxonomy->cap->manage_terms ) ? admin_url( 'edit-tags.php?taxonomy=' . $taxonomy->name ) : '',
 				/* translators: %s: taxonomy plural name, e.g. "categories". */
 				'linkText' => sprintf( __( 'Edit %s', 'matter' ), mb_strtolower( (string) $taxonomy->labels->name ) ),
+			];
+		}
+
+		if ( in_array( $target->type, [ 'author', 'date' ], true ) ) {
+			return [
+				'text'     => 'author' === $target->type
+					? __( 'Each author shows their own name as the title, and their biography as the description.', 'matter' )
+					: __( 'Each date shows its own title, such as “Year: 2026”.', 'matter' ),
+				'link'     => '',
+				'linkText' => '',
 			];
 		}
 

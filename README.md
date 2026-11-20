@@ -527,18 +527,18 @@ In the Site Editor it's outlined and tagged, as a button without a link is, with
 
 It renders the archive's **Archive** entry (post type `matter_archive`). Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". If it's removed anyway (by grouping it first), it can be added again from the inserter, which offers it only in entries and only once. In the editor it previews the real list for the archive. Without the block, the list goes at the end.
 
-**Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), `search` or `404`. Matter looks in this order:
+**Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), every author archive (`author`), every date archive (`date`: year, month and day), `search` or `404`. Matter looks in this order:
 1. the term's entry;
 2. its parent terms' entries, if set to show on the categories inside them;
 3. the taxonomy's entry;
-4. the post type archive's entry (the blog's for categories, tags, author and date archives), if set to show on its category and tag pages;
+4. the post type archive's entry (the blog's for categories, tags, author and date archives), if set to show on its category and tag pages; an author or date archive looks only at its own entry, then the blog's;
 5. the theme's default content.
 
 Whether a term's or post type archive's entry also shows further down is the entry's choice ("Include subcategories", or for a post type "Include category and tag pages", in Shows on; `_matter_archive_cascade`), off by default: usually a category's content is about that category only. A taxonomy's entry is for each of its terms. Only published entries count, and a parent's or post type's newest entry decides: if it doesn't cascade, an older one that did doesn't either. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
 
 **Default content.** Filter `matter_archive_default_content( $content, $target )` with block markup; it's also where a customised entry starts.
 
-**Bindings.** `matter/archive` gives the archive's `title`, `description`, `count` and `image` (a term's `thumbnail_id`), so one layout serves every term:
+**Bindings.** `matter/archive` gives the archive's `title`, `description`, `count` and `image` (a term's `thumbnail_id`), so one layout serves every term. For author and date archives the title is WordPress's own (`get_the_archive_title()`, e.g. "Author: Ada", "Year: 2026"), and an author's description is their biography:
 
 ```json
 "metadata": { "bindings": { "content": { "source": "matter/archive", "args": { "key": "title" } } } }

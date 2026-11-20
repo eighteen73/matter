@@ -5,8 +5,10 @@ const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
 const AxeBuilder = require('@axe-core/playwright').default;
 const {
 	collections,
+	createArchiveEntry,
 	createCategories,
 	createDuplicatesPage,
+	deleteArchiveEntries,
 	createMenu,
 	createPage,
 	createPosts,
@@ -983,5 +985,89 @@ test.describe('blocks rendered twice', () => {
 		await page.locator('a[href="#dup-modal"]').nth(0).click();
 		await expect(first).toHaveJSProperty('open', true);
 		await expect(second).toHaveJSProperty('open', false);
+	});
+});
+
+test.describe('author and date archives', () => {
+	test.use({ viewport: DESKTOP });
+
+	let author;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		await createPosts(requestUtils, [
+			'Archive post one',
+			'Archive post two',
+		]);
+		author = (await requestUtils.rest({ path: '/wp/v2/users/me' })).id;
+		await deleteArchiveEntries(requestUtils);
+	});
+
+	test.afterAll(async ({ requestUtils }) => {
+		await deleteArchiveEntries(requestUtils);
+	});
+
+	test('without entries they show the default, titled for the archive', async ({
+		page,
+	}) => {
+		await page.goto(`/?author=${author}`);
+		await expect(page.locator('h1')).toContainText('Author:');
+
+		await page.goto('/?year=2026');
+		await expect(page.locator('h1')).toContainText('2026');
+	});
+
+	test('each has its own entry, and the blog’s shows only when it cascades', async ({
+		page,
+		requestUtils,
+	}) => {
+		await createArchiveEntry(requestUtils, 'post_type:post', {
+			content:
+				'<!-- wp:paragraph --><p>Blog intro</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->',
+		});
+
+		await page.goto(`/?author=${author}`);
+		await expect(page.getByText('Blog intro')).toHaveCount(0);
+		await expect(page.getByText('Archive post one')).toBeVisible();
+
+		await createArchiveEntry(requestUtils, 'author', {
+			content:
+				'<!-- wp:paragraph --><p>Authors intro</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->',
+		});
+		await createArchiveEntry(requestUtils, 'date', {
+			content:
+				'<!-- wp:paragraph --><p>Dates intro</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->',
+		});
+
+		await page.goto(`/?author=${author}`);
+		await expect(page.getByText('Authors intro')).toBeVisible();
+		await expect(page.getByText('Dates intro')).toHaveCount(0);
+		await expect(page.getByText('Blog intro')).toHaveCount(0);
+
+		await page.goto('/?year=2026');
+		await expect(page.getByText('Dates intro')).toBeVisible();
+		await expect(page.getByText('Authors intro')).toHaveCount(0);
+
+		// The blog itself is untouched.
+		await page.goto('/');
+		await expect(page.getByText('Blog intro')).toBeVisible();
+		await expect(page.getByText('Authors intro')).toHaveCount(0);
+	});
+
+	test('the blog’s entry shows on them when it is set to cascade', async ({
+		page,
+		requestUtils,
+	}) => {
+		await deleteArchiveEntries(requestUtils);
+		await createArchiveEntry(requestUtils, 'post_type:post', {
+			cascade: true,
+			content:
+				'<!-- wp:paragraph --><p>Shared blog intro</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->',
+		});
+
+		await page.goto(`/?author=${author}`);
+		await expect(page.getByText('Shared blog intro')).toBeVisible();
+
+		await page.goto('/?year=2026');
+		await expect(page.getByText('Shared blog intro')).toBeVisible();
 	});
 });

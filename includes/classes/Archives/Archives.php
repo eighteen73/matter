@@ -7,7 +7,8 @@
  * block renders an "Archive" entry, edited like a page with sections,
  * in which `matter/archive-loop` marks where the template's list goes.
  *
- * Which entry shows (see Target::chain()): the archive's own; for a term,
+ * Which entry shows (see Target::chain()): the archive's own (author archives
+ * and date archives each have one entry for all of them); for a term,
  * then its parent's (and theirs), the taxonomy's, then the post type
  * archive's; without one, the theme's default content
  * (`matter_archive_default_content`). A parent term's or post type archive's
@@ -573,6 +574,8 @@ class Archives {
 					/* translators: %s: taxonomy singular name. */
 					'taxonomy'  => sprintf( __( '%s name', 'matter' ), $singular ),
 					'post_type' => self::post_type_title( $target->name ),
+					'author'    => is_author() ? wp_strip_all_tags( get_the_archive_title() ) : __( 'Author archives', 'matter' ),
+					'date'      => is_date() ? wp_strip_all_tags( get_the_archive_title() ) : __( 'Date archives', 'matter' ),
 					/* translators: %s: search terms. */
 					'search'    => is_search() ? sprintf( __( 'Search results for “%s”', 'matter' ), get_search_query( false ) ) : __( 'Search results', 'matter' ),
 					'404'       => __( 'Page not found', 'matter' ),
@@ -587,6 +590,7 @@ class Archives {
 					/* translators: %s: taxonomy singular name. */
 					'taxonomy'  => sprintf( __( '%s description', 'matter' ), $singular ),
 					'post_type' => (string) ( get_post_type_object( $target->name )->description ?? '' ),
+					'author'    => is_author() ? (string) get_the_author_meta( 'description', (int) get_queried_object_id() ) : '',
 					default     => '',
 				};
 
@@ -601,7 +605,11 @@ class Archives {
 					return (int) ( wp_count_posts( $target->name )->publish ?? 0 );
 				}
 
-				return 'search' === $target->type ? (int) $GLOBALS['wp_query']?->found_posts : null;
+				if ( ( 'author' === $target->type && is_author() ) || ( 'date' === $target->type && is_date() ) || 'search' === $target->type ) {
+					return (int) $GLOBALS['wp_query']?->found_posts;
+				}
+
+				return null;
 
 			case 'image':
 				/**
