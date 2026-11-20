@@ -326,6 +326,69 @@ test.describe('accordion, collapsible and tabs', () => {
 			await expect(page.getByText('The rest of it')).toBeVisible();
 		});
 
+		test('an inactive tab panel is hidden until found, and takes no room', async ({
+			page,
+		}) => {
+			await page.goto(kitchenSink.link);
+			await page.addStyleTag({
+				content:
+					'.wp-block-matter-tab { padding: 24px; border: 6px solid red; min-height: 80px; }',
+			});
+
+			const [active, inactive] = await page
+				.locator('#specs .wp-block-matter-tab')
+				.all();
+
+			await expect(inactive).toHaveAttribute('hidden', /until-found|^$/);
+			expect(await inactive.boundingBox()).toMatchObject({ height: 0 });
+			// The panels' box is the active panel's.
+			expect(
+				(
+					await page
+						.locator('#specs .wp-block-matter-tabs__panels')
+						.boundingBox()
+				).height
+			).toBe((await active.boundingBox()).height);
+		});
+
+		test('a match found in an inactive tab selects it', async ({
+			page,
+		}) => {
+			// A text fragment: the browser finds the text in the hidden panel,
+			// sends `beforematch`, and shows it.
+			await page.goto(`${kitchenSink.link}#:~:text=Blue`);
+
+			await expect(
+				page.getByRole('tab', { name: 'Colour' })
+			).toHaveAttribute('aria-selected', 'true');
+			await expect(page.getByText('Blue')).toBeVisible();
+			await expect(page.getByText('Large')).toBeHidden();
+		});
+
+		test('a match found in an inactive tab updates the address when the tabs deep-link', async ({
+			page,
+			requestUtils,
+		}) => {
+			const deep = await createPage(
+				requestUtils,
+				'Deep tabs',
+				'<!-- wp:matter/tabs {"anchor":"deep","deepLink":true} --><!-- wp:matter/tab {"label":"First"} --><!-- wp:paragraph --><p>First text</p><!-- /wp:paragraph --><!-- /wp:matter/tab --><!-- wp:matter/tab {"label":"Second"} --><!-- wp:paragraph --><p>Second text</p><!-- /wp:paragraph --><!-- /wp:matter/tab --><!-- /wp:matter/tabs -->'
+			);
+
+			await page.goto(deep.link);
+			await page
+				.locator('#deep .wp-block-matter-tab')
+				.nth(1)
+				.evaluate((panel) =>
+					panel.dispatchEvent(
+						new Event('beforematch', { bubbles: true })
+					)
+				);
+
+			await expect(page.getByText('Second text')).toBeVisible();
+			await expect(page).toHaveURL(/#deep-2$/);
+		});
+
 		test('a closed collapsible takes no room of its own, whatever a theme gives its content', async ({
 			page,
 		}) => {

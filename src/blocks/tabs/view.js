@@ -103,9 +103,11 @@ const { state, actions } = store('matter/tabs', {
 			return state.isActive ? 0 : -1;
 		},
 		// The server shows every panel; once the script runs only the active
-		// one shows.
+		// one shows. An inactive one is `hidden="until-found"`, so find-in-page,
+		// a text fragment or a link inside it can reach it (`beforematch`,
+		// below). A browser that doesn't know `until-found` just hides it.
 		get isPanelHidden() {
-			return !state.isActive;
+			return state.isActive ? false : 'until-found';
 		},
 	},
 	actions: {
@@ -129,6 +131,15 @@ const { state, actions } = store('matter/tabs', {
 
 			if (context.isMenuOpen) {
 				actions.closeMenu();
+			}
+		},
+		// The browser is about to show an inactive panel's text, found in the
+		// page: select its tab, as its button would.
+		reveal() {
+			const context = getContext();
+
+			if (context.active !== context.tabId) {
+				activate(context.tabId, context);
 			}
 		},
 		next(target) {

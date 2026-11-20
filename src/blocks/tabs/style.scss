@@ -13,13 +13,26 @@
 	display: flex;
 }
 
-.wp-block-matter-tab[hidden] {
+// An inactive panel is `hidden="until-found"` once the script has started, so
+// find-in-page can reach it: the browser's `content-visibility: hidden` keeps
+// it out of the tab order and the accessibility tree and skips what is in it,
+// but the panel keeps its own box, so that takes no room (a theme's padding,
+// border or margin on a panel would show). A plain `hidden` (a browser without
+// `until-found`) is `display: none`.
+.wp-block-matter-tab[hidden]:where(:not([hidden="until-found"])) {
 	display: none;
+}
+
+.wp-block-matter-tab[hidden="until-found"] {
+	border-width: 0;
+	margin: 0;
+	min-block-size: 0;
+	padding: 0;
 }
 
 // Until the script has started, the active panel only: the server shows them
 // all (and marks the active one `is-active`).
-.wp-block-matter-tab:not(.is-active):where(#{enhanced-front(tabs)}) {
+.wp-block-matter-tab:not(.is-active):where(#{enhanced-front(tabs)}):where(:not([hidden="until-found"])) {
 	display: none;
 }
 
