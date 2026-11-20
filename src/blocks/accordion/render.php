@@ -30,6 +30,7 @@ if ( ! $matter_items ) {
 // posts in all, not the page's, so every page of it decides the same. A panel
 // without the role is still named by its button (`aria-controls`).
 $matter_count = max( count( $matter_items ), Instances::total( 'matter/accordion' ) ?? 0 );
+
 $content = preg_replace_callback(
 	'/ data-matter-region="([^"]*)"/',
 	fn( $found ) => $matter_count <= 6 ? ' role="region" aria-labelledby="' . $found[1] . '"' : '',
