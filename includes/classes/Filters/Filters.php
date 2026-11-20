@@ -72,6 +72,7 @@ final class Filters {
 		add_filter( 'render_block', [ $this, 'finish' ], 10, 2 );
 		add_filter( 'register_block_type_args', [ $this, 'block_args' ], 10, 2 );
 		add_filter( 'block_categories_all', [ self::class, 'category' ] );
+		add_filter( 'wp_robots', [ self::class, 'robots' ] );
 	}
 
 	/**
@@ -481,6 +482,56 @@ final class Filters {
 		}
 
 		return $args;
+	}
+
+	/**
+	 * Whether the request filters a listing: any source has a selection.
+	 *
+	 * @return bool
+	 */
+	public static function filtered(): bool {
+		$request = Request::params();
+
+		foreach ( Sources::all() as $source ) {
+			if ( ! Query::is_empty( $source->selected( $request ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * A filtered listing isn't for search engines: each combination of
+	 * filters is a URL of its own, endlessly many, each a copy of part of
+	 * the listing. `noindex, follow`, so its links (its products, the other
+	 * pages) are still followed (unless the site says `nofollow`). Through core's `wp_robots`, which Yoast SEO
+	 * merges its own values into (and keeps `noindex`).
+	 *
+	 * @param array<string, bool|string> $robots Robots directives.
+	 * @return array<string, bool|string>
+	 */
+	public static function robots( array $robots ): array {
+		/**
+		 * Filters whether a filtered listing is hidden from search engines.
+		 *
+		 * @param bool $noindex Hidden (default: true).
+		 */
+		if ( ! self::filtered() || ! apply_filters( 'matter_filters_noindex', true ) ) {
+			return $robots;
+		}
+
+		unset( $robots['index'] );
+
+		$robots = [ 'noindex' => true ] + $robots;
+
+		// Followed, unless something else says not (a site hidden from
+		// search engines: core's `nofollow`).
+		if ( empty( $robots['nofollow'] ) ) {
+			$robots['follow'] = true;
+		}
+
+		return $robots;
 	}
 
 	/**

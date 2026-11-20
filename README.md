@@ -600,6 +600,8 @@ Pagination is core's Query Pagination, which works inside the router region.
 
 **The URL is the state.** Each source owns its parameters, so a filtered listing is a plain URL the server renders the same way however it's reached: a click, a reload, a shared link, or the form submitted without JavaScript (its Apply button shows only then; checkboxes arrive as `filter_x[]=…` and are joined into the comma form before WordPress reads the request). Changing a filter goes back to the first page.
 
+**Search engines.** A filtered listing is `noindex, follow` (through core's `wp_robots`, which Yoast SEO keeps): every combination of filters is a URL of its own, each a copy of part of the listing, but its links are followed. The unfiltered listing is left alone. `matter_filters_noindex` (default true) lets a project index filtered listings.
+
 Parameters follow one convention, for every source:
 
 | Kind | Parameters |
@@ -677,6 +679,7 @@ A provider that adds placeholders a page didn't render calls `Live\Live::expect(
 | `matter_filter_sources` (action) | Given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key. A source can also have `ordered()` (ratings: stars, "& up"), `default_display()`, `icon()` (its filter's icon in the editor: `category`, `tag`, `brand`, `color`, `attribute`, `currency-pound`, `currency-euro`, `currency-dollar`, `price`, `stock` or `rating`) and `examples()` (options to preview its filter with in the editor). |
 | `matter_filterable_query_blocks` | Query blocks that can be filtered, and the attributes that make them navigate. |
 | `matter_pre_filter_counts` | Counts from elsewhere (Seek). |
+| `matter_filters_noindex` | `$noindex`: whether a filtered listing is hidden from search engines (`noindex, follow`; default true). |
 | `matter_filter_swatch` | `$swatch, $term`: a term's swatch, for the swatches display: any CSS background (a colour, or an image as `url(…) center / cover`). The WooCommerce integration gives attributes' colour and image swatches (WooCommerce 10.9's visual attributes), and a filter for one of those shows swatches at first. |
 | `matter_filters_listing` (action) | A listing's query block has rendered (`$listing`). |
 | `matter_filters_base_query_vars` | `$vars, $listing, $block`: a listing's query vars without filters, for query blocks that build theirs differently (the WooCommerce integration's Product Collection). |

@@ -418,4 +418,34 @@ class FiltersTest extends TestCase {
 		$this->assertMatchesRegularExpression( '#<form[^>]*wp-block-matter-filters__form[\s\S]*<h3 class="wp-block-heading">Narrow it down</h3>[\s\S]*</form>#', $html );
 		$this->assertSame( 2, $this->option_count( $html, 'news' ), 'The filters still work.' );
 	}
+
+	/**
+	 * A filtered listing is `noindex, follow`; an unfiltered one is left
+	 * alone, and a project can index filtered ones.
+	 *
+	 * @return void
+	 */
+	public function test_filtered_listings_are_not_indexed(): void {
+		$robots = apply_filters( 'wp_robots', [ 'max-image-preview' => 'large' ] );
+
+		$this->assertArrayNotHasKey( 'noindex', $robots, 'Unfiltered: left alone.' );
+
+		$_GET = [ 'filter_category' => 'news' ];
+
+		$robots = apply_filters( 'wp_robots', [ 'max-image-preview' => 'large' ] );
+
+		$this->assertTrue( $robots['noindex'] ?? false );
+		$this->assertTrue( $robots['follow'] ?? false );
+		$this->assertSame( 'large', $robots['max-image-preview'] );
+
+		$robots = apply_filters( 'wp_robots', [ 'nofollow' => true ] );
+
+		$this->assertArrayNotHasKey( 'follow', $robots, 'A site hidden from search engines stays nofollow.' );
+
+		add_filter( 'matter_filters_noindex', '__return_false' );
+		$robots = apply_filters( 'wp_robots', [] );
+		remove_filter( 'matter_filters_noindex', '__return_false' );
+
+		$this->assertArrayNotHasKey( 'noindex', $robots );
+	}
 }
