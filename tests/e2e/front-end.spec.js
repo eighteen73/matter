@@ -875,6 +875,55 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		).toBe(0);
 	});
 
+	test('a panel opened while a modal is open stays out of its way, and takes focus when the modal closes', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+		await page.evaluate(() => window.matter.overlay('in-tab').open());
+
+		const dialog = page.getByRole('dialog', { name: 'Modal in a tab' });
+		const panel = page.locator('#test-nav');
+		const inPanel = () =>
+			page.evaluate(() => {
+				const { activeElement } = document.querySelector(
+					'#test-nav .matter-panel__content'
+				).ownerDocument;
+
+				return document
+					.querySelector('#test-nav .matter-panel__content')
+					.contains(activeElement);
+			});
+
+		await expect(dialog).toBeVisible();
+
+		// Opened by a script, as the modal makes the toggle unreachable.
+		await page.evaluate(() =>
+			document.querySelector('[aria-controls="test-nav"]').click()
+		);
+		await expect(panel).toHaveClass(/\bis-open\b/);
+
+		// The panel's trap activates a frame later: it mustn't pull focus out
+		// of the modal, then or when Tab is pressed (the browser keeps Tab in
+		// the modal, or leaves the page; never in the panel behind it).
+		await page.evaluate(
+			() => new Promise((resolve) => setTimeout(resolve, 300))
+		);
+		expect(await inPanel()).toBe(false);
+
+		for (let step = 0; step < 6; step++) {
+			await page.keyboard.press('Tab');
+			expect(await inPanel()).toBe(false);
+		}
+
+		// Closing it hands focus to the panel.
+		await page.evaluate(() => window.matter.overlay('in-tab').close());
+		await expect(dialog).toBeHidden();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect.poll(inPanel).toBe(true);
+	});
+
 	test('a change of hash closes the panel', async ({ page }) => {
 		await page.goto(kitchenSink.link);
 		await page.locator('[aria-controls="test-nav"]').click();
