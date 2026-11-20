@@ -139,9 +139,27 @@ add_action(
 	)
 );
 
+// And one whose template gains a block (saved content has one image).
+add_action(
+	'init',
+	fn() => register_setting(
+		'general',
+		'matter_test_media_gain',
+		[
+			'type'         => 'boolean',
+			'default'      => false,
+			'show_in_rest' => true,
+		]
+	)
+);
+
 add_filter(
 	'register_block_type_args',
 	function ( $args, $name ) {
+		if ( 'matter-test/section' === $name && get_option( 'matter_test_media_gain' ) ) {
+			$args['supports']['matter']['slots']['media']['template'] = [ [ 'core/image' ], [ 'core/image' ] ];
+		}
+
 		if ( 'matter-test/section' === $name && get_option( 'matter_test_media_video' ) ) {
 			$args['supports']['matter']['slots']['media']['allowedBlocks'] = [ 'core/video' ];
 			$args['supports']['matter']['slots']['media']['template']      = [ [ 'core/video' ] ];

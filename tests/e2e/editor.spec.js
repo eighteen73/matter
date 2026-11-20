@@ -300,9 +300,43 @@ test.describe('allowed blocks when every block is allowed', () => {
 });
 
 test.describe('a locked slot whose template changes', () => {
-	test.afterAll(async ({ requestUtils }) => {
+	test.afterEach(async ({ requestUtils }) => {
 		await requestUtils.updateSiteSettings({
 			matter_test_media_video: false,
+			matter_test_media_gain: false,
+		});
+	});
+
+	test('a block the theme adds to its template is added, and the saved ones are kept', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		const saved = await createPage(
+			requestUtils,
+			'Template gain',
+			'<!-- wp:matter-test/section --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- wp:matter/slot {"name":"media"} --><!-- wp:image {"alt":"Saved"} --><figure class="wp-block-image"><img src="https://example.com/a.jpg" alt="Saved"/></figure><!-- /wp:image --><!-- /wp:matter/slot --><!-- /wp:matter-test/section -->'
+		);
+
+		await requestUtils.updateSiteSettings({ matter_test_media_gain: true });
+		await admin.editPost(saved.id);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					window.wp.data
+						.select('core/block-editor')
+						.getBlocks()[0]
+						.innerBlocks.find(
+							(slot) => slot.attributes.name === 'media'
+						)
+						.innerBlocks.map(
+							(block) => `${block.name}:${block.attributes.alt}`
+						)
+				)
+			)
+			.toEqual(['core/image:Saved', 'core/image:']);
+		await requestUtils.updateSiteSettings({
+			matter_test_media_gain: false,
 		});
 	});
 

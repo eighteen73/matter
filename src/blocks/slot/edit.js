@@ -41,30 +41,38 @@ import { __ } from '@wordpress/i18n';
  * @return {Element} Slot editor.
  */
 export default function Edit({ attributes: { name }, clientId }) {
-	const { parentId, sectionName, hasInnerBlocks, isFirstWithName } =
-		useSelect(
-			(select) => {
-				const {
-					getBlockRootClientId,
-					getBlockName,
-					getBlockCount,
-					getBlockOrder,
-					getBlockAttributes,
-				} = select(blockEditorStore);
-				const rootId = getBlockRootClientId(clientId);
-				const first = getBlockOrder(rootId).find(
-					(id) => getBlockAttributes(id)?.name === name
-				);
+	const {
+		parentId,
+		sectionName,
+		hasInnerBlocks,
+		innerNames,
+		isFirstWithName,
+	} = useSelect(
+		(select) => {
+			const {
+				getBlockRootClientId,
+				getBlockName,
+				getBlocks,
+				getBlockOrder,
+				getBlockAttributes,
+			} = select(blockEditorStore);
+			const rootId = getBlockRootClientId(clientId);
+			const first = getBlockOrder(rootId).find(
+				(id) => getBlockAttributes(id)?.name === name
+			);
+			const blocks = getBlocks(clientId);
 
-				return {
-					parentId: rootId,
-					sectionName: getBlockName(rootId),
-					hasInnerBlocks: getBlockCount(clientId) > 0,
-					isFirstWithName: first === clientId,
-				};
-			},
-			[clientId, name]
-		);
+			return {
+				parentId: rootId,
+				sectionName: getBlockName(rootId),
+				hasInnerBlocks: blocks.length > 0,
+				// A string, so the slot re-renders only when they change.
+				innerNames: blocks.map((block) => block.name).join(','),
+				isFirstWithName: first === clientId,
+			};
+		},
+		[clientId, name]
+	);
 	const registry = useRegistry();
 	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
 
@@ -93,6 +101,15 @@ export default function Edit({ attributes: { name }, clientId }) {
 	});
 
 	const isLocked = !!config.templateLock;
+
+	// Whether the saved blocks are the template's first ones, by type (so the
+	// template can only add to them).
+	const templateNames = (config.template ?? []).map(([block]) => block);
+	const continuesTemplate =
+		innerNames !== '' &&
+		innerNames
+			.split(',')
+			.every((block, index) => block === templateNames[index]);
 
 	// "Posts carousel", "Posts accordion" and "Posts tabs" are query blocks,
 	// so a slot allowing the carousel, accordion or tabs allows those too.
@@ -127,9 +144,15 @@ export default function Edit({ attributes: { name }, clientId }) {
 		layout,
 		// Nothing new goes into an orphaned slot; its content can be moved out.
 		allowedBlocks: isOrphaned ? [] : allowedBlocks,
-		// Only to fill an empty slot. With blocks saved in it, a template of
-		// another block type (changed since) would replace them.
-		template: isLocked && !hasInnerBlocks ? config.template : undefined,
+		// Core re-syncs a locked slot with its template, which is how a block
+		// the theme adds to it reaches saved content. A template whose block
+		// types no longer match the saved ones (one replaced by another type)
+		// would replace what's saved, so it's applied only to an empty slot
+		// or one whose saved blocks are the template's first.
+		template:
+			isLocked && (!hasInnerBlocks || continuesTemplate)
+				? config.template
+				: undefined,
 		templateLock: isOrphaned ? false : (config.templateLock ?? false),
 		renderAppender:
 			isOrphaned || isLocked || hasInnerBlocks
