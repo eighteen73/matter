@@ -294,6 +294,26 @@ test.describe('accordion, collapsible and tabs', () => {
 			await expect(page.getByText('The rest of it')).toBeVisible();
 		});
 
+		test('a closed collapsible takes no room of its own, whatever a theme gives its content', async ({
+			page,
+		}) => {
+			await page.goto(kitchenSink.link);
+			await page.addStyleTag({
+				content:
+					'.wp-block-matter-collapsible__content { padding: 24px; border: 6px solid red; margin-block: 20px; min-height: 80px; background: yellow; }',
+			});
+
+			const content = page.locator('#more');
+
+			await expect(content).toHaveAttribute('hidden', /until-found/);
+			expect(await content.boundingBox()).toMatchObject({ height: 0 });
+
+			// Open, it is the theme's.
+			await page.getByRole('link', { name: 'Show more' }).click();
+			await expect(page.getByText('The rest of it')).toBeVisible();
+			expect((await content.boundingBox()).height).toBeGreaterThan(80);
+		});
+
 		test('only the active tab shows, and tabs switch', async ({ page }) => {
 			await page.goto(kitchenSink.link);
 

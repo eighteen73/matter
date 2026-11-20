@@ -15,6 +15,18 @@
 	display: none;
 }
 
+// A closed `until-found` content keeps its box: the browser's
+// `content-visibility: hidden` skips only what is inside it, so a theme's
+// padding, border, background or minimum height would still show on it. None
+// of that belongs to a closed one. (A theme that sets these with more
+// specificity than this has to do the same for `[hidden="until-found"]`.)
+.wp-block-matter-collapsible__content[hidden="until-found"] {
+	border-width: 0;
+	margin: 0;
+	min-block-size: 0;
+	padding: 0;
+}
+
 :where(.wp-block-matter-collapsible__trigger[role="button"]) {
 	cursor: pointer;
 }
