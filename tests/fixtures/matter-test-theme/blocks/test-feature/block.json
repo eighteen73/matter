@@ -7,6 +7,7 @@
 	"supports": {
 		"html": false,
 		"matter": {
+			"link": true,
 			"slots": {
 				"content": {
 					"allowedBlocks": [ "core/paragraph", "matter/accordion", "matter/tabs", "matter/carousel" ]

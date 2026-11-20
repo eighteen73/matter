@@ -62,7 +62,7 @@ class LinkTest extends TestCase {
 		$html = $this->render( '<!-- wp:' . self::BLOCK . ' {"matterLink":{"url":"https://example.com/page/","opensInNewTab":true}} /-->' );
 
 		$this->assertStringContainsString( 'has-link', $html );
-		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/" target="_blank" rel="noopener">Title</a></h3>', $html );
+		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/" target="_blank" rel="noopener">Title <span class="screen-reader-text">(opens in a new tab)</span></a></h3>', $html );
 	}
 
 	/**
@@ -144,14 +144,15 @@ class LinkTest extends TestCase {
 	}
 
 	/**
-	 * Without a heading, a visually hidden link goes before the closing tag.
+	 * Without a heading, a visually hidden link goes before the closing tag,
+	 * named after the block's text.
 	 *
 	 * @return void
 	 */
 	public function test_without_a_heading_a_hidden_link_is_added(): void {
 		$html = $this->link( '<div><p>Text</p></div>' );
 
-		$this->assertSame( '<div><p>Text</p><a class="matter-link" href="https://example.com/page/"><span class="screen-reader-text">Read more</span></a></div>', $html );
+		$this->assertSame( '<div><p>Text</p><a class="matter-link" href="https://example.com/page/"><span class="screen-reader-text">Text</span></a></div>', $html );
 	}
 
 	/**
@@ -163,5 +164,57 @@ class LinkTest extends TestCase {
 		$html = $this->link( '<div><h3>Title</h3></div>', 'https://example.com/page/', true );
 
 		$this->assertStringContainsString( 'href="https://example.com/page/" target="_blank" rel="noopener"', $html );
+	}
+
+	/**
+	 * Without a heading the hidden link is named after the block's first
+	 * text, shortened, else its first image's description, else "Read more".
+	 *
+	 * @return void
+	 */
+	public function test_a_hidden_link_is_named_after_the_block(): void {
+		$this->assertStringContainsString(
+			'<span class="screen-reader-text">Spring offers &amp; more</span>',
+			$this->link( '<div><p>Spring <em>offers</em> &amp; more</p></div>' )
+		);
+		$this->assertStringContainsString(
+			'<span class="screen-reader-text">The long and winding road that leads to…</span>',
+			$this->link( '<div><p>The long and winding road that leads to your door</p></div>' )
+		);
+		$this->assertStringContainsString(
+			'<span class="screen-reader-text">A red door</span>',
+			$this->link( '<div><img src="a.jpg" alt=""><img src="b.jpg" alt="A red door"></div>' )
+		);
+		$this->assertStringContainsString( '<span class="screen-reader-text">Read more</span>', $this->link( '<div><img src="a.jpg" alt=""></div>' ) );
+	}
+
+	/**
+	 * A new tab is said in the name, in the heading's link and in the hidden
+	 * one, and not for a link that opens in place.
+	 *
+	 * @return void
+	 */
+	public function test_a_new_tab_is_in_the_name(): void {
+		$hidden = $this->link( '<div><p>Offers</p></div>', 'https://example.com/page/', true );
+
+		$this->assertStringContainsString( '<span class="screen-reader-text">Offers (opens in a new tab)</span>', $hidden );
+		$this->assertSame( 1, substr_count( $hidden, 'opens in a new tab' ) );
+		$this->assertStringNotContainsString( 'opens in a new tab', $this->link( '<div><h3>Title</h3></div>' ) );
+		$this->assertStringNotContainsString( 'opens in a new tab', $this->link( '<div><p>Offers</p></div>' ) );
+	}
+
+	/**
+	 * The filter still has the last word on the hidden label.
+	 *
+	 * @return void
+	 */
+	public function test_the_label_is_filterable(): void {
+		$filter = fn( $label ) => $label . ' now';
+
+		add_filter( 'matter_link_label', $filter );
+
+		$this->assertStringContainsString( 'Offers now', $this->link( '<div><p>Offers</p></div>' ) );
+
+		remove_filter( 'matter_link_label', $filter );
 	}
 }

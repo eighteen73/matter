@@ -9,8 +9,10 @@
  * On the front end the block's first heading becomes the link (so the link's
  * name is the heading), and the link is stretched over the whole block. Links
  * and buttons inside stay clickable above it. Without a heading, a visually
- * hidden link is added instead. This runs on the rendered block, so sections
- * with their own render.php get it too.
+ * hidden link is added instead, named after the block's first text or image
+ * (else "Read more"). A link that opens in a new tab says so, in visually
+ * hidden text. This runs on the rendered block, so sections with their own
+ * render.php get it too.
  *
  * The linked block gets `has-link`, and the link `matter-link`, for styling
  * (e.g. hover and focus states).
@@ -167,7 +169,7 @@ class Link {
 
 		// The first heading's content, unless it already holds a link.
 		if ( preg_match( '/(<h([1-6])\b[^>]*>)(.*?)(<\/h\2>)/s', $block_content, $match, PREG_OFFSET_CAPTURE ) && ! preg_match( '/<a[\s>]/i', $match[3][0] ) ) {
-			$linked = $match[1][0] . '<a ' . $attributes . '>' . $match[3][0] . '</a>' . $match[4][0];
+			$linked = $match[1][0] . '<a ' . $attributes . '>' . $match[3][0] . ( $new_tab ? ' <span class="screen-reader-text">' . esc_html__( '(opens in a new tab)', 'matter' ) . '</span>' : '' ) . '</a>' . $match[4][0];
 
 			return substr_replace( $block_content, $linked, $match[0][1], strlen( $match[0][0] ) );
 		}
@@ -179,20 +181,73 @@ class Link {
 			return $block_content;
 		}
 
-		$link = sprintf(
-			'<a %1$s><span class="screen-reader-text">%2$s</span></a>',
-			$attributes,
-			esc_html(
-				/**
-				 * Filters the label of a whole-block link when the block has no heading.
-				 *
-				 * @param string $label Label.
-				 * @param array  $block Parsed block.
-				 */
-				(string) apply_filters( 'matter_link_label', __( 'Read more', 'matter' ), $block )
-			)
-		);
+		/**
+		 * Filters the label of a whole-block link when the block has no heading.
+		 * The default is the block's first text or image description, else
+		 * "Read more".
+		 *
+		 * @param string $label Label.
+		 * @param array  $block Parsed block.
+		 */
+		$label = (string) apply_filters( 'matter_link_label', self::default_label( $block_content ), $block );
+
+		if ( $new_tab ) {
+			/* translators: %s: the link's label */
+			$label = sprintf( __( '%s (opens in a new tab)', 'matter' ), $label );
+		}
+
+		$link = sprintf( '<a %1$s><span class="screen-reader-text">%2$s</span></a>', $attributes, esc_html( $label ) );
 
 		return substr_replace( $block_content, $link, $closing, 0 );
+	}
+
+	/**
+	 * What a block without a heading is called: its first text (a paragraph,
+	 * shortened as the editor shortens a section's label), else the
+	 * description of its first image, else "Read more".
+	 *
+	 * @param string $html Rendered block.
+	 * @return string
+	 */
+	private static function default_label( string $html ): string {
+		$text = '';
+
+		if ( preg_match( '/<p\b[^>]*>(.*?)<\/p>/is', $html, $match ) ) {
+			$text = self::shorten( (string) preg_replace( '/\s+/u', ' ', trim( html_entity_decode( wp_strip_all_tags( $match[1] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) ) );
+		}
+
+		if ( '' === $text ) {
+			$tags = new \WP_HTML_Tag_Processor( $html );
+
+			while ( $tags->next_tag( 'img' ) ) {
+				$text = self::shorten( (string) preg_replace( '/\s+/u', ' ', trim( (string) $tags->get_attribute( 'alt' ) ) ) );
+
+				if ( '' !== $text ) {
+					break;
+				}
+			}
+		}
+
+		return '' !== $text ? $text : __( 'Read more', 'matter' );
+	}
+
+	/**
+	 * Text shortened to a label's length, at a word's end unless that leaves
+	 * too little (as `shorten` in the editor's first-heading.js).
+	 *
+	 * @param string $text Text.
+	 * @return string
+	 */
+	private static function shorten( string $text ): string {
+		$length = 40;
+
+		if ( mb_strlen( $text ) <= $length ) {
+			return $text;
+		}
+
+		$cut   = mb_substr( $text, 0, $length );
+		$space = mb_strrpos( $cut, ' ' );
+
+		return rtrim( false !== $space && $space > $length / 2 ? mb_substr( $cut, 0, $space ) : $cut ) . '…';
 	}
 }
