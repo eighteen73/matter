@@ -47,6 +47,11 @@ defined( 'ABSPATH' ) || exit;
 final class WooCommerce implements Integration {
 
 	/**
+	 * The oldest WooCommerce the integration works with.
+	 */
+	public const MINIMUM_VERSION = '11.0';
+
+	/**
 	 * WooCommerce's query block, shown as a Matter carousel.
 	 */
 	public const PRODUCT_COLLECTION = 'woocommerce/product-collection';
@@ -80,7 +85,51 @@ final class WooCommerce implements Integration {
 	 * @return bool
 	 */
 	public function can_boot(): bool {
-		return class_exists( 'WooCommerce' );
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return false;
+		}
+
+		$version = defined( 'WC_VERSION' ) ? (string) WC_VERSION : '0';
+
+		if ( self::supports( $version, class_exists( Params::class ) ) ) {
+			return true;
+		}
+
+		add_action(
+			'admin_notices',
+			static function () use ( $version ): void {
+				printf(
+					'<div class="notice notice-warning"><p><strong>%1$s</strong>: %2$s</p></div>',
+					esc_html__( 'Matter', 'matter' ),
+					esc_html(
+						sprintf(
+							/* translators: 1: version needed, 2: version in use. */
+							__( 'Matter’s WooCommerce features need WooCommerce %1$s or later (this site has %2$s), so they are switched off.', 'matter' ),
+							self::MINIMUM_VERSION,
+							$version
+						)
+					)
+				);
+			}
+		);
+
+		return false;
+	}
+
+	/**
+	 * Whether a WooCommerce version has what the integration uses: its version
+	 * and the product filters' parameters class (WooCommerce's internals,
+	 * which Matter's filters read).
+	 *
+	 * @param string $version    WooCommerce version (`WC_VERSION`).
+	 * @param bool   $has_params Whether the product filters' Params class exists.
+	 * @return bool
+	 */
+	public static function supports( string $version, bool $has_params ): bool {
+		// A pre-release of the minimum (11.0.0-beta.1) counts as the minimum.
+		$version = (string) preg_replace( '/[-+].*$/', '', $version );
+
+		return $has_params && version_compare( $version, self::MINIMUM_VERSION, '>=' );
 	}
 
 	/**

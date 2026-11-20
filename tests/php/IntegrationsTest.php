@@ -104,6 +104,40 @@ class IntegrationsTest extends TestCase {
 	}
 
 	/**
+	 * The WooCommerce integration needs WooCommerce 11 and its product
+	 * filters' parameters class; an older one is switched off.
+	 *
+	 * @return void
+	 */
+	public function test_woocommerce_integration_needs_woocommerce_11(): void {
+		$this->assertSame( '11.0', WooCommerce::MINIMUM_VERSION );
+
+		$this->assertFalse( WooCommerce::supports( '10.9.9', true ), 'Too old.' );
+		$this->assertFalse( WooCommerce::supports( '9.4.0', true ) );
+		$this->assertTrue( WooCommerce::supports( '11.0.0', true ) );
+		$this->assertTrue( WooCommerce::supports( '11.3.1', true ) );
+		$this->assertTrue( WooCommerce::supports( '12.0.0-beta.1', true ) );
+		$this->assertTrue( WooCommerce::supports( '11.0.0-rc.2', true ), 'A pre-release of the minimum counts as the minimum.' );
+		$this->assertFalse( WooCommerce::supports( '10.9.9-rc.2', true ) );
+		$this->assertFalse( WooCommerce::supports( '11.3.1', false ), 'Without the parameters class.' );
+		$this->assertFalse( WooCommerce::supports( '', true ) );
+	}
+
+	/**
+	 * Without WooCommerce there is nothing to boot, and nothing to say about it.
+	 *
+	 * @return void
+	 */
+	public function test_woocommerce_integration_without_woocommerce_is_quiet(): void {
+		$this->assertFalse( class_exists( 'WooCommerce' ), 'PHPUnit runs without WooCommerce.' );
+
+		$before = has_action( 'admin_notices' );
+
+		$this->assertFalse( ( new WooCommerce() )->can_boot() );
+		$this->assertSame( $before, has_action( 'admin_notices' ) );
+	}
+
+	/**
 	 * A project can add its own integration; one that can't boot doesn't.
 	 *
 	 * @return void

@@ -29,6 +29,7 @@
 		"test": "npx wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit"
 	},
 	"config": {
+		"platform-check": false,
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		}

@@ -123,7 +123,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 - **Direction:** one stylesheet per component, with logical properties and `:dir(rtl)`, instead of flipped `-rtl.css` copies, so right-to-left content works on any site. Drawer and panel sides are `start` and `end` (drawer `position`, `.is-position-start`; panel `position`, `.is-from-start`), not left and right.
 - **Carousel settings:** `--carousel-per-view` and `--carousel-gap` set slide widths and gaps.
 - **Core blocks Matter replaces:** hidden with `supports.inserter` instead of rewriting the allowed-blocks list.
-- **Requirements:** WordPress 7.1 and PHP 8.3.
+- **Requirements:** WordPress 7.1 and PHP 8.3, checked before anything loads (an older one gets an admin notice, not a fatal error); WooCommerce 11 for its integration.
 - **Dependencies:** pinned; unused packages removed.
 
 ### Removed

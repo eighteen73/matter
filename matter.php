@@ -23,6 +23,46 @@ namespace Eighteen73\Matter;
 
 defined( 'ABSPATH' ) || exit;
 
+// What Matter needs, checked before anything else loads: its code uses PHP 8.3
+// and WordPress 7.1 APIs, so older ones would fail with a fatal error.
+$matter_requirements = [
+	'PHP'       => [ PHP_VERSION, '8.3', PHP_VERSION_ID >= 80300 ],
+	'WordPress' => [
+		(string) ( $GLOBALS['wp_version'] ?? '0' ),
+		'7.1',
+		version_compare( (string) preg_replace( '/[-+].*$/', '', (string) ( $GLOBALS['wp_version'] ?? '0' ) ), '7.1', '>=' ),
+	],
+];
+
+foreach ( $matter_requirements as $matter_name => [ $matter_have, $matter_need, $matter_ok ] ) {
+	if ( $matter_ok ) {
+		continue;
+	}
+
+	add_action(
+		'admin_notices',
+		static function () use ( $matter_name, $matter_have, $matter_need ) {
+			printf(
+				'<div class="notice notice-error"><p><strong>%1$s</strong>: %2$s</p></div>',
+				esc_html__( 'Matter', 'matter' ),
+				esc_html(
+					sprintf(
+						/* translators: 1: PHP or WordPress, 2: version needed, 3: version in use. */
+						__( 'Matter needs %1$s %2$s or later (this site has %3$s), so it is switched off.', 'matter' ),
+						$matter_name,
+						$matter_need,
+						$matter_have
+					)
+				)
+			);
+		}
+	);
+
+	return;
+}
+
+unset( $matter_requirements, $matter_name, $matter_have, $matter_need, $matter_ok );
+
 // Useful global constants.
 define( 'MATTER_VERSION', '1.0.0' );
 define( 'MATTER_URL', plugin_dir_url( __FILE__ ) );

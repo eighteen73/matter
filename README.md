@@ -16,6 +16,9 @@ Matter ships behaviour and functional CSS. Presentational defaults are wrapped i
 
 - WordPress 7.1+
 - PHP 8.3+
+- WooCommerce 11+, only for the WooCommerce integration (older versions switch it off, with an admin notice)
+
+On an older PHP or WordPress, Matter loads nothing and shows an admin notice. Its Composer package turns off Composer's platform check (`config.platform-check`), so that this notice appears instead of a fatal error from the autoloader.
 
 ## Installing
 
