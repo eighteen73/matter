@@ -107,10 +107,13 @@
 }
 
 // Forced colours drop the background and the backdrop's tint, so the panel
-// would have no edge against the page: the side it opens from gets one.
+// would have no edge against the page: the side it opens from gets one, and
+// an outline (as the drawer's) that a theme's `border: 0` doesn't remove.
 @media (forced-colors: active) {
 	:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content) {
 		border-inline-start: 1px solid canvastext;
+		outline: 1px solid canvastext;
+		outline-offset: 0;
 	}
 
 	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content) {

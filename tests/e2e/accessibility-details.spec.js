@@ -252,18 +252,18 @@ test.describe('dialog names', () => {
 	});
 });
 
+// The border each dialog gets.
+const edges = async (locator) =>
+	locator.evaluate((element) => {
+		const style = window.getComputedStyle(element);
+
+		return ['Top', 'Right', 'Bottom', 'Left'].map(
+			(side) => style[`border${side}Width`]
+		);
+	});
+
 test.describe('forced colours', () => {
 	test.use({ viewport: { width: 1280, height: 900 } });
-
-	// The border each dialog gets, and where the screenshots go for a look.
-	const edges = async (locator) =>
-		locator.evaluate((element) => {
-			const style = window.getComputedStyle(element);
-
-			return ['Top', 'Right', 'Bottom', 'Left'].map(
-				(side) => style[`border${side}Width`]
-			);
-		});
 
 	test('a modal, drawer and lightbox have an edge', async ({
 		page,
@@ -322,6 +322,88 @@ test.describe('forced colours', () => {
 		await expect(content).toBeVisible();
 		await page.waitForTimeout(500);
 		expect(await edges(content)).toEqual(['0px', '0px', '0px', '1px']);
+		await page.screenshot({ path: info.outputPath('panel.png') });
+	});
+});
+
+test.describe('forced colours, against a theme that removes borders', () => {
+	// A normal reset, which outranks Matter's `:where()` border at any
+	// specificity: the outline is what keeps the edge.
+	const RESET =
+		'dialog, .wp-block-matter-drawer, .matter-panel__content { border: 0; }';
+
+	const outline = (locator) =>
+		locator.evaluate((element) => {
+			const style = window.getComputedStyle(element);
+
+			return [
+				style.outlineStyle,
+				style.outlineWidth,
+				style.outlineOffset,
+			];
+		});
+
+	test('a modal, drawer and lightbox keep an edge', async ({
+		page,
+	}, info) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.emulateMedia({ forcedColors: 'active' });
+		await page.goto(details.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
+		await page.addStyleTag({ content: RESET });
+
+		const shoot = (name) =>
+			page.screenshot({ path: info.outputPath(`${name}.png`) });
+
+		await page.getByRole('link', { name: 'Open welcome' }).click();
+
+		const modal = page.getByRole('dialog', { name: 'Welcome aboard' });
+
+		await expect(modal).toBeVisible();
+		await page.waitForTimeout(400);
+		expect(await edges(modal)).toEqual(['0px', '0px', '0px', '0px']);
+		expect(await outline(modal)).toEqual(['solid', '1px', '0px']);
+		await shoot('modal');
+		await page.keyboard.press('Escape');
+		await expect(modal).toBeHidden();
+
+		await page.getByRole('link', { name: 'Open drawer' }).click();
+
+		const drawer = page.getByRole('dialog', { name: 'Browse the shop' });
+
+		await expect(drawer).toBeVisible();
+		await page.waitForTimeout(500);
+		expect(await outline(drawer)).toEqual(['solid', '1px', '0px']);
+		await shoot('drawer');
+		await page.keyboard.press('Escape');
+		await expect(drawer).toBeHidden();
+
+		await page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 1 of 3' })
+			.click();
+
+		const lightbox = page.locator('#photos dialog');
+
+		await expect(lightbox).toHaveAttribute('open', '');
+		await page.waitForTimeout(400);
+		expect(await outline(lightbox)).toEqual(['solid', '1px', '0px']);
+		await shoot('lightbox');
+	});
+
+	test('the off-canvas panel keeps an edge', async ({ page }, info) => {
+		await page.emulateMedia({ forcedColors: 'active' });
+		await page.setViewportSize({ width: 390, height: 800 });
+		await page.goto(panelPage.link);
+		await page.addStyleTag({ content: RESET });
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const content = page.locator('#test-nav .matter-panel__content');
+
+		await expect(content).toBeVisible();
+		await page.waitForTimeout(500);
+		expect(await edges(content)).toEqual(['0px', '0px', '0px', '0px']);
+		expect(await outline(content)).toEqual(['solid', '1px', '0px']);
 		await page.screenshot({ path: info.outputPath('panel.png') });
 	});
 });

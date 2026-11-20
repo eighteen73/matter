@@ -308,6 +308,9 @@
 		box-sizing: border-box;
 		// The skin's white text and icons would vanish on it.
 		color: canvastext;
+		// As the modal's: a theme's `border: 0` doesn't remove it.
+		outline: 1px solid canvastext;
+		outline-offset: 0;
 	}
 }
 

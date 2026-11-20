@@ -134,10 +134,14 @@ html.has-overlay-open.has-overlay-gutter {
 // Forced colours drop the background and the backdrop's tint, so the drawer
 // would have no edge against the page: the side it opens towards gets one. It
 // is placed with logical offsets, so the edge facing the page is logical too:
-// no direction-specific rules.
+// no direction-specific rules. An outline as well, which a theme's
+// `border: 0` doesn't remove: it draws on every side, and the sides at the
+// edge of the screen are off it.
 @media (forced-colors: active) {
 	:where(.wp-block-matter-drawer) {
 		border-inline-start: 1px solid canvastext;
+		outline: 1px solid canvastext;
+		outline-offset: 0;
 	}
 
 	:where(.wp-block-matter-drawer.is-position-start) {

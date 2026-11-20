@@ -187,10 +187,15 @@ html.has-overlay-open.has-overlay-gutter {
 }
 
 // Forced colours drop the background and the backdrop's tint, so the dialog
-// would have no edge against the page: give it one.
+// would have no edge against the page: give it one. An outline as well as a
+// border: a theme that sets `border: 0` on the dialog (a normal reset) wins
+// over this at any specificity, but rarely resets the outline, and an outline
+// takes no space.
 @media (forced-colors: active) {
 	:where(.wp-block-matter-modal) {
 		border: 1px solid canvastext;
+		outline: 1px solid canvastext;
+		outline-offset: 0;
 	}
 }
 

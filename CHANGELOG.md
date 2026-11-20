@@ -138,7 +138,7 @@ Changes to the default skin (in `:where()`). From 1.0 the skin changes only in a
 - The skin is minimal: no radii (modal, dropdown, tooltip, caption and carousel buttons), shadows, font weights (toggles, tabs, labels), decorative borders (accordion items, the tab list, drill-down rows and header, carousel arrows) or opacity effects (thumbnails, menu descriptions).
 - Dropdown submenus and the tabs dropdown have a border instead of a shadow; the selected tab is underlined (both orientations) instead of a border on its side.
 - Surfaces fall back to the system colours `Canvas` and `CanvasText` without a scheme, and tints (progress and timer tracks, borders) are mixed from the text colour, so they show on dark schemes.
-- In forced colours, a modal, drawer, off-canvas panel and gallery lightbox have a border (the system text colour), as their background and backdrop aren't shown.
+- In forced colours, a modal, drawer, off-canvas panel and gallery lightbox have a border and an outline (the system text colour), as their background and backdrop aren't shown. The outline is there for a theme that resets `border` on its dialogs (which outranks the `:where()` border); it takes no space, and on a drawer or panel only its page-facing edge is on the screen.
 - Icons, dots, progress bars and the panel toggle's bars stay visible in forced colours.
 - Carousel dots are sized in `rem` (0.625rem) and spaced with their centres 24px apart; menu toggles, back buttons and links, and overlay close buttons, are at least 24px, for WCAG 2.5.8's target size.
 - Reduced motion also stops the transition between grouped modals.
