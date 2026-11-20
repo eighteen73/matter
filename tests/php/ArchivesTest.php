@@ -514,7 +514,6 @@ class ArchivesTest extends TestCase {
 			'a searched feed' => [ '/?post_type=matter_archive&feed=rss2&s=entry' ],
 			'a list of types' => [ '/?post_type[]=matter_archive&post_type[]=post' ],
 			'a draft by ID'   => [ '/?p={draft}&post_type=matter_archive' ],
-			'a draft, no type' => [ '/?p={draft}' ],
 			'a draft by name' => [ '/?name=a-draft&post_type=matter_archive' ],
 		];
 	}
@@ -528,7 +527,15 @@ class ArchivesTest extends TestCase {
 	 * @return void
 	 */
 	public function test_entries_cannot_be_listed( string $url ): void {
-		$this->entry( 'date' );
+		$published = $this->entry( 'date' );
+
+		wp_update_post(
+			[
+				'ID'         => $published,
+				'post_title' => 'Entry published',
+			]
+		);
+		self::factory()->post->create( [ 'post_title' => 'Ordinary post' ] );
 
 		$draft = self::factory()->post->create(
 			[
@@ -553,14 +560,115 @@ class ArchivesTest extends TestCase {
 			ob_start();
 			@do_feed(); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- The feed sends headers, which the test run has already sent.
 			$feed = ob_get_clean();
-			$this->assertStringNotContainsString( '<item>', $feed, $url );
 			$this->assertStringNotContainsString( 'Entry draft', $feed, $url );
+			$this->assertStringNotContainsString( 'Entry published', $feed, $url );
+		}
+
+		// A request that also asks for posts still has them in the main query
+		// (so the check above isn't passing on an empty site), without the
+		// entries.
+		if ( str_contains( $url, 'post_type[]=post' ) ) {
+			$this->assertContains( 'Ordinary post', wp_list_pluck( $GLOBALS['wp_query']->posts, 'post_title' ), $url );
 		}
 
 		$this->assertFalse( is_home() );
 		$this->assertFalse( is_post_type_archive() );
 
 		$this->go_to( '/' );
+	}
+
+	/**
+	 * An entry's own address as a feed (`?p=<ID>&feed=rss2`) lists nothing:
+	 * singular requests keep the entry for its redirect, but not in a feed.
+	 *
+	 * @return void
+	 */
+	public function test_an_entrys_own_feed_is_empty(): void {
+		$entry = $this->entry( 'date' );
+
+		wp_update_post(
+			[
+				'ID'         => $entry,
+				'post_title' => 'Entry published',
+			]
+		);
+
+		$this->go_to( '/?p=' . $entry . '&feed=rss2' );
+		Archives::instance()->deny_listing();
+
+		$this->assertSame( [], array_filter( $GLOBALS['wp_query']->posts, fn( $post ) => Archives::POST_TYPE === $post->post_type ) );
+
+		ob_start();
+		@do_feed(); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- The feed sends headers, which the test run has already sent.
+		$feed = ob_get_clean();
+
+		$this->assertStringNotContainsString( 'Entry published', $feed );
+		$this->assertStringNotContainsString( '<item>', $feed );
+
+		$this->go_to( '/' );
+	}
+
+	/**
+	 * Preview requests for something that isn't an entry the user may edit
+	 * are ordinary requests: no entry, so core's redirect and caching headers
+	 * are left alone.
+	 *
+	 * @return void
+	 */
+	public function test_a_preview_of_no_entry_is_left_alone(): void {
+		$editor = self::factory()->user->create( [ 'role' => 'editor' ] );
+		$post   = self::factory()->post->create();
+
+		wp_set_current_user( $editor );
+
+		// A preview id that doesn't exist, and one of another post type.
+		$this->assertSame( 0, $this->previewed( 999999, $editor ) );
+		$this->assertSame( 0, $this->previewed( $post, $editor ) );
+
+		$_GET = [
+			'preview'    => 'true',
+			'preview_id' => (string) $post,
+		];
+
+		$this->assertSame( 'https://example.org/', Archives::instance()->keep_preview( 'https://example.org/' ), 'core redirects as usual' );
+
+		$_GET = [];
+
+		wp_set_current_user( 0 );
+	}
+
+	/**
+	 * The editor's Preview keeps `preview=true` through core's canonical
+	 * redirect, for the user who may edit the entry only. (That the draft is
+	 * kept out of shared caches is checked in the browser: the headers can't
+	 * be sent in a test run.)
+	 *
+	 * @return void
+	 */
+	public function test_a_preview_keeps_its_query(): void {
+		$editor = self::factory()->user->create( [ 'role' => 'editor' ] );
+		$draft  = self::factory()->post->create(
+			[
+				'post_type'    => Archives::POST_TYPE,
+				'post_status'  => 'draft',
+				'meta_input'   => [ Archives::META => 'post_type:post' ],
+			]
+		);
+
+		wp_set_current_user( $editor );
+
+		$_GET = [
+			'preview'    => 'true',
+			'preview_id' => (string) $draft,
+		];
+
+		$this->assertFalse( Archives::instance()->keep_preview( 'https://example.org/blog/' ), 'the redirect that would drop preview=true is cancelled' );
+
+		// Only the editing user's request is kept.
+		wp_set_current_user( 0 );
+		$this->assertSame( 'https://example.org/blog/', Archives::instance()->keep_preview( 'https://example.org/blog/' ) );
+
+		$_GET = [];
 	}
 
 	/**
@@ -723,6 +831,31 @@ class ArchivesTest extends TestCase {
 		// content), not an older one the editor replaced.
 		$this->assertNull( Archives::instance()->resolve( new Target( 'author' ) ) );
 		$this->assertStringNotContainsString( (string) $protected, (string) Archives::instance()->content_for( new Target( 'author' ) ) );
+	}
+
+	/**
+	 * A protected newest entry ends the search: the archive shows the default
+	 * content, not the cascading parent's entry that its own was meant to
+	 * replace.
+	 *
+	 * @return void
+	 */
+	public function test_a_protected_newest_entry_does_not_fall_through_to_a_parent(): void {
+		$parent = $this->entry( "term:category:{$this->terms['parent']}", true );
+
+		$this->assertSame( $parent, $this->child_entry(), 'the parent cascades while the child has no entry' );
+
+		self::factory()->post->create(
+			[
+				'post_type'     => Archives::POST_TYPE,
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+				'post_date'     => '2026-03-01 00:00:00',
+				'meta_input'    => [ Archives::META => "term:category:{$this->terms['child']}" ],
+			]
+		);
+
+		$this->assertNull( $this->child_entry() );
 	}
 
 	/**

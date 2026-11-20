@@ -286,11 +286,16 @@ class Archives {
 				array_filter( $posts, fn( WP_Post $post ) => get_post_meta( $post->ID, self::META, true ) === $candidate->key() )
 			);
 
-			// A password-protected entry would show to everyone (an archive has
-			// no password form). It's skipped after the newest is picked, so a
-			// protected newest entry doesn't bring back an older one.
-			if ( ! $entry || '' !== $entry->post_password ) {
+			if ( ! $entry ) {
 				continue;
+			}
+
+			// A password-protected entry would show to everyone (an archive has
+			// no password form), so it isn't shown. It also ends the search:
+			// the archive shows its default content, not an entry from
+			// further up the chain that its owner meant to be replaced.
+			if ( '' !== $entry->post_password ) {
+				break;
 			}
 
 			// The archive's own, a taxonomy's (for each of its terms), or one

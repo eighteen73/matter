@@ -1309,8 +1309,12 @@ test.describe('archive entry preview', () => {
 
 		// The first one's link, opened again now the second is newer, is
 		// still the first.
-		await page.goto(urls[0]);
+		const again = await page.goto(urls[0]);
+
 		await expect(page.getByText('Draft intro first')).toBeVisible();
+
+		// A draft is for one person: it's kept out of shared caches.
+		expect(again.headers()['cache-control']).toMatch(/no-cache|no-store/);
 		await expect(page.getByText('Draft intro second')).toHaveCount(0);
 
 		// Someone logged out, or without the right to edit, sees neither.

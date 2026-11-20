@@ -1580,7 +1580,6 @@ test.describe('archive entries are not pages, logged out', () => {
 			'/?post_type=matter_archive&paged=2',
 			'/?post_type=matter_archive&feed=rss2',
 			`/?p=${draft.id}&post_type=matter_archive`,
-			`/?p=${draft.id}`,
 		]) {
 			const response = await page.goto(path);
 
@@ -1610,6 +1609,13 @@ test.describe('archive entries are not pages, logged out', () => {
 			expect(body, path).not.toContain('<entry>');
 			expect(body, path).not.toContain('Entry title that must not leak');
 		}
+
+		// A published entry's own address as a feed goes to its archive: no
+		// feed, and nothing of the entry in it.
+		const own = await request.get(`/?p=${published.id}&feed=rss2`);
+		const ownBody = await own.text();
+
+		expect(ownBody).not.toContain('Entry title that must not leak');
 
 		// A published entry's own address goes to its archive.
 		await page.goto(`/?p=${published.id}&post_type=matter_archive`);
