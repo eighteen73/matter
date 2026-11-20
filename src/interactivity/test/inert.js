@@ -244,6 +244,15 @@ describe('inertAround', () => {
 		});
 	});
 
+	it('leaves an aria-live="off" region to be made inert', () => {
+		document.body.innerHTML =
+			'<div id="quiet" aria-live="off"></div><div id="loud" aria-live="polite"></div><div id="content"></div>';
+
+		inertAround(document.getElementById('content'));
+
+		expect(inert()).toEqual(['quiet']);
+	});
+
 	describe('several holders', () => {
 		it('keeps an element inert until the last holder lets go, in any order', () => {
 			const content = build();

@@ -9,7 +9,7 @@
  * so.
  *
  * Live regions keep announcing: an element that is, or sits in, a live region
- * (`aria-live`, `role` status, alert or log) is never made inert, and a
+ * (`aria-live` other than `off`, `role` status, alert or log) is never made inert, and a
  * sibling that only holds one is entered, so the rest of it is inert and the
  * path to the region is not. The same goes for what is on top of the page
  * already: a modal (`:modal`, `aria-modal="true"`) or an open dialog, such as a
@@ -32,7 +32,7 @@ const supports = (selector) => {
 	}
 };
 const LEFT_ALONE = [
-	'[aria-live]',
+	'[aria-live]:not([aria-live="off"])',
 	'[role="status"]',
 	'[role="alert"]',
 	'[role="log"]',
