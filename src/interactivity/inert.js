@@ -20,10 +20,14 @@
 // Nothing to make inert, or that mustn't be.
 const SKIPPED = ['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT'];
 
-// What announces changes to assistive technology, which inert would silence,
-// and what is on top of the page already (a cookie banner, an open dialog):
-// neither is made inert. `:modal` isn't known to every browser.
-const supports = (selector) => {
+/**
+ * Whether the browser knows a selector (`:modal` isn't known to every one),
+ * so matching with it doesn't throw.
+ *
+ * @param {string} selector Selector.
+ * @return {boolean} Whether it is supported.
+ */
+export const supports = (selector) => {
 	try {
 		document.querySelector(selector);
 		return true;
@@ -31,6 +35,10 @@ const supports = (selector) => {
 		return false;
 	}
 };
+
+// What announces changes to assistive technology, which inert would silence,
+// and what is on top of the page already (a cookie banner, an open dialog):
+// neither is made inert.
 const LEFT_ALONE = [
 	'[aria-live]:not([aria-live="off"])',
 	'[role="status"]',

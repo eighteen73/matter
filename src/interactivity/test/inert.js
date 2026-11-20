@@ -1,7 +1,7 @@
 /**
  * Making the surroundings of an element inert, and putting back exactly that.
  */
-import { inertAround, onModal, suspendForModal } from '../inert';
+import { inertAround, onModal, supports, suspendForModal } from '../inert';
 
 const build = () => {
 	document.body.innerHTML = `
@@ -430,5 +430,12 @@ describe('onModal while a modal is open, and a pauser that throws', () => {
 		expect(good).toHaveBeenCalled();
 		end();
 		stopGood();
+	});
+});
+
+describe('supports', () => {
+	it('tells a selector the browser knows from one that would throw', () => {
+		expect(supports('dialog[open]')).toBe(true);
+		expect(supports(':not-a-pseudo-class')).toBe(false);
 	});
 });

@@ -38,10 +38,13 @@ import {
 } from '../interactivity/api';
 import { focused, isUsable } from '../interactivity/focus';
 import { hasScrollbar } from '../interactivity/scrollbar';
-import { inertAround, onModal } from '@matter/inert';
+import { inertAround, onModal, supports } from '@matter/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 
 registerType('panel', '.matter-panel');
+
+// `:modal` isn't known to every browser (the selector would throw).
+const HAS_MODAL = supports(':modal');
 
 const OPEN_CLASS = 'has-panel-open';
 const GUTTER_CLASS = 'has-panel-gutter';
@@ -331,7 +334,7 @@ const { state, actions } = store(
 				// the panel, or opened from a button in it.
 				if (
 					event.target.closest?.('dialog[open]') ||
-					document.querySelector('dialog[open]:modal')
+					(HAS_MODAL && document.querySelector('dialog[open]:modal'))
 				) {
 					return;
 				}
