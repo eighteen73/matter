@@ -26,7 +26,7 @@ import { createTrap as createFocusTrap } from '@matter/focus-trap';
  * Internal dependencies
  */
 import { enhance } from '../interactivity/api';
-import { inertAround } from '../interactivity/inert';
+import { inertAround } from '@matter/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 import { clearPlacements, unwatchSubmenu, watchSubmenu } from './positioning';
 

@@ -7,7 +7,9 @@ export default [
 	{
 		// Matter's shared script modules: external, loaded by ID (see
 		// webpack.config.js), so not on disk to resolve.
-		settings: { 'import/core-modules': ['@matter/focus-trap'] },
+		settings: {
+			'import/core-modules': ['@matter/focus-trap', '@matter/inert'],
+		},
 	},
 	{
 		// Unit tests (npm run test:unit).

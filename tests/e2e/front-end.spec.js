@@ -687,6 +687,96 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		).toHaveJSProperty('inert', true);
 	});
 
+	test('a modal opened from a button in the panel can be used and closed', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.evaluate(() =>
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.insertAdjacentHTML(
+					'beforeend',
+					'<button type="button" id="panel-modal-button" aria-controls="in-tab">Offer</button>'
+				)
+		);
+
+		const toggle = page.locator('[aria-controls="test-nav"]');
+		const panel = page.locator('#test-nav');
+		const dialog = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await toggle.click();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page.locator('#panel-modal-button').click();
+		await expect(dialog).toBeVisible();
+
+		// The close control takes focus and clicks, though the modal sits in
+		// the page's content, which the panel made inert.
+		const close = dialog.getByRole('button', { name: /close/i }).first();
+
+		await close.focus();
+		await expect(close).toBeFocused();
+		await close.click();
+		await expect(dialog).toBeHidden();
+
+		// Back in the panel, which is still open, still holds the page inert
+		// and still works.
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect(page.locator('main')).toHaveJSProperty('inert', true);
+		await page.locator('#panel-modal-button').focus();
+		await expect(page.locator('#panel-modal-button')).toBeFocused();
+		await panel.locator('.matter-panel__close').click();
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+		await expect(toggle).toBeFocused();
+		expect(await page.locator('[inert]').count()).toBe(
+			await page.evaluate(
+				() =>
+					document.querySelectorAll('.matter-menu__submenu[inert]')
+						.length
+			)
+		);
+	});
+
+	test('a modal opened from a link in the panel leaves nothing inert or trapped', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.evaluate(() =>
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.insertAdjacentHTML(
+					'beforeend',
+					'<a href="#in-tab" id="panel-modal-link">Offer</a>'
+				)
+		);
+
+		const panel = page.locator('#test-nav');
+		const dialog = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page.locator('#panel-modal-link').click();
+		await expect(dialog).toBeVisible();
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-panel-open\b/
+		);
+
+		const close = dialog.getByRole('button', { name: /close/i }).first();
+
+		await close.focus();
+		await expect(close).toBeFocused();
+		await close.click();
+		await expect(dialog).toBeHidden();
+		expect(
+			await page.evaluate(
+				() =>
+					document.querySelectorAll(
+						'[inert]:not(.matter-menu__submenu)'
+					).length
+			)
+		).toBe(0);
+	});
+
 	test('a change of hash closes the panel', async ({ page }) => {
 		await page.goto(kitchenSink.link);
 		await page.locator('[aria-controls="test-nav"]').click();

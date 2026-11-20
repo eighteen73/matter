@@ -20,6 +20,10 @@ const SKIPPED = ['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT'];
 // What announces changes to assistive technology, which inert would silence.
 const LIVE = '[aria-live], [role="status"], [role="alert"], [role="log"]';
 
+// What each holder made inert, while it holds, and who is told of a modal.
+const holders = new Set();
+const pausers = new Set();
+
 /**
  * Make an element inert, except live regions: one is left alone, and an
  * element that holds one is entered, so what is around the region is inert.
@@ -59,6 +63,8 @@ function silence(element, changed) {
 export function inertAround(element, { root = document.body, keep = '' } = {}) {
 	const changed = [];
 
+	holders.add(changed);
+
 	for (let node = element; node && node !== root; ) {
 		const parent = node.parentElement;
 
@@ -76,8 +82,58 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
 	}
 
 	return () => {
+		holders.delete(changed);
 		changed.splice(0).forEach((sibling) => {
 			sibling.removeAttribute('inert');
 		});
 	};
+}
+
+/**
+ * A modal dialog that opens while something holds the page inert (a modal
+ * opened from a button in an open panel) sits inside what is inert, where it
+ * can't be used in every browser. This lets the holds around the dialog go,
+ * and asks what else is paused for it (e.g. a focus trap), until it closes: the
+ * browser itself keeps everything outside a modal dialog inert meanwhile.
+ *
+ * @param {Element} dialog The dialog about to be shown.
+ * @return {Function} Puts back what is still held, and resumes what was paused.
+ */
+export function suspendForModal(dialog) {
+	const released = [];
+
+	holders.forEach((changed) => {
+		changed
+			.filter((element) => element.contains(dialog))
+			.forEach((element) => {
+				element.removeAttribute('inert');
+				released.push([changed, element]);
+			});
+	});
+
+	const resumes = [...pausers].map((pause) => pause(dialog));
+
+	return () => {
+		resumes.forEach((resume) => resume?.());
+		released.forEach(([changed, element]) => {
+			// Not if its holder let go meanwhile.
+			if (changed.includes(element)) {
+				element.setAttribute('inert', '');
+			}
+		});
+	};
+}
+
+/**
+ * Be told when a modal dialog is about to open over the page, to pause
+ * what would fight it (a focus trap).
+ *
+ * @param {Function} pause Called with the dialog; returns a function that
+ *                         resumes.
+ * @return {Function} Stops being told.
+ */
+export function onModal(pause) {
+	pausers.add(pause);
+
+	return () => pausers.delete(pause);
 }

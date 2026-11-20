@@ -49,6 +49,7 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
+import { suspendForModal } from '@matter/inert';
 import { focusFirst, focused, isUsable } from '../interactivity/focus';
 import { hashId } from '../interactivity/hash';
 import {
@@ -71,6 +72,15 @@ const lastStates = new Map();
 
 // The control that opened each dialog.
 const openers = new Map();
+
+// Puts back what let go for a dialog opened over an inert page (see
+// suspendForModal()), once it closes.
+const resumes = new Map();
+
+const resumeAfter = (id) => {
+	resumes.get(id)?.();
+	resumes.delete(id);
+};
 
 const isDialog = (id) => elements.get(id)?.tagName === 'DIALOG';
 
@@ -540,7 +550,12 @@ const showDialog = (dialog, id) => {
 		return;
 	}
 
+	// Over something that holds the page inert (an open panel), the holds
+	// around it let go until it closes, so it can be used.
+	const resume = suspendForModal(dialog);
+
 	if (!isRendered(dialog) || dialog.closest('[inert]')) {
+		resume();
 		// eslint-disable-next-line no-console -- Tells the developer why it didn't open.
 		console.warn(
 			`Matter: "#${id}" wasn't opened because it's inside something hidden.`
@@ -555,7 +570,15 @@ const showDialog = (dialog, id) => {
 		openers.set(id, focused());
 	}
 
-	dialog.showModal();
+	resumes.set(id, resume);
+
+	try {
+		dialog.showModal();
+	} catch (error) {
+		resumeAfter(id);
+		throw error;
+	}
+
 	syncDocumentClass();
 	emit(dialog, 'overlay', 'open');
 };
@@ -765,6 +788,7 @@ const { state, actions } = store('matter/overlay', {
 					elements.delete(id);
 					lastStates.delete(id);
 					openers.delete(id);
+					resumeAfter(id);
 				}
 
 				syncDocumentClass();
@@ -837,6 +861,7 @@ const { state, actions } = store('matter/overlay', {
 				item.autoOpened = false;
 			}
 
+			resumeAfter(id);
 			syncDocumentClass();
 			restoreFocus(id);
 			emit(ref, 'overlay', 'close');

@@ -1,7 +1,7 @@
 /**
  * Making the surroundings of an element inert, and putting back exactly that.
  */
-import { inertAround } from '../inert';
+import { inertAround, onModal, suspendForModal } from '../inert';
 
 const build = () => {
 	document.body.innerHTML = `
@@ -102,6 +102,68 @@ describe('inertAround', () => {
 			inertAround(content)();
 
 			expect(inert()).toEqual([]);
+		});
+	});
+
+	describe('a modal over the held page', () => {
+		const withDialog = () => {
+			const content = build();
+
+			document
+				.getElementById('main')
+				.insertAdjacentHTML(
+					'beforeend',
+					'<section id="section"><dialog id="dialog"></dialog></section><p id="other"></p>'
+				);
+
+			return content;
+		};
+
+		it('lets go of what holds the dialog, and puts it back', () => {
+			inertAround(withDialog());
+
+			expect(
+				document.getElementById('dialog').closest('[inert]')
+			).not.toBeNull();
+
+			const resume = suspendForModal(document.getElementById('dialog'));
+
+			expect(
+				document.getElementById('dialog').closest('[inert]')
+			).toBeNull();
+			// What doesn't hold the dialog stays inert.
+			expect(inert()).toContain('header');
+			resume();
+			expect(
+				document.getElementById('dialog').closest('[inert]')
+			).not.toBeNull();
+		});
+
+		it("doesn't put back what its holder released meanwhile", () => {
+			const release = inertAround(withDialog());
+			const resume = suspendForModal(document.getElementById('dialog'));
+
+			release();
+			resume();
+
+			expect(inert()).toEqual([]);
+		});
+
+		it('pauses and resumes what registered for a modal', () => {
+			const resumeTrap = jest.fn();
+			const pause = jest.fn(() => resumeTrap);
+			const stop = onModal(pause);
+			const dialog = withDialog() && document.getElementById('dialog');
+			const resume = suspendForModal(dialog);
+
+			expect(pause).toHaveBeenCalledWith(dialog);
+			expect(resumeTrap).not.toHaveBeenCalled();
+			resume();
+			expect(resumeTrap).toHaveBeenCalled();
+
+			stop();
+			suspendForModal(dialog)();
+			expect(pause).toHaveBeenCalledTimes(1);
 		});
 	});
 });

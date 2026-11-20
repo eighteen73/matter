@@ -40,6 +40,7 @@ const styleEntries = {
 
 const moduleEntries = {
 	'focus-trap/index': src('focus-trap/index.js'),
+	'inert/index': src('interactivity/inert.js'),
 	'overlay/view': src('overlay/view.js'),
 	'menu/view': src('menu/view.js'),
 	'panel/view': src('panel/view.js'),
@@ -104,6 +105,7 @@ const sharedModules = {
 	// (as @wordpress/interactivity is) and register their stores before
 	// hydration. The default for modules is a dynamic import().
 	'@matter/focus-trap': 'module matter/focus-trap',
+	'@matter/inert': 'module matter/inert',
 };
 
 /**

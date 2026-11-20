@@ -37,7 +37,7 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { focused, isUsable } from '../interactivity/focus';
-import { inertAround } from '../interactivity/inert';
+import { inertAround, onModal } from '@matter/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 
 registerType('panel', '.matter-panel');
@@ -57,6 +57,9 @@ const watchers = new Map();
 
 // What makes everything around an open panel inert, to release on close.
 const releases = new Map();
+
+// Each open panel's registration to be told of a modal dialog opening.
+const modalWatchers = new Map();
 
 // The panels that are open, the last one on top: Escape closes that one.
 const stack = [];
@@ -132,18 +135,35 @@ const activate = (panel, id) => {
 	// backdrop stays live, as it takes the click that closes the panel.
 	releases.set(id, inertAround(content, { keep: '.matter-panel__backdrop' }));
 
+	// Set when the trap resumes after a modal dialog: focus is where that dialog
+	// gave it back (the control that opened it), and stays there.
+	let resumed = false;
+
 	const trap = createFocusTrap([content], {
 		allowOutsideClick: true,
 		escapeDeactivates: false,
 		returnFocusOnDeactivate: true,
 		// Called after the page is live again (see deactivate()).
 		setReturnFocus: () => returnTarget(id, opener, previous),
-		initialFocus: () =>
-			[...content.querySelectorAll(FOCUSABLE)].find(
-				(element) =>
-					!element.classList.contains('matter-panel__close') &&
-					element.checkVisibility?.() !== false
-			) || content,
+		initialFocus: () => {
+			const active = focused();
+
+			if (resumed) {
+				resumed = false;
+
+				if (active && content.contains(active)) {
+					return active;
+				}
+			}
+
+			return (
+				[...content.querySelectorAll(FOCUSABLE)].find(
+					(element) =>
+						!element.classList.contains('matter-panel__close') &&
+						element.checkVisibility?.() !== false
+				) || content
+			);
+		},
 		fallbackFocus: content,
 		// The panel is still sliding in: don't scroll anything to reveal it.
 		preventScroll: true,
@@ -152,6 +172,20 @@ const activate = (panel, id) => {
 	traps.set(id, trap);
 	owners.set(id, panel);
 	stack.push(id);
+
+	// A modal dialog opened from the panel is outside its trap: the trap rests
+	// until that dialog closes.
+	modalWatchers.set(
+		id,
+		onModal(() => {
+			trap.pause();
+
+			return () => {
+				resumed = true;
+				trap.unpause();
+			};
+		})
+	);
 
 	// A panel taken out of the page while open (by a script, or a replacement
 	// the interactivity runtime never tears down) must let go of the scroll
@@ -202,6 +236,9 @@ const deactivate = (
 	// element can't take it.
 	releases.get(id)?.();
 	releases.delete(id);
+
+	modalWatchers.get(id)?.();
+	modalWatchers.delete(id);
 
 	traps.get(id).deactivate({ returnFocus: restoreFocus });
 	traps.delete(id);

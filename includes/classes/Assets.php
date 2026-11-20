@@ -36,6 +36,9 @@ class Assets {
 	public const MODULES = [
 		// Shared by menus and panels (one copy, one trap stack).
 		'matter/focus-trap' => 'focus-trap/index.js',
+		// What panels, drill-down menus and overlays hold inert: one registry,
+		// so a modal can tell a panel's hold to let go.
+		'matter/inert'      => 'inert/index.js',
 		'matter/menu'       => 'menu/view.js',
 		'matter/panel'      => 'panel/view.js',
 		'matter/overlay'    => 'overlay/view.js',
