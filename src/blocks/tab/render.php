@@ -11,6 +11,7 @@
  */
 
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Ids;
 
 // A tab with nothing to show isn't output (it isn't recorded, so the tab list
 // leaves it out too).
@@ -28,18 +29,20 @@ if ( '' === $matter_label && Instances::in_query_loop() && ! empty( $block->cont
 $matter_parent = Instances::current( 'matter/tabs' ) ?? wp_unique_id( 'tabs-' );
 // A post's tab is named after the post, so links to it survive new posts.
 $matter_post = Instances::in_query_loop() ? (int) ( $block->context['postId'] ?? 0 ) : 0;
-$matter_id   = $matter_post ? $matter_parent . '-post-' . $matter_post : null;
 
-$matter_position = Instances::add(
+$matter_id = Instances::add(
 	'matter/tabs',
 	[
 		'label' => $matter_label,
 		'icon'  => (string) ( $attributes['icon'] ?? '' ),
-		'id'    => $matter_id,
+		'id'    => $matter_post ? $matter_parent . '-post-' . $matter_post : null,
 	]
 );
 
-$matter_id ??= $matter_parent . '-' . ( $matter_position ? $matter_position : wp_unique_id() );
+// Outside a tabs block there's nothing to record or number.
+if ( '' === $matter_id ) {
+	$matter_id = Ids::claim( $matter_parent . '-' . wp_unique_id() );
+}
 
 printf(
 	'<div %1$s %2$s role="tabpanel" aria-labelledby="%3$s-tab" tabindex="0" data-wp-bind--hidden="!state.isActive">%4$s</div>',

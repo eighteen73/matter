@@ -100,4 +100,23 @@ class MenuTest extends TestCase {
 		$this->assertStringNotContainsString( 'Retitled', $html );
 		$this->assertTrue( $still_in_the_loop );
 	}
+
+	/**
+	 * The same menu twice on a page (a header and a panel): the menu's own ID,
+	 * its submenus' IDs and every item's ID stay unique.
+	 *
+	 * @return void
+	 */
+	public function test_a_menu_rendered_twice_has_unique_ids(): void {
+		$menu  = $this->menu();
+		$first = \Eighteen73\Matter\get_menu( [ 'menu' => $menu ] );
+		$other = \Eighteen73\Matter\get_menu( [ 'menu' => $menu ] );
+
+		preg_match_all( '/\sid="([^"]+)"/', $first . $other, $found );
+
+		$this->assertGreaterThan( 4, count( $found[1] ) );
+		$this->assertSame( $found[1], array_unique( $found[1] ), 'IDs repeat' );
+		$this->assertMatchesRegularExpression( '/<li id="matter-menu-[^"]*-2-item-\d+"/', $other );
+		$this->assertMatchesRegularExpression( '/aria-controls="matter-menu-[^"]*-2-submenu-1"/', $other );
+	}
 }

@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter\Tests;
 
+use Eighteen73\Matter\Ids;
 use WP_UnitTestCase;
 
 /**
@@ -15,6 +16,17 @@ use WP_UnitTestCase;
 abstract class TestCase extends WP_UnitTestCase {
 
 	use Snapshots;
+
+	/**
+	 * Every test starts a new page: nothing is claimed yet.
+	 *
+	 * @return void
+	 */
+	public function set_up(): void {
+		parent::set_up();
+
+		Ids::reset();
+	}
 
 	/**
 	 * Render block markup as the front end would.

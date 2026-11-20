@@ -227,8 +227,22 @@ class Walker extends Walker_Nav_Menu {
 			$classes[] = 'is-column';
 		}
 
+		// Prefixed with the menu's own ID: the same menu in two places (a
+		// header and a panel) would otherwise repeat core's `menu-item-{ID}`.
+		// That makes the ID unique already, so core's "use each item's ID
+		// once" filter (which would drop it from the second copy) stands aside.
+		$once = has_filter( 'nav_menu_item_id', '_nav_menu_item_id_use_once' );
+
+		if ( false !== $once ) {
+			remove_filter( 'nav_menu_item_id', '_nav_menu_item_id_use_once', (int) $once );
+		}
+
 		/** This filter is documented in wp-includes/class-walker-nav-menu.php */
-		$id = apply_filters( 'nav_menu_item_id', 'menu-item-' . $item->ID, $item, $args, $depth );
+		$id = apply_filters( 'nav_menu_item_id', $this->id_prefix . '-item-' . $item->ID, $item, $args, $depth );
+
+		if ( false !== $once ) {
+			add_filter( 'nav_menu_item_id', '_nav_menu_item_id_use_once', (int) $once, 2 );
+		}
 
 		/** This filter is documented in wp-includes/class-walker-nav-menu.php */
 		$atts = (array) apply_filters(

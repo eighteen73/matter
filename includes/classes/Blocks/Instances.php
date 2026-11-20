@@ -27,6 +27,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Singleton;
 
 defined( 'ABSPATH' ) || exit;
@@ -141,6 +142,10 @@ class Instances {
 		$anchor = sanitize_html_class( (string) ( $parent_block->attributes['anchor'] ?? '' ) );
 		$anchor = '' !== $anchor ? $anchor : sanitize_html_class( (string) ( $parent_block->attributes['matterId'] ?? '' ) );
 		$id     = '' !== $anchor ? $anchor : wp_unique_id( str_replace( 'matter/', '', $name ) . '-' );
+
+		// Claimed before any item derives its own ID from it, so a container
+		// rendered twice (a synced pattern used twice) keeps every ID unique.
+		$id = Ids::claim( $id );
 
 		self::$active[ $key ]   = [ $id, $name ];
 		self::$stack[ $name ][] = $id;
@@ -282,22 +287,29 @@ class Instances {
 	}
 
 	/**
-	 * Record a child of the current container.
+	 * Record a child of the current container, and give it its ID: the one
+	 * it asks for (`id`, a post's item), else `{container}-{position}`, made
+	 * unique on the page. (A container rendered twice is `tabs-2`, and its
+	 * own second item `tabs-2` too, so item IDs are claimed as well.)
 	 *
 	 * @param string $name Container block name.
 	 * @param array  $item Item data.
-	 * @return int The item's position (1-based), or 0 outside a container.
+	 * @return string The item's ID, or empty outside a container.
 	 */
-	public static function add( string $name, array $item ): int {
-		$id = self::current( $name );
+	public static function add( string $name, array $item ): string {
+		$container = self::current( $name );
 
-		if ( null === $id ) {
-			return 0;
+		if ( null === $container ) {
+			return '';
 		}
 
-		self::$items[ $id ][] = $item;
+		$wanted     = (string) ( $item['id'] ?? '' );
+		$wanted     = '' !== $wanted ? $wanted : $container . '-' . ( count( self::$items[ $container ] ) + 1 );
+		$item['id'] = Ids::claim( $wanted );
 
-		return count( self::$items[ $id ] );
+		self::$items[ $container ][] = $item;
+
+		return $item['id'];
 	}
 
 	/**

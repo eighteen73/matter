@@ -6,6 +6,7 @@ const AxeBuilder = require('@axe-core/playwright').default;
 const {
 	collections,
 	createCategories,
+	createDuplicatesPage,
 	createMenu,
 	createPage,
 	createPosts,
@@ -896,5 +897,91 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 		await page.keyboard.press('ArrowRight');
 		await expect(posts.nth(1)).toBeFocused();
 		await expect(posts.nth(1)).toHaveAttribute('aria-selected', 'true');
+	});
+});
+
+test.describe('blocks rendered twice', () => {
+	test.use({ viewport: DESKTOP });
+
+	let duplicates;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		duplicates = await createDuplicatesPage(requestUtils);
+	});
+
+	test('every ID on the page is unique, and axe finds no duplicates', async ({
+		page,
+	}) => {
+		await page.goto(duplicates.link);
+		await page.locator('.wp-block-matter-tabs').first().waitFor();
+
+		const repeated = await page.evaluate(() => {
+			const seen = new Set();
+
+			return [...document.querySelectorAll('[id]')]
+				.map((element) => element.id)
+				.filter((id) => seen.size === seen.add(id).size);
+		});
+
+		expect(repeated).toEqual([]);
+		expect(
+			(await violations(page)).filter((line) =>
+				/^duplicate-id/.test(line)
+			)
+		).toEqual([]);
+	});
+
+	test('each copy of the tabs works on its own', async ({ page }) => {
+		await page.goto(duplicates.link);
+
+		const tabs = page.locator('.wp-block-matter-tabs');
+
+		await expect(tabs).toHaveCount(2);
+		await expect(tabs.nth(0)).toHaveAttribute('id', 'dup-tabs');
+		// The first copy's second panel is `dup-tabs-2`, so the copy is `-3`.
+		await expect(tabs.nth(1)).toHaveAttribute('id', 'dup-tabs-3');
+
+		await tabs.nth(1).getByRole('tab', { name: 'Second' }).click();
+
+		await expect(
+			tabs.nth(1).getByRole('tabpanel', { name: 'Second' })
+		).toBeVisible();
+		await expect(
+			tabs.nth(0).getByRole('tabpanel', { name: 'First' })
+		).toBeVisible();
+		await expect(
+			tabs.nth(0).getByRole('tab', { name: 'First' })
+		).toHaveAttribute('aria-selected', 'true');
+
+		// Each tab controls the panel in its own copy.
+		await tabs.nth(0).getByRole('tab', { name: 'Second' }).click();
+		await expect(
+			tabs.nth(0).getByRole('tabpanel', { name: 'Second' })
+		).toBeVisible();
+		await expect(
+			tabs.nth(1).getByRole('tab', { name: 'Second' })
+		).toHaveAttribute('aria-selected', 'true');
+	});
+
+	test('opening the second modal opens only it', async ({ page }) => {
+		await page.goto(duplicates.link);
+
+		const first = page.locator('dialog#dup-modal');
+		const second = page.locator('dialog#dup-modal-2');
+
+		await page.locator('a[href="#dup-modal"]').nth(1).click();
+		await expect(second).toHaveJSProperty('open', true);
+		await expect(first).toHaveJSProperty('open', false);
+		await expect(
+			page.locator('dialog:modal'),
+			'only one dialog is in the top layer'
+		).toHaveCount(1);
+
+		await page.keyboard.press('Escape');
+		await expect(second).toHaveJSProperty('open', false);
+
+		await page.locator('a[href="#dup-modal"]').nth(0).click();
+		await expect(first).toHaveJSProperty('open', true);
+		await expect(second).toHaveJSProperty('open', false);
 	});
 });

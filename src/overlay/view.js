@@ -171,6 +171,15 @@ const findTriggers = (id) => {
 			`a[href$="#${escaped}"], [aria-controls="${escaped}"]`
 		),
 	].filter((element) => {
+		// A control in an overlay's own trigger area belongs to that overlay
+		// alone, whatever its link says (a copy of a block keeps the saved
+		// `#id` in its link, though its own overlay's ID has changed).
+		const area = element.closest('[data-matter-trigger]');
+
+		if (area && area.dataset.matterTrigger !== id) {
+			return false;
+		}
+
 		if (element.tagName !== 'A') {
 			return true;
 		}
@@ -339,12 +348,17 @@ const startAutomaticOpens = (id, item, later, signal) => {
 		return;
 	}
 
-	const params = new URLSearchParams(window.location.search);
+	// Parameter names match whatever case the link has; values must match.
+	const params = new Map(
+		[...new URLSearchParams(window.location.search)].map(
+			([name, value]) => [name.toLowerCase(), value]
+		)
+	);
 	const matchesUrl = (item.urlTriggers ?? []).some(
 		({ param, value }) =>
 			param &&
-			params.has(param) &&
-			(!value || params.get(param) === value)
+			params.has(param.toLowerCase()) &&
+			(!value || params.get(param.toLowerCase()) === value)
 	);
 
 	// A matching URL parameter is asked for (e.g. a campaign link), so

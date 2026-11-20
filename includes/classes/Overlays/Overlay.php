@@ -17,6 +17,7 @@
 namespace Eighteen73\Matter\Overlays;
 
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Sections\Sections;
 use WP_Block;
 
@@ -28,14 +29,16 @@ defined( 'ABSPATH' ) || exit;
 class Overlay {
 
 	/**
-	 * The overlay's base ID: the editor-assigned ID, or a generated fallback.
+	 * The overlay's base ID: the editor-assigned ID (cleaned as the editor
+	 * cleans it), or a generated fallback. The fallback changes between page
+	 * loads, so only a saved ID can be linked to or remembered (see render()).
 	 *
 	 * @param array  $attributes Block attributes.
 	 * @param string $prefix     Fallback prefix.
 	 * @return string
 	 */
 	public static function id( array $attributes, string $prefix ): string {
-		$id = sanitize_html_class( (string) ( $attributes['overlayId'] ?? '' ) );
+		$id = Ids::sanitize( (string) ( $attributes['overlayId'] ?? '' ) );
 
 		return '' !== $id ? $id : wp_unique_id( $prefix . '-' );
 	}
@@ -51,8 +54,10 @@ class Overlay {
 		$url_triggers = array_values(
 			array_filter(
 				array_map(
+					// The parameter is kept as typed (view.js compares names
+					// case-insensitively), the value as the visitor's URL has it.
 					fn( $rule ) => [
-						'param' => sanitize_key( (string) ( $rule['param'] ?? '' ) ),
+						'param' => (string) preg_replace( '/[^A-Za-z0-9_.\-]/', '', (string) ( $rule['param'] ?? '' ) ),
 						'value' => sanitize_text_field( (string) ( $rule['value'] ?? '' ) ),
 					],
 					(array) ( $config['urlTriggers'] ?? [] )
@@ -115,14 +120,21 @@ class Overlay {
 		$base  = self::id( $attributes, $type );
 		// Inside a Query Loop each post gets its own overlay.
 		$post_id = Instances::in_query_loop() ? (int) ( $block->context['postId'] ?? 0 ) : 0;
-		$id      = $post_id ? $base . '-' . $post_id : $base;
+		$id      = Ids::claim( $post_id ? $base . '-' . $post_id : $base );
 		$class   = 'wp-block-matter-' . $type;
 
 		// Modals in a Query Loop form a group automatically; others can share a group name.
 		$group = sanitize_html_class( (string) ( $attributes['group'] ?? '' ) );
 
 		if ( '' === $group && $post_id && 'modal' === $type ) {
-			$group = $base;
+			// A second copy of the loop (`offer-5-2`) is a group of its own.
+			$group = $base . substr( $id, strlen( $base . '-' . $post_id ) );
+		}
+
+		// Dismissal is remembered under the overlay's ID, which only a saved
+		// one keeps from one page load to the next.
+		if ( '' === Ids::sanitize( (string) ( $attributes['overlayId'] ?? '' ) ) ) {
+			$attributes['dismissDays'] = 0;
 		}
 
 		self::register(

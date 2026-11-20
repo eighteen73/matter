@@ -251,6 +251,9 @@ class ContractMarkupTest extends TestCase {
 		$this->assertStringContainsString( "id=\"news-post-{$newer}\"", $accordion );
 		$this->assertStringContainsString( "\"openItems\":[\"news-post-{$newer}\",\"news-post-{$older}\"]", str_replace( '&quot;', '"', $accordion ) );
 
+		// The tabs are another page: the anchor is free again.
+		\Eighteen73\Matter\Ids::reset();
+
 		$tabs = $this->render( $query( 'tabs', '<!-- wp:matter/tab --><!-- wp:matter/loop-item /--><!-- /wp:matter/tab -->' ) );
 
 		$this->assertSame( 1, substr_count( $tabs, 'id="news"' ) );

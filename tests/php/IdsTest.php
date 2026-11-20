@@ -1,0 +1,208 @@
+<?php
+/**
+ * Element IDs are unique within a page.
+ *
+ * @package Eighteen73\Matter
+ */
+
+namespace Eighteen73\Matter\Tests;
+
+use Eighteen73\Matter\Ids;
+
+/**
+ * IDs.
+ */
+class IdsTest extends TestCase {
+
+	/**
+	 * One tab, in a tabs block with a saved ID.
+	 *
+	 * @param string $attrs Tabs attributes (JSON).
+	 * @return string
+	 */
+	private function tabs( string $attrs ): string {
+		return '<!-- wp:matter/tabs ' . $attrs . ' --><!-- wp:matter/tab {"label":"One"} --><!-- wp:paragraph --><p>One</p><!-- /wp:paragraph --><!-- /wp:matter/tab --><!-- /wp:matter/tabs -->';
+	}
+
+	/**
+	 * Every ID in some markup.
+	 *
+	 * @param string $html Markup.
+	 * @return string[]
+	 */
+	private function ids( string $html ): array {
+		preg_match_all( '/\sid="([^"]+)"/', $html, $found );
+
+		return $found[1];
+	}
+
+	/**
+	 * A repeated ID gets -2, -3; a different one is untouched.
+	 *
+	 * @return void
+	 */
+	public function test_claim(): void {
+		$this->assertSame( 'a', Ids::claim( 'a' ) );
+		$this->assertSame( 'a-2', Ids::claim( 'a' ) );
+		$this->assertSame( 'a-3', Ids::claim( 'a' ) );
+		$this->assertSame( 'b', Ids::claim( 'b' ) );
+
+		// A saved ID that looks like a generated one still wins its own name.
+		$this->assertSame( 'c', Ids::claim( 'c' ) );
+		$this->assertSame( 'c-2', Ids::claim( 'c' ) );
+		$this->assertSame( 'c-2-2', Ids::claim( 'c-2' ) );
+		$this->assertSame( 'c-3', Ids::claim( 'c' ) );
+
+		Ids::reset();
+		$this->assertSame( 'a', Ids::claim( 'a' ) );
+	}
+
+	/**
+	 * A preview has a registry of its own, and the page's is put back.
+	 *
+	 * @return void
+	 */
+	public function test_isolate(): void {
+		Ids::claim( 'a' );
+
+		$this->assertSame( 'a', Ids::isolate( fn() => Ids::claim( 'a' ) ) );
+		$this->assertSame( 'a-2', Ids::claim( 'a' ) );
+	}
+
+	/**
+	 * Saved IDs are cleaned as the editor cleans them.
+	 *
+	 * @return void
+	 */
+	public function test_sanitize(): void {
+		$this->assertSame( 'my-offer-2', Ids::sanitize( '  My Offer! 2 ' ) );
+		$this->assertSame( 'a_b-c', Ids::sanitize( 'a_b-c' ) );
+		$this->assertSame( '', Ids::sanitize( '!!!' ) );
+	}
+
+	/**
+	 * Tabs rendered twice (a synced pattern used twice): every ID is unique,
+	 * and each copy's tab controls its own panel.
+	 *
+	 * @return void
+	 */
+	public function test_tabs_rendered_twice(): void {
+		$first  = $this->render( $this->tabs( '{"matterId":"tabs-abc"}' ) );
+		$second = $this->render( $this->tabs( '{"matterId":"tabs-abc"}' ) );
+		$ids    = array_merge( $this->ids( $first ), $this->ids( $second ) );
+
+		$this->assertSame( $ids, array_unique( $ids ), 'IDs repeat' );
+		$this->assertStringContainsString( 'id="tabs-abc"', $first );
+		$this->assertStringContainsString( 'id="tabs-abc-2"', $second );
+		$this->assertStringContainsString( 'aria-controls="tabs-abc-2-1"', $second );
+		$this->assertStringContainsString( 'id="tabs-abc-2-1"', $second );
+		$this->assertStringContainsString( 'aria-labelledby="tabs-abc-2-1-tab"', $second );
+
+		// Not only the same markup twice in a row: an anchor does the same.
+		$anchor = $this->render( $this->tabs( '{"anchor":"tabs-abc"}' ) );
+		$this->assertStringContainsString( 'id="tabs-abc-3"', $anchor );
+	}
+
+	/**
+	 * Accordions, and an accordion query, are claimed too.
+	 *
+	 * @return void
+	 */
+	public function test_accordions_rendered_twice(): void {
+		$item = '<!-- wp:matter/accordion-item {"title":"Q"} --><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item -->';
+		$html = $this->render( '<!-- wp:matter/accordion {"matterId":"faq"} -->' . $item . '<!-- /wp:matter/accordion -->' )
+			. $this->render( '<!-- wp:matter/accordion {"matterId":"faq"} -->' . $item . '<!-- /wp:matter/accordion -->' );
+		$ids  = $this->ids( $html );
+
+		$this->assertSame( $ids, array_unique( $ids ), 'IDs repeat' );
+		$this->assertStringContainsString( 'aria-controls="faq-2-1-panel"', $html );
+		$this->assertStringContainsString( 'id="faq-2-1-panel"', $html );
+
+		$post  = self::factory()->post->create();
+		$query = '<!-- wp:query {"queryId":9,"matterId":"news","query":{"perPage":1,"postType":"post","inherit":false},"matterDisplay":{"type":"accordion"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/accordion-item --><!-- wp:matter/loop-item /--><!-- /wp:matter/accordion-item --><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->';
+		$html  = $this->render( $query ) . $this->render( $query );
+		$ids   = $this->ids( $html );
+
+		$this->assertSame( $ids, array_unique( $ids ), 'IDs repeat' );
+		$this->assertStringContainsString( "id=\"news-2-post-{$post}\"", $html );
+	}
+
+	/**
+	 * A tabs or accordion block with nothing to show outputs nothing.
+	 *
+	 * @return void
+	 */
+	public function test_empty_containers_output_nothing(): void {
+		$this->assertSame( '', trim( $this->render( '<!-- wp:matter/tabs {"matterId":"t"} --><!-- /wp:matter/tabs -->' ) ) );
+		$this->assertSame( '', trim( $this->render( '<!-- wp:matter/accordion {"matterId":"a","faqSchema":true} --><!-- /wp:matter/accordion -->' ) ) );
+
+		// Items that render nothing leave nothing either.
+		$this->assertSame( '', trim( $this->render( '<!-- wp:matter/accordion {"matterId":"a"} --><!-- wp:matter/accordion-item {"title":"Q"} --><!-- /wp:matter/accordion-item --><!-- /wp:matter/accordion -->' ) ) );
+	}
+
+	/**
+	 * Overlays rendered twice: unique IDs, each with its own trigger and state.
+	 *
+	 * @return void
+	 */
+	public function test_overlays_rendered_twice(): void {
+		$modal = '<!-- wp:matter/modal {"overlayId":"offer"} --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Hi</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->';
+		$html  = $this->render( $modal ) . $this->render( $modal );
+
+		$this->assertStringContainsString( '<dialog', $html );
+		$this->assertSame( 1, substr_count( $html, 'id="offer"' ) );
+		$this->assertSame( 1, substr_count( $html, 'id="offer-2"' ) );
+		$this->assertStringContainsString( "data-wp-context='{\"id\":\"offer-2\"}'", $html );
+
+		$items = wp_interactivity_state( 'matter/overlay' )['items'];
+
+		$this->assertArrayHasKey( 'offer', $items );
+		$this->assertArrayHasKey( 'offer-2', $items );
+	}
+
+	/**
+	 * The server cleans an overlay ID as the editor does, and keeps a URL
+	 * trigger's parameter as typed.
+	 *
+	 * @return void
+	 */
+	public function test_overlay_id_is_cleaned(): void {
+		$html = $this->render( '<!-- wp:matter/modal {"overlayId":"Spring Offer!","urlTriggers":[{"param":"Offer","value":"Spring"}]} --><!-- /wp:matter/modal -->' );
+
+		$this->assertStringContainsString( 'id="spring-offer"', $html );
+		$this->assertArrayHasKey( 'spring-offer', wp_interactivity_state( 'matter/overlay' )['items'] );
+		$this->assertSame(
+			[
+				[
+					'param' => 'Offer',
+					'value' => 'Spring',
+				],
+			],
+			wp_interactivity_state( 'matter/overlay' )['items']['spring-offer']['urlTriggers']
+		);
+	}
+
+	/**
+	 * Dismissal is remembered under the overlay's ID, so it's off without a
+	 * saved one.
+	 *
+	 * @return void
+	 */
+	public function test_dismissal_needs_a_saved_id(): void {
+		$before = array_keys( wp_interactivity_state( 'matter/overlay' )['items'] ?? [] );
+
+		$this->render( '<!-- wp:matter/modal {"overlayId":"kept","dismissDays":7} --><!-- /wp:matter/modal -->' );
+		$this->render( '<!-- wp:matter/modal {"dismissDays":7} --><!-- /wp:matter/modal -->' );
+
+		$items = wp_interactivity_state( 'matter/overlay' )['items'];
+
+		$this->assertSame( 7, $items['kept']['dismissDays'] );
+
+		$generated = array_diff( array_keys( $items ), $before, [ 'kept' ] );
+
+		$this->assertCount( 1, $generated );
+		$this->assertSame( 0, $items[ reset( $generated ) ]['dismissDays'] );
+	}
+}

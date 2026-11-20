@@ -9,6 +9,8 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Ids;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -27,7 +29,9 @@ final class Preview {
 		$styles = wp_styles();
 		$queued = $styles->queue;
 
-		$html = render_block( $parsed_block );
+		// A preview is the block on its own: its IDs aren't renamed because the
+		// request rendered something with the same ones.
+		$html = Ids::isolate( fn() => render_block( $parsed_block ) );
 
 		ob_start();
 		$styles->do_items( array_values( array_diff( $styles->queue, $queued ) ) );

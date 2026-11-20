@@ -12,6 +12,7 @@
  */
 
 use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Ids;
 
 // An item with nothing to show isn't output.
 if ( Instances::is_empty( $content ) ) {
@@ -28,19 +29,22 @@ if ( '' === $matter_title && Instances::in_query_loop() && ! empty( $block->cont
 $matter_parent = Instances::current( 'matter/accordion' ) ?? wp_unique_id( 'accordion-' );
 // A post's item is named after the post, so links to it survive new posts.
 $matter_post = Instances::in_query_loop() ? (int) ( $block->context['postId'] ?? 0 ) : 0;
-$matter_id   = $matter_post ? $matter_parent . '-post-' . $matter_post : null;
 
-$matter_position = Instances::add(
+$matter_id = Instances::add(
 	'matter/accordion',
 	[
 		'title' => wp_strip_all_tags( $matter_title ),
 		'text'  => trim( wp_strip_all_tags( $content ) ),
 		'open'  => ! empty( $attributes['open'] ),
-		'id'    => $matter_id,
+		'id'    => $matter_post ? $matter_parent . '-post-' . $matter_post : null,
 	]
 );
 
-$matter_id  ??= $matter_parent . '-' . ( $matter_position ? $matter_position : wp_unique_id() );
+// Outside an accordion there's nothing to record or number.
+if ( '' === $matter_id ) {
+	$matter_id = Ids::claim( $matter_parent . '-' . wp_unique_id() );
+}
+
 $matter_level = min( 6, max( 2, (int) ( $block->context['matter/headingLevel'] ?? 3 ) ) );
 
 printf(

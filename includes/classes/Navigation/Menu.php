@@ -20,6 +20,7 @@ namespace Eighteen73\Matter\Navigation;
 
 use Eighteen73\Matter\Assets;
 use Eighteen73\Matter\Breakpoints;
+use Eighteen73\Matter\Ids;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -32,13 +33,6 @@ class Menu {
 	 * Placeholder class menu type stylesheets are authored against.
 	 */
 	private const TYPE_CLASS = 'is-type-%s';
-
-	/**
-	 * Instances rendered this request, for unique IDs.
-	 *
-	 * @var array<string, int>
-	 */
-	private static array $instances = [];
 
 	/**
 	 * Responsive CSS already printed this request, keyed by instance class.
@@ -103,7 +97,7 @@ class Menu {
 			return '';
 		}
 
-		$id     = self::unique_id( (string) ( $args['id'] ?: 'matter-menu-' . ( $args['location'] ?: $menu->slug ) ) );
+		$id     = Ids::claim( (string) ( $args['id'] ?: 'matter-menu-' . ( $args['location'] ?: $menu->slug ) ) );
 		$ranges = self::get_type_ranges( $args['type'] );
 		// Menus that open on click hide parent links, so their "View all"
 		// links are the only way to reach those pages.
@@ -304,19 +298,5 @@ class Menu {
 		);
 
 		$registered = true;
-	}
-
-	/**
-	 * Unique element ID for this request.
-	 *
-	 * @param string $id Requested ID.
-	 * @return string
-	 */
-	private static function unique_id( string $id ): string {
-		$id = sanitize_html_class( $id );
-
-		self::$instances[ $id ] = ( self::$instances[ $id ] ?? 0 ) + 1;
-
-		return 1 === self::$instances[ $id ] ? $id : $id . '-' . self::$instances[ $id ];
 	}
 }

@@ -18,6 +18,11 @@ $matter_id    = Instances::current( 'matter/accordion' ) ?? wp_unique_id( 'accor
 $matter_items = Instances::items( 'matter/accordion' );
 $matter_open  = [];
 
+// Nothing to show (no items, or every one empty): no empty wrapper.
+if ( ! $matter_items ) {
+	return;
+}
+
 foreach ( $matter_items as $matter_index => $matter_item ) {
 	if ( ! empty( $matter_item['open'] ) || ( 0 === $matter_index && ! empty( $attributes['openFirst'] ) ) ) {
 		$matter_open[] = $matter_item['id'] ?? $matter_id . '-' . ( $matter_index + 1 );
@@ -51,7 +56,7 @@ printf(
 	$content // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 );
 
-if ( ! empty( $attributes['faqSchema'] ) && $matter_items ) {
+if ( ! empty( $attributes['faqSchema'] ) ) {
 	$matter_schema = [
 		'@context'   => 'https://schema.org',
 		'@type'      => 'FAQPage',
