@@ -562,6 +562,11 @@ const restoreFocus = (id) => {
  */
 const showDialog = (dialog, id) => {
 	if (dialog.open || !state.items[id]?.isOpen) {
+		// Closed again before it was shown: the click that asked is spent.
+		if (!dialog.open) {
+			openers.delete(id);
+		}
+
 		return;
 	}
 
@@ -576,6 +581,8 @@ const showDialog = (dialog, id) => {
 			`Matter: "#${id}" wasn't opened because it's inside something hidden.`
 		);
 		state.items[id].isOpen = false;
+		// Nothing opened, so nothing to give focus back to later.
+		openers.delete(id);
 		return;
 	}
 
@@ -592,6 +599,7 @@ const showDialog = (dialog, id) => {
 		dialog.showModal();
 	} catch (error) {
 		resumeAfter(id);
+		openers.delete(id);
 		throw error;
 	}
 

@@ -192,6 +192,57 @@ test.describe('overlays', { tag: '@cross-browser' }, () => {
 		await expect(page.locator('#in-tab')).not.toHaveAttribute('open', '');
 	});
 
+	test("a modal that couldn't be shown doesn't leave its opener to be returned to later", async ({
+		page,
+	}) => {
+		const warnings = [];
+
+		page.on('console', (message) => {
+			if (message.type() === 'warning') {
+				warnings.push(message.text());
+			}
+		});
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+		// Another link to the modal, first in the page.
+		await page.evaluate(() => {
+			document.body.insertAdjacentHTML(
+				'afterbegin',
+				'<a href="#in-tab" id="first-link">First link</a>'
+			);
+			document.getElementById('specs').style.display = 'none';
+		});
+		await page
+			.getByRole('link', { name: 'Open the modal in tab two' })
+			.click();
+		await expect.poll(() => warnings.length).toBeGreaterThan(0);
+		await page.evaluate(() => {
+			document.getElementById('specs').style.display = '';
+		});
+
+		// Opened another way, from a control that goes away while it is open:
+		// focus is lost on close, and goes to the first control that opens the
+		// modal, not to the link of the open that failed.
+		await page.evaluate(() => {
+			document.body.insertAdjacentHTML(
+				'beforeend',
+				'<button type="button" id="elsewhere">Elsewhere</button>'
+			);
+			document.getElementById('elsewhere').focus();
+			window.matter.overlay('in-tab').open();
+		});
+
+		const dialog = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await expect(dialog).toBeVisible();
+		await page.evaluate(() =>
+			document.getElementById('elsewhere').remove()
+		);
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(page.locator('#first-link')).toBeFocused();
+	});
+
 	test('a modal opened from the keyboard takes focus, and gives it back on Escape', async ({
 		page,
 	}) => {
