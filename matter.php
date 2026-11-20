@@ -30,7 +30,11 @@ $matter_requirements = [
 	'WordPress' => [
 		(string) ( $GLOBALS['wp_version'] ?? '0' ),
 		'7.1',
-		version_compare( (string) preg_replace( '/[-+].*$/', '', (string) ( $GLOBALS['wp_version'] ?? '0' ) ), '7.1', '>=' ),
+		// From 7.1 beta 1: the 7.1 APIs Matter uses (the icon registry) are
+		// there from the beta, but an alpha build of 7.1 may not have them
+		// yet, and a plain `7.1-alpha-123` would otherwise pass as 7.1 once
+		// its suffix was stripped. Later versions' alphas (7.2-alpha) are past it.
+		version_compare( (string) ( $GLOBALS['wp_version'] ?? '0' ), '7.1-beta1', '>=' ),
 	],
 ];
 
