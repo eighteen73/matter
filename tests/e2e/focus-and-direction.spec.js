@@ -372,6 +372,86 @@ test.describe('drill-down', { tag: '@cross-browser' }, () => {
 		).toBe(true);
 	});
 
+	test('a modal opened from a button in an open submenu keeps focus', async ({
+		page,
+		browserName,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		// The modal is in the page, which the open menu holds inert; the button
+		// that opens it is in the submenu.
+		await page.evaluate(() => {
+			const holder = document.createElement('div');
+			holder.append(document.querySelector('dialog#in-tab'));
+			document.body.prepend(holder);
+
+			const second = document.createElement('button');
+
+			second.type = 'button';
+			second.id = 'second-in-modal';
+			second.textContent = 'Second';
+			document.querySelector('dialog#in-tab').append(second);
+
+			const button = document.createElement('button');
+
+			button.type = 'button';
+			button.id = 'open-from-submenu';
+			button.textContent = 'Open the modal';
+			button.setAttribute('aria-controls', 'in-tab');
+			document
+				.querySelector('#test-nav .matter-menu__submenu')
+				.append(button);
+		});
+
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
+
+		const panel = page.locator('#test-nav');
+		const parent = panel.locator('.matter-menu__item.has-submenu').first();
+
+		await parent.locator(':scope > .matter-menu__toggle').click();
+		await expect(parent).toHaveClass(/\bis-open\b/);
+		await expect(
+			panel.getByRole('button', { name: /^Back/ }).first()
+		).toBeFocused();
+
+		const modal = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await page.locator('#open-from-submenu').click();
+		await expect(modal).toBeVisible();
+
+		// The submenu's trap rests: focus stays in the modal, even a moment on.
+		const inModal = () =>
+			page.evaluate(() =>
+				Boolean(window.document.activeElement.closest('dialog#in-tab'))
+			);
+
+		await page.waitForTimeout(250);
+		expect(await inModal()).toBe(true);
+
+		// Tab moves through the modal: the trap isn't taking the key. (WebKit's
+		// Tab skips buttons; Option+Tab reaches them.)
+		await modal.getByRole('button', { name: 'Close' }).focus();
+		await page.keyboard.press('webkit' === browserName ? 'Alt+Tab' : 'Tab');
+		await expect(page.locator('#second-in-modal')).toBeFocused();
+
+		// And is back when the modal closes.
+		await modal.getByRole('button', { name: 'Close' }).click();
+		await expect(modal).toBeHidden();
+		await expect(parent).toHaveClass(/\bis-open\b/);
+		expect(
+			await isLive(page, '.matter-menu__submenu .matter-menu__back')
+		).toBe(true);
+		expect(
+			await isLive(
+				page,
+				'.matter-menu__item.has-submenu > .matter-menu__toggle'
+			)
+		).toBe(false);
+	});
+
 	test("the panel's close button stays in the Tab cycle while a submenu is open", async ({
 		page,
 		browserName,

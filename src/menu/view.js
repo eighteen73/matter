@@ -26,7 +26,7 @@ import { createTrap as createFocusTrap } from '@matter/focus-trap';
  * Internal dependencies
  */
 import { enhance } from '../interactivity/api';
-import { inertAround } from '@matter/inert';
+import { inertAround, onModal } from '@matter/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 import { clearPlacements, unwatchSubmenu, watchSubmenu } from './positioning';
 
@@ -221,9 +221,17 @@ const trapDrillDown = (context, submenuId, item) => {
 	// its own toggle) is inert until the submenu closes. Released as the trap
 	// lets go, before focus goes back to the toggle, which can't take it
 	// while inert.
-	const release = inertAround(submenu, {
+	const releaseInert = inertAround(submenu, {
 		root: item.closest(SELECTORS.menu),
 	});
+
+	// A modal dialog opened from a button in the submenu is outside the trap:
+	// the trap rests until that dialog closes (as the panel's does).
+	let stopWatching = () => {};
+	const release = () => {
+		stopWatching();
+		releaseInert();
+	};
 
 	// The panel's close control stays in the cycle: it is exposed (it's
 	// outside the menu, in the dialog), so closing the whole menu from a
@@ -257,6 +265,12 @@ const trapDrillDown = (context, submenuId, item) => {
 						: window.requestAnimationFrame(check);
 				check();
 			}),
+	});
+
+	stopWatching = onModal(() => {
+		trap.pause();
+
+		return () => trap.unpause();
 	});
 
 	traps.set(item, trap);
