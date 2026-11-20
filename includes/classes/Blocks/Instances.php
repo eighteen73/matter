@@ -88,6 +88,22 @@ class Instances {
 	private static array $settings = [];
 
 	/**
+	 * Containers that are a Query Loop shown as the container (a posts
+	 * accordion), by container ID, and how many posts each query has in all
+	 * (every page), once known.
+	 *
+	 * @var array<string, bool>
+	 */
+	private static array $queries = [];
+
+	/**
+	 * Posts the query of a posts display has in all, by container ID.
+	 *
+	 * @var array<string, int>
+	 */
+	private static array $totals = [];
+
+	/**
 	 * Started containers: block object ID => [ container ID, container name ].
 	 *
 	 * @var array<int, array{0: string, 1: string}>
@@ -102,6 +118,42 @@ class Instances {
 	public function setup(): void {
 		add_filter( 'render_block_data', [ $this, 'start' ], 10, 3 );
 		add_filter( 'render_block', [ $this, 'finish' ], 10, 3 );
+		add_filter( 'the_posts', [ $this, 'found' ], 10, 2 );
+	}
+
+	/**
+	 * A query has its posts (`the_posts`, not `found_posts`, which a cached
+	 * query skips): if it is the Query Loop of a posts
+	 * display (the first query inside it, not one inside an item), remember
+	 * the total, so what depends on the number of items (an accordion's
+	 * landmarks) decides the same on every page of the query.
+	 *
+	 * @param \WP_Post[]|int[] $posts Posts.
+	 * @param \WP_Query|null   $query The query.
+	 * @return \WP_Post[]|int[] Unchanged.
+	 */
+	public function found( $posts, $query = null ) {
+		$id = self::current( 'matter/accordion' );
+
+		if ( null !== $id && ! empty( self::$queries[ $id ] ) && ! isset( self::$totals[ $id ] ) && self::in_query_loop() ) {
+			self::$totals[ $id ] = (int) $query?->found_posts;
+		}
+
+		return $posts;
+	}
+
+	/**
+	 * How many posts the Query Loop of the innermost posts display of a type
+	 * has in all (every page), or null if it isn't a posts display or hasn't
+	 * been counted.
+	 *
+	 * @param string $name Container block name.
+	 * @return int|null
+	 */
+	public static function total( string $name ): ?int {
+		$id = self::current( $name );
+
+		return null !== $id ? ( self::$totals[ $id ] ?? null ) : null;
 	}
 
 	/**
@@ -152,6 +204,10 @@ class Instances {
 		self::$items[ $id ]     = [];
 		self::$settings[ $id ]  = $settings;
 
+		if ( ! in_array( $parent_block->name, self::CONTAINERS, true ) ) {
+			self::$queries[ $id ] = true;
+		}
+
 		return $parsed_block;
 	}
 
@@ -175,7 +231,7 @@ class Instances {
 			[ $id, $name ] = self::$active[ $key ];
 
 			array_pop( self::$stack[ $name ] );
-			unset( self::$items[ $id ], self::$settings[ $id ], self::$active[ $key ] );
+			unset( self::$items[ $id ], self::$settings[ $id ], self::$active[ $key ], self::$queries[ $id ], self::$totals[ $id ] );
 		}
 
 		return $block_content;

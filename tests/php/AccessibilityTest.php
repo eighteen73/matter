@@ -90,9 +90,30 @@ class AccessibilityTest extends TestCase {
 		$this->assertSame( 7, substr_count( $this->render( $query( 7 ) ), 'wp-block-matter-accordion-item__heading' ) );
 		$this->assertStringNotContainsString( 'role="region"', $this->render( $query( 7 ) ) );
 
+		// Three of the seven on a page: still no regions, as on every page.
 		Ids::reset();
 
-		$this->assertSame( 3, substr_count( $this->render( $query( 3 ) ), 'role="region"' ) );
+		$html = $this->render( $query( 3 ) );
+
+		$this->assertSame( 3, substr_count( $html, 'wp-block-matter-accordion-item__heading' ) );
+		$this->assertStringNotContainsString( 'role="region"', $html );
+	}
+
+	/**
+	 * A posts accordion of few posts in all has regions.
+	 *
+	 * @return void
+	 */
+	public function test_a_posts_accordion_of_few_posts_has_regions(): void {
+		$this->assertCount( 3, self::factory()->post->create_many( 3 ) );
+
+		$html = $this->render(
+			'<!-- wp:query {"queryId":12,"query":{"perPage":2,"postType":"post","inherit":false},"matterDisplay":{"type":"accordion"}} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/accordion-item --><!-- wp:paragraph --><p>Text</p><!-- /wp:paragraph --><!-- /wp:matter/accordion-item --><!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->'
+		);
+
+		$this->assertSame( 2, substr_count( $html, 'role="region"' ) );
 	}
 
 	/**
