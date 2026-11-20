@@ -12,6 +12,11 @@
 import { addFilter } from '@wordpress/hooks';
 import { select } from '@wordpress/data';
 
+/**
+ * Internal dependencies
+ */
+import { CAN_INSERT_FILTER } from './can-insert';
+
 const BLOCK = 'matter/archive-loop';
 const POST_TYPE = 'matter_archive';
 
@@ -27,7 +32,7 @@ export const withArchiveLoopOnlyInEntries = (canInsert, blockType, postType) =>
 	blockType?.name === BLOCK ? canInsert && postType === POST_TYPE : canInsert;
 
 addFilter(
-	'blockEditor.__unstableCanInsertBlockType',
+	CAN_INSERT_FILTER,
 	'matter/archive-loop-only-in-entries',
 	(canInsert, blockType) =>
 		withArchiveLoopOnlyInEntries(

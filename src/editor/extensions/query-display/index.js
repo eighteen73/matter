@@ -44,6 +44,7 @@ import { category, postList } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
+import { CAN_INSERT_FILTER } from '../can-insert';
 import {
 	ATTRIBUTE,
 	DISPLAY_BLOCKS,
@@ -285,7 +286,7 @@ addFilter(
 // filter for insertion rules; `__unstable` in name only, as WooCommerce uses
 // it.)
 addFilter(
-	'blockEditor.__unstableCanInsertBlockType',
+	CAN_INSERT_FILTER,
 	'matter/query-display/locked-query',
 	(canInsert, blockType, rootClientId, { getBlock }) => {
 		const root = rootClientId ? getBlock(rootClientId) : null;
