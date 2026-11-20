@@ -2180,6 +2180,57 @@ test.describe('featured image URL', () => {
 	});
 });
 
+test.describe('a saved icon the theme no longer has', () => {
+	test('is shown as missing in the toolbar, with no 404 in the console', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		const errors = [];
+
+		page.on('console', (message) => {
+			if (
+				message.type() === 'error' &&
+				/icons|404/.test(message.text() + message.location().url)
+			) {
+				errors.push(message.text());
+			}
+		});
+		await admin.createNewPost();
+		await editor.insertBlock({
+			name: 'core/buttons',
+			innerBlocks: [
+				{
+					name: 'core/button',
+					attributes: { text: 'Go', matterIcon: 'gone/lock' },
+				},
+			],
+		});
+		await page.evaluate(() => {
+			const { select, dispatch } = window.wp.data;
+			const [buttons] = select('core/block-editor').getBlocks();
+
+			dispatch('core/block-editor').selectBlock(
+				buttons.innerBlocks[0].clientId
+			);
+		});
+
+		const toolbar = page.getByRole('toolbar', { name: 'Block tools' });
+
+		await expect(
+			toolbar.getByRole('button', { name: 'Icon not found' })
+		).toBeVisible();
+		expect(errors).toEqual([]);
+
+		// It can be replaced or removed as any icon can.
+		await toolbar.getByRole('button', { name: 'Icon not found' }).click();
+		await page.getByRole('menuitem', { name: 'Remove icon' }).click();
+		await expect(
+			toolbar.getByRole('button', { name: 'Add icon' })
+		).toBeVisible();
+	});
+});
+
 test.describe('icon library', () => {
 	test('collections are toggle buttons, not a tab list', async ({
 		admin,

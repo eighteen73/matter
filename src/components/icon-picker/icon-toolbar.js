@@ -21,6 +21,7 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import { IconLibraryModal } from './icon-library-modal';
+import { useIconState } from './use-icons';
 
 /**
  * @param {Object}   props
@@ -30,6 +31,8 @@ import { IconLibraryModal } from './icon-library-modal';
  */
 export function IconToolbar({ value, onChange }) {
 	const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+	// Saved content can name an icon the theme no longer has.
+	const { isMissing } = useIconState(value);
 
 	return (
 		<ToolbarGroup>
@@ -43,7 +46,9 @@ export function IconToolbar({ value, onChange }) {
 							aria-haspopup="true"
 							onClick={onToggle}
 						>
-							{__('Replace icon', 'matter')}
+							{isMissing
+								? __('Icon not found', 'matter')
+								: __('Replace icon', 'matter')}
 						</ToolbarButton>
 					)}
 					renderContent={({ onClose }) => (
