@@ -388,14 +388,19 @@ function createLargeSlotPage(requestUtils, bytes = 1.2 * 1024 * 1024) {
  * @return {Promise<Object>} The entry.
  */
 function createArchiveEntry(requestUtils, target, options = {}) {
-	const { title = `Archive: ${target}`, content, cascade = false } = options;
+	const {
+		title = `Archive: ${target}`,
+		content,
+		cascade = false,
+		status = 'publish',
+	} = options;
 
 	return requestUtils.rest({
 		path: '/wp/v2/matter_archive',
 		method: 'POST',
 		data: {
 			title,
-			status: 'publish',
+			status,
 			content:
 				content ??
 				`<!-- wp:paragraph --><p>Intro for ${target}</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->`,

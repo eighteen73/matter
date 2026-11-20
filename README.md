@@ -540,7 +540,7 @@ It renders the archive's **Archive** entry (post type `matter_archive`). Entries
 4. the post type archive's entry (the blog's for categories, tags, author and date archives), if set to show on its category and tag pages; an author or date archive looks only at its own entry, then the blog's;
 5. the theme's default content.
 
-Whether a term's or post type archive's entry also shows further down is the entry's choice ("Include subcategories", or for a post type "Include category and tag pages", in Shows on; `_matter_archive_cascade`), off by default: usually a category's content is about that category only. A taxonomy's entry is for each of its terms. Only published entries count, and a parent's or post type's newest entry decides: if it doesn't cascade, an older one that did doesn't either. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
+Whether a term's or post type archive's entry also shows further down is the entry's choice ("Include subcategories", or for a post type "Include category and tag pages", and for the blog also "author and date", in Shows on; `_matter_archive_cascade`), off by default: usually a category's content is about that category only. A taxonomy's entry is for each of its terms. Only published entries count, and a parent's or post type's newest entry decides: if it doesn't cascade, an older one that did doesn't either. Among several for one archive the newest wins, so a scheduled version takes over on its date and unpublishing it falls back.
 
 **Default content.** Filter `matter_archive_default_content( $content, $target )` with block markup; it's also where a customised entry starts.
 
@@ -559,7 +559,7 @@ A bound paragraph that comes out empty (a term without a description) isn't outp
 - "Archive" under each post type with an archive, and under Posts.
 - "New version" on an entry: a draft copy to schedule as its replacement.
 
-Preview shows the entry, including unsaved changes, on its archive. The entry editor's "Shows on" panel changes which archive it's for.
+Preview shows the entry, including unsaved changes, on its archive. A draft opened with the editor's "Preview in new tab" (the archive's URL plus `preview=true`) shows the newest unpublished entry for that archive that the signed-in user can edit, and is never cached; nobody else sees it. The entry editor's "Shows on" panel changes which archive it's for.
 
 ## Allowed blocks
 

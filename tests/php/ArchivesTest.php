@@ -357,4 +357,44 @@ class ArchivesTest extends TestCase {
 		$this->assertSame( [ 'author', 'archive', 'index' ], ( new Target( 'author' ) )->template_hierarchy() );
 		$this->assertSame( 'post', ( new Target( 'date' ) )->query_args()['post_type'] );
 	}
+
+	/**
+	 * The blog's checkbox says it also covers author and date archives.
+	 *
+	 * @return void
+	 */
+	public function test_blog_cascade_label_names_author_and_date(): void {
+		$label = ( new Target( 'post_type', 'post' ) )->cascade_label();
+
+		$this->assertStringContainsString( 'category', $label );
+		$this->assertStringContainsString( 'author', $label );
+		$this->assertStringContainsString( 'date', $label );
+		$this->assertStringNotContainsString( 'author', ( new Target( 'post_type', 'page' ) )->cascade_label() );
+	}
+
+	/**
+	 * An author archive's preview lists nothing, not everyone's posts, when no
+	 * author has published; with one it lists theirs.
+	 *
+	 * @return void
+	 */
+	public function test_author_preview_without_an_author_lists_nothing(): void {
+		foreach ( get_posts( [ 'numberposts' => -1, 'post_status' => 'any' ] ) as $existing ) { // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+			wp_delete_post( $existing->ID, true );
+		}
+
+		$args = ( new Target( 'author' ) )->query_args();
+
+		$this->assertSame( [ 0 ], $args['post__in'] );
+		$this->assertArrayNotHasKey( 'author', $args );
+
+		$user = self::factory()->user->create( [ 'role' => 'author' ] );
+
+		self::factory()->post->create( [ 'post_author' => $user ] );
+
+		$args = ( new Target( 'author' ) )->query_args();
+
+		$this->assertSame( $user, $args['author'] );
+		$this->assertArrayNotHasKey( 'post__in', $args );
+	}
 }

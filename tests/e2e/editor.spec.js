@@ -2,7 +2,14 @@
  * Block editor: content integrity fixed before 1.0.
  */
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
-const { createCategories, createPage, termsCarousel } = require('./fixtures');
+const {
+	createArchiveEntry,
+	createCategories,
+	createPage,
+	createPosts,
+	deleteArchiveEntries,
+	termsCarousel,
+} = require('./fixtures');
 
 const blocks = (page) =>
 	page.evaluate(() =>
@@ -983,6 +990,57 @@ test.describe('archive entries', () => {
 
 		await page.goto(`/?cat=${id}`);
 		await expect(archiveLink).toHaveText('Edit archive');
+	});
+});
+
+test.describe('archive entry preview', () => {
+	test.afterAll(async ({ requestUtils }) => {
+		await deleteArchiveEntries(requestUtils);
+	});
+
+	test("Preview in new tab shows a draft entry's intro", async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		await deleteArchiveEntries(requestUtils);
+		// A date archive without posts is a 404.
+		await createPosts(requestUtils, ['Dated post']);
+
+		const entry = await createArchiveEntry(requestUtils, 'date', {
+			status: 'draft',
+			content:
+				'<!-- wp:paragraph --><p>Draft intro for dates</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->',
+		});
+
+		await admin.visitAdminPage('post.php', `post=${entry.id}&action=edit`);
+		await page.waitForFunction(() =>
+			window.wp?.data?.select('core/editor')?.getCurrentPostId()
+		);
+		await page.evaluate(() => {
+			window.wp.data
+				.dispatch('core/preferences')
+				.set('core/edit-post', 'welcomeGuide', false);
+		});
+
+		await page.getByRole('button', { name: 'View', exact: true }).click();
+
+		const [preview] = await Promise.all([
+			page.context().waitForEvent('page'),
+			page.getByRole('menuitem', { name: /Preview in new tab/ }).click(),
+		]);
+
+		await expect(preview.getByText('Draft intro for dates')).toBeVisible();
+
+		// Someone logged out, or without the right to edit, sees no draft.
+		const visitor = await page.context().browser().newContext();
+		const anonymous = await visitor.newPage();
+
+		await anonymous.goto(new URL(preview.url()).pathname + '?preview=true');
+		await expect(anonymous.getByText('Draft intro for dates')).toHaveCount(
+			0
+		);
+		await visitor.close();
 	});
 });
 

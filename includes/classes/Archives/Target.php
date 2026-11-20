@@ -271,7 +271,13 @@ final readonly class Target {
 			)
 		);
 
-		/* translators: %l: taxonomy names, e.g. "category and tag". */
+		// The blog's entry can also show on the author and date archives.
+		if ( 'post' === $this->name ) {
+			$names[] = __( 'author', 'matter' );
+			$names[] = __( 'date', 'matter' );
+		}
+
+		/* translators: %l: archive names, e.g. "category and tag". */
 		return $names ? wp_sprintf( __( 'Include %l pages', 'matter' ), array_values( $names ) ) : '';
 	}
 
@@ -313,8 +319,10 @@ final readonly class Target {
 			return is_string( $link ) ? $link : null;
 		}
 
+		$author = 'author' === $this->type ? $this->sample_author() : 0;
+
 		return match ( $this->type ) {
-			'author' => $this->sample_author() ? get_author_posts_url( $this->sample_author() ) : null,
+			'author' => $author ? get_author_posts_url( $author ) : null,
 			'date'   => get_year_link( $this->sample_year() ),
 			'search' => add_query_arg( 's', '', home_url( '/' ) ),
 			'404'    => home_url( '/page-not-found-preview/' ),
@@ -411,7 +419,15 @@ final readonly class Target {
 		}
 
 		if ( 'author' === $this->type ) {
-			$args['author'] = $this->sample_author();
+			$author = $this->sample_author();
+
+			if ( $author ) {
+				$args['author'] = $author;
+			} else {
+				// `author => 0` would list everyone's posts; without an author
+				// there is nothing to list.
+				$args['post__in'] = [ 0 ];
+			}
 		}
 
 		if ( 'date' === $this->type ) {

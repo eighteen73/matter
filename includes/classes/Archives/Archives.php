@@ -74,6 +74,7 @@ class Archives {
 		add_action( 'template_redirect', [ $this, 'redirect_single' ] );
 		add_filter( 'post_type_link', [ $this, 'permalink' ], 10, 2 );
 		add_filter( 'preview_post_link', [ $this, 'preview_link' ], 10, 2 );
+		add_filter( 'redirect_canonical', [ $this, 'keep_preview' ] );
 		add_filter( 'render_block_core/paragraph', [ $this, 'drop_empty_bound_paragraph' ], 10, 2 );
 		add_filter( 'rest_request_after_callbacks', [ $this, 'hide_from_post_type_list' ], 10, 3 );
 		// After the theme's list (AllowedBlocks, 10) and the query blocks (20).
@@ -361,6 +362,41 @@ class Archives {
 	}
 
 	/**
+	 * The newest draft, pending, scheduled or private entry for the current
+	 * archive that the user can edit.
+	 *
+	 * @return WP_Post|null
+	 */
+	private function editable_unpublished_entry(): ?WP_Post {
+		$target = Target::current();
+
+		if ( ! $target || ! is_user_logged_in() ) {
+			return null;
+		}
+
+		$posts = get_posts(
+			[
+				'post_type'     => self::POST_TYPE,
+				'post_status'   => [ 'future', 'draft', 'pending', 'private' ],
+				'numberposts'   => 10,
+				'orderby'       => 'modified',
+				'order'         => 'DESC',
+				'no_found_rows' => true,
+				'meta_key'      => self::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Only for a signed-in preview.
+				'meta_value'    => $target->key(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Only for a signed-in preview.
+			]
+		);
+
+		foreach ( $posts as $post ) {
+			if ( current_user_can( 'edit_post', $post->ID ) ) {
+				return $post;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * The entry being previewed on this request, if the user may.
 	 *
 	 * @return WP_Post|null With its autosave's content when that's newer.
@@ -371,15 +407,22 @@ class Archives {
 		$nonce = sanitize_text_field( wp_unslash( $_GET['preview_nonce'] ?? '' ) );
 		// phpcs:enable
 
-		if ( ! $id || ! wp_verify_nonce( $nonce, 'post_preview_' . $id ) || ! current_user_can( 'edit_post', $id ) ) {
-			return null;
+		if ( $id && wp_verify_nonce( $nonce, 'post_preview_' . $id ) && current_user_can( 'edit_post', $id ) ) {
+			$post = get_post( $id );
+		} else {
+			// The block editor builds a draft's preview from the entry's link
+			// (the archive's URL) plus `preview=true`, with no ID or nonce, so
+			// a signed-in editor gets the newest entry for this archive that
+			// they may edit and that isn't published.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only shows what the user can already edit.
+			$post = 'true' === ( $_GET['preview'] ?? '' ) ? $this->editable_unpublished_entry() : null;
 		}
-
-		$post = get_post( $id );
 
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
 			return null;
 		}
+
+		$id = $post->ID;
 
 		$autosave = wp_get_post_autosave( $id, get_current_user_id() );
 
@@ -406,6 +449,11 @@ class Archives {
 
 		$preview = $this->preview_entry();
 		$content = $preview ? $preview->post_content : $this->content_for( $target );
+
+		// A draft is for one person: keep it out of shared caches.
+		if ( $preview && ! headers_sent() ) {
+			nocache_headers();
+		}
 
 		$this->loops[] = [
 			'html' => $loop,
@@ -481,6 +529,11 @@ class Archives {
 
 		if ( ! $target || ! $args ) {
 			return '';
+		}
+
+		// An author archive with no author who has posts: nothing to list.
+		if ( [ 0 ] === ( $args['post__in'] ?? null ) ) {
+			return '<p class="wp-block-matter-archive-loop__empty">' . esc_html__( 'No author has published posts yet, so there is nothing to list here.', 'matter' ) . '</p>';
 		}
 
 		$template = resolve_block_template( 'archive', $target->template_hierarchy(), '' );
@@ -717,6 +770,24 @@ class Archives {
 			],
 			self::target_of( $post )?->preview_url() ?? home_url( '/' )
 		);
+	}
+
+	/**
+	 * Core's canonical redirect drops `preview=true` from a URL that isn't a
+	 * post preview, which every archive is, so the editor's Preview (the
+	 * archive's URL plus `preview=true`) would lose it before the entry could
+	 * be shown. Leave that request alone for someone who has a draft to see.
+	 *
+	 * @param string|false $redirect Redirect URL.
+	 * @return string|false
+	 */
+	public function keep_preview( string|false $redirect ): string|false {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only decides whether to redirect.
+		if ( $redirect && 'true' === ( $_GET['preview'] ?? '' ) && null !== $this->editable_unpublished_entry() ) {
+			return false;
+		}
+
+		return $redirect;
 	}
 
 	/**
