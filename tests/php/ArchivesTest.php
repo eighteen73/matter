@@ -792,6 +792,60 @@ class ArchivesTest extends TestCase {
 	}
 
 	/**
+	 * Contributors and authors can edit posts but not entries, so they can't
+	 * read an entry, its revisions or autosaves, or its edit context.
+	 *
+	 * @return void
+	 */
+	public function test_entries_stay_out_of_reach_of_contributors_and_authors(): void {
+		$entry = $this->entry( 'date' );
+
+		do_action( 'rest_api_init' );
+		wp_update_post(
+			[
+				'ID'           => $entry,
+				'post_content' => 'Changed so there is a revision',
+			]
+		);
+
+		$routes = [
+			'/wp/v2/matter_archive',
+			"/wp/v2/matter_archive/{$entry}",
+			"/wp/v2/matter_archive/{$entry}/revisions",
+			"/wp/v2/matter_archive/{$entry}/autosaves",
+		];
+
+		foreach ( [ 'contributor', 'author' ] as $role ) {
+			wp_set_current_user( self::factory()->user->create( [ 'role' => $role ] ) );
+
+			foreach ( $routes as $route ) {
+				foreach ( [ 'view', 'edit' ] as $context ) {
+					$request = new \WP_REST_Request( 'GET', $route );
+
+					$request->set_param( 'context', $context );
+
+					$status = rest_get_server()->dispatch( $request )->get_status();
+
+					$this->assertSame( 403, $status, "{$role} {$context} {$route}" );
+				}
+			}
+		}
+
+		// An editor reads them.
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'editor' ] ) );
+
+		foreach ( $routes as $route ) {
+			$request = new \WP_REST_Request( 'GET', $route );
+
+			$request->set_param( 'context', 'edit' );
+
+			$this->assertSame( 200, rest_get_server()->dispatch( $request )->get_status(), "editor {$route}" );
+		}
+
+		wp_set_current_user( 0 );
+	}
+
+	/**
 	 * Only taxonomies with a front end can have an archive entry: a private
 	 * one's terms have no archive to customise.
 	 *
@@ -896,6 +950,29 @@ class ArchivesTest extends TestCase {
 		$this->assertStringNotContainsString( 'Custom intro heading', $paged );
 		$this->assertStringContainsString( 'Search results for', $paged );
 		$this->assertStringContainsString( '<li>Post</li>', $paged );
+
+		// A preview of the entry keeps it on a later page.
+		$editor = self::factory()->user->create( [ 'role' => 'editor' ] );
+		$entry  = self::factory()->post->create(
+			[
+				'post_type'    => Archives::POST_TYPE,
+				'post_status'  => 'draft',
+				'post_content' => '<!-- wp:heading {"level":1} --><h1>Previewed intro</h1><!-- /wp:heading --><!-- wp:matter/archive-loop /-->',
+				'meta_input'   => [ Archives::META => 'search' ],
+			]
+		);
+
+		wp_set_current_user( $editor );
+		$_GET = [
+			'preview'    => 'true',
+			'preview_id' => (string) $entry,
+		];
+
+		$this->assertStringContainsString( 'Previewed intro', $render() );
+
+		$_GET = [];
+
+		wp_set_current_user( 0 );
 
 		// Themes can change it.
 		add_filter( 'matter_archive_paged_content', fn() => '<!-- wp:matter/archive-loop /-->' );
