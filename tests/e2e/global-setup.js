@@ -12,6 +12,34 @@ const { ensureEditorUser, resetSiteLanguage } = require('./fixtures');
 
 const run = promisify(execFile);
 
+// The test site's wp-env config (see playwright.config.js).
+const WP_ENV_CONFIG = process.env.WP_ENV_CONFIG || '.wp-env.tests.json';
+
+/**
+ * Stop the run if port 8889 is served by another config's site (they share the
+ * port), since Playwright reuses whatever is listening there.
+ *
+ * @return {Promise<void>}
+ */
+async function assertSiteIsConfigs() {
+	try {
+		await run('npx', [
+			'wp-env',
+			`--config=${WP_ENV_CONFIG}`,
+			'run',
+			'cli',
+			'wp',
+			'option',
+			'get',
+			'siteurl',
+		]);
+	} catch (error) {
+		throw new Error(
+			`The site on port 8889 isn't ${WP_ENV_CONFIG}'s. Stop the other test site (npm run env:stop) and run again. ${error.message}`
+		);
+	}
+}
+
 /**
  * Install the Arabic language pack (it downloads from wordpress.org). Sets
  * MATTER_E2E_ARABIC=1 for the workers when it worked; without network the run
@@ -27,7 +55,7 @@ async function installArabic() {
 			'npx',
 			[
 				'wp-env',
-				'--config=.wp-env.tests.json',
+				`--config=${WP_ENV_CONFIG}`,
 				'run',
 				'cli',
 				'wp',
@@ -48,6 +76,7 @@ async function installArabic() {
 }
 
 module.exports = async (config) => {
+	await assertSiteIsConfigs();
 	await baseSetup(config);
 
 	const { storageState, baseURL } = config.projects[0].use;

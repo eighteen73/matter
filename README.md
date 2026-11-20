@@ -1049,8 +1049,13 @@ npm run test:unit    # JavaScript unit tests
 npm run test:php     # PHPUnit, including contract snapshots (or composer test)
 npm run test:php:update   # PHPUnit, writing the contract snapshots afresh
 npm run test:e2e     # browser tests with Playwright and axe (npx playwright install chromium first)
+npm run env:start:tests:nowc   # the test site without WooCommerce (see below)
+npm run test:php:nowc          # PHPUnit on that site, with no Gravity Forms stub
+npm run test:e2e:nowc          # the browser smoke specs on that site
 ```
 
-CI runs the linters and all three suites on pushes to `next` and pull requests, and weekly against WordPress nightly and the latest WooCommerce (`.github/workflows/compatibility.yml`).
+PHPUnit never loads WooCommerce (its tables have their own prefix, where no plugin is active), and loads a stub of Gravity Forms' API (`tests/fixtures/gravity-forms-stub`) so that integration and its block can be tested. `test:php` skips the tests tagged `without-plugins`, which need Gravity Forms absent: a saved Gravity Form block and a saved Products carousel, rendering nothing and raising no warning. `test:php:nowc` runs them on a site without WooCommerce (`.wp-env.tests.nowc.json`), without the stub, and fails on any skipped test. That site uses port 8889 like the test site, so stop one before starting the other (`npm run env:stop`); a browser run says so if it finds the wrong one.
+
+CI runs the linters and all three suites on pushes to `next` and pull requests (with PHPUnit and the browser smoke specs again on the site without WooCommerce), and weekly against WordPress nightly and the latest WooCommerce (`.github/workflows/compatibility.yml`).
 
 Lefthook runs the linters on commit. `npm install` sets up the hook only in Matter's own repository (`bin/install-hooks.js`, using lefthook from npx), so building Matter inside a project leaves the project's hooks alone. If commits stop running the linters ("Can't find lefthook"), run `npm run prepare`. Pushing to `main` builds and tags a release (see `.github/workflows/release.yml`). See [CHANGELOG.md](CHANGELOG.md).

@@ -5,6 +5,10 @@
  *
  *     npm run test:php
  *
+ * and, without WooCommerce or Gravity Forms (their own site, port 8889 too):
+ *
+ *     npm run test:php:nowc
+ *
  * Matter is loaded by the must-use loader that wp-env maps in
  * (tests/wp-env/matter-loader.php), as on a real site, and the fixture theme
  * (tests/fixtures/matter-test-theme) is active.
@@ -22,6 +26,19 @@ if ( ! file_exists( $matter_tests_dir . '/includes/functions.php' ) ) {
 define( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH', dirname( __DIR__, 2 ) . '/vendor/yoast/phpunit-polyfills' );
 
 require_once $matter_tests_dir . '/includes/functions.php';
+
+// Gravity Forms' public API, stubbed, so its integration boots and its block
+// renders. `npm run test:php:nowc` (MATTER_TESTS_WITHOUT_PLUGINS) leaves it
+// out, as on a site without the plugin. WooCommerce isn't loaded here: PHPUnit
+// has its own database prefix, where no plugin is active.
+if ( ! getenv( 'MATTER_TESTS_WITHOUT_PLUGINS' ) ) {
+	tests_add_filter(
+		'muplugins_loaded',
+		static function (): void {
+			require __DIR__ . '/../fixtures/gravity-forms-stub/gravity-forms-stub.php';
+		}
+	);
+}
 
 // The fixture theme, whatever the database says.
 tests_add_filter( 'pre_option_template', fn() => 'matter-test-theme' );

@@ -90,7 +90,8 @@ class IntegrationsTest extends TestCase {
 
 	/**
 	 * An integration boots only when its plugin is active, on
-	 * `plugins_loaded`: neither plugin is active in the test site.
+	 * `plugins_loaded`. WooCommerce is never loaded in PHPUnit; Gravity Forms
+	 * is, as a stub, except in `npm run test:php:nowc`.
 	 *
 	 * @return void
 	 */
@@ -151,16 +152,15 @@ class IntegrationsTest extends TestCase {
 	 * Without its integration, Matter's Gravity Form block doesn't register,
 	 * and Gravity Forms' own Form block isn't hidden.
 	 *
+	 * @group without-plugins
+	 *
 	 * @return void
 	 */
 	public function test_gravity_form_block_waits_for_its_integration(): void {
-		$this->assertSame( class_exists( 'GFAPI' ), \WP_Block_Type_Registry::get_instance()->is_registered( 'matter/gravity-form' ) );
-
-		if ( class_exists( 'GFAPI' ) ) {
-			return;
-		}
-
+		$this->assertFalse( class_exists( 'GFAPI' ), 'Run with npm run test:php:nowc.' );
+		$this->assertFalse( \WP_Block_Type_Registry::get_instance()->is_registered( 'matter/gravity-form' ) );
 		$this->assertNotContains( 'gravityforms/form', Registry::hidden_blocks() );
+		$this->assertFalse( Integrations::active( GravityForms::class ) );
 
 		$this->boot( new GravityForms() );
 
@@ -174,15 +174,58 @@ class IntegrationsTest extends TestCase {
 	}
 
 	/**
+	 * A saved Gravity Form block, with Gravity Forms off, renders nothing and
+	 * raises no warning (the test case fails on one).
+	 *
+	 * @group without-plugins
+	 *
+	 * @return void
+	 */
+	public function test_a_saved_gravity_form_renders_nothing_without_the_plugin(): void {
+		$this->assertFalse( class_exists( 'GFAPI' ), 'Run with npm run test:php:nowc.' );
+
+		$markup = '<!-- wp:group --><div class="wp-block-group"><!-- wp:matter/gravity-form {"formId":"1","displayTitle":true} /--></div><!-- /wp:group -->';
+		$html   = $this->render( $markup );
+
+		$this->assertStringNotContainsString( 'gform', $html );
+		$this->assertStringNotContainsString( 'matter/gravity-form', $html );
+		$this->assertSame( '', trim( $this->render( '<!-- wp:matter/gravity-form {"formId":"1"} /-->' ) ) );
+	}
+
+	/**
+	 * A saved Products carousel (a Product Collection shown as a carousel),
+	 * with WooCommerce off, renders no products and raises no warning.
+	 *
+	 * @group without-plugins
+	 *
+	 * @return void
+	 */
+	public function test_a_saved_products_carousel_renders_nothing_without_the_plugin(): void {
+		$this->assertFalse( class_exists( 'WooCommerce' ), 'Run with npm run test:php:nowc.' );
+		$this->assertFalse( QueryDisplay::supports( 'carousel', WooCommerce::PRODUCT_COLLECTION ) );
+
+		$product = self::factory()->post->create( [ 'post_title' => 'A stocked product' ] );
+
+		$html = $this->render(
+			'<!-- wp:woocommerce/product-collection {"queryId":3,"query":{"perPage":3,"postType":"product","inherit":false},"matterDisplay":{"type":"carousel"}} -->'
+			. '<div class="wp-block-woocommerce-product-collection"><!-- wp:woocommerce/product-template --><!-- wp:matter/loop-item /--><!-- /wp:woocommerce/product-template --></div>'
+			. '<!-- /wp:woocommerce/product-collection -->'
+		);
+
+		$this->assertStringNotContainsString( 'A stocked product', $html );
+		$this->assertStringNotContainsString( 'matter-carousel', $html );
+		$this->assertStringNotContainsString( 'loop-item', $html );
+		$this->assertNotNull( get_post( $product ) );
+	}
+
+	/**
 	 * Matter's own lists name only core's blocks; the WooCommerce integration
 	 * adds the Product Collection and its template.
 	 *
 	 * @return void
 	 */
 	public function test_woocommerce_integration_adds_its_query_blocks(): void {
-		if ( class_exists( 'WooCommerce' ) ) {
-			$this->markTestSkipped( 'WooCommerce is active: its integration has already booted.' );
-		}
+		$this->assertFalse( class_exists( 'WooCommerce' ), 'PHPUnit runs without WooCommerce, so these tests boot its integration themselves.' );
 
 		$this->assertSame(
 			[
@@ -215,9 +258,7 @@ class IntegrationsTest extends TestCase {
 	 * @return void
 	 */
 	public function test_woocommerce_integration_keeps_products_for_the_products_carousel(): void {
-		if ( class_exists( 'WooCommerce' ) ) {
-			$this->markTestSkipped( 'WooCommerce is active: its integration has already booted.' );
-		}
+		$this->assertFalse( class_exists( 'WooCommerce' ), 'PHPUnit runs without WooCommerce, so these tests boot its integration themselves.' );
 
 		register_post_type(
 			'product',
@@ -245,9 +286,7 @@ class IntegrationsTest extends TestCase {
 	 * @return void
 	 */
 	public function test_term_image_comes_from_the_integration(): void {
-		if ( class_exists( 'WooCommerce' ) ) {
-			$this->markTestSkipped( 'WooCommerce is active: its integration has already booted.' );
-		}
+		$this->assertFalse( class_exists( 'WooCommerce' ), 'PHPUnit runs without WooCommerce, so these tests boot its integration themselves.' );
 
 		$term  = self::factory()->term->create_and_get( [ 'taxonomy' => 'category' ] );
 		$image = self::factory()->attachment->create();

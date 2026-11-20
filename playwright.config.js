@@ -6,6 +6,10 @@
 const { defineConfig, devices } = require('@playwright/test');
 const base = require('@wordpress/scripts/config/playwright.config.js');
 
+// The test site's wp-env config. `npm run test:e2e:nowc` points this at the
+// site without WooCommerce, which also uses port 8889: stop the other first.
+const wpEnvConfig = process.env.WP_ENV_CONFIG || '.wp-env.tests.json';
+
 module.exports = defineConfig({
 	...base,
 	testDir: './tests/e2e',
@@ -29,6 +33,6 @@ module.exports = defineConfig({
 	globalSetup: require.resolve('./tests/e2e/global-setup.js'),
 	webServer: {
 		...base.webServer,
-		command: 'npm run env:start:tests',
+		command: `npx wp-env --config=${wpEnvConfig} start`,
 	},
 });

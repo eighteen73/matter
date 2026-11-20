@@ -75,3 +75,51 @@ jobs:
           name: browser-test-artifacts
           path: artifacts/
           retention-days: 7
+
+  # Matter on a site without WooCommerce or Gravity Forms: PHPUnit (the
+  # integrations' off states, with no skipped tests) and the browser smoke
+  # specs, on their own wp-env site (.wp-env.tests.nowc.json).
+  without-plugins:
+    name: PHPUnit and browser smoke tests without WooCommerce
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Start wp-env's test site without WooCommerce
+        run: npm run env:start:tests:nowc
+
+      - name: Run PHPUnit
+        run: npm run test:php:nowc
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Run browser smoke tests
+        run: npm run test:e2e:nowc
+
+      - name: Keep browser test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-artifacts-without-plugins
+          path: artifacts/
+          retention-days: 7
