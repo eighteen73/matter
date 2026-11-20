@@ -523,3 +523,271 @@ test.describe('overlays', () => {
 		});
 	});
 });
+
+/**
+ * The names of the links reached by pressing Tab, from the top of the page,
+ * and which of them were on screen when they had focus.
+ *
+ * @param {Object} page  Page.
+ * @param {number} limit Tab presses.
+ * @return {Promise<Object[]>} `{ name, visible }` for each stop that is a link.
+ */
+async function tabThroughLinks(page, limit = 30) {
+	const stops = [];
+
+	await page.locator('body').click({ position: { x: 1, y: 1 } });
+
+	for (let i = 0; i < limit; i++) {
+		await page.keyboard.press('Tab');
+		stops.push(
+			await page.evaluate(() => {
+				// eslint-disable-next-line @wordpress/no-global-active-element -- The page's own focus, whatever has it.
+				const el = document.activeElement;
+				const box = el.getBoundingClientRect();
+
+				return {
+					tag: el.tagName,
+					name: el.textContent.trim(),
+					visible:
+						box.width > 0 &&
+						box.height > 0 &&
+						window.getComputedStyle(el).visibility === 'visible',
+					insideMenu: !!el.closest('.matter-menu'),
+				};
+			})
+		);
+	}
+
+	return stops.filter((stop) => stop.tag === 'A' && stop.insideMenu);
+}
+
+test.describe('menus and the panel', () => {
+	const MENU_LINKS = ['Services', 'Design', 'Contact'];
+
+	for (const [name, viewport] of [
+		['375 px', { width: 375, height: 800 }],
+		['1280 px', VIEWPORTS.desktop],
+	]) {
+		test.describe(`without JavaScript at ${name}`, () => {
+			test.use({ ...NO_JAVASCRIPT, viewport });
+
+			test('every menu link is on screen, and nothing is inert', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				// The panel's menu is nested lists below `lg` (a drill-down),
+				// and a dropdown at it, which opens on hover and focus.
+				const panelLinks = page.locator(
+					'#test-nav .matter-menu__link:visible'
+				);
+
+				await expect(panelLinks).toHaveText(
+					viewport.width < 1024 ? MENU_LINKS : ['Services', 'Contact']
+				);
+				await expect(page.locator('#test-nav')).toBeVisible();
+				await expect(
+					page.locator('.matter-menu :is([inert], [hidden])')
+				).toHaveCount(0);
+
+				// Nothing that needs the script is offered.
+				await expect(
+					page.locator(
+						'.matter-menu__toggle:visible, .matter-panel-toggle:visible'
+					)
+				).toHaveCount(0);
+				await expect(
+					page.locator(
+						'.matter-panel__close:visible, .matter-panel__backdrop:visible'
+					)
+				).toHaveCount(0);
+			});
+
+			test('the panel is inline: nothing off screen, no scroll lock', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				const box = await page
+					.locator('#test-nav .matter-panel__content')
+					.evaluate((el) => {
+						const style = window.getComputedStyle(el);
+						const rect = el.getBoundingClientRect();
+
+						return {
+							position: style.position,
+							translate: style.translate,
+							visibility: style.visibility,
+							left: rect.left,
+							right: rect.right,
+							width: window.innerWidth,
+						};
+					});
+
+				expect(box.position).not.toBe('fixed');
+				expect(box.translate).toBe('none');
+				expect(box.visibility).toBe('visible');
+				expect(box.left).toBeGreaterThanOrEqual(0);
+				expect(box.right).toBeLessThanOrEqual(box.width);
+			});
+
+			test('the keyboard reaches every link, on screen', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				const stops = await tabThroughLinks(page);
+				const names = new Set(stops.map((stop) => stop.name));
+
+				for (const link of MENU_LINKS) {
+					expect(names, `${link} was reached`).toContain(link);
+				}
+
+				// The submenu link in the hover menu is reached too, and
+				// everything that has focus can be seen.
+				expect(stops.filter((stop) => !stop.visible)).toEqual([]);
+			});
+		});
+	}
+
+	test.describe('without JavaScript, dropdowns', () => {
+		test.use({ ...NO_JAVASCRIPT, viewport: VIEWPORTS.desktop });
+
+		test('open on hover and when focus is inside, and never hide what has focus', async ({
+			page,
+		}) => {
+			await page.goto(kitchenSink.link);
+
+			const hover = page.locator('#hover-menu');
+			const design = hover.getByRole('link', {
+				name: 'Design',
+				exact: true,
+			});
+
+			await expect(design).toBeHidden();
+			await hover
+				.getByRole('link', { name: 'Services', exact: true })
+				.hover();
+			await expect(design).toBeVisible();
+
+			await page.mouse.move(0, 0);
+			await expect(design).toBeHidden();
+
+			// Focus on the parent opens it; Tab goes on into it, and the
+			// submenu stays open while focus is in it.
+			await hover
+				.getByRole('link', { name: 'Services', exact: true })
+				.focus();
+			await expect(design).toBeVisible();
+			await page.keyboard.press('Tab');
+			await expect(design).toBeFocused();
+			await expect(design).toBeVisible();
+
+			// Tabbing on leaves it, and it closes.
+			await page.keyboard.press('Tab');
+			await expect(design).toBeHidden();
+		});
+	});
+
+	test.describe('when the scripts do not start', () => {
+		test.use({ viewport: { width: 375, height: 800 } });
+
+		test('the panel stays off canvas until the allowance has run out, then is inline', async ({
+			page,
+		}) => {
+			await page.route(BLOCK_SCRIPTS, (route) => route.abort());
+			await page.clock.install();
+			await page.goto(kitchenSink.link);
+
+			// About to start: as an enhanced page first paints it, so
+			// nothing flashes.
+			await expect(page.locator('html')).toHaveClass(/matter-js/);
+			await expect(page.locator('.matter-panel-toggle')).toBeVisible();
+			await expect(
+				page.locator('#test-nav .matter-panel__content')
+			).toBeHidden();
+
+			await page.clock.fastForward(5000);
+			await expect(
+				page.locator('#test-nav .matter-panel__content')
+			).toBeVisible();
+			await expect(page.locator('.matter-panel-toggle')).toBeHidden();
+			await expect(
+				page.locator('#test-nav .matter-menu__link:visible')
+			).toHaveText(MENU_LINKS);
+		});
+	});
+
+	test.describe('with JavaScript', () => {
+		test.describe('at 375 px', () => {
+			test.use({ viewport: { width: 375, height: 800 } });
+
+			test('the panel is off canvas, and opens with its toggle', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				await expect(page.locator('#test-nav')).toHaveClass(
+					/is-enhanced/
+				);
+				await expect(
+					page.locator('#test-nav .matter-panel__content')
+				).toBeHidden();
+
+				const toggle = page.getByRole('button', {
+					name: 'Menu',
+					exact: true,
+				});
+
+				await toggle.click();
+				await expect(
+					page.getByRole('dialog', { name: 'Menu' })
+				).toBeVisible();
+				await expect(
+					page.locator('#test-nav .matter-menu__toggle').first()
+				).toBeVisible();
+				// Parent links are replaced by their toggles.
+				await expect(
+					page.locator('#test-nav .has-submenu > .matter-menu__link')
+				).toBeHidden();
+			});
+		});
+
+		test.describe('at 1280 px', () => {
+			test.use({ viewport: VIEWPORTS.desktop });
+
+			test('closed submenus are inert, and open ones are not', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				const submenu = page.locator(
+					'#hover-menu .matter-menu__submenu'
+				);
+				const toggle = page.locator('#hover-menu .matter-menu__toggle');
+
+				await expect(submenu).toHaveAttribute('inert', '');
+				await toggle.click();
+				await expect(submenu).not.toHaveAttribute('inert', '');
+				await expect(
+					submenu.getByRole('link', { name: 'Design' })
+				).toBeVisible();
+			});
+
+			test('a submenu does not open on focus alone', async ({ page }) => {
+				await page.goto(kitchenSink.link);
+				await page
+					.locator('#hover-menu')
+					.getByRole('link', { name: 'Services', exact: true })
+					.focus();
+
+				// The script opens it with the toggle, not by CSS.
+				await expect(
+					page
+						.locator('#hover-menu')
+						.getByRole('link', { name: 'Design' })
+				).toBeHidden();
+			});
+		});
+	});
+});

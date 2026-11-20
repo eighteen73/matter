@@ -6,6 +6,7 @@
 // Functional rules first, then the default skin, all in :where().
 
 @use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
 
 .is-type-dropdown {
 	position: relative;
@@ -44,6 +45,18 @@
 
 :where(.is-type-dropdown .matter-menu__item.is-open) > .matter-menu__submenu.is-positioned {
 	opacity: 1;
+}
+
+// Without JavaScript (or a script that failed), a submenu opens as its item is
+// hovered or has focus inside it, so it can be reached from the keyboard and
+// never traps or hides what has focus.
+:where(.is-type-dropdown:not(#{$enhanced}) .matter-menu__item:is(:hover, :focus-within)) > .matter-menu__submenu {
+	display: block;
+	opacity: 1;
+}
+
+:where(.is-type-dropdown:not(#{$enhanced}) .is-megamenu:is(:hover, :focus-within)) > .matter-menu__submenu {
+	display: flex;
 }
 
 :where(.is-type-dropdown) .matter-menu__submenu.is-flipped {
@@ -103,22 +116,22 @@
 }
 
 // Click to open: the toggle replaces the parent link…
-:where(.is-type-dropdown.opens-on-click .has-submenu:not(.is-column)) > .matter-menu__link {
+:where(.is-type-dropdown.opens-on-click#{$enhanced} .has-submenu:not(.is-column)) > .matter-menu__link {
 	display: none;
 }
 
-:where(.is-type-dropdown.opens-on-click) .matter-menu__toggle-text {
+:where(.is-type-dropdown.opens-on-click#{$enhanced}) .matter-menu__toggle-text {
 	display: inline;
 }
 
 // …so the submenu leads with a "View all" link to the parent page (the
 // drill-down header, without its back button and label).
-:where(.is-type-dropdown.opens-on-click) .matter-menu__submenu-header {
+:where(.is-type-dropdown.opens-on-click#{$enhanced}) .matter-menu__submenu-header {
 	display: block;
 }
 
-:where(.is-type-dropdown.opens-on-click) .matter-menu__back,
-:where(.is-type-dropdown.opens-on-click) .matter-menu__parent-label {
+:where(.is-type-dropdown.opens-on-click#{$enhanced}) .matter-menu__back,
+:where(.is-type-dropdown.opens-on-click#{$enhanced}) .matter-menu__parent-label {
 	display: none;
 }
 

@@ -289,11 +289,15 @@ class Menu {
 		wp_interactivity_state(
 			'matter/menu',
 			[
-				'isSubmenuOpen' => function () {
+				'isSubmenuOpen'  => function () {
 					$context = wp_interactivity_get_context();
 
 					return in_array( $context['submenuId'] ?? null, $context['openSubmenus'] ?? [], true );
 				},
+				// A closed submenu is inert once the script runs (view.js); the
+				// server doesn't render it, so without JavaScript every link
+				// can be reached.
+				'isSubmenuInert' => fn() => false,
 			]
 		);
 

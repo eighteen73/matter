@@ -75,7 +75,7 @@ class Walker extends Walker_Nav_Menu {
 		}
 
 		$output .= sprintf(
-			'<div id="%1$s" class="matter-menu__submenu" tabindex="-1" inert data-wp-bind--inert="!state.isSubmenuOpen">%2$s<ul class="%3$s">',
+			'<div id="%1$s" class="matter-menu__submenu" tabindex="-1" data-wp-bind--inert="state.isSubmenuInert">%2$s<ul class="%3$s">',
 			esc_attr( $this->submenu_dom_id( $parent['submenu'] ) ),
 			$this->submenu_header( $parent['item'] ),
 			'megamenu' === $parent['kind'] ? 'matter-menu__submenu-items matter-menu__columns' : 'matter-menu__submenu-items'

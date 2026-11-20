@@ -5,6 +5,7 @@
 // context in :where()); then the default skin, all in :where().
 
 @use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
 
 html.has-panel-open {
 	overflow: hidden;
@@ -13,6 +14,14 @@ html.has-panel-open {
 // Only the off-canvas mode uses these.
 .matter-panel__backdrop,
 .matter-panel__close {
+	display: none;
+}
+
+// Without JavaScript the panel is inline at every width: nothing to open, so no
+// toggle, and what is for the off-canvas panel only doesn't show. (A toggle is
+// marked, as the panel is, when its script starts; see styles/enhanced.)
+.matter-panel-toggle:not(#{$enhanced}),
+:where(.matter-panel:not(#{$enhanced})) .is-panel-only {
 	display: none;
 }
 

@@ -251,6 +251,10 @@ const { state } = store(
 
 				return context.openSubmenus.includes(context.submenuId);
 			},
+			// Closed submenus are inert (the server leaves them reachable).
+			get isSubmenuInert() {
+				return !state.isSubmenuOpen;
+			},
 		},
 		actions: {
 			openOnHover() {

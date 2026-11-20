@@ -4,8 +4,15 @@
 // context in :where()); then the default skin, all in :where(). Matter shows
 // and hides parts per type (e.g. a parent's link in a drill-down): themes
 // shouldn't set `display` on the toggle text, submenus or their headers.
+// Without JavaScript, or when the menu's script fails, every link can be
+// reached: parent links show and the toggles, which need the script, don't;
+// dropdowns open on hover and focus; accordions and drill-downs are nested
+// lists, open. The rules that close and hide submenus and swap parent links
+// for toggles only apply to a menu that is running, or about to be (see
+// styles/enhanced).
 
 @use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
 
 .matter-menu__items,
 .matter-menu__submenu-items,
@@ -25,12 +32,17 @@
 }
 
 // Submenus stay in the DOM (for transitions) but are hidden until open.
-.matter-menu__submenu {
+:where(.matter-menu#{$enhanced}) .matter-menu__submenu {
 	visibility: hidden;
 }
 
-:where(.matter-menu__item.is-open) > .matter-menu__submenu {
+:where(.matter-menu#{$enhanced} .matter-menu__item.is-open) > .matter-menu__submenu {
 	visibility: visible;
+}
+
+// The toggles need the script. High specificity, as any hidden state.
+.matter-menu:not(#{$enhanced}) .matter-menu__toggle {
+	display: none;
 }
 
 // The submenu header (back button, label, "View all") is shown by the
