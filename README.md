@@ -523,7 +523,7 @@ add_filter( 'matter_settings_fields', fn() => [
 ```
 
 **Field types:**
-- `text`, `textarea`, `email`, `url`, `tel`. A `url` field takes an address as people copy it (`instagram.com/name`) and adds `https://`.
+- `text`, `textarea`, `email`, `url`, `tel`. A `url` field takes an address as people copy it (`instagram.com/name`) and adds `https://`; a relative address (starting `/`, `#` or `?`) is kept as it is. A `number` field must be a finite number (saving anything else shows an error on the page). Saving leaves out nothing it isn't sent: a field missing from a REST save keeps its stored value, and `Matter\setting()` treats a media field with no image as empty.
 - `number`, `toggle`
 - `select` (with `options`)
 - `media` (attachment ID)

@@ -28,6 +28,7 @@ namespace Eighteen73\Matter\Settings;
 
 use Eighteen73\Matter\Singleton;
 use WP_Block;
+use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -208,23 +209,39 @@ class Settings {
 
 		$value = $this->get_values()[ $section_key ][ $field_key ] ?? null;
 
-		return ( null === $value || '' === $value || [] === $value ) ? $default_value : $value;
+		if ( null === $value || '' === $value || [] === $value ) {
+			return $default_value;
+		}
+
+		// A media field's empty value is 0 (no attachment), not a value.
+		if ( 0 === $value && 'media' === ( $this->get_field( $path )['type'] ?? '' ) ) {
+			return $default_value;
+		}
+
+		return $value;
 	}
 
 	/**
 	 * Save values, sanitising them against the field definitions.
 	 *
-	 * Unknown sections/fields are discarded.
+	 * Unknown sections/fields are discarded. Fields left out of `$values` keep
+	 * their stored value (a field sent as `null` is cleared), so a partial
+	 * save, or one from a page loaded before a field was added, loses nothing.
 	 *
 	 * @param array $values Values keyed by section then field.
 	 * @return array The saved values.
 	 */
 	public function save( array $values ): array {
-		$clean = [];
+		$clean  = [];
+		$stored = $this->get_values();
 
 		foreach ( $this->get_sections() as $section_key => $section ) {
 			foreach ( $section['fields'] as $field_key => $field ) {
-				$clean[ $section_key ][ $field_key ] = $this->sanitise_value( $values[ $section_key ][ $field_key ] ?? null, $field );
+				$given = $values[ $section_key ] ?? null;
+
+				$clean[ $section_key ][ $field_key ] = is_array( $given ) && array_key_exists( $field_key, $given )
+					? $this->sanitise_value( $given[ $field_key ], $field )
+					: $stored[ $section_key ][ $field_key ];
 			}
 		}
 
@@ -288,8 +305,81 @@ class Settings {
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
-	public function rest_save( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( $this->save( (array) $request->get_param( 'values' ) ) );
+	public function rest_save( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$values = (array) $request->get_param( 'values' );
+		$error  = $this->validate( $values );
+
+		if ( $error ) {
+			return $error;
+		}
+
+		return new WP_REST_Response( $this->save( $values ) );
+	}
+
+	/**
+	 * Check what would otherwise be silently dropped: a number that isn't one
+	 * (or is too large to store), so the page can say so.
+	 *
+	 * @param array $values Values keyed by section then field.
+	 * @return WP_Error|null
+	 */
+	public function validate( array $values ): ?WP_Error {
+		foreach ( $this->get_sections() as $section_key => $section ) {
+			foreach ( $section['fields'] as $field_key => $field ) {
+				$error = $this->invalid_number( $values[ $section_key ][ $field_key ] ?? null, $field );
+
+				if ( $error ) {
+					return $error;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * An error for a number field's value that isn't a finite number.
+	 *
+	 * @param mixed $value Raw value.
+	 * @param array $field Field definition.
+	 * @return WP_Error|null
+	 */
+	private function invalid_number( mixed $value, array $field ): ?WP_Error {
+		if ( 'repeater' === $field['type'] ) {
+			foreach ( is_array( $value ) ? $value : [] as $row ) {
+				foreach ( $field['fields'] as $key => $sub_field ) {
+					$error = $this->invalid_number( is_array( $row ) ? ( $row[ $key ] ?? null ) : null, $sub_field );
+
+					if ( $error ) {
+						return $error;
+					}
+				}
+			}
+
+			return null;
+		}
+
+		if ( 'number' !== $field['type'] || null === $value || '' === $value || $this->is_finite_number( $value ) ) {
+			return null;
+		}
+
+		return new WP_Error(
+			'matter_settings_invalid_number',
+			/* translators: %s: field label. */
+			sprintf( __( '“%s” needs a number that isn’t too large.', 'matter' ), $field['label'] ),
+			[ 'status' => 400 ]
+		);
+	}
+
+	/**
+	 * Whether a value is a number that can be stored (not NAN or infinite,
+	 * which `1e999` is).
+	 *
+	 * @param mixed $value Raw value.
+	 * @return bool
+	 */
+	private function is_finite_number( mixed $value ): bool {
+		return is_numeric( $value ) && is_finite( $value + 0 );
 	}
 
 	/**
@@ -435,9 +525,7 @@ class Settings {
 			return match ( $field['type'] ) {
 				'email' => 'mailto:' . $value,
 				'tel'   => 'tel:' . preg_replace( '/[^0-9+]/', '', (string) $value ),
-				// Only a safe address (no `javascript:`). Not HTML-encoded: the
-				// block sets the attribute, which escapes it once.
-				default => esc_url_raw( (string) $value ),
+				default => self::safe_url( (string) $value ),
 			};
 		}
 
@@ -522,6 +610,27 @@ class Settings {
 	}
 
 	/**
+	 * A URL setting made safe for a bound attribute: a relative address (a
+	 * path, `#anchor` or `?query`, which the settings page accepts as typed)
+	 * is kept as it is, anything else must be a safe absolute address (no
+	 * `javascript:`). Not HTML-encoded: the block sets the attribute, which
+	 * escapes it once.
+	 *
+	 * @param string $url Stored address.
+	 * @return string
+	 */
+	public static function safe_url( string $url ): string {
+		$url = trim( $url );
+
+		// One slash, not `//host`, which is another site.
+		if ( preg_match( '#^(/(?!/)|[\#?])#', $url ) ) {
+			return $url;
+		}
+
+		return esc_url_raw( self::with_scheme( $url ) );
+	}
+
+	/**
 	 * Sanitise a value for a field.
 	 *
 	 * @param mixed $value Raw value.
@@ -541,7 +650,7 @@ class Settings {
 			case 'url':
 				return esc_url_raw( self::with_scheme( (string) $value ) );
 			case 'number':
-				return is_numeric( $value ) ? $value + 0 : null;
+				return $this->is_finite_number( $value ) ? $value + 0 : null;
 			case 'toggle':
 				return (bool) $value;
 			case 'media':

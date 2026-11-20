@@ -948,6 +948,69 @@ test.describe('site details', () => {
 	});
 });
 
+test.describe('site details numbers', () => {
+	test('a number too large to store is refused, shown on the page, and nothing breaks', async ({
+		admin,
+		page,
+	}) => {
+		await admin.visitAdminPage('admin.php', 'page=matter-settings');
+
+		const seats = page.getByRole('spinbutton', { name: 'Seats' });
+		const good = String(10 + (Date.now() % 80));
+
+		await seats.fill(good);
+		await page.getByRole('button', { name: 'Save settings' }).click();
+		await expect(
+			page.getByText('Settings saved.', { exact: true }).first()
+		).toBeVisible();
+
+		// `1e999` is valid JSON and decodes to infinity, which can't be stored
+		// (the page's own JSON would fail). The route refuses it.
+		const refused = await page.evaluate(async () => {
+			try {
+				await window.wp.apiFetch({
+					path: '/matter/v1/settings',
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: '{"values":{"social":{"seats":1e999}}}',
+				});
+				return 'saved';
+			} catch (error) {
+				return error.message;
+			}
+		});
+
+		expect(refused).toBe('“Seats” needs a number that isn’t too large.');
+
+		// The page shows what the route says, and stays until the next save.
+		await page.route(/matter(\/|%2F)v1(\/|%2F)settings/, (route) =>
+			route.request().method() === 'POST'
+				? route.fulfill({
+						status: 400,
+						contentType: 'application/json',
+						body: JSON.stringify({
+							code: 'matter_settings_invalid_number',
+							message:
+								'“Seats” needs a number that isn’t too large.',
+						}),
+					})
+				: route.continue()
+		);
+		await seats.fill(String(Number(good) + 1));
+		await page.getByRole('button', { name: 'Save settings' }).click();
+		await expect(page.locator('.components-notice.is-error')).toContainText(
+			'“Seats” needs a number that isn’t too large.'
+		);
+		await page.unroute(/matter(\/|%2F)v1(\/|%2F)settings/);
+
+		// Nothing was stored: the page loads, with the last good value.
+		await page.reload();
+		await expect(
+			page.getByRole('spinbutton', { name: 'Seats' })
+		).toHaveValue(good);
+	});
+});
+
 test.describe('archive entries', () => {
 	test('customising an archive saves nothing until saved, and its bound text says where it comes from', async ({
 		page,

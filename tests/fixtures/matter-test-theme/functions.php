@@ -92,6 +92,10 @@ add_filter(
 					'type'  => 'url',
 					'label' => 'Instagram',
 				],
+				'seats'     => [
+					'type'  => 'number',
+					'label' => 'Seats',
+				],
 			],
 		],
 	]

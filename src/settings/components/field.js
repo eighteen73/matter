@@ -56,9 +56,16 @@ export default function Field({ field, value, onChange, media }) {
 					__next40pxDefaultSize
 					type="number"
 					value={value ?? ''}
-					onChange={(next) =>
-						onChange(next === '' ? null : Number(next))
-					}
+					onChange={(next) => {
+						// A number too large to be one (`1e999`) stays text, so
+						// saving says so rather than silently emptying it.
+						const number = Number(next);
+						if (next === '') {
+							onChange(null);
+						} else {
+							onChange(Number.isFinite(number) ? number : next);
+						}
+					}}
 				/>
 			);
 

@@ -14,6 +14,7 @@ import {
 	Card,
 	CardBody,
 	CardHeader,
+	Notice,
 	SnackbarList,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -47,8 +48,8 @@ function SettingsPage() {
 	const [values, setValues] = useState(initialValues);
 	const [isDirty, setIsDirty] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
-	const { createSuccessNotice, createErrorNotice } =
-		useDispatch(noticesStore);
+	const [error, setError] = useState('');
+	const { createSuccessNotice } = useDispatch(noticesStore);
 
 	const setValue = (sectionKey, fieldKey, next) => {
 		setValues((current) => ({
@@ -61,6 +62,7 @@ function SettingsPage() {
 	const save = async (event) => {
 		event.preventDefault();
 		setIsSaving(true);
+		setError('');
 
 		try {
 			const saved = await apiFetch({
@@ -73,10 +75,10 @@ function SettingsPage() {
 			createSuccessNotice(__('Settings saved.', 'matter'), {
 				type: 'snackbar',
 			});
-		} catch (error) {
-			createErrorNotice(
-				error?.message ?? __('Settings could not be saved.', 'matter'),
-				{ type: 'snackbar' }
+		} catch (caught) {
+			// Stays until the next save, so the reason can be read and fixed.
+			setError(
+				caught?.message || __('Settings could not be saved.', 'matter')
 			);
 		} finally {
 			setIsSaving(false);
@@ -86,6 +88,11 @@ function SettingsPage() {
 	return (
 		<form className="matter-settings" onSubmit={save}>
 			<div className="matter-settings__sections">
+				{error && (
+					<Notice status="error" onRemove={() => setError('')}>
+						{error}
+					</Notice>
+				)}
 				{Object.entries(sections).map(([sectionKey, section]) => (
 					<Card key={sectionKey}>
 						<CardHeader>

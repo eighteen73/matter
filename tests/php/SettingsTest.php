@@ -180,4 +180,98 @@ class SettingsTest extends TestCase {
 
 		$this->assertStringContainsString( 'href="https://example.com/a?b=1&#038;c=2"', $html );
 	}
+
+	/**
+	 * A media field with no image (0) is empty, so a default applies.
+	 *
+	 * @return void
+	 */
+	public function test_an_empty_media_field_is_empty(): void {
+		$settings = Settings::instance();
+
+		$settings->save( [ 'contact' => [ 'logo' => 0 ] ] );
+
+		$this->assertSame( 'none', $settings->get( 'contact.logo', 'none' ) );
+		$this->assertNull( $settings->get( 'contact.logo' ) );
+
+		// Other zeros are values.
+		$settings->save( [ 'contact' => [ 'count' => 0 ] ] );
+
+		$this->assertSame( 0, $settings->get( 'contact.count', 5 ) );
+	}
+
+	/**
+	 * A number that isn't finite is refused, not stored (it would break the
+	 * page's JSON).
+	 *
+	 * @return void
+	 */
+	public function test_a_number_must_be_finite(): void {
+		$settings = Settings::instance();
+
+		foreach ( [ '1e999', INF, NAN, '-1e999' ] as $bad ) {
+			$saved = $settings->save( [ 'contact' => [ 'count' => $bad ] ] );
+
+			$this->assertNull( $saved['contact']['count'], 'saved ' . var_export( $bad, true ) );
+			$this->assertInstanceOf( \WP_Error::class, $settings->validate( [ 'contact' => [ 'count' => $bad ] ] ) );
+		}
+
+		$this->assertNull( $settings->validate( [ 'contact' => [ 'count' => '12.5' ] ] ) );
+		$this->assertNull( $settings->validate( [ 'contact' => [ 'count' => null ] ] ) );
+		$this->assertSame( 12.5, $settings->save( [ 'contact' => [ 'count' => '12.5' ] ] )['contact']['count'] );
+		$this->assertNotFalse( wp_json_encode( $settings->get_values() ) );
+	}
+
+	/**
+	 * A save that leaves a field out keeps what is stored; null clears it.
+	 *
+	 * @return void
+	 */
+	public function test_a_save_merges_over_stored_values(): void {
+		$settings = Settings::instance();
+
+		$settings->save(
+			[
+				'contact' => [
+					'name'  => 'Acme',
+					'phone' => '0113',
+				],
+			]
+		);
+
+		$saved = $settings->save( [ 'contact' => [ 'phone' => '0114' ] ] );
+
+		$this->assertSame( 'Acme', $saved['contact']['name'] );
+		$this->assertSame( '0114', $saved['contact']['phone'] );
+
+		$saved = $settings->save( [ 'contact' => [ 'name' => null ] ] );
+
+		$this->assertSame( '', $saved['contact']['name'] );
+		$this->assertSame( '0114', $saved['contact']['phone'] );
+	}
+
+	/**
+	 * Relative addresses (a path, an anchor, a query) are kept by the binding,
+	 * as the settings page keeps them; absolute ones are made safe.
+	 *
+	 * @return void
+	 */
+	public function test_a_url_binding_keeps_relative_addresses(): void {
+		$block = new \WP_Block( [ 'blockName' => 'core/button' ] );
+
+		foreach (
+			[
+				'/contact-us/'   => '/contact-us/',
+				'#form'          => '#form',
+				'?tab=2'         => '?tab=2',
+				'//evil.example' => 'https://evil.example',
+				'example.com/a'  => 'https://example.com/a',
+			] as $stored => $expected
+		) {
+			update_option( Settings::OPTION, [ 'contact' => [ 'site' => $stored ] ] );
+			Settings::instance()->flush();
+
+			$this->assertSame( $expected, Settings::instance()->get_binding_value( [ 'key' => 'contact.site' ], $block, 'url' ), $stored );
+		}
+	}
 }
