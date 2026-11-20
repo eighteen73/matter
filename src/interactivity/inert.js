@@ -20,22 +20,50 @@ const SKIPPED = ['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'NOSCRIPT'];
 // What announces changes to assistive technology, which inert would silence.
 const LIVE = '[aria-live], [role="status"], [role="alert"], [role="log"]';
 
-// What each holder made inert, while it holds, and who is told of a modal.
+// What each holder made inert, while it holds, and how many holders have each
+// element: the first sets `inert` and the last removes it, in whatever order
+// they let go. Who is told of a modal dialog is below.
 const holders = new Set();
+const counts = new WeakMap();
 const pausers = new Set();
+
+/**
+ * Count a holder of an element, making it inert if nobody holds it yet. An
+ * element that was inert before any holder is left as it is.
+ *
+ * @param {Element}   element Element to hold.
+ * @param {Element[]} changed The holder's elements.
+ */
+function hold(element, changed) {
+	const held = counts.get(element);
+
+	if (held) {
+		counts.set(element, held + 1);
+		changed.push(element);
+		return;
+	}
+
+	if (element.hasAttribute('inert')) {
+		return;
+	}
+
+	element.setAttribute('inert', '');
+	counts.set(element, 1);
+	changed.push(element);
+}
 
 /**
  * Make an element inert, except live regions: one is left alone, and an
  * element that holds one is entered, so what is around the region is inert.
  *
  * @param {Element}   element Element to make inert.
- * @param {Element[]} changed Collects what was made inert.
+ * @param {Element[]} changed Collects what was held.
  */
 function silence(element, changed) {
 	if (
 		SKIPPED.includes(element.tagName) ||
-		element.hasAttribute('inert') ||
-		element.matches(LIVE)
+		element.matches(LIVE) ||
+		(element.hasAttribute('inert') && !counts.has(element))
 	) {
 		return;
 	}
@@ -45,12 +73,15 @@ function silence(element, changed) {
 		return;
 	}
 
-	element.setAttribute('inert', '');
-	changed.push(element);
+	hold(element, changed);
 }
 
 /**
  * Make the surroundings of an element inert.
+ *
+ * If the element itself sits inside something another holder made inert (a
+ * panel opened from inside another), that is let go for as long as this holds,
+ * and put back after.
  *
  * @param {Element} element      Element that stays active.
  * @param {Object}  options
@@ -62,6 +93,44 @@ function silence(element, changed) {
  */
 export function inertAround(element, { root = document.body, keep = '' } = {}) {
 	const changed = [];
+	const lifted = new Set();
+	let released = false;
+
+	const release = () => {
+		if (released) {
+			return;
+		}
+
+		released = true;
+		holders.delete(changed);
+
+		changed.splice(0).forEach((sibling) => {
+			const held = (counts.get(sibling) ?? 1) - 1;
+
+			if (held > 0) {
+				counts.set(sibling, held);
+			} else {
+				counts.delete(sibling);
+				sibling.removeAttribute('inert');
+			}
+		});
+
+		// What was let go of for this holder, if others still hold it.
+		lifted.forEach((container) => {
+			if (counts.has(container)) {
+				container.setAttribute('inert', '');
+			}
+		});
+	};
+
+	holders.forEach((others) =>
+		others
+			.filter((other) => other.contains(element))
+			.forEach((other) => {
+				other.removeAttribute('inert');
+				lifted.add(other);
+			})
+	);
 
 	holders.add(changed);
 
@@ -81,12 +150,7 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
 		node = parent;
 	}
 
-	return () => {
-		holders.delete(changed);
-		changed.splice(0).forEach((sibling) => {
-			sibling.removeAttribute('inert');
-		});
-	};
+	return release;
 }
 
 /**
@@ -100,24 +164,24 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
  * @return {Function} Puts back what is still held, and resumes what was paused.
  */
 export function suspendForModal(dialog) {
-	const released = [];
+	const suspended = new Set();
 
-	holders.forEach((changed) => {
+	holders.forEach((changed) =>
 		changed
 			.filter((element) => element.contains(dialog))
 			.forEach((element) => {
 				element.removeAttribute('inert');
-				released.push([changed, element]);
-			});
-	});
+				suspended.add(element);
+			})
+	);
 
 	const resumes = [...pausers].map((pause) => pause(dialog));
 
 	return () => {
 		resumes.forEach((resume) => resume?.());
-		released.forEach(([changed, element]) => {
-			// Not if its holder let go meanwhile.
-			if (changed.includes(element)) {
+		suspended.forEach((element) => {
+			// Not if every holder let go meanwhile.
+			if (counts.has(element)) {
 				element.setAttribute('inert', '');
 			}
 		});

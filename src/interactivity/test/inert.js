@@ -166,4 +166,78 @@ describe('inertAround', () => {
 			expect(pause).toHaveBeenCalledTimes(1);
 		});
 	});
+
+	describe('several holders', () => {
+		it('keeps an element inert until the last holder lets go, in any order', () => {
+			const content = build();
+			const first = inertAround(content);
+			const second = inertAround(content);
+
+			expect(inert().sort()).toEqual(['backdrop', 'header', 'main']);
+			first();
+			expect(inert().sort()).toEqual(['backdrop', 'header', 'main']);
+			second();
+			expect(inert()).toEqual([]);
+
+			// Last in, first out gives the same.
+			const a = inertAround(content);
+			const b = inertAround(content);
+
+			b();
+			expect(inert().sort()).toEqual(['backdrop', 'header', 'main']);
+			a();
+			expect(inert()).toEqual([]);
+		});
+
+		it('leaves what was inert before any holder, whatever they do', () => {
+			const content = build();
+
+			document.getElementById('main').setAttribute('inert', '');
+
+			const first = inertAround(content);
+			const second = inertAround(content);
+
+			second();
+			first();
+			expect(inert()).toEqual(['main']);
+		});
+
+		it('keeps a holder that is released twice from freeing another', () => {
+			const content = build();
+			const first = inertAround(content);
+			const second = inertAround(content);
+
+			first();
+			first();
+			expect(inert().sort()).toEqual(['backdrop', 'header', 'main']);
+			second();
+			expect(inert()).toEqual([]);
+		});
+
+		it('can hold the page around an element inside what another holds', () => {
+			build();
+
+			document.getElementById('main').innerHTML =
+				'<div id="second"><button id="second-inside"></button></div><div id="aside"></div>';
+
+			// The first holds around the first panel: `main` is inert.
+			const first = inertAround(document.getElementById('content'));
+			const second = inertAround(document.getElementById('second'));
+
+			expect(
+				document.getElementById('second-inside').closest('[inert]')
+			).toBeNull();
+			expect(document.getElementById('aside').hasAttribute('inert')).toBe(
+				true
+			);
+
+			second();
+			// Back to the first holder's page: all of it inert again.
+			expect(document.getElementById('main').hasAttribute('inert')).toBe(
+				true
+			);
+			first();
+			expect(inert()).toEqual([]);
+		});
+	});
 });
