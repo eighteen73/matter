@@ -7,6 +7,8 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Ids;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -37,6 +39,9 @@ class Carousel {
 	 * @return string
 	 */
 	public static function render( string $slides, array $options, string $wrapper_attributes, string $label = '', array $args = [] ): string {
+		// Each carousel is a landmark: none shares its name with another.
+		$label = Ids::claim_label( $label );
+
 		$autoplay    = max( 0, (float) ( $options['autoplay'] ?? 0 ) );
 		$auto_scroll = max( 0, (float) ( $options['autoScroll'] ?? 0 ) );
 		$align       = (string) ( $options['align'] ?? 'start' );

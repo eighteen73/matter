@@ -84,4 +84,40 @@ class GalleryTest extends TestCase {
 		$this->assertSame( 'Fish & chips?', $schema['mainEntity'][0]['name'] );
 		$this->assertSame( 'Salt & vinegar', $schema['mainEntity'][0]['acceptedAnswer']['text'] );
 	}
+
+	/**
+	 * Every carousel region has a name of its own (axe: landmark-unique):
+	 * galleries given the same label are numbered, the first keeping it.
+	 *
+	 * @return void
+	 */
+	public function test_carousel_regions_with_the_same_label_get_unique_names(): void {
+		$image   = '<!-- wp:image --><figure class="wp-block-image"><img src="https://example.com/one.jpg" alt="One"/></figure><!-- /wp:image -->';
+		$gallery = '<!-- wp:matter/gallery {"layout":"carousel","label":"Project images"} -->' . $image . '<!-- /wp:matter/gallery -->';
+
+		$html = $this->render( $gallery . $gallery . $gallery );
+
+		preg_match_all( '/role="region" aria-roledescription="carousel" aria-label="([^"]*)"/', $html, $found );
+
+		$this->assertSame( [ 'Project images', 'Project images (2)', 'Project images (3)' ], $found[1] );
+	}
+
+	/**
+	 * A carousel with no label stays unnamed, and different labels are kept.
+	 *
+	 * @return void
+	 */
+	public function test_distinct_and_empty_carousel_labels_are_left_alone(): void {
+		$image = '<!-- wp:image --><figure class="wp-block-image"><img src="https://example.com/one.jpg" alt="One"/></figure><!-- /wp:image -->';
+		$html  = $this->render(
+			'<!-- wp:matter/gallery {"layout":"carousel","label":"Photos"} -->' . $image . '<!-- /wp:matter/gallery -->'
+			. '<!-- wp:matter/gallery {"layout":"carousel","label":"Videos"} -->' . $image . '<!-- /wp:matter/gallery -->'
+			. '<!-- wp:matter/gallery {"layout":"carousel"} -->' . $image . '<!-- /wp:matter/gallery -->'
+		);
+
+		$this->assertStringContainsString( 'aria-label="Photos"', $html );
+		$this->assertStringContainsString( 'aria-label="Videos"', $html );
+		$this->assertSame( 2, substr_count( $html, 'aria-label="Photos' ) + substr_count( $html, 'aria-label="Videos' ) );
+		$this->assertSame( 1, preg_match_all( '/role="region" aria-roledescription="carousel" data-wp/', $html ) );
+	}
 }

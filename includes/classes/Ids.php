@@ -53,6 +53,13 @@ final class Ids {
 	private static array $next = [];
 
 	/**
+	 * How many times each accessible name has been given out.
+	 *
+	 * @var array<string, int>
+	 */
+	private static array $labels = [];
+
+	/**
 	 * How many REST requests are being handled (they can be nested).
 	 *
 	 * @var int
@@ -130,6 +137,27 @@ final class Ids {
 	}
 
 	/**
+	 * Claim an accessible name for a landmark, so no two on the page share one
+	 * (axe: landmark-unique): the first keeps it, later ones are numbered,
+	 * "Photos", "Photos (2)". An empty name stays empty.
+	 *
+	 * @param string $label Requested name.
+	 * @return string
+	 */
+	public static function claim_label( string $label ): string {
+		if ( '' === $label ) {
+			return '';
+		}
+
+		$count = ( self::$labels[ $label ] ?? 0 ) + 1;
+
+		self::$labels[ $label ] = $count;
+
+		/* translators: 1: a name that is used more than once on the page, 2: its number (2, 3…). */
+		return 1 === $count ? $label : sprintf( __( '%1$s (%2$d)', 'matter' ), $label, $count );
+	}
+
+	/**
 	 * Claim the `id` in a wrapper attribute string (what
 	 * `get_block_wrapper_attributes()` returns, where core's anchor support put
 	 * the block's HTML anchor), so a repeated block's wrapper is unique too.
@@ -171,6 +199,7 @@ final class Ids {
 	public static function reset(): void {
 		self::$claimed = [];
 		self::$next    = [];
+		self::$labels  = [];
 	}
 
 	/**
@@ -183,14 +212,14 @@ final class Ids {
 	 * @return T
 	 */
 	public static function isolate( callable $callback ): mixed {
-		$page = [ self::$claimed, self::$next ];
+		$page = [ self::$claimed, self::$next, self::$labels ];
 
 		self::reset();
 
 		try {
 			return $callback();
 		} finally {
-			[ self::$claimed, self::$next ] = $page;
+			[ self::$claimed, self::$next, self::$labels ] = $page;
 		}
 	}
 }

@@ -445,15 +445,32 @@ test.describe('terms carousel', () => {
 			carousel.getByRole('link', { name: 'Matter Hats' })
 		).toBeVisible();
 
-		// Its slides are groups, so their list is presentational (axe: list).
-		await expect(carousel.locator('ul').first()).toHaveAttribute(
+		// Its slides are list items, which keep that role (a list item can't
+		// be a group: axe, aria-allowed-role), so the list stays a list, and
+		// each is still named as a slide.
+		await expect(carousel.locator('ul').first()).not.toHaveAttribute(
 			'role',
-			'none'
+			/.*/
 		);
-		await expect(carousel.getByRole('group').first()).toHaveAttribute(
+		await expect(carousel.getByRole('listitem').first()).toHaveAttribute(
 			'aria-roledescription',
 			'slide'
 		);
+		await expect(
+			carousel.getByRole('listitem').first()
+		).not.toHaveAttribute('role', /.*/);
+		expect(
+			(
+				await new AxeBuilder({ page })
+					.withRules([
+						'aria-allowed-role',
+						'aria-roledescription',
+						'list',
+						'listitem',
+					])
+					.analyze()
+			).violations
+		).toEqual([]);
 	});
 });
 

@@ -4,12 +4,14 @@
  * forced colours.
  */
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
+const AxeBuilder = require('@axe-core/playwright').default;
 const { createMenu, createPage } = require('./fixtures');
 
 let cards;
 let details;
 let shortPage;
 let panelPage;
+let slidesPage;
 
 const IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 const image = (alt) =>
@@ -43,6 +45,21 @@ test.beforeAll(async ({ requestUtils }) => {
 		'kitchen-sink.html'
 	);
 
+	// Carousels whose slides are elements that don't take `group` (an article,
+	// a figure), and two galleries with the same label.
+	const article = (text) =>
+		`<!-- wp:group {"tagName":"article"} --><article class="wp-block-group"><!-- wp:paragraph --><p>${text}</p><!-- /wp:paragraph --></article><!-- /wp:group -->`;
+	const gallery = `<!-- wp:matter/gallery {"layout":"carousel","label":"Project images"} -->${image('One')}${image('Two')}<!-- /wp:matter/gallery -->`;
+
+	slidesPage = await createPage(
+		requestUtils,
+		'Slides',
+		`<!-- wp:matter/carousel {"label":"Articles","anchor":"articles"} -->${article('A')}${article('B')}<!-- /wp:matter/carousel -->` +
+			`<!-- wp:matter/carousel {"label":"Figures","anchor":"figures"} -->${image('F one')}${image('F two')}<!-- /wp:matter/carousel -->` +
+			`<!-- wp:matter/carousel {"label":"Plain","anchor":"plain"} --><!-- wp:paragraph --><p>P</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>Q</p><!-- /wp:paragraph --><!-- /wp:matter/carousel -->` +
+			gallery +
+			gallery
+	);
 	cards = await createPage(
 		requestUtils,
 		'Linked cards',
@@ -73,6 +90,77 @@ test.use({ storageState: { cookies: [], origins: [] } });
 // With the scrollbars headless Chromium hides: the scroll lock is about the
 // space a real one takes (Firefox and WebKit ignore the flag).
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
+
+test.describe('carousel and gallery semantics (axe, best practice)', () => {
+	test.use({ viewport: { width: 1280, height: 900 } });
+
+	test('slides keep roles their element allows, and regions have unique names', async ({
+		page,
+	}) => {
+		await page.goto(slidesPage.link);
+		await expect(page.locator('#articles')).toHaveClass(/is-initialised/);
+		await expect(page.locator('#figures')).toHaveClass(/is-initialised/);
+
+		const slides = (selector) =>
+			page
+				.locator(`${selector} [aria-roledescription="slide"]`)
+				.evaluateAll((nodes) =>
+					nodes.map((node) => [
+						node.tagName,
+						node.getAttribute('role'),
+						node.getAttribute('aria-label'),
+					])
+				);
+
+		// A paragraph takes the carousel pattern's group; an article or a figure
+		// keeps its own role and is still named as a slide.
+		expect(await slides('#plain')).toEqual([
+			['P', 'group', '1 of 2'],
+			['P', 'group', '2 of 2'],
+		]);
+		expect(await slides('#articles')).toEqual([
+			['ARTICLE', null, '1 of 2'],
+			['ARTICLE', null, '2 of 2'],
+		]);
+		expect(await slides('#figures')).toEqual([
+			['FIGURE', null, '1 of 2'],
+			['FIGURE', null, '2 of 2'],
+		]);
+
+		const names = await page
+			.locator('[role="region"][aria-roledescription="carousel"]')
+			.evaluateAll((nodes) =>
+				nodes.map((node) => node.getAttribute('aria-label'))
+			);
+
+		expect(names).toEqual([
+			'Articles',
+			'Figures',
+			'Plain',
+			'Project images',
+			'Project images (2)',
+		]);
+
+		// Not the fixture header, which renders one menu twice.
+		const results = await new AxeBuilder({ page })
+			.exclude('.test-header')
+			.withRules([
+				'aria-allowed-role',
+				'aria-allowed-attr',
+				'aria-roledescription',
+				'landmark-unique',
+				'list',
+				'listitem',
+			])
+			.analyze();
+
+		expect(
+			results.violations.map(
+				({ id, nodes }) => `${id}: ${nodes.map((n) => n.target)}`
+			)
+		).toEqual([]);
+	});
+});
 
 test.describe('block link names', () => {
 	test('each card link is named by its text, and a new tab says so', async ({

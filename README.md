@@ -316,6 +316,8 @@ Carousel options: `loop`, `align` (start/center/end), `slidesToScroll` (number o
 
 **Controls** are groups of parts by position: `before` the slides, over them on the `stage`, or `after` them. Matter renders each group as `.wp-block-matter-carousel__controls.is-{position}` with its parts in order, and wires up their behaviour and accessibility; the theme's CSS places the group and each part (`.wp-block-matter-carousel__{part}`).
 
+**Accessibility:** the carousel is a `role="region"` with `aria-roledescription="carousel"`, and its name (the block's label) is unique on the page: a second carousel or gallery given the same label is named "Label (2)", and so on. Each slide has `aria-roledescription="slide"` and a name ("1 of 5"), and is a `role="group"` where its element takes that role (`div`, `section`, `p`, `span`); an element that has a role of its own (`li` of a query's list, `article`, `figure`, `aside`) keeps it, and its list stays a list.
+
 ```php
 'controls' => [ 'after' => [ 'prev', 'dots', 'next' ] ],                     // Matter's default
 'controls' => [ 'stage' => [ 'prev', 'next' ] ],                              // arrows over the slides

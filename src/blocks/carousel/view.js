@@ -122,6 +122,9 @@ const snapForSlide = (embla, slide) => {
 	return snap >= 0 ? snap : slide;
 };
 
+// Elements with no role of their own, which take `group`.
+const GROUP_ALLOWED = ['DIV', 'SECTION', 'SPAN', 'P'];
+
 const selectedSlides = (embla) =>
 	embla.internalEngine().slideRegistry[embla.selectedScrollSnap()] ?? [];
 
@@ -139,16 +142,15 @@ const updateUi = (embla, root, context) => {
 	const current = embla.selectedScrollSnap();
 	const selected = selectedSlides(embla);
 
-	// Slides that are a list's items (a query's, a product collection's): the
-	// list is presentational, as items that are groups don't make a list.
-	const list = slides[0]?.parentElement;
-
-	if (list && ['UL', 'OL'].includes(list.tagName)) {
-		list.setAttribute('role', 'none');
-	}
-
 	slides.forEach((slide, index) => {
-		slide.setAttribute('role', 'group');
+		// A slide is a group, as the carousel pattern has it, where its
+		// element allows that role (axe: aria-allowed-role). One with a role
+		// of its own (a list item, an article, a figure) keeps it, and is
+		// still described as a slide. Its list stays a list.
+		if (GROUP_ALLOWED.includes(slide.tagName)) {
+			slide.setAttribute('role', 'group');
+		}
+
 		slide.setAttribute('aria-roledescription', 'slide');
 		slide.setAttribute(
 			'aria-label',
