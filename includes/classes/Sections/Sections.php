@@ -113,7 +113,8 @@ class Sections {
 	 * - `is-section` on every section, for theme targeting;
 	 * - `alignfull` when `supports.matter.align` is "full" (full-width bands);
 	 * - the default variant's class (`is-style-default`) when no variant is
-	 *   chosen, so the default can be styled like any other variant. Core
+	 *   chosen, or the one chosen is no longer registered (a variant the theme
+	 *   removed), so the default can be styled like any other variant. Core
 	 *   saves no class for it.
 	 *
 	 * @return void
@@ -135,7 +136,7 @@ class Sections {
 
 					$default = self::default_variant( $block_type );
 
-					if ( null !== $default && ! preg_match( '/(?:^|\s)is-style-/', (string) ( $attributes['className'] ?? '' ) ) ) {
+					if ( null !== $default && ! self::has_variant( $block_type, (string) ( $attributes['className'] ?? '' ) ) ) {
 						$classes[] = 'is-style-' . $default;
 					}
 
@@ -143,6 +144,37 @@ class Sections {
 				},
 			]
 		);
+	}
+
+	/**
+	 * Whether a class list names one of the block's registered variants. One
+	 * the theme has since removed doesn't count.
+	 *
+	 * @param WP_Block_Type $block_type Block type.
+	 * @param string        $class_name Saved `className`.
+	 * @return bool
+	 */
+	public static function has_variant( WP_Block_Type $block_type, string $class_name ): bool {
+		if ( ! preg_match_all( '/(?:^|\s)is-style-([^\s]+)/', $class_name, $found ) ) {
+			return false;
+		}
+
+		return (bool) array_intersect( $found[1], self::variant_names( $block_type ) );
+	}
+
+	/**
+	 * The names of a block's registered variants (block styles).
+	 *
+	 * @param WP_Block_Type $block_type Block type.
+	 * @return string[]
+	 */
+	private static function variant_names( WP_Block_Type $block_type ): array {
+		$styles = array_merge(
+			(array) $block_type->styles,
+			array_values( \WP_Block_Styles_Registry::get_instance()->get_registered_styles_for_block( $block_type->name ) )
+		);
+
+		return array_values( array_filter( array_map( fn( $style ) => (string) ( $style['name'] ?? '' ), $styles ) ) );
 	}
 
 	/**

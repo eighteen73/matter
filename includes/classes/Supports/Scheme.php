@@ -136,6 +136,8 @@ class Scheme {
 		$data   = [];
 
 		foreach ( $this->get_schemes() as $slug => $tokens ) {
+			unset( $tokens['label'] );
+
 			$data[] = [
 				'slug'   => (string) $slug,
 				'label'  => $labels[ $slug ] ?? (string) $slug,
@@ -152,20 +154,27 @@ class Scheme {
 	 * @return array<string, array<string, string>>
 	 */
 	public function get_schemes(): array {
-		$schemes = wp_get_global_settings( [ 'custom', 'scheme' ] );
-
-		if ( ! is_array( $schemes ) ) {
-			return [];
-		}
-
-		$schemes = array_filter( $schemes, 'is_array' );
-
 		/**
-		 * Filters the available colour schemes.
+		 * Filters the available colour schemes: the theme's (from theme.json)
+		 * or none, and whatever else a plugin or the theme's code adds. A
+		 * scheme added here lists literal CSS values (or `var:preset|color|slug`
+		 * shorthand); an optional `label` names it in the editor.
 		 *
 		 * @param array<string, array<string, string>> $schemes Schemes keyed by slug.
 		 */
-		return apply_filters( 'matter_schemes', $schemes );
+		return (array) apply_filters( 'matter_schemes', $this->get_theme_schemes() );
+	}
+
+	/**
+	 * The schemes theme.json defines, which WordPress turns into
+	 * `--wp--custom--scheme--{slug}--{token}` variables.
+	 *
+	 * @return array<string, array<string, string>>
+	 */
+	private function get_theme_schemes(): array {
+		$schemes = wp_get_global_settings( [ 'custom', 'scheme' ] );
+
+		return is_array( $schemes ) ? array_filter( $schemes, 'is_array' ) : [];
 	}
 
 	/**
@@ -201,8 +210,9 @@ class Scheme {
 	public function get_labels(): array {
 		$labels = [];
 
-		foreach ( array_keys( $this->get_schemes() ) as $slug ) {
-			$labels[ $slug ] = ucwords( str_replace( [ '-', '_' ], ' ', $slug ) );
+		foreach ( $this->get_schemes() as $slug => $tokens ) {
+			$label           = isset( $tokens['label'] ) && is_string( $tokens['label'] ) ? trim( $tokens['label'] ) : '';
+			$labels[ $slug ] = '' !== $label ? $label : ucwords( str_replace( [ '-', '_' ], ' ', (string) $slug ) );
 		}
 
 		/**
@@ -226,10 +236,11 @@ class Scheme {
 			return '';
 		}
 
-		$css = ':root{' . $this->get_declarations( $default, $schemes[ $default ] ) . '}';
+		$theme = $this->get_theme_schemes();
+		$css   = ':root{' . $this->get_declarations( $default, $schemes[ $default ], $theme[ $default ] ?? [] ) . '}';
 
 		foreach ( $schemes as $slug => $tokens ) {
-			$css .= sprintf( '.has-scheme-%s{%s}', sanitize_html_class( $slug ), $this->get_declarations( $slug, $tokens ) );
+			$css .= sprintf( '.has-scheme-%s{%s}', sanitize_html_class( (string) $slug ), $this->get_declarations( (string) $slug, $tokens, $theme[ $slug ] ?? [] ) );
 		}
 
 		// A scheme always paints its own surface.
@@ -258,20 +269,63 @@ class Scheme {
 	/**
 	 * CSS declarations mapping a scheme's tokens onto `--scheme--{token}`.
 	 *
+	 * A token that comes from theme.json, unchanged, reads the variable
+	 * WordPress made from it. Any other (a scheme a filter added, or a value a
+	 * filter changed) is written out as its own value. A `label` is the
+	 * scheme's name, not a colour.
+	 *
 	 * @param string $slug   Scheme slug.
 	 * @param array  $tokens Token => value pairs.
+	 * @param array  $theme  The same scheme's tokens in theme.json, if it has them.
 	 * @return string
 	 */
-	private function get_declarations( string $slug, array $tokens ): string {
+	private function get_declarations( string $slug, array $tokens, array $theme = [] ): string {
 		$declarations = '';
 		$slug         = self::kebab( $slug );
 
-		foreach ( array_keys( $tokens ) as $token ) {
-			$token         = self::kebab( (string) $token );
-			$declarations .= sprintf( '--scheme--%1$s:var(--wp--custom--scheme--%2$s--%1$s);', $token, $slug );
+		foreach ( $tokens as $token => $value ) {
+			if ( 'label' === $token ) {
+				continue;
+			}
+
+			$name = self::kebab( (string) $token );
+
+			if ( isset( $theme[ $token ] ) && $theme[ $token ] === $value ) {
+				$declarations .= sprintf( '--scheme--%1$s:var(--wp--custom--scheme--%2$s--%1$s);', $name, $slug );
+				continue;
+			}
+
+			$value = self::literal( $value );
+
+			if ( '' !== $value ) {
+				$declarations .= sprintf( '--scheme--%1$s:%2$s;', $name, $value );
+			}
 		}
 
 		return $declarations;
+	}
+
+	/**
+	 * A token's value as CSS: theme.json's `var:preset|color|slug` shorthand
+	 * becomes its variable, and anything that could end the declaration or
+	 * the rule is dropped.
+	 *
+	 * @param mixed $value Value.
+	 * @return string
+	 */
+	private static function literal( mixed $value ): string {
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+
+		$value = (string) preg_replace_callback(
+			'/var:(preset|custom)\|([\w|-]+)/',
+			fn( $found ) => 'var(--wp--' . $found[1] . '--' . str_replace( '|', '--', $found[2] ) . ')',
+			$value
+		);
+		$value = wp_strip_all_tags( $value );
+
+		return trim( str_replace( [ ';', '{', '}', '/*', '*/', '\\' ], '', $value ) );
 	}
 
 	/**

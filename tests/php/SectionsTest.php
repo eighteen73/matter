@@ -199,6 +199,14 @@ class SectionsTest extends TestCase {
 		$this->assertMatchesRegularExpression( '/class="wp-block-matter-test-variants is-section is-style-default"/', $section( '' ) );
 		$this->assertStringNotContainsString( 'is-style-default', $section( '{"className":"is-style-wide"}' ) );
 		$this->assertStringContainsString( 'is-style-wide', $section( '{"className":"is-style-wide"}' ) );
+
+		// A variant the theme has removed: its class stays, and the default's applies.
+		$removed = $section( '{"className":"is-style-gone"}' );
+
+		$this->assertStringContainsString( 'is-style-gone', $removed );
+		$this->assertStringContainsString( 'is-style-default', $removed );
+		$this->assertStringContainsString( 'is-style-default', $section( '{"className":"has-x is-style-gone"}' ) );
+		$this->assertStringNotContainsString( 'is-style-default', $section( '{"className":"is-style-gone is-style-wide"}' ) );
 		$this->assertStringNotContainsString( 'is-style-', $this->render( '<!-- wp:matter-test/section --><!-- /wp:matter-test/section -->' ) );
 
 		unregister_block_type( 'matter-test/variants' );

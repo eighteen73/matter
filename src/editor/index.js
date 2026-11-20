@@ -20,6 +20,7 @@ import { addFilter } from '@wordpress/hooks';
  * Internal dependencies
  */
 import SchemeControl from './components/scheme-control';
+import { schemeClasses } from './class-names';
 import SectionEdit from './components/section-edit';
 import { sectionLabel } from './section-label';
 import './archives/bindings';
@@ -39,7 +40,7 @@ import '../overlay/editor/dialog-preview';
 import '../components/icon-picker/editor.scss';
 import './index.scss';
 
-const { sections = [] } = window.matterEditor ?? {};
+const { sections = [], schemes = [] } = window.matterEditor ?? {};
 
 const DIALOGS = ['matter/modal', 'matter/drawer'];
 
@@ -104,11 +105,12 @@ addFilter(
 	'matter/scheme/classes',
 	createHigherOrderComponent(
 		(BlockListBlock) => (props) => {
-			const scheme = props.attributes?.scheme;
+			const classes = schemeClasses(props.attributes?.scheme, schemes);
 
-			// Modals and drawers add theirs to the open dialog only.
+			// Modals and drawers add theirs to the open dialog only. A scheme
+			// the theme no longer defines adds nothing, as on the front end.
 			if (
-				!scheme ||
+				!classes.length ||
 				!hasSchemeSupport(props.name) ||
 				DIALOGS.includes(props.name)
 			) {
@@ -118,11 +120,7 @@ addFilter(
 			return (
 				<BlockListBlock
 					{...props}
-					className={[
-						props.className,
-						'has-scheme',
-						`has-scheme-${scheme}`,
-					]
+					className={[props.className, ...classes]
 						.filter(Boolean)
 						.join(' ')}
 				/>

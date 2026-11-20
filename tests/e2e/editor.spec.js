@@ -284,6 +284,57 @@ test.describe('section variants', () => {
 			'is-style-default'
 		);
 	});
+
+	test('a removed scheme or variant looks the same in the editor as on the site', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		// Saved with a scheme and a variant the theme doesn't have (any more).
+		const saved = await createPage(
+			requestUtils,
+			'Removed scheme',
+			'<!-- wp:matter-test/section {"scheme":"removed-scheme","className":"is-style-removed-variant"} -->' +
+				'<!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Hello</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->' +
+				'<!-- /wp:matter-test/section -->'
+		);
+
+		await admin.editPost(saved.id);
+		await page.evaluate(() =>
+			['default', 'wide'].forEach((name) =>
+				window.wp.blocks.registerBlockStyle('matter-test/section', {
+					name,
+					label: name,
+					isDefault: name === 'default',
+				})
+			)
+		);
+
+		const section = page
+			.frameLocator('[name="editor-canvas"]')
+			.locator('.wp-block-matter-test-section');
+
+		await expect(section).toHaveClass(/(^|\s)is-style-default(\s|$)/);
+		await expect(section).toHaveClass(/is-style-removed-variant/);
+		await expect(section).not.toHaveClass(/has-scheme/);
+
+		const editorClasses = await section.evaluate((element) => [
+			...element.classList,
+		]);
+
+		// The front end: no scheme class either. (The fixture theme has no
+		// `default` variant, so only the scheme is compared.)
+		await page.goto(saved.link);
+
+		const front = await page
+			.locator('.wp-block-matter-test-section')
+			.evaluate((element) => [...element.classList]);
+
+		expect(front.some((name) => name.startsWith('has-scheme'))).toBe(false);
+		expect(
+			editorClasses.some((name) => name.startsWith('has-scheme'))
+		).toBe(false);
+	});
 });
 
 test.describe('slot labels', () => {

@@ -12,6 +12,7 @@ import { useSelect } from '@wordpress/data';
 /**
  * Internal dependencies
  */
+import { hasVariant } from '../class-names';
 import useSlots from './use-slots';
 
 /**
@@ -22,8 +23,9 @@ import useSlots from './use-slots';
  * can be added, reordered, renamed (`previously`) or removed without losing
  * content.
  *
- * A section in its default variant gets that variant's class
- * (`is-style-default`), as on the front end (Sections), though core saves none.
+ * A section in its default variant (or in one the theme has since removed)
+ * gets the default variant's class (`is-style-default`), as on the front end
+ * (Sections), though core saves none.
  *
  * @param {Object} props
  * @param {string} props.name       Block name.
@@ -33,14 +35,16 @@ import useSlots from './use-slots';
  */
 export default function SectionEdit({ name, clientId, attributes }) {
 	const { align } = getBlockType(name)?.supports?.matter ?? {};
-	const defaultVariant = useSelect(
-		(select) =>
-			select(blocksStore)
-				.getBlockStyles(name)
-				?.find((style) => style.isDefault)?.name,
+	const styles = useSelect(
+		(select) => select(blocksStore).getBlockStyles(name),
 		[name]
 	);
-	const hasVariant = /(?:^|\s)is-style-/.test(attributes?.className ?? '');
+	const defaultVariant = styles?.find((style) => style.isDefault)?.name;
+	// A variant the theme has removed isn't one: the default's class applies.
+	const chosen = hasVariant(
+		attributes?.className,
+		(styles ?? []).map((style) => style.name)
+	);
 
 	useSlots(clientId, name);
 
@@ -48,7 +52,7 @@ export default function SectionEdit({ name, clientId, attributes }) {
 		className: [
 			'is-section',
 			align === 'full' && 'alignfull',
-			defaultVariant && !hasVariant && `is-style-${defaultVariant}`,
+			defaultVariant && !chosen && `is-style-${defaultVariant}`,
 		]
 			.filter(Boolean)
 			.join(' '),

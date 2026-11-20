@@ -221,7 +221,7 @@ $slots = Eighteen73\Matter\slots( $content, $block );
 ]
 ```
 
-The default (`isDefault`) gets its class too, `is-style-default`, on the front end and in the editor, though core saves no class for it, so the default's own styles don't have to exclude every other variant. A variant changes CSS only: every variant has the same slots, with the same templates and locks. A layout that needs different slots (two images where the others have one) is a separate section.
+The default (`isDefault`) gets its class too, `is-style-default`, on the front end and in the editor, though core saves no class for it (it also gets it when the saved variant is no longer registered), so the default's own styles don't have to exclude every other variant. A variant changes CSS only: every variant has the same slots, with the same templates and locks. A layout that needs different slots (two images where the others have one) is a separate section.
 
 **Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
 - **Add or reorder** slots anywhere in `block.json`. Existing instances get a new slot (filled from its `template`) the next time they're edited.
@@ -271,11 +271,13 @@ Define schemes in the theme's `theme.json`. Every scheme sets the same roles, us
 | `border-strong` | Input borders and anything that must be seen (3:1 contrast). |
 | `highlight` | Small accents: eyebrows, icons, active indicators. |
 
-Slugs and the number of schemes are the theme's choice. The default is `default` if there is one, otherwise the first (`matter_default_scheme`); editors see each slug title-cased unless `matter_scheme_labels` names it.
+Slugs and the number of schemes are the theme's choice. The default is `default` if there is one, otherwise the first (`matter_default_scheme`); editors see each slug title-cased unless the scheme has a `label` (a string next to its roles, which isn't a colour and makes no variable) or `matter_scheme_labels` names it.
 
 Matter outputs:
 - `:root` with the default scheme;
-- `.has-scheme-{slug}` rules mapping each role to `--scheme--{role}` (e.g. `--scheme--text-heading`), each read from WordPress's variable for it, `--wp--custom--scheme--{slug}--{role}`.
+- `.has-scheme-{slug}` rules mapping each role to `--scheme--{role}` (e.g. `--scheme--text-heading`), each read from WordPress's variable for it, `--wp--custom--scheme--{slug}--{role}`. A scheme the `matter_schemes` filter adds has no such variables, so its values (CSS, or `var:preset|color|slug` shorthand) are written out as they are, as is any role a filter changed.
+
+**A scheme that doesn't exist** (a slug saved in content that the theme has since removed) adds no class, in the editor as on the front end, so the block inherits its parent's scheme. The same goes for a **variant that doesn't exist**: its `is-style-*` class stays in the markup, harmlessly, and the block gets the default variant's class (`is-style-default`).
 
 A class can't change with the screen width, so for a wrapper whose scheme does (a header bar that's one scheme on phones and another from `lg`), set each `--scheme--{role}` variable from `--wp--custom--scheme--{slug}--{role}` in the theme's CSS inside a media query, as `.has-scheme-{slug}` does. Both names are part of the [theme contract](#theme-contract). (Pulsar has a `scheme()` mixin for this.)
 
@@ -283,7 +285,7 @@ Matter's own default styles use only `--scheme--background`, `--scheme--text` an
 
 Blocks declaring `supports.matter.scheme` get a swatch control in the Styles tab, each swatch named under it (the scheme's `label`). Selecting the active scheme again inherits the surrounding scheme.
 
-Filters: `matter_schemes`, `matter_default_scheme`, `matter_scheme_labels`.
+Filters: `matter_schemes` (always applied, whether or not theme.json defines schemes), `matter_default_scheme`, `matter_scheme_labels`.
 
 ## Variants
 
