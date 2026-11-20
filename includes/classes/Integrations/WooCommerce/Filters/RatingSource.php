@@ -49,6 +49,15 @@ final class RatingSource implements Source, QueryParams {
 	}
 
 	/**
+	 * How its filter shows when inserted: stars, each with a checkbox.
+	 *
+	 * @return string
+	 */
+	public function default_display(): string {
+		return 'stars';
+	}
+
+	/**
 	 * Its icon in the editor: a star.
 	 *
 	 * @return string

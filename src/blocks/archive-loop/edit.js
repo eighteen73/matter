@@ -12,6 +12,7 @@ import { Disabled, Placeholder, Spinner } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { store as editorStore } from '@wordpress/editor';
 import { __ } from '@wordpress/i18n';
+import { postList } from '@wordpress/icons';
 import { useServerSideRender } from '@wordpress/server-side-render';
 
 export default function Edit() {
@@ -33,13 +34,15 @@ export default function Edit() {
 		skipBlockSupportAttributes: true,
 	});
 
-	const blockProps = useBlockProps({ className: 'alignfull' });
+	// Marked, as archive content and a button with no link are
+	// (editor/canvas.scss).
+	const blockProps = useBlockProps({
+		className: 'alignfull matter-has-hint',
+		'data-matter-hint': __('Archive list · set by the theme', 'matter'),
+	});
 
 	return (
 		<div {...blockProps}>
-			<span className="wp-block-matter-archive-loop__label">
-				{__('Archive list · set by the theme', 'matter')}
-			</span>
 			{content && (
 				<Disabled>
 					<div
@@ -50,7 +53,7 @@ export default function Edit() {
 			)}
 			{!content && (
 				<Placeholder
-					icon="grid-view"
+					icon={postList}
 					label={__('Archive list', 'matter')}
 					instructions={
 						'loading' === status

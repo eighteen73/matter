@@ -1418,7 +1418,7 @@ test.describe('filters in the editor', () => {
 		await admin.createNewPost();
 		await editor.setContent(
 			listing(
-				'<!-- wp:matter/filter {"source":"taxonomy:category"} /--><!-- wp:matter/filter {"source":"taxonomy:post_tag","collapsible":true,"open":false} /-->'
+				'<!-- wp:matter/filter {"source":"taxonomy:category"} /--><!-- wp:matter/filter {"source":"taxonomy:post_tag","collapsible":true,"open":false} /--><!-- wp:matter/filter /-->'
 			)
 		);
 
@@ -1468,5 +1468,15 @@ test.describe('filters in the editor', () => {
 		await row.click({ position: { x: width - 4, y: 4 } });
 		await expect(group).toHaveAttribute('open', '');
 		expect((await filterAttributes(page))[1].open).toBe(false);
+
+		// A new filter (no source yet): its placeholder chooses one.
+		await editor.canvas
+			.locator('.wp-block-matter-filter')
+			.nth(2)
+			.getByRole('combobox', { name: 'Filter by' })
+			.selectOption('taxonomy:post_tag');
+		await expect
+			.poll(async () => (await filterAttributes(page))[2].source)
+			.toBe('taxonomy:post_tag');
 	});
 });

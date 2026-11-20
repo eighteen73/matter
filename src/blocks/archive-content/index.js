@@ -10,7 +10,6 @@ import { InnerBlocks } from '@wordpress/block-editor';
  */
 import Edit from './edit';
 import metadata from './block.json';
-import './editor.scss';
 
 registerBlockType(metadata.name, {
 	icon: archive,

@@ -484,8 +484,10 @@ final class Filters {
 	}
 
 	/**
-	 * A "Filters" category for the filter blocks, after core's Theme: the
-	 * inserter lists them together, and first inside a listing's filters.
+	 * A "Filters" category for the filter blocks, after the others (as other
+	 * plugins' are). Inside a listing's filters, the inserter lists the
+	 * blocks that fit there first, above a line: core's way, as for a list's
+	 * items.
 	 *
 	 * @param array<int, array<string, mixed>> $categories Block categories.
 	 * @return array<int, array<string, mixed>>
@@ -495,52 +497,31 @@ final class Filters {
 			return $categories;
 		}
 
-		$category = [
+		$categories[] = [
 			'slug'  => 'matter-filters',
 			'title' => __( 'Filters', 'matter' ),
 			'icon'  => null,
 		];
-		$after    = array_search( 'theme', array_column( $categories, 'slug' ), true );
-
-		if ( false === $after ) {
-			$categories[] = $category;
-
-			return $categories;
-		}
-
-		array_splice( $categories, (int) $after + 1, 0, [ $category ] );
 
 		return $categories;
 	}
 
 	/**
-	 * The filter block's variations: one per source ("Category filter"). Two
-	 * sources with one name (a post's category and a product's) are told
-	 * apart by what they list: "Category filter (Products)".
+	 * The filter block's variations: one per source, named as it is
+	 * ("Category"; they're in the Filters category, and only go in a
+	 * listing's filters). The editor offers a listing those for what it
+	 * lists (`postTypes`), so a post's category and a product's don't both
+	 * show.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function variations(): array {
-		$sources    = Sources::all();
-		$labels     = array_count_values( array_map( fn( Source $source ) => $source->label(), $sources ) );
 		$variations = [];
 
-		foreach ( $sources as $key => $source ) {
-			$label = $source->label();
-			/* translators: %s: what's filtered by, e.g. "Category". */
-			$title = sprintf( __( '%s filter', 'matter' ), $label );
-
-			if ( $labels[ $label ] > 1 ) {
-				$type  = get_post_type_object( (string) ( $source->post_types()[0] ?? '' ) );
-				$title = $type
-					/* translators: 1: what's filtered by, e.g. "Category"; 2: what's listed, e.g. "Products". */
-					? sprintf( __( '%1$s filter (%2$s)', 'matter' ), $label, $type->labels->name )
-					: $title;
-			}
-
+		foreach ( Sources::all() as $key => $source ) {
 			$variations[] = [
 				'name'       => sanitize_key( str_replace( ':', '-', $key ) ),
-				'title'      => $title,
+				'title'      => $source->label(),
 				'attributes' => [
 					'source'  => $key,
 					'display' => self::default_display( $source ),

@@ -8,10 +8,20 @@
 	gap: 1.5rem;
 }
 
-// Previews: the editor's clicks select the block, so its controls don't take
-// them (or focus).
-.wp-block-matter-filter :is(input, select, .wp-block-matter-filter__more) {
+// Previews: the editor's clicks select the block, so its options don't take
+// them (or focus). Not the placeholder's "Filter by".
+.wp-block-matter-filter :is(.wp-block-matter-filter__fieldset, .wp-block-matter-filter__field) :is(input, select),
+.wp-block-matter-filter__more {
 	pointer-events: none;
+}
+
+// The editor's hover and selection outline (with its white inner edge) is
+// drawn inside a block's box, over a filter's checkboxes at its edge: here
+// it's drawn just outside. Core's outline rules are long chains (0,6,1 and
+// more, by state), so only the inset is overridden, outright.
+.wp-block-matter-filter.block-editor-block-list__block::after {
+	// stylelint-disable-next-line declaration-no-important -- Outranks core's chains.
+	inset: -0.25rem !important;
 }
 
 // A filter's options open below its button (in a bar, while it's selected).

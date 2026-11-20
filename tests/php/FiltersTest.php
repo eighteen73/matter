@@ -365,7 +365,8 @@ class FiltersTest extends TestCase {
 	}
 
 	/**
-	 * The filter block has a variation per source.
+	 * The filter block has a variation per source, named as the source is,
+	 * and its blocks have their own category.
 	 *
 	 * @return void
 	 */
@@ -374,7 +375,10 @@ class FiltersTest extends TestCase {
 		$names      = array_column( $variations, 'name' );
 
 		$this->assertContains( 'taxonomy-category', $names );
-		$this->assertSame( 'Category filter', $variations[ array_search( 'taxonomy-category', $names, true ) ]['title'] );
+		$categories = array_column( apply_filters( 'block_categories_all', get_default_block_categories(), new \WP_Block_Editor_Context() ), 'slug' );
+
+		$this->assertSame( 'matter-filters', end( $categories ), 'Filters is last, as other plugins\' categories are.' );
+		$this->assertSame( 'Category', $variations[ array_search( 'taxonomy-category', $names, true ) ]['title'], 'Named as the source is: they\'re in the Filters category.' );
 	}
 
 	/**

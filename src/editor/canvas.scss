@@ -14,12 +14,15 @@
 	width: 1em;
 }
 
-// A hint on a block in the editor: a tag in its top corner (its
-// `data-matter-hint`), inside the block's box so it doesn't change its
-// spacing. Editor UI, so not left to the theme. Used for a button with text
-// but no link (extensions/button-link.js), which is outlined too, and for
-// archive content (where editors add content around it).
+// A hint on a block in the editor: an outline in the admin colour, with a
+// tag in its top corner (its `data-matter-hint`), both inside the block's
+// box so they don't change its spacing. Editor UI, so not left to the theme.
+// Used for a button with text but no link (extensions/button-link.js), and
+// for archive content and the archive list (where editors add content around
+// the list, and that the theme sets it).
 .matter-has-hint {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: -2px;
 	position: relative;
 
 	&::before {
@@ -41,11 +44,6 @@
 		white-space: nowrap;
 		z-index: 1;
 	}
-}
-
-.wp-block-button.matter-needs-link {
-	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
-	outline-offset: -2px;
 }
 
 // "Add tab" and "Add item" (components/add-button.js): core's block appender
