@@ -24,7 +24,8 @@ class Icons {
 	use Singleton;
 
 	/**
-	 * Whether the theme's icons are registered.
+	 * Whether the theme's icons are registered (once a request: the registry
+	 * keeps them, and registering again is a mistake).
 	 *
 	 * @var bool
 	 */
@@ -33,28 +34,15 @@ class Icons {
 	/**
 	 * Setup hooks.
 	 *
-	 * Registering reads a folder of SVG files, so it happens where icons are
-	 * used: the editor (the admin, and the REST requests it makes for the icon
-	 * library) and on the first icon rendered (see render()). A page without
-	 * icons doesn't pay for it.
+	 * The theme's icons are registered on `init`, on every request: core's
+	 * Icon block (and `wp_get_icon()` in WP-CLI, cron or any plugin) reads the
+	 * registry directly, so an icon that is only registered when Matter's own
+	 * blocks ask for it renders nothing there.
 	 *
 	 * @return void
 	 */
 	public function setup(): void {
-		if ( is_admin() ) {
-			add_action( 'init', [ $this, 'register_theme_icons' ] );
-		}
-
-		// Only a REST request of its own: a page can run internal ones (a cart
-		// block's, say) that don't need icons.
-		add_action(
-			'rest_api_init',
-			function (): void {
-				if ( wp_is_serving_rest_request() ) {
-					$this->register_theme_icons();
-				}
-			}
-		);
+		add_action( 'init', [ $this, 'register_theme_icons' ] );
 	}
 
 	/**
@@ -172,8 +160,6 @@ class Icons {
 		if ( '' === $name || ! function_exists( 'wp_get_icon' ) ) {
 			return '';
 		}
-
-		self::instance()->register_theme_icons();
 
 		$svg = (string) wp_get_icon( $name, [ 'size' => null ] );
 
