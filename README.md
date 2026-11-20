@@ -580,7 +580,7 @@ A bound paragraph that comes out empty (a term without a description) isn't outp
 - "Archive" under each post type with an archive, and under Posts.
 - "New version" on an entry: a draft copy to schedule as its replacement.
 
-Preview shows the entry, including unsaved changes, on its archive. A draft opened with the editor's "Preview in new tab" (the archive's URL plus `preview=true`) shows the newest unpublished entry for that archive that the signed-in user can edit, and is never cached; nobody else sees it. The entry editor's "Shows on" panel changes which archive it's for.
+Preview shows the entry, including unsaved changes, on its archive. An entry that isn't published has `preview_id=<its ID>` on its link (what the editor reads), so "Preview in new tab" (the link plus `preview=true`) shows exactly that entry, even when there are other drafts for the archive: to a signed-in user who can edit it, with or without a `preview_nonce` (an autosave's preview link has one, and shows the autosave when it is newer), as core does for a draft. It is never cached; nobody else sees it. The entry editor's "Shows on" panel changes which archive it's for.
 
 ## Allowed blocks
 

@@ -998,7 +998,7 @@ test.describe('archive entry preview', () => {
 		await deleteArchiveEntries(requestUtils);
 	});
 
-	test("Preview in new tab shows a draft entry's intro", async ({
+	test("Preview in new tab shows each draft entry's own intro, to those who can edit it", async ({
 		admin,
 		page,
 		requestUtils,
@@ -1007,39 +1007,76 @@ test.describe('archive entry preview', () => {
 		// A date archive without posts is a 404.
 		await createPosts(requestUtils, ['Dated post']);
 
-		const entry = await createArchiveEntry(requestUtils, 'date', {
-			status: 'draft',
-			content:
-				'<!-- wp:paragraph --><p>Draft intro for dates</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->',
-		});
+		// Two drafts for the same archive: neither is "the" draft.
+		const drafts = [];
 
-		await admin.visitAdminPage('post.php', `post=${entry.id}&action=edit`);
-		await page.waitForFunction(() =>
-			window.wp?.data?.select('core/editor')?.getCurrentPostId()
-		);
-		await page.evaluate(() => {
-			window.wp.data
-				.dispatch('core/preferences')
-				.set('core/edit-post', 'welcomeGuide', false);
-		});
+		for (const name of ['first', 'second']) {
+			drafts.push(
+				await createArchiveEntry(requestUtils, 'date', {
+					status: 'draft',
+					title: `Draft ${name}`,
+					content: `<!-- wp:paragraph --><p>Draft intro ${name}</p><!-- /wp:paragraph --><!-- wp:matter/archive-loop /-->`,
+				})
+			);
+		}
 
-		await page.getByRole('button', { name: 'View', exact: true }).click();
+		const urls = [];
 
-		const [preview] = await Promise.all([
-			page.context().waitForEvent('page'),
-			page.getByRole('menuitem', { name: /Preview in new tab/ }).click(),
-		]);
+		for (const [index, name] of ['first', 'second'].entries()) {
+			await admin.visitAdminPage(
+				'post.php',
+				`post=${drafts[index].id}&action=edit`
+			);
+			await page.waitForFunction(() =>
+				window.wp?.data?.select('core/editor')?.getCurrentPostId()
+			);
+			await page.evaluate(() => {
+				window.wp.data
+					.dispatch('core/preferences')
+					.set('core/edit-post', 'welcomeGuide', false);
+			});
 
-		await expect(preview.getByText('Draft intro for dates')).toBeVisible();
+			await page
+				.getByRole('button', { name: 'View', exact: true })
+				.click();
 
-		// Someone logged out, or without the right to edit, sees no draft.
-		const visitor = await page.context().browser().newContext();
+			const [preview] = await Promise.all([
+				page.context().waitForEvent('page'),
+				page
+					.getByRole('menuitem', { name: /Preview in new tab/ })
+					.click(),
+			]);
+
+			await expect(
+				preview.getByText(`Draft intro ${name}`)
+			).toBeVisible();
+			await expect(
+				preview.getByText(`Draft intro ${index ? 'first' : 'second'}`)
+			).toHaveCount(0);
+			urls.push(preview.url());
+			await preview.close();
+		}
+
+		// The first one's link, opened again now the second is newer, is
+		// still the first.
+		await page.goto(urls[0]);
+		await expect(page.getByText('Draft intro first')).toBeVisible();
+		await expect(page.getByText('Draft intro second')).toHaveCount(0);
+
+		// Someone logged out, or without the right to edit, sees neither.
+		const visitor = await page
+			.context()
+			.browser()
+			.newContext({ storageState: { cookies: [], origins: [] } });
 		const anonymous = await visitor.newPage();
 
-		await anonymous.goto(new URL(preview.url()).pathname + '?preview=true');
-		await expect(anonymous.getByText('Draft intro for dates')).toHaveCount(
-			0
-		);
+		for (const url of urls) {
+			await anonymous.goto(url);
+			await expect(
+				anonymous.getByText(/Draft intro (first|second)/)
+			).toHaveCount(0);
+		}
+
 		await visitor.close();
 	});
 });

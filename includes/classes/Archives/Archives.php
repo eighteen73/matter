@@ -362,69 +362,47 @@ class Archives {
 	}
 
 	/**
-	 * The newest draft, pending, scheduled or private entry for the current
-	 * archive that the user can edit.
+	 * The entry a preview asks for (`preview=true&preview_id=<ID>`), if the user
+	 * may edit it: as core shows a draft to someone who can edit it, with or
+	 * without a nonce.
 	 *
 	 * @return WP_Post|null
 	 */
-	private function editable_unpublished_entry(): ?WP_Post {
-		$target = Target::current();
+	private function requested_entry(): ?WP_Post {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Only shows what the user can already edit.
+		$id      = absint( $_GET['preview_id'] ?? 0 );
+		$preview = 'true' === ( $_GET['preview'] ?? '' );
+		// phpcs:enable
 
-		if ( ! $target || ! is_user_logged_in() ) {
+		if ( ! $id || ! $preview || ! current_user_can( 'edit_post', $id ) ) {
 			return null;
 		}
 
-		$posts = get_posts(
-			[
-				'post_type'     => self::POST_TYPE,
-				'post_status'   => [ 'future', 'draft', 'pending', 'private' ],
-				'numberposts'   => 10,
-				'orderby'       => 'modified',
-				'order'         => 'DESC',
-				'no_found_rows' => true,
-				'meta_key'      => self::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Only for a signed-in preview.
-				'meta_value'    => $target->key(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Only for a signed-in preview.
-			]
-		);
+		$post = get_post( $id );
 
-		foreach ( $posts as $post ) {
-			if ( current_user_can( 'edit_post', $post->ID ) ) {
-				return $post;
-			}
-		}
-
-		return null;
+		return $post && self::POST_TYPE === $post->post_type ? $post : null;
 	}
 
 	/**
 	 * The entry being previewed on this request, if the user may.
 	 *
-	 * @return WP_Post|null With its autosave's content when that's newer.
+	 * @return WP_Post|null With its autosave's content when the link has a valid nonce (an
+	 *                      autosave's preview link) and the autosave is newer.
 	 */
 	private function preview_entry(): ?WP_Post {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Verified below.
-		$id    = absint( $_GET['preview_id'] ?? 0 );
-		$nonce = sanitize_text_field( wp_unslash( $_GET['preview_nonce'] ?? '' ) );
-		// phpcs:enable
+		$post = $this->requested_entry();
 
-		if ( $id && wp_verify_nonce( $nonce, 'post_preview_' . $id ) && current_user_can( 'edit_post', $id ) ) {
-			$post = get_post( $id );
-		} else {
-			// The block editor builds a draft's preview from the entry's link
-			// (the archive's URL) plus `preview=true`, with no ID or nonce, so
-			// a signed-in editor gets the newest entry for this archive that
-			// they may edit and that isn't published.
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only shows what the user can already edit.
-			$post = 'true' === ( $_GET['preview'] ?? '' ) ? $this->editable_unpublished_entry() : null;
-		}
-
-		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
+		if ( ! $post ) {
 			return null;
 		}
 
-		$id = $post->ID;
+		$nonce = sanitize_text_field( wp_unslash( $_GET['preview_nonce'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified below.
 
-		$autosave = wp_get_post_autosave( $id, get_current_user_id() );
+		if ( ! wp_verify_nonce( $nonce, 'post_preview_' . $post->ID ) ) {
+			return $post;
+		}
+
+		$autosave = wp_get_post_autosave( $post->ID, get_current_user_id() );
 
 		if ( $autosave && mysql2date( 'U', $autosave->post_modified_gmt, false ) > mysql2date( 'U', $post->post_modified_gmt, false ) ) {
 			$post               = clone $post;
@@ -745,7 +723,17 @@ class Archives {
 	 * @return string
 	 */
 	public function permalink( string $link, WP_Post $post ): string {
-		return self::POST_TYPE === $post->post_type ? ( self::target_of( $post )?->preview_url() ?? home_url( '/' ) ) : $link;
+		if ( self::POST_TYPE !== $post->post_type ) {
+			return $link;
+		}
+
+		$url = self::target_of( $post )?->preview_url() ?? home_url( '/' );
+
+		// The block editor's Preview is this link plus `preview=true`, which on
+		// an archive says nothing of which entry, so an entry that isn't
+		// published says so itself: two drafts for one archive each preview
+		// as themselves.
+		return 'publish' === $post->post_status ? $url : add_query_arg( 'preview_id', $post->ID, $url );
 	}
 
 	/**
@@ -776,14 +764,14 @@ class Archives {
 	 * Core's canonical redirect drops `preview=true` from a URL that isn't a
 	 * post preview, which every archive is, so the editor's Preview (the
 	 * archive's URL plus `preview=true`) would lose it before the entry could
-	 * be shown. Leave that request alone for someone who has a draft to see.
+	 * be shown. Leave that request alone when it asks for an entry its user may
+	 * edit.
 	 *
 	 * @param string|false $redirect Redirect URL.
 	 * @return string|false
 	 */
 	public function keep_preview( string|false $redirect ): string|false {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only decides whether to redirect.
-		if ( $redirect && 'true' === ( $_GET['preview'] ?? '' ) && null !== $this->editable_unpublished_entry() ) {
+		if ( $redirect && null !== $this->requested_entry() ) {
 			return false;
 		}
 

@@ -9,6 +9,7 @@ namespace Eighteen73\Matter\Tests;
 
 use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Archives\Target;
+use ReflectionMethod;
 use ReflectionProperty;
 
 /**
@@ -396,5 +397,103 @@ class ArchivesTest extends TestCase {
 
 		$this->assertSame( $user, $args['author'] );
 		$this->assertArrayNotHasKey( 'post__in', $args );
+	}
+
+	/**
+	 * Run the preview of an entry as a user, as the editor's Preview does:
+	 * the entry's link plus `preview=true`.
+	 *
+	 * @param int    $post_id Entry.
+	 * @param int    $user    User ID (0 for no one).
+	 * @param string $nonce   A `preview_nonce`, if any.
+	 * @return int The entry shown, or 0.
+	 */
+	private function previewed( int $post_id, int $user, string $nonce = '' ): int {
+		$_GET = [
+			'preview'    => 'true',
+			'preview_id' => (string) $post_id,
+		];
+
+		if ( '' !== $nonce ) {
+			$_GET['preview_nonce'] = $nonce;
+		}
+
+		wp_set_current_user( $user );
+
+		$method = new ReflectionMethod( Archives::class, 'preview_entry' );
+		$shown  = $method->invoke( Archives::instance() );
+
+		$_GET = [];
+
+		wp_set_current_user( 0 );
+
+		return $shown ? $shown->ID : 0;
+	}
+
+	/**
+	 * The link the editor reads for an entry that isn't published says which
+	 * entry it is, so two drafts for one archive each preview as themselves.
+	 *
+	 * @return void
+	 */
+	public function test_an_unpublished_entrys_link_names_it(): void {
+		$draft = self::factory()->post->create(
+			[
+				'post_type'   => Archives::POST_TYPE,
+				'post_status' => 'draft',
+				'meta_input'  => [ Archives::META => 'author' ],
+			]
+		);
+
+		$published = $this->entry( 'date' );
+
+		$this->assertStringContainsString( 'preview_id=' . $draft, get_permalink( $draft ) );
+		$this->assertStringNotContainsString( 'preview_id', get_permalink( $published ) );
+	}
+
+	/**
+	 * Preview shows exactly the entry asked for, whoever else has drafts for
+	 * the archive, to someone who can edit it (with or without a nonce), and
+	 * to no one else.
+	 *
+	 * @return void
+	 */
+	public function test_preview_shows_the_entry_asked_for(): void {
+		$editor = self::factory()->user->create( [ 'role' => 'editor' ] );
+		$other  = self::factory()->user->create( [ 'role' => 'subscriber' ] );
+		$drafts = [];
+
+		foreach ( [ 'First draft', 'Second draft' ] as $title ) {
+			$drafts[] = self::factory()->post->create(
+				[
+					'post_type'   => Archives::POST_TYPE,
+					'post_status' => 'draft',
+					'post_title'  => $title,
+					'meta_input'  => [ Archives::META => 'date' ],
+				]
+			);
+		}
+
+		// Each is its own, whichever is newer.
+		$this->assertSame( $drafts[0], $this->previewed( $drafts[0], $editor ) );
+		$this->assertSame( $drafts[1], $this->previewed( $drafts[1], $editor ) );
+		$this->assertSame( $drafts[0], $this->previewed( $drafts[0], $editor, wp_create_nonce( 'post_preview_' . $drafts[0] ) ) );
+
+		// Logged out, or without the right to edit: nothing.
+		$this->assertSame( 0, $this->previewed( $drafts[0], 0 ) );
+		$this->assertSame( 0, $this->previewed( $drafts[1], $other ) );
+
+		// Without an entry named, nothing is guessed (it used to be the newest).
+		$_GET = [ 'preview' => 'true' ];
+
+		wp_set_current_user( $editor );
+
+		$shown = ( new ReflectionMethod( Archives::class, 'preview_entry' ) )->invoke( Archives::instance() );
+
+		$_GET = [];
+
+		wp_set_current_user( 0 );
+
+		$this->assertNull( $shown );
 	}
 }
