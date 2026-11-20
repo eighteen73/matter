@@ -59,6 +59,22 @@
 	display: flex;
 }
 
+// A parent that is only a label (no link) has nothing to focus, so its
+// submenu would be out of the keyboard's reach: its toggle shows instead, as a
+// button that takes focus (and does nothing else, without the script), in
+// place of the label. High specificity, as it undoes the hidden toggle.
+.is-type-dropdown:not(#{enhanced(menu)}) .matter-menu__link.is-label:has(+ .matter-menu__toggle) {
+	display: none;
+}
+
+.is-type-dropdown:not(#{enhanced(menu)}) .matter-menu__link.is-label + .matter-menu__toggle {
+	display: inline-flex;
+}
+
+.is-type-dropdown:not(#{enhanced(menu)}) .matter-menu__link.is-label + .matter-menu__toggle .matter-menu__toggle-text {
+	display: inline;
+}
+
 :where(.is-type-dropdown) .matter-menu__submenu.is-flipped {
 	inset-inline: auto 0;
 }

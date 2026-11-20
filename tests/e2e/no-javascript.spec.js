@@ -1105,6 +1105,113 @@ test.describe('menus and the panel', () => {
 		});
 	});
 
+	test.describe('a parent that is only a label', () => {
+		let added = [];
+
+		// "Explore" has no link, so without its toggle nothing in it can take
+		// focus, and its submenu can't be reached from the keyboard.
+		test.beforeAll(async ({ requestUtils }) => {
+			const [menu] = await requestUtils.rest({
+				path: '/wp/v2/menus',
+				params: { per_page: 100 },
+			});
+			const item = (data) =>
+				requestUtils.rest({
+					path: '/wp/v2/menu-items',
+					method: 'POST',
+					data: { status: 'publish', menus: menu.id, ...data },
+				});
+			const parent = await item({ title: 'Explore', url: '#' });
+			const child = await item({
+				title: 'Guides',
+				url: 'http://localhost:8889/guides/',
+				parent: parent.id,
+			});
+
+			added = [child.id, parent.id];
+		});
+
+		test.afterAll(async ({ requestUtils }) => {
+			for (const id of added) {
+				await requestUtils.rest({
+					path: `/wp/v2/menu-items/${id}`,
+					method: 'DELETE',
+					params: { force: true },
+				});
+			}
+		});
+
+		test.describe('without JavaScript', () => {
+			test.use({ ...NO_JAVASCRIPT, viewport: VIEWPORTS.desktop });
+
+			test('its toggle takes focus, which opens the submenu to the keyboard', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				const hover = page.locator('#hover-menu');
+				const explore = hover.getByRole('button', { name: /Explore/ });
+				const guides = hover.getByRole('link', {
+					name: 'Guides',
+					exact: true,
+				});
+
+				// One control for it: the label gives way to the toggle.
+				await expect(explore).toBeVisible();
+				await expect(explore).toHaveText('Explore');
+				await expect(hover.locator('.is-label:visible')).toHaveCount(0);
+				await expect(guides).toBeHidden();
+
+				// Tab reaches the toggle, then every link in the submenu.
+				await hover
+					.getByRole('link', { name: 'Contact', exact: true })
+					.focus();
+				await page.keyboard.press('Tab');
+				await expect(explore).toBeFocused();
+				await expect(guides).toBeVisible();
+				await page.keyboard.press('Tab');
+				await expect(guides).toBeFocused();
+				await expect(guides).toBeVisible();
+			});
+
+			test("a parent with a link keeps its link, and only the label's toggle shows", async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				const hover = page.locator('#hover-menu');
+
+				await expect(
+					hover.getByRole('link', { name: 'Services', exact: true })
+				).toBeVisible();
+				await expect(
+					hover.locator('.matter-menu__toggle:visible')
+				).toHaveCount(1);
+			});
+		});
+
+		test.describe('with JavaScript', () => {
+			test.use({ viewport: VIEWPORTS.desktop });
+
+			test('its toggle opens the submenu on click, as before', async ({
+				page,
+			}) => {
+				await page.goto(kitchenSink.link);
+
+				const hover = page.locator('#hover-menu');
+				const guides = hover.getByRole('link', {
+					name: 'Guides',
+					exact: true,
+				});
+
+				await expect(hover).toHaveClass(/is-enhanced/);
+				await expect(guides).toBeHidden();
+				await hover.getByRole('button', { name: /Explore/ }).click();
+				await expect(guides).toBeVisible();
+			});
+		});
+	});
+
 	test.describe('when the scripts do not start', () => {
 		test.use({ viewport: { width: 375, height: 800 } });
 
