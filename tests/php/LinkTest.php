@@ -62,7 +62,7 @@ class LinkTest extends TestCase {
 		$html = $this->render( '<!-- wp:' . self::BLOCK . ' {"matterLink":{"url":"https://example.com/page/","opensInNewTab":true}} /-->' );
 
 		$this->assertStringContainsString( 'has-link', $html );
-		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/" target="_blank" rel="noopener">Title <span class="screen-reader-text">(opens in a new tab)</span></a></h3>', $html );
+		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/" target="_blank" rel="noopener" aria-describedby="matter-link-new-tab">Title</a></h3><span id="matter-link-new-tab" hidden>(opens in a new tab)</span>', $html );
 	}
 
 	/**
@@ -222,6 +222,15 @@ class LinkTest extends TestCase {
 		$this->assertStringContainsString( '<span class="screen-reader-text">Offers (opens in a new tab)</span>', $hidden );
 		$this->assertSame( 1, substr_count( $hidden, 'opens in a new tab' ) );
 		$this->assertStringNotContainsString( 'opens in a new tab', $this->link( '<div><h3>Title</h3></div>' ) );
+
+		// A heading's text stays clean: the cue is after it, and the link is
+		// described by it, with an ID that is unique for each.
+		$heading = $this->link( '<div><h3>Title</h3></div>', 'https://example.com/page/', true ) . $this->link( '<div><h3>Other</h3></div>', 'https://example.com/other/', true );
+
+		$this->assertStringContainsString( '<h3><a class="matter-link"', $heading );
+		$this->assertStringContainsString( '>Title</a></h3><span id="matter-link-new-tab" hidden>', $heading );
+		$this->assertStringContainsString( '>Other</a></h3><span id="matter-link-new-tab-2" hidden>', $heading );
+		$this->assertStringContainsString( 'aria-describedby="matter-link-new-tab-2"', $heading );
 		$this->assertStringNotContainsString( 'opens in a new tab', $this->link( '<div><p>Offers</p></div>' ) );
 	}
 

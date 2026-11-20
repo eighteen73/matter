@@ -10,8 +10,9 @@
  * name is the heading), and the link is stretched over the whole block. Links
  * and buttons inside stay clickable above it. Without a heading, a visually
  * hidden link is added instead, named after the block's first text or image
- * (else "Read more"). A link that opens in a new tab says so, in visually
- * hidden text. This runs on the rendered block, so sections with their own
+ * (else "Read more"). A link that opens in a new tab says so: in the hidden
+ * link's name, and for a heading link in a hidden element after the heading
+ * that the link is described by, so the heading's text stays clean. This runs on the rendered block, so sections with their own
  * render.php get it too.
  *
  * The linked block gets `has-link`, and the link `matter-link`, for styling
@@ -22,6 +23,7 @@
 
 namespace Eighteen73\Matter\Supports;
 
+use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Singleton;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
@@ -169,7 +171,19 @@ class Link {
 
 		// The first heading's content, unless it already holds a link.
 		if ( preg_match( '/(<h([1-6])\b[^>]*>)(.*?)(<\/h\2>)/s', $block_content, $match, PREG_OFFSET_CAPTURE ) && ! preg_match( '/<a[\s>]/i', $match[3][0] ) ) {
-			$linked = $match[1][0] . '<a ' . $attributes . '>' . $match[3][0] . ( $new_tab ? ' <span class="screen-reader-text">' . esc_html__( '(opens in a new tab)', 'matter' ) . '</span>' : '' ) . '</a>' . $match[4][0];
+			$link = $attributes;
+			$cue  = '';
+
+			if ( $new_tab ) {
+				// The cue sits after the heading, not in it, so the heading's
+				// text stays what the author wrote, and the link is described
+				// by it.
+				$cue_id = Ids::claim( 'matter-link-new-tab' );
+				$link  .= ' aria-describedby="' . esc_attr( $cue_id ) . '"';
+				$cue    = '<span id="' . esc_attr( $cue_id ) . '" hidden>' . esc_html__( '(opens in a new tab)', 'matter' ) . '</span>';
+			}
+
+			$linked = $match[1][0] . '<a ' . $link . '>' . $match[3][0] . '</a>' . $match[4][0] . $cue;
 
 			return substr_replace( $block_content, $linked, $match[0][1], strlen( $match[0][0] ) );
 		}

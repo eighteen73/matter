@@ -47,7 +47,8 @@ test.beforeAll(async ({ requestUtils }) => {
 		requestUtils,
 		'Linked cards',
 		card('Spring sale', 'https://example.com/spring/') +
-			card('Summer sale', 'https://example.com/summer/', true)
+			card('Summer sale', 'https://example.com/summer/', true) +
+			`<!-- wp:matter-test/feature ${JSON.stringify({ matterLink: { url: 'https://example.com/autumn/', opensInNewTab: true } })} --><!-- wp:matter/slot {"name":"content"} --><!-- wp:heading {"level":3} --><h3 class="wp-block-heading">Autumn sale</h3><!-- /wp:heading --><!-- /wp:matter/slot --><!-- /wp:matter-test/feature -->`
 	);
 	shortPage = await createPage(
 		requestUtils,
@@ -87,6 +88,27 @@ test.describe('block link names', () => {
 		await expect(page.getByRole('link', { name: 'Read more' })).toHaveCount(
 			0
 		);
+	});
+
+	test('a heading link keeps the heading clean and is described by the new-tab cue', async ({
+		page,
+	}) => {
+		await page.goto(cards.link);
+
+		// The heading's text is just the heading; the cue describes the link.
+		const autumn = page.getByRole('link', {
+			name: 'Autumn sale',
+			exact: true,
+		});
+
+		await expect(autumn).toHaveAttribute('target', '_blank');
+		await expect(autumn).toHaveAccessibleName('Autumn sale');
+		await expect(autumn).toHaveAccessibleDescription(
+			'(opens in a new tab)'
+		);
+		await expect(
+			page.getByRole('heading', { name: 'Autumn sale', exact: true })
+		).toHaveText('Autumn sale');
 	});
 });
 
