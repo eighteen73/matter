@@ -127,7 +127,11 @@ export function resolve(target, selector) {
 /**
  * Resolves with a block's instance once it has started. Once the page has
  * loaded, a target that isn't (and isn't in or around) a block resolves with
- * `null`; a block that exists but hasn't started yet is still waited for.
+ * `null`; a block that exists but hasn't started yet is still waited for, until
+ * it is removed from the page (then `null`). So after load `ready()` resolves
+ * `null` for a block that isn't on the page yet, even if client-side navigation
+ * inserts it later; wait for `matter-{type}-ready` for that. A waiter whose
+ * element has been removed is dropped each time a block registers.
  *
  * @param {string|Element} target Element ID or element.
  * @return {Promise<Object|null>} Instance.
@@ -136,9 +140,21 @@ function ready(target) {
 	const { state } = shared();
 
 	return new Promise((resolvePromise) => {
+		// What the target pointed at when it was last seen: once that has been
+		// removed from the page (a client-side navigation, say) nothing can
+		// start it, so the wait is over.
+		let seen = null;
+
 		const find = (loaded) => {
 			const element = blockFor(target);
 			const entry = element && state.instances.get(element);
+
+			seen = toElement(target) ?? element ?? seen;
+
+			if (!entry && seen && !seen.isConnected) {
+				resolvePromise(null);
+				return true;
+			}
 
 			if (entry) {
 				resolvePromise(entry.instance);
@@ -208,6 +224,7 @@ export function registerInstance(type, element, instance) {
 	const { state } = shared();
 
 	state.instances.set(element, { type, instance });
+	// Also lets go of waiters whose element has left the page.
 	state.waiting = state.waiting.filter((find) => !find(false));
 	emit(element, type, 'ready', { instance });
 }

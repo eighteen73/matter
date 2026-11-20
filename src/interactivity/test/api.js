@@ -202,6 +202,41 @@ describe('matter.ready()', () => {
 		state.mockRestore();
 	});
 
+	it('lets go of a waiter whose element left the page, when another block registers', async () => {
+		const api = loadApi();
+
+		api.registerType('tabs', SELECTOR);
+
+		const gone = block('gone');
+		const promise = window.matter.ready('#gone');
+		const other = block('other');
+
+		// Seen once (still there, not started), then removed.
+		api.registerInstance('tabs', other, {});
+		expect(await settled(promise)).toBe('pending');
+
+		gone.remove();
+		api.registerInstance('tabs', block('third'), {});
+
+		await expect(promise).resolves.toBeNull();
+	});
+
+	it('lets go of a waiter for an element that is removed before it starts', async () => {
+		const api = loadApi();
+
+		api.registerType('tabs', SELECTOR);
+
+		const element = block('detached');
+		const promise = window.matter.ready(element);
+
+		expect(await settled(promise)).toBe('pending');
+
+		element.remove();
+		api.registerInstance('tabs', block('next'), {});
+
+		await expect(promise).resolves.toBeNull();
+	});
+
 	it('keeps waiting for a block that is there but has not started', async () => {
 		const api = loadApi();
 
