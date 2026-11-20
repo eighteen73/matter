@@ -257,6 +257,11 @@ test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
 
 		await page.locator('[aria-controls="test-nav"]').click();
 		await expect(panel).toHaveClass(/\bis-open\b/);
+		// The panel moves focus in a frame after opening: wait for that, or it
+		// takes focus back from the button.
+		await expect(
+			page.locator('#test-nav .matter-menu__toggle').first()
+		).toBeFocused();
 		await page.locator('#open-modal-from-panel').focus();
 		await page.keyboard.press('Enter');
 		await expect(modal).toBeVisible();
@@ -300,6 +305,11 @@ test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
 		await page.locator('[aria-controls="test-nav"]').click();
 		await expect(panel).toHaveClass(/\bis-open\b/);
 		await expect.poll(() => isLive(page, 'h1')).toBe(false);
+		// The panel moves focus in a frame after opening: wait for that, or it
+		// takes focus back from the button.
+		await expect(
+			page.locator('#test-nav .matter-menu__toggle').first()
+		).toBeFocused();
 		await page.locator('#open-modal-from-panel').focus();
 		await page.keyboard.press('Enter');
 		await expect(modal).toBeVisible();
