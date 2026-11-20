@@ -279,7 +279,7 @@ store('matter/carousel', {
 			const context = getContext();
 			const { ref } = getElement();
 
-			enhance(ref);
+			enhance('carousel', ref);
 			const viewport = own(ref, '.wp-block-matter-carousel__viewport')[0];
 			const track = viewport.querySelector(
 				'.wp-block-matter-carousel__track'

@@ -347,6 +347,107 @@ test.describe('accordion, collapsible and tabs', () => {
 	});
 });
 
+test.describe('the gate follows the scripts, not the clock', () => {
+	test.use({ viewport: VIEWPORTS.desktop });
+
+	// A block the server rendered, as a client-side navigation or Live
+	// results would put it in the page after the allowance has run out.
+	const serverRendered = (page, selector) =>
+		page.evaluate(
+			async ([url, css]) => {
+				const response = await fetch(url);
+				const doc = new window.DOMParser().parseFromString(
+					await response.text(),
+					'text/html'
+				);
+
+				return doc
+					.querySelector(css)
+					.outerHTML.replace(/id="/g, 'id="late-');
+			},
+			[page.url(), selector]
+		);
+
+	test('a block inserted after the allowance does not show open before it starts', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('html')).toHaveClass(
+			/matter-ready-accordion/
+		);
+		// The allowance runs out (real time: a faked clock stalls hydration).
+		await expect(page.locator('html')).toHaveClass(/matter-late/, {
+			timeout: 8000,
+		});
+
+		const html = await serverRendered(page, '#faq');
+		const visibility = await page.evaluate((markup) => {
+			const holder = document.createElement('div');
+
+			holder.innerHTML = markup;
+			document.body.append(holder);
+
+			// Before any script has had a chance to start the block.
+			return window
+				.getComputedStyle(
+					holder.querySelector(
+						'.wp-block-matter-accordion-item:not(.is-open) .wp-block-matter-accordion-item__panel'
+					)
+				)
+				.getPropertyValue('visibility');
+		}, html);
+
+		expect(visibility).toBe('hidden');
+	});
+
+	test('a type whose script did not start shows its content after the allowance, whatever else runs', async ({
+		page,
+	}) => {
+		await page.route(/\/build\/blocks\/accordion\/view\.js/, (route) =>
+			route.abort()
+		);
+		await page.goto(kitchenSink.link);
+
+		await expect(page.locator('html')).toHaveClass(/matter-ready-tabs/);
+		await expect(page.getByText('Second answer')).toBeHidden();
+		await expect(page.locator('html')).toHaveClass(/matter-late/, {
+			timeout: 8000,
+		});
+		await expect(page.getByText('Second answer')).toBeVisible();
+		// Tabs started: still tabs.
+		await expect(page.getByText('Blue')).toBeHidden();
+	});
+
+	test('the allowance runs from a script that starts after the page is parsed', async ({
+		page,
+	}) => {
+		await page.route(BLOCK_SCRIPTS, (route) => route.abort());
+		// The inline script doesn't run with the page: it's run by hand after
+		// the page has been parsed and has loaded (as a tag manager that adds
+		// it late would).
+		await page.route(kitchenSink.link, async (route) => {
+			const response = await route.fetch();
+			const body = (await response.text()).replace(
+				/<script([^>]*id=["']matter-api["'])/,
+				'<script type="text/plain"$1'
+			);
+
+			await route.fulfill({ response, body });
+		});
+		await page.clock.install();
+		await page.goto(kitchenSink.link, { waitUntil: 'load' });
+		await expect(page.locator('html')).not.toHaveClass(/matter-js/);
+		await page.evaluate(() => {
+			new Function(document.getElementById('matter-api').textContent)();
+		});
+		await expect(page.locator('html')).toHaveClass(/matter-js/);
+		await expect(page.locator('html')).not.toHaveClass(/matter-late/);
+		await page.clock.fastForward(5000);
+		await expect(page.locator('html')).toHaveClass(/matter-late/);
+		await expect(page.getByText('Second answer')).toBeVisible();
+	});
+});
+
 test.describe('closed panels degrade @cross-browser', () => {
 	test.use({ viewport: VIEWPORTS.desktop });
 

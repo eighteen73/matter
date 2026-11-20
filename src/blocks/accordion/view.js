@@ -166,7 +166,7 @@ const { state } = store('matter/accordion', {
 			const context = getContext();
 			const { ref } = getElement();
 
-			enhance(ref);
+			enhance('accordion', ref);
 			// A link to an item, or to anything in one (including an item of
 			// an accordion nested in it), opens this accordion's item that
 			// holds it: on load, and when the address's #hash changes.

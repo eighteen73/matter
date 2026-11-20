@@ -485,7 +485,7 @@ const { state } = store(
 				const context = getContext();
 				const { ref } = getElement();
 
-				enhance(ref);
+				enhance('menu', ref);
 				context.menuType = resolveType(context.types);
 
 				// Follow the active type as the viewport crosses breakpoints.

@@ -327,14 +327,28 @@ describe('events', () => {
 });
 
 describe('enhance()', () => {
+	afterEach(() => {
+		document.documentElement.className = '';
+	});
+
 	it('marks each block it is given', () => {
 		const api = loadApi();
 		const [one, two] = [block('one'), block('two')];
 
-		api.enhance(one, two, null);
+		api.enhance('accordion', one, two, null);
 
 		expect(one.classList.contains('is-enhanced')).toBe(true);
 		expect(two.classList.contains('is-enhanced')).toBe(true);
+	});
+
+	it('says on the page that the type has run, and only that type', () => {
+		const api = loadApi();
+		const html = document.documentElement;
+
+		api.enhance('tabs', block('one'));
+
+		expect(html.classList.contains('matter-ready-tabs')).toBe(true);
+		expect(html.classList.contains('matter-ready-accordion')).toBe(false);
 	});
 });
 
@@ -360,5 +374,24 @@ describe('the head stub marks the page', () => {
 		expect(html.classList.contains('matter-late')).toBe(false);
 		jest.advanceTimersByTime(1);
 		expect(html.classList.contains('matter-late')).toBe(true);
+	});
+
+	it('starts the four seconds at once when the page has already been parsed', () => {
+		jest.useFakeTimers();
+		// No DOMContentLoaded is coming: the script is running after it.
+		const state = jest
+			.spyOn(document, 'readyState', 'get')
+			.mockReturnValue('interactive');
+
+		// eslint-disable-next-line no-eval -- The script PHP prints.
+		window.eval(stubScript());
+
+		const html = document.documentElement;
+
+		expect(html.classList.contains('matter-late')).toBe(false);
+		jest.advanceTimersByTime(4000);
+		expect(html.classList.contains('matter-late')).toBe(true);
+
+		state.mockRestore();
 	});
 });

@@ -19,22 +19,22 @@
 
 // Until the script has started, the active panel only: the server shows them
 // all (and marks the active one `is-active`).
-:where(#{$in-enhanced-front}) .wp-block-matter-tab:not(.is-active) {
+:where(#{in-enhanced-front(tabs)}) .wp-block-matter-tab:not(.is-active) {
 	display: none;
 }
 
 // Not running: no tab list (or the dropdown's button), and a layout without
 // it. Each panel names itself.
-.wp-block-matter-tabs:not(#{$enhanced}) > .wp-block-matter-tabs__list,
-.wp-block-matter-tabs:not(#{$enhanced}) > .wp-block-matter-tabs__nav {
+.wp-block-matter-tabs:not(#{enhanced(tabs)}) > .wp-block-matter-tabs__list,
+.wp-block-matter-tabs:not(#{enhanced(tabs)}) > .wp-block-matter-tabs__nav {
 	display: none;
 }
 
-.wp-block-matter-tabs.is-vertical:not(#{$enhanced}) {
+.wp-block-matter-tabs.is-vertical:not(#{enhanced(tabs)}) {
 	display: block;
 }
 
-.wp-block-matter-tabs:is(#{$enhanced}) .wp-block-matter-tab__label {
+.wp-block-matter-tabs:is(#{enhanced(tabs)}) .wp-block-matter-tab__label {
 	display: none;
 }
 

@@ -11,7 +11,7 @@
 // Hidden for good: a browser without `until-found` (it hides the attribute's
 // content as a plain `hidden`), and before the script's own `hidden`.
 .wp-block-matter-collapsible__content[hidden]:where(:not([hidden="until-found"])),
-.wp-block-matter-collapsible__content:not(.is-open)#{$enhanced-front}:where(:not([hidden="until-found"])) {
+.wp-block-matter-collapsible__content:not(.is-open)#{enhanced-front(overlay)}:where(:not([hidden="until-found"])) {
 	display: none;
 }
 

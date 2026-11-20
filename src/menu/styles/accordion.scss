@@ -22,7 +22,7 @@
 	flex-basis: 100%;
 }
 
-:where(.is-type-accordion#{$enhanced}) .matter-menu__submenu {
+:where(.is-type-accordion#{enhanced(menu)}) .matter-menu__submenu {
 	grid-auto-rows: 0fr;
 	grid-template-rows: 0fr;
 }
@@ -32,7 +32,7 @@
 	overflow: hidden;
 }
 
-:where(.is-type-accordion#{$enhanced} .matter-menu__item.is-open) > .matter-menu__submenu {
+:where(.is-type-accordion#{enhanced(menu)} .matter-menu__item.is-open) > .matter-menu__submenu {
 	grid-auto-rows: 1fr;
 	grid-template-rows: 1fr;
 }
@@ -44,22 +44,22 @@
 }
 
 // Click to open: the toggle replaces the parent link…
-:where(.is-type-accordion.opens-on-click#{$enhanced} .has-submenu:not(.is-column)) > .matter-menu__link {
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)} .has-submenu:not(.is-column)) > .matter-menu__link {
 	display: none;
 }
 
-:where(.is-type-accordion.opens-on-click#{$enhanced}) .matter-menu__toggle-text {
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__toggle-text {
 	display: inline;
 }
 
 // …so the submenu leads with a "View all" link to the parent page (the
 // drill-down header, without its back button and label).
-:where(.is-type-accordion.opens-on-click#{$enhanced}) .matter-menu__submenu-header {
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__submenu-header {
 	display: block;
 }
 
-:where(.is-type-accordion.opens-on-click#{$enhanced}) .matter-menu__back,
-:where(.is-type-accordion.opens-on-click#{$enhanced}) .matter-menu__parent-label {
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__back,
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__parent-label {
 	display: none;
 }
 

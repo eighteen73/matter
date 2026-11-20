@@ -32,16 +32,16 @@
 }
 
 // Submenus stay in the DOM (for transitions) but are hidden until open.
-:where(.matter-menu#{$enhanced}) .matter-menu__submenu {
+:where(.matter-menu#{enhanced(menu)}) .matter-menu__submenu {
 	visibility: hidden;
 }
 
-:where(.matter-menu#{$enhanced} .matter-menu__item.is-open) > .matter-menu__submenu {
+:where(.matter-menu#{enhanced(menu)} .matter-menu__item.is-open) > .matter-menu__submenu {
 	visibility: visible;
 }
 
 // The toggles need the script. High specificity, as any hidden state.
-.matter-menu:not(#{$enhanced}) .matter-menu__toggle {
+.matter-menu:not(#{enhanced(menu)}) .matter-menu__toggle {
 	display: none;
 }
 

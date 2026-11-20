@@ -216,11 +216,15 @@ export function registerType(type, selector) {
 /**
  * Mark a block as running: `is-enhanced`, which the block's CSS hides content
  * behind (so a block whose module fails keeps its content showing). Blocks
- * call it first in `callbacks.init`.
+ * call it first in `callbacks.init`. It also marks the page (`matter-ready-{type}`
+ * on `<html>`): this type's module has run, so a block of the type inserted
+ * later is about to start, and its CSS keeps hiding after `matter-late`.
  *
+ * @param {string}     type     Block type (`accordion`, `menu`).
  * @param {...Element} elements Block root, and anything else that goes with it.
  */
-export function enhance(...elements) {
+export function enhance(type, ...elements) {
+	document.documentElement.classList.add(`matter-ready-${type}`);
 	elements.forEach((element) => element?.classList.add('is-enhanced'));
 }
 

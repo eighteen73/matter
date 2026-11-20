@@ -177,7 +177,7 @@ const { state, actions } = store(
 
 				// The panel and its toggles (the toggles stay hidden until
 				// the panel can open).
-				enhance(ref, ...getToggles(id));
+				enhance('panel', ref, ...getToggles(id));
 
 				// Listeners removed with the block (e.g. by client-side
 				// navigation).

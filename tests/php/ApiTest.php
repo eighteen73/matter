@@ -41,6 +41,8 @@ class ApiTest extends TestCase {
 
 		$this->assertStringContainsString( 'classList.add("matter-js")', $stub );
 		$this->assertStringContainsString( 'classList.add("matter-late")', $stub );
+		// The four seconds start now if the page has been parsed already.
+		$this->assertStringContainsString( 'document.readyState==="loading"', $stub );
 		// Before the early return, so a second stub on the page still marks it.
 		$this->assertLessThan( strpos( $stub, 'if(m.ready)return' ), strpos( $stub, 'matter-js' ) );
 	}

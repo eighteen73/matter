@@ -64,11 +64,12 @@ class Assets {
 	/**
 	 * The first thing Matter's JavaScript does on a page: it adds `matter-js`
 	 * to `<html>` (so CSS can tell "JavaScript is running" from "it isn't"),
-	 * and `matter-late` four seconds after the page is parsed. A block's
-	 * module adds `is-enhanced` to the block when it starts; CSS hides content
+	 * and `matter-late` four seconds after the page is parsed (at once, if the
+	 * script runs after that). A block's module adds `is-enhanced` to the block
+	 * when it starts, and `matter-ready-{type}` to `<html>`; CSS hides content
 	 * only once a block is enhanced, or while it is about to be (`matter-js`
-	 * and not yet `matter-late`), so a module that fails leaves the content
-	 * showing.
+	 * and either not yet `matter-late` or `matter-ready-{type}`), so a module
+	 * that fails leaves the content showing.
 	 *
 	 * It also gives theme scripts a small `window.matter` that works before
 	 * Matter's modules load, or on pages without the block: `matter.ready()` queues
@@ -81,7 +82,7 @@ class Assets {
 	 */
 	public static function api_stub(): string {
 		return sprintf(
-			'(function(m){var h=document.documentElement;h.classList.add("matter-js");document.addEventListener("DOMContentLoaded",function(){setTimeout(function(){h.classList.add("matter-late");},4000);});if(m.ready)return;var s=m[Symbol.for("matter")]={stub:true,queue:[]};m.ready=function(t){return new Promise(function(r){s.queue.push([t,r]);});};window.addEventListener("load",function(){s.queue.splice(0).forEach(function(q){q[1](null);});});%s.forEach(function(t){var f=function(){return null;};f._stub=true;m[t]=f;});})(window.matter=window.matter||{});',
+			'(function(m){var h=document.documentElement,l=function(){setTimeout(function(){h.classList.add("matter-late");},4000);};h.classList.add("matter-js");if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",l);}else{l();}if(m.ready)return;var s=m[Symbol.for("matter")]={stub:true,queue:[]};m.ready=function(t){return new Promise(function(r){s.queue.push([t,r]);});};window.addEventListener("load",function(){s.queue.splice(0).forEach(function(q){q[1](null);});});%s.forEach(function(t){var f=function(){return null;};f._stub=true;m[t]=f;});})(window.matter=window.matter||{});',
 			wp_json_encode( self::API_TYPES )
 		);
 	}

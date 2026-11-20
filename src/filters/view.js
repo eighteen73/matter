@@ -763,7 +763,7 @@ const { state, actions } = store('matter/filters', {
 			const { listing } = getContext();
 			const { ref } = getElement();
 
-			enhance(ref);
+			enhance('filters', ref);
 			elements.set(ref, listing);
 
 			registerInstance('filters', ref, {

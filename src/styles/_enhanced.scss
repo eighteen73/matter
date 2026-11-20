@@ -1,24 +1,44 @@
 // When a block's script is running, or is about to: the CSS that hides content
 // (closed panels, submenus, an off-canvas panel) is only applied then, so a
-// visitor without JavaScript, or whose script failed, gets the content. The
-// head script adds `matter-js` to <html> and, four seconds after the page
-// is parsed, `matter-late`; a block's script adds `is-enhanced` to the block
-// when it starts. "About to" is `matter-js` and not yet `matter-late`: the
-// script has been asked for and has had its allowance, so the content isn't
-// shown only to be hidden a moment later. See "Without JavaScript" in the
-// README.
-// `$enhanced` goes after a block's own selector, for the element that is
-// marked (`.panel#{$enhanced}`); `$in-enhanced` goes in front of a descendant
-// combinator, for anything inside a marked block (`#{$in-enhanced} .item`).
-// Both are specificity-free in :where(), and hold in the block editor
+// visitor without JavaScript, or whose script failed, gets the content.
+
+// The head script adds `matter-js` to <html>, and `matter-late` four seconds
+// after the page is parsed. A block type's script adds `is-enhanced` to the
+// block when it starts, and `matter-ready-{type}` to <html> (it has run on this
+// page, so a block of that type inserted later, by client-side navigation or
+// Live results, is about to start too). "About to" is `matter-js` and either
+// not yet `matter-late`, or `matter-ready-{type}`: the script has been asked for
+// and has had its allowance, or has proved itself, so the content isn't shown
+// only to be hidden a moment later. A type whose script never started
+// (blocked, failed) never gets `matter-ready-{type}`, so after `matter-late`
+// its blocks are plain content again, whatever other types are doing. See
+// "Without JavaScript" in the README.
+// `enhanced($type)` goes after a block's own selector, for the element that is
+// marked (`.panel#{enhanced(panel)}`). It holds in the block editor
 // (`.editor-styles-wrapper`), which shows the enhanced look without running
-// the scripts. The `-front` forms leave the editor out, for rules the editor's
+// the scripts; `enhanced-front` leaves the editor out, for rules the editor's
 // own markup doesn't take part in.
 
-$enhanced: ":is(.is-enhanced, html.matter-js:not(.matter-late) *, .editor-styles-wrapper *)";
-$in-enhanced: ":is(.is-enhanced, html.matter-js:not(.matter-late), .editor-styles-wrapper)";
-$enhanced-front: ":is(.is-enhanced, html.matter-js:not(.matter-late) *)";
-$in-enhanced-front: ":is(.is-enhanced, html.matter-js:not(.matter-late))";
+@function about-to-be($type) {
+	@return "html.matter-js:is(:not(.matter-late), .matter-ready-#{$type})";
+}
+
+@function enhanced($type) {
+	@return ":is(.is-enhanced, #{about-to-be($type)} *, .editor-styles-wrapper *)";
+}
+
+// Temporary: the same for anything inside a marked block.
+@function in-enhanced($type) {
+	@return ":is(.is-enhanced, #{about-to-be($type)}, .editor-styles-wrapper)";
+}
+
+@function in-enhanced-front($type) {
+	@return ":is(.is-enhanced, #{about-to-be($type)})";
+}
+
+@function enhanced-front($type) {
+	@return ":is(.is-enhanced, #{about-to-be($type)} *)";
+}
 
 // A dialog (modal or drawer) that nothing has opened: a link to its #ID, with
 // JavaScript off or a script that didn't start, shows it in the page where it

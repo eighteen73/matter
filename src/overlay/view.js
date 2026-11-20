@@ -489,7 +489,7 @@ const { state, actions } = store('matter/overlay', {
 				return;
 			}
 
-			enhance(getElement().ref);
+			enhance('overlay', getElement().ref);
 			elements.set(id, getElement().ref);
 			registerInstance('overlay', getElement().ref, {
 				element: getElement().ref,

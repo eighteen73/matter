@@ -11,7 +11,7 @@
 
 @use "../../styles/enhanced" as *;
 
-:where(.matter-panel.is-collapsed#{$enhanced}) .matter-panel__content {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}) .matter-panel__content {
 	display: flex;
 	flex-direction: column;
 	inset-block: var(--wp-admin--admin-bar--height, 0) 0;
@@ -23,42 +23,42 @@
 	visibility: hidden;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-from-start) .matter-panel__content {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start) .matter-panel__content {
 	inset-inline: 0 auto;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-from-top) .matter-panel__content {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-top) .matter-panel__content {
 	inset-block: var(--wp-admin--admin-bar--height, 0) auto;
 	inset-inline: 0;
 	max-height: 100dvh;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-open) .matter-panel__content {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-open) .matter-panel__content {
 	visibility: visible;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}) .matter-panel__backdrop {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}) .matter-panel__backdrop {
 	display: block;
 	inset: 0;
 	position: fixed;
 	visibility: hidden;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-open) .matter-panel__backdrop {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-open) .matter-panel__backdrop {
 	visibility: visible;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}) .matter-panel__close {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}) .matter-panel__close {
 	display: inline-flex;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}) .is-inline-only {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}) .is-inline-only {
 	display: none;
 }
 
 // Default skin. The panel slides in (`--_panel-from`: how far off screen) and
 // the backdrop fades.
-:where(.matter-panel.is-collapsed#{$enhanced} .matter-panel__content) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content) {
 	--_panel-from: 100% 0;
 	background: var(--scheme--background, Canvas);
 	color: var(--scheme--text, CanvasText);
@@ -72,24 +72,24 @@
 	z-index: 1000;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-from-start .matter-panel__content, .matter-panel.is-collapsed#{$enhanced} .matter-panel__content:dir(rtl)) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content, .matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content:dir(rtl)) {
 	--_panel-from: -100% 0;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-from-start .matter-panel__content:dir(rtl)) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content:dir(rtl)) {
 	--_panel-from: 100% 0;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-from-top .matter-panel__content) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-top .matter-panel__content) {
 	--_panel-from: 0 -100%;
 	width: 100%;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-open .matter-panel__content) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-open .matter-panel__content) {
 	translate: none;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced} .matter-panel__backdrop) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__backdrop) {
 	background: rgb(0 0 0 / 50%);
 	opacity: 0;
 	transition:
@@ -98,17 +98,17 @@
 	z-index: 999;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced}.is-open .matter-panel__backdrop) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-open .matter-panel__backdrop) {
 	opacity: 1;
 }
 
-:where(.matter-panel.is-collapsed#{$enhanced} .matter-panel__close) {
+:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__close) {
 	align-self: flex-end;
 }
 
 // Last, so it wins over every transition above.
 @media (prefers-reduced-motion: reduce) {
-	:where(.matter-panel.is-collapsed#{$enhanced} .matter-panel__content, .matter-panel.is-collapsed#{$enhanced} .matter-panel__backdrop) {
+	:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content, .matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__backdrop) {
 		transition: none;
 	}
 }

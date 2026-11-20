@@ -27,26 +27,26 @@
 }
 
 // Without JavaScript a submenu is a list under its parent (not beside it).
-:where(.is-type-drill-down:not(#{$enhanced})) .matter-menu__item {
+:where(.is-type-drill-down:not(#{enhanced(menu)})) .matter-menu__item {
 	flex-wrap: wrap;
 }
 
-:where(.is-type-drill-down:not(#{$enhanced})) .matter-menu__submenu {
+:where(.is-type-drill-down:not(#{enhanced(menu)})) .matter-menu__submenu {
 	flex-basis: 100%;
 	padding-inline-start: 1em;
 }
 
 // Parents open their panel; the parent page is linked from its header.
-:where(.is-type-drill-down#{$enhanced} .has-submenu:not(.is-column)) > .matter-menu__link {
+:where(.is-type-drill-down#{enhanced(menu)} .has-submenu:not(.is-column)) > .matter-menu__link {
 	display: none;
 }
 
-:where(.is-type-drill-down#{$enhanced}) .matter-menu__toggle-text {
+:where(.is-type-drill-down#{enhanced(menu)}) .matter-menu__toggle-text {
 	display: inline;
 }
 
 // Submenus slide over the menu from the inline end.
-:where(.is-type-drill-down#{$enhanced}) .matter-menu__submenu {
+:where(.is-type-drill-down#{enhanced(menu)}) .matter-menu__submenu {
 	display: flex;
 	flex-direction: column;
 	inset: 0;
@@ -62,12 +62,12 @@
 	}
 }
 
-:where(.is-type-drill-down#{$enhanced} .matter-menu__item.is-open) > .matter-menu__submenu {
+:where(.is-type-drill-down#{enhanced(menu)} .matter-menu__item.is-open) > .matter-menu__submenu {
 	translate: none;
 }
 
 // Back stays in reach while a long submenu scrolls.
-:where(.is-type-drill-down#{$enhanced}) .matter-menu__submenu-header {
+:where(.is-type-drill-down#{enhanced(menu)}) .matter-menu__submenu-header {
 	align-items: center;
 	display: flex;
 	inset-block-start: 0;

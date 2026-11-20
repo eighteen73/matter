@@ -114,7 +114,7 @@ const { actions } = store('matter/gallery', {
 			const context = getContext();
 			const { ref } = getElement();
 
-			enhance(ref);
+			enhance('gallery', ref);
 			const step = withScope((offset) => {
 				const count = context.images.length;
 

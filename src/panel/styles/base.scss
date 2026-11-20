@@ -20,8 +20,8 @@ html.has-panel-open {
 // Without JavaScript the panel is inline at every width: nothing to open, so no
 // toggle, and what is for the off-canvas panel only doesn't show. (A toggle is
 // marked, as the panel is, when its script starts; see styles/enhanced.)
-.matter-panel-toggle:not(#{$enhanced}),
-:where(.matter-panel:not(#{$enhanced})) .is-panel-only {
+.matter-panel-toggle:not(#{enhanced(panel)}),
+:where(.matter-panel:not(#{enhanced(panel)})) .is-panel-only {
 	display: none;
 }
 
