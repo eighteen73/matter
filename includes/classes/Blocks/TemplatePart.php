@@ -5,7 +5,10 @@
  * Block templates render version-controlled PHP parts (header, footer…) with
  * `<!-- wp:matter/template-part {"slug":"header"} /-->`. A part is any PHP
  * file in the theme's `template-parts/` folder (child theme first); its slug
- * is its path there without `.php`, e.g. `header` or `footer/social`.
+ * is its path there without `.php`, e.g. `header` or `footer/social`. Only
+ * parts with a `Title:` header are listed, and only listed parts render: content
+ * can name any slug, but the theme decides which files are parts. The megamenu
+ * panels (`template-parts/megamenu/`) are not parts of this block.
  *
  * The editor previews a part with the stylesheets its render enqueues (e.g.
  * a menu's or panel's, with their generated breakpoint CSS), which core's
@@ -37,6 +40,13 @@ final class TemplatePart {
 	public const DIRECTORY = 'template-parts';
 
 	/**
+	 * The listed parts (slug => title), per stylesheet, for this request.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private static array $listed = [];
+
+	/**
 	 * Setup hooks.
 	 *
 	 * @return void
@@ -63,7 +73,7 @@ final class TemplatePart {
 					'slug' => [
 						'type'              => 'string',
 						'required'          => true,
-						'validate_callback' => fn( $slug ) => is_string( $slug ) && self::is_valid_slug( $slug ),
+						'validate_callback' => fn( $slug ) => is_string( $slug ) && self::is_listed( $slug ),
 					],
 				],
 			]
@@ -104,10 +114,10 @@ final class TemplatePart {
 	 *
 	 * @param string $slug Part slug.
 	 * @param array  $args Arguments for the part.
-	 * @return string Empty for an invalid or missing part.
+	 * @return string Empty for a part that isn't listed or is missing.
 	 */
 	public static function render( string $slug, array $args = [] ): string {
-		if ( ! self::is_valid_slug( $slug ) || ! locate_template( self::DIRECTORY . "/{$slug}.php" ) ) {
+		if ( ! self::is_listed( $slug ) || ! locate_template( self::DIRECTORY . "/{$slug}.php" ) ) {
 			return '';
 		}
 
@@ -118,12 +128,48 @@ final class TemplatePart {
 	}
 
 	/**
+	 * Whether a slug is a part the theme lists (see all()): the only ones that
+	 * render, in the front end and the editor.
+	 *
+	 * @param string $slug Part slug.
+	 * @return bool
+	 */
+	public static function is_listed( string $slug ): bool {
+		return self::is_valid_slug( $slug ) && array_key_exists( $slug, self::listed() );
+	}
+
+	/**
 	 * Parts offered in the block's settings: files with a `Title:` header,
-	 * sorted by title.
+	 * sorted by title. Not the megamenu panels.
 	 *
 	 * @return array<int, array{slug: string, title: string}>
 	 */
 	public static function all(): array {
+		$parts = self::listed();
+
+		return array_map(
+			fn( $slug, $title ) => [
+				'slug'  => (string) $slug,
+				'title' => (string) $title,
+			],
+			array_keys( $parts ),
+			$parts
+		);
+	}
+
+	/**
+	 * The listed parts (slug => title, by title), found once per request for
+	 * the active theme.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function listed(): array {
+		$key = get_stylesheet();
+
+		if ( isset( self::$listed[ $key ] ) ) {
+			return self::$listed[ $key ];
+		}
+
 		$parts = [];
 
 		// Parent first, so the child theme's file wins for the same slug.
@@ -151,20 +197,21 @@ final class TemplatePart {
 		}
 
 		/**
-		 * Filters the template parts offered in the editor.
+		 * Filters the template parts offered in the editor, and the only ones
+		 * the block renders. Megamenu panels (`megamenu/*`) are removed after.
 		 *
 		 * @param array<string, string> $parts Slug => title.
 		 */
-		$parts = (array) apply_filters( 'matter_template_parts', $parts );
+		$parts = array_filter(
+			(array) apply_filters( 'matter_template_parts', $parts ),
+			fn( $title, $slug ) => ! str_starts_with( (string) $slug, 'megamenu/' ),
+			ARRAY_FILTER_USE_BOTH
+		);
+
 		asort( $parts, SORT_NATURAL | SORT_FLAG_CASE );
 
-		return array_map(
-			fn( $slug, $title ) => [
-				'slug'  => (string) $slug,
-				'title' => (string) $title,
-			],
-			array_keys( $parts ),
-			$parts
-		);
+		self::$listed[ $key ] = array_map( 'strval', $parts );
+
+		return self::$listed[ $key ];
 	}
 }

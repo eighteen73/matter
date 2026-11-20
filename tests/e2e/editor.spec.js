@@ -1081,6 +1081,37 @@ test.describe('archive entry preview', () => {
 	});
 });
 
+test.describe('template part', () => {
+	test('a part the theme doesn\'t list shows the "couldn\'t be shown" placeholder, not an empty block', async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+
+		for (const slug of ['megamenu/x', 'nothing-here']) {
+			await editor.insertBlock({
+				name: 'matter/template-part',
+				attributes: { slug },
+			});
+		}
+
+		await editor.insertBlock({
+			name: 'matter/template-part',
+			attributes: { slug: 'note' },
+		});
+
+		const canvas = editor.canvas;
+
+		await expect(
+			canvas.getByText("This template part couldn't be shown.")
+		).toHaveCount(2);
+		await expect(canvas.getByText('Listed part')).toBeVisible();
+		await expect(canvas.getByText('Panel')).toHaveCount(0);
+		expect(await page.locator('.components-spinner').count()).toBe(0);
+	});
+});
+
 test.describe('accordion', () => {
 	test("“Add item” shows while an item's text is selected, and adds one", async ({
 		admin,
