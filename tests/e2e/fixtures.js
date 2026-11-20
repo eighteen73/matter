@@ -521,12 +521,24 @@ async function setSiteLanguage(requestUtils, locale) {
 		data: { language: locale },
 	});
 
-	return () =>
-		requestUtils.rest({
-			path: '/wp/v2/settings',
-			method: 'POST',
-			data: { language },
-		});
+	return () => resetSiteLanguage(requestUtils, language);
+}
+
+/**
+ * Put the site's language back to English (or another locale). English is
+ * stored as an empty string: `en_US` isn't an installed language, so
+ * WordPress would ignore it.
+ *
+ * @param {Object} requestUtils WordPress request utils.
+ * @param {string} locale       Locale, empty (English) by default.
+ * @return {Promise<void>}
+ */
+async function resetSiteLanguage(requestUtils, locale = '') {
+	await requestUtils.rest({
+		path: '/wp/v2/settings',
+		method: 'POST',
+		data: { language: locale },
+	});
 }
 
 module.exports = {
@@ -548,6 +560,7 @@ module.exports = {
 	emulate,
 	ensureEditorUser,
 	fixture,
+	resetSiteLanguage,
 	resizeThrough,
 	rtl,
 	setSiteLanguage,

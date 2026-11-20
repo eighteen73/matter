@@ -8,7 +8,7 @@ const { promisify } = require('util');
 const { request } = require('@playwright/test');
 const { RequestUtils } = require('@wordpress/e2e-test-utils-playwright');
 const baseSetup = require('@wordpress/scripts/config/playwright/global-setup.js');
-const { ensureEditorUser } = require('./fixtures');
+const { ensureEditorUser, resetSiteLanguage } = require('./fixtures');
 
 const run = promisify(execFile);
 
@@ -60,6 +60,8 @@ module.exports = async (config) => {
 	await requestUtils.setupRest();
 	await requestUtils.activateTheme('matter-test-theme');
 	await ensureEditorUser(requestUtils);
+	// A run that stopped midway can leave the site in another language.
+	await resetSiteLanguage(requestUtils);
 	await context.dispose();
 
 	await installArabic();
