@@ -149,13 +149,15 @@ class Overlay {
 			$attributes['dismissDays'] = 0;
 		}
 
+		$dismissible = ! isset( $attributes['dismissible'] ) || ! empty( $attributes['dismissible'] );
+
 		self::register(
 			$id,
 			array_merge(
 				$attributes,
 				[
 					'group'       => $group,
-					'dismissible' => 'collapsible' === $type || ! isset( $attributes['dismissible'] ) || ! empty( $attributes['dismissible'] ),
+					'dismissible' => 'collapsible' === $type || $dismissible,
 				]
 			)
 		);
@@ -184,7 +186,6 @@ class Overlay {
 			);
 		}
 
-		$dismissible = ! isset( $attributes['dismissible'] ) || ! empty( $attributes['dismissible'] );
 		$label       = trim( (string) ( $attributes['label'] ?? '' ) );
 		$name        = '';
 
