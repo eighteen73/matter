@@ -82,6 +82,10 @@ class Archives {
 		add_filter( 'rest_request_after_callbacks', [ $this, 'hide_from_post_type_list' ], 10, 3 );
 		// After the theme's list (AllowedBlocks, 10) and the query blocks (20).
 		add_filter( 'allowed_block_types_all', [ $this, 'allow_archive_loop' ], 30, 2 );
+		// Addresses are worked out once a request (Target::url()).
+		foreach ( [ 'update_option_page_for_posts', 'update_option_show_on_front', 'update_option_permalink_structure', 'switch_blog' ] as $hook ) {
+			add_action( $hook, [ Target::class, 'flush_urls' ] );
+		}
 
 		Admin::instance()->setup();
 	}
@@ -378,6 +382,38 @@ class Archives {
 	}
 
 	/**
+	 * What shows around the list on page 2 and later: the archive's title
+	 * (the page's one H1) and the list, without the entry's intro, which
+	 * belongs to the first page. The entry's own first section can hold the
+	 * H1, so none of it is reused.
+	 *
+	 * @param Target $target Archive.
+	 * @return string
+	 */
+	public function paged_content( Target $target ): string {
+		$content = implode(
+			"\n\n",
+			[
+				'<!-- wp:heading {"level":1,"metadata":{"bindings":{"content":{"source":"matter/archive","args":{"key":"title"}}}}} -->',
+				'<h1 class="wp-block-heading"></h1>',
+				'<!-- /wp:heading -->',
+				'<!-- wp:matter/archive-loop /-->',
+			]
+		);
+
+		/**
+		 * Filters the content shown around an archive's list on page 2 and
+		 * later, in place of its entry's (or the default) content. Keep to a
+		 * title and `<!-- wp:matter/archive-loop /-->`: the page needs one H1,
+		 * and the first page's intro would repeat on every page.
+		 *
+		 * @param string $content Block markup.
+		 * @param Target $target  The archive.
+		 */
+		return (string) apply_filters( 'matter_archive_paged_content', $content, $target );
+	}
+
+	/**
 	 * The entry a preview asks for (`preview=true&preview_id=<ID>`), if the user
 	 * may edit it: as core shows a draft to someone who can edit it, with or
 	 * without a nonce.
@@ -442,7 +478,14 @@ class Archives {
 		}
 
 		$preview = $this->preview_entry();
-		$content = $preview ? $preview->post_content : $this->content_for( $target );
+
+		if ( $preview ) {
+			$content = $preview->post_content;
+		} elseif ( is_paged() ) {
+			$content = $this->paged_content( $target );
+		} else {
+			$content = $this->content_for( $target );
+		}
 
 		// A draft is for one person: keep it out of shared caches.
 		if ( $preview && ! headers_sent() ) {

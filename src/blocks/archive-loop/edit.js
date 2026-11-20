@@ -38,7 +38,10 @@ export default function Edit() {
 	// (editor/canvas.scss).
 	const blockProps = useBlockProps({
 		className: 'alignfull matter-has-hint',
-		'data-matter-hint': __('Archive list · set by the theme', 'matter'),
+		'data-matter-hint': __(
+			'Archive list · a preview, set by the theme',
+			'matter'
+		),
 	});
 
 	return (

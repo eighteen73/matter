@@ -292,11 +292,51 @@ final readonly class Target {
 	}
 
 	/**
-	 * The archive's address (a taxonomy uses its busiest term).
+	 * The archive's address (a taxonomy uses its busiest term), worked out
+	 * once per request (several screens ask for each, and an author's or a
+	 * year's takes a query).
 	 *
 	 * @return string|null
 	 */
 	public function url(): ?string {
+		$cache = &self::url_cache();
+		$key   = $this->key();
+
+		if ( ! array_key_exists( $key, $cache ) ) {
+			$cache[ $key ] = $this->work_out_url();
+		}
+
+		return $cache[ $key ];
+	}
+
+	/**
+	 * Forget the addresses worked out (when what they depend on changes).
+	 *
+	 * @return void
+	 */
+	public static function flush_urls(): void {
+		$cache = &self::url_cache();
+		$cache = [];
+	}
+
+	/**
+	 * The addresses worked out this request, by target. (A static variable:
+	 * a readonly class can't have static properties.)
+	 *
+	 * @return array<string, string|null>
+	 */
+	private static function &url_cache(): array {
+		static $cache = [];
+
+		return $cache;
+	}
+
+	/**
+	 * The archive's address, without the cache.
+	 *
+	 * @return string|null
+	 */
+	private function work_out_url(): ?string {
 		if ( 'post_type' === $this->type ) {
 			if ( 'post' === $this->name ) {
 				$page = (int) get_option( 'page_for_posts' );
@@ -402,9 +442,16 @@ final readonly class Target {
 	 */
 	public function query_args(): ?array {
 		$args = [
-			'post_type'   => $this->post_type() ?? 'post',
-			'post_status' => 'publish',
+			'post_type'      => $this->post_type() ?? 'post',
+			'post_status'    => 'publish',
+			// A page of the list, as the front end lists it (the template's
+			// own page size isn't known here).
+			'posts_per_page' => max( 1, (int) get_option( 'posts_per_page', 10 ) ),
 		];
+
+		if ( 'search' === $this->type ) {
+			$args['s'] = $this->sample_search();
+		}
 
 		if ( in_array( $this->type, [ 'term', 'taxonomy' ], true ) ) {
 			$term = $this->term();
@@ -436,6 +483,29 @@ final readonly class Target {
 		}
 
 		return '404' === $this->type ? null : $args;
+	}
+
+	/**
+	 * Something to search for, for the search preview: a word from the
+	 * newest post's title, so there are results to show.
+	 *
+	 * @return string
+	 */
+	private function sample_search(): string {
+		$posts = get_posts(
+			[
+				'numberposts'   => 1,
+				'no_found_rows' => true,
+			]
+		);
+
+		foreach ( preg_split( '/\W+/u', (string) ( $posts[0]->post_title ?? '' ), -1, PREG_SPLIT_NO_EMPTY ) ?: [] as $word ) {
+			if ( mb_strlen( $word ) >= 3 ) {
+				return $word;
+			}
+		}
+
+		return 'a';
 	}
 
 	/**

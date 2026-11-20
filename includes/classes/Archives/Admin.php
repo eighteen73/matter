@@ -124,7 +124,7 @@ class Admin {
 					// until the client saves, and an abandoned one is
 					// cleaned up.
 					'post_status'  => 'auto-draft',
-					'post_title'   => $target->label(),
+					'post_title'   => wp_slash( $target->label() ),
 					'post_content' => wp_slash( $copy ? $copy->post_content : $archives->content_for( $target ) ),
 					'meta_input'   => [ Archives::META => $target->key() ],
 				],

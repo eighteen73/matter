@@ -724,4 +724,149 @@ class ArchivesTest extends TestCase {
 		$this->assertNull( Archives::instance()->resolve( new Target( 'author' ) ) );
 		$this->assertStringNotContainsString( (string) $protected, (string) Archives::instance()->content_for( new Target( 'author' ) ) );
 	}
+
+	/**
+	 * Page 2 and later show the archive's title and the list, not the entry's
+	 * intro (whose first section can hold the H1): one H1, no intro. Page 1,
+	 * and a preview, keep the entry.
+	 *
+	 * @return void
+	 */
+	public function test_paged_archives_show_a_title_and_the_list_only(): void {
+		update_option( 'posts_per_page', 1 );
+		self::factory()->post->create_many( 3, [ 'post_title' => 'Hello there' ] );
+
+		$this->entry( 'search' );
+		wp_update_post(
+			[
+				'ID'           => $this->entry( 'search', false, '2026-03-01 00:00:00' ),
+				'post_content' => '<!-- wp:heading {"level":1} --><h1>Custom intro heading</h1><!-- /wp:heading --><!-- wp:matter/archive-loop /-->',
+			]
+		);
+		( new ReflectionProperty( Archives::class, 'resolved' ) )->setValue( Archives::instance(), [] );
+
+		$render = fn() => Archives::instance()->render( '<ul class="list"><li>Post</li></ul>' );
+
+		$this->go_to( home_url( '/?s=hello' ) );
+		$first = $render();
+
+		$this->assertStringContainsString( 'Custom intro heading', $first );
+
+		$this->go_to( home_url( '/?s=hello&paged=2' ) );
+		$this->assertTrue( is_paged() );
+
+		$paged = $render();
+
+		$this->assertSame( 1, substr_count( $paged, '<h1' ), 'one H1' );
+		$this->assertStringNotContainsString( 'Custom intro heading', $paged );
+		$this->assertStringContainsString( 'Search results for', $paged );
+		$this->assertStringContainsString( '<li>Post</li>', $paged );
+
+		// Themes can change it.
+		add_filter( 'matter_archive_paged_content', fn() => '<!-- wp:matter/archive-loop /-->' );
+		$this->assertStringNotContainsString( '<h1', $render() );
+		remove_all_filters( 'matter_archive_paged_content' );
+
+		$this->go_to( '/' );
+	}
+
+	/**
+	 * Customising an archive whose title has a backslash keeps it.
+	 *
+	 * @return void
+	 */
+	public function test_a_new_entrys_title_keeps_backslashes(): void {
+		$term = self::factory()->category->create( [ 'name' => wp_slash( 'Back\\slash' ) ] );
+
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+		$_GET = [
+			'action'   => 'matter_archive_customise',
+			'target'   => 'term:category:' . $term,
+			'_wpnonce' => wp_create_nonce( 'matter_archive_customise' ),
+		];
+		$_REQUEST = $_GET;
+
+		add_filter(
+			'wp_redirect',
+			function ( $location ) {
+				throw new \RuntimeException( 'redirected' );
+			}
+		);
+
+		try {
+			\Eighteen73\Matter\Archives\Admin::instance()->customise();
+		} catch ( \RuntimeException ) {
+			// Redirected to the editor.
+		}
+
+		remove_all_filters( 'wp_redirect' );
+
+		$_GET     = [];
+		$_REQUEST = [];
+
+		$found = get_posts(
+			[
+				'post_type'   => Archives::POST_TYPE,
+				'post_status' => 'auto-draft',
+				'meta_key'    => Archives::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Test.
+				'meta_value'  => 'term:category:' . $term, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Test.
+			]
+		);
+		$entry = $found[0] ?? null;
+
+		wp_set_current_user( 0 );
+
+		$this->assertNotNull( $entry );
+		$this->assertSame( 'Back\\slash (Categories)', $entry->post_title );
+	}
+
+	/**
+	 * An archive's address is worked out once a request, until what it
+	 * depends on changes.
+	 *
+	 * @return void
+	 */
+	public function test_an_archives_address_is_cached_for_the_request(): void {
+		$page = self::factory()->post->create(
+			[
+				'post_type'  => 'page',
+				'post_title' => 'Journal',
+			]
+		);
+
+		Target::flush_urls();
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_for_posts', $page );
+
+		$posts = new Target( 'post_type', 'post' );
+		$first = $posts->url();
+
+		$this->assertSame( get_permalink( $page ), $first );
+
+		// The cached address is used (a later change that doesn't announce
+		// itself isn't seen), and the options flush it.
+		$queries = get_num_queries();
+		$posts->url();
+		$this->assertSame( $queries, get_num_queries() );
+
+		update_option( 'page_for_posts', 0 );
+		$this->assertNull( $posts->url() );
+	}
+
+	/**
+	 * The editor's search preview lists matching posts, a page at a time.
+	 *
+	 * @return void
+	 */
+	public function test_the_search_preview_applies_a_search_and_a_page_size(): void {
+		update_option( 'posts_per_page', 7 );
+		self::factory()->post->create( [ 'post_title' => 'Quokkas everywhere' ] );
+
+		$args = ( new Target( 'search' ) )->query_args();
+
+		$this->assertSame( 'Quokkas', $args['s'] );
+		$this->assertSame( 7, $args['posts_per_page'] );
+		$this->assertNotEmpty( ( new \WP_Query( $args ) )->posts );
+	}
 }

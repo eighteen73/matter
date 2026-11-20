@@ -565,6 +565,8 @@ Whether a term's or post type archive's entry also shows further down is the ent
 
 **Default content.** Filter `matter_archive_default_content( $content, $target )` with block markup; it's also where a customised entry starts.
 
+**Page 2 and later.** An entry's intro belongs to the first page (its first section may hold the H1), so on a paged archive Matter shows only the archive's title as the page's one H1, then the list. Filter `matter_archive_paged_content( $content, $target )` to change it.
+
 **Bindings.** `matter/archive` gives the archive's `title`, `description`, `count` and `image` (a term's `thumbnail_id`), so one layout serves every term. For author and date archives the title is WordPress's own (`get_the_archive_title()`, e.g. "Author: Ada", "Year: 2026"), and an author's description is their biography:
 
 ```json
@@ -981,6 +983,7 @@ Every hook Matter fires, with its arguments, except the [Filters](#filters), [Li
 | Hook | Arguments and what it does |
 | --- | --- |
 | `matter_archive_default_content` | `string $content, Target $target`: the content of an archive without an entry. `Target` is `Eighteen73\Matter\Archives\Target`. |
+| `matter_archive_paged_content` | `string $content, Target $target`: the content around the list on page 2 and later, in place of the entry's. Default: the archive's title as the H1, then the list. |
 | `matter_archive_term_image_id` | `int $image, ?WP_Term $term`: a term archive's image (attachment ID). |
 | `matter_archive_post_type_title` | `?string $title, string $post_type`: a post type archive's title; null works it out. |
 
