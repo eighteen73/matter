@@ -304,4 +304,43 @@ class IdsTest extends TestCase {
 		$this->assertSame( 1, substr_count( $panel, 'id="site-nav"' ) );
 		$this->assertSame( 1, substr_count( $panel, 'id="site-nav-2"' ) );
 	}
+
+	/**
+	 * A panel rendered twice, with its toggle before it each time (a template
+	 * part used in two places): each toggle controls its own panel.
+	 *
+	 * @return void
+	 */
+	public function test_toggles_follow_a_panel_rendered_twice(): void {
+		$html = '';
+
+		foreach ( [ 1, 2 ] as $ignored ) {
+			$html .= \Eighteen73\Matter\get_panel_toggle( 'site-nav', [ 'collapse_below' => 'lg' ] );
+			$html .= \Eighteen73\Matter\get_panel( 'site-nav', 'Menu', [ 'collapse_below' => 'lg' ] );
+		}
+
+		preg_match_all( '/aria-controls="([^"]+)"/', $html, $controls );
+		preg_match_all( '/<div id="([^"]+)" class="matter-panel/', $html, $panels );
+
+		$this->assertSame( [ 'site-nav', 'site-nav-2' ], $panels[1] );
+		$this->assertSame( [ 'site-nav', 'site-nav-2' ], $controls[1] );
+	}
+
+	/**
+	 * Toggles with no panel between them share one, and a toggle after its
+	 * panel controls it.
+	 *
+	 * @return void
+	 */
+	public function test_toggles_share_a_panel_and_can_follow_it(): void {
+		$html  = \Eighteen73\Matter\get_panel_toggle( 'a' );
+		$html .= \Eighteen73\Matter\get_panel_toggle( 'a' );
+		$html .= \Eighteen73\Matter\get_panel( 'a', 'Menu' );
+		$html .= \Eighteen73\Matter\get_panel( 'b', 'Menu' );
+		$html .= \Eighteen73\Matter\get_panel_toggle( 'b' );
+
+		preg_match_all( '/aria-controls="([^"]+)"/', $html, $controls );
+
+		$this->assertSame( [ 'a', 'a', 'b' ], $controls[1] );
+	}
 }
