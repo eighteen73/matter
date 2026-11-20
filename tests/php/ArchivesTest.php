@@ -508,6 +508,10 @@ class ArchivesTest extends TestCase {
 			'the type'        => [ '/?post_type=matter_archive' ],
 			'the type, paged' => [ '/?post_type=matter_archive&paged=2' ],
 			'its feed'        => [ '/?post_type=matter_archive&feed=rss2' ],
+			'its atom feed'   => [ '/?post_type=matter_archive&feed=atom' ],
+			'the main feed'   => [ '/feed/?post_type=matter_archive' ],
+			'a mixed feed'    => [ '/?post_type[]=matter_archive&post_type[]=post&feed=rss2' ],
+			'a searched feed' => [ '/?post_type=matter_archive&feed=rss2&s=entry' ],
 			'a list of types' => [ '/?post_type[]=matter_archive&post_type[]=post' ],
 			'a draft by ID'   => [ '/?p={draft}&post_type=matter_archive' ],
 			'a draft, no type' => [ '/?p={draft}' ],
@@ -530,6 +534,7 @@ class ArchivesTest extends TestCase {
 			[
 				'post_type'   => Archives::POST_TYPE,
 				'post_status' => 'draft',
+				'post_title'  => 'Entry draft',
 				'post_name'   => 'a-draft',
 				'meta_input'  => [ Archives::META => 'author' ],
 			]
@@ -539,8 +544,46 @@ class ArchivesTest extends TestCase {
 		Archives::instance()->deny_listing();
 
 		$this->assertTrue( is_404(), $url );
+
+		// Nothing of an entry is left in the main query, which a feed or a
+		// theme's 404 or search template would list.
+		$this->assertSame( [], array_filter( $GLOBALS['wp_query']->posts, fn( $post ) => Archives::POST_TYPE === $post->post_type ), $url );
+
+		if ( str_contains( $url, 'feed' ) ) {
+			ob_start();
+			@do_feed(); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- The feed sends headers, which the test run has already sent.
+			$feed = ob_get_clean();
+			$this->assertStringNotContainsString( '<item>', $feed, $url );
+			$this->assertStringNotContainsString( 'Entry draft', $feed, $url );
+		}
+
 		$this->assertFalse( is_home() );
 		$this->assertFalse( is_post_type_archive() );
+
+		$this->go_to( '/' );
+	}
+
+	/**
+	 * A search plugin that puts an entry in the main query doesn't make the
+	 * page a 404: the entry is dropped, and the rest is shown.
+	 *
+	 * @return void
+	 */
+	public function test_an_entry_in_the_main_query_is_dropped(): void {
+		$entry = get_post( $this->entry( 'date' ) );
+		$post  = get_post( self::factory()->post->create() );
+
+		$this->go_to( '/?s=anything' );
+
+		$kept = Archives::instance()->keep_entries_out_of_the_page( [ $entry, $post ], $GLOBALS['wp_query'] );
+
+		$this->assertSame( [ $post ], $kept );
+
+		Archives::instance()->deny_listing();
+		$this->assertFalse( is_404() );
+
+		// Another query keeps them (the admin's lists, the editor's REST).
+		$this->assertSame( [ $entry, $post ], Archives::instance()->keep_entries_out_of_the_page( [ $entry, $post ], new \WP_Query() ) );
 
 		$this->go_to( '/' );
 	}
@@ -644,7 +687,7 @@ class ArchivesTest extends TestCase {
 	 * @return void
 	 */
 	public function test_a_password_protected_entry_is_skipped(): void {
-		$open = $this->entry( 'author', false, '2026-01-01 00:00:00' );
+		$this->entry( 'author', false, '2026-01-01 00:00:00' );
 
 		$protected = self::factory()->post->create(
 			[
@@ -656,12 +699,9 @@ class ArchivesTest extends TestCase {
 			]
 		);
 
-		$this->assertSame( $open, Archives::instance()->resolve( new Target( 'author' ) )?->ID );
-		$this->assertStringNotContainsString( (string) $protected, (string) Archives::instance()->content_for( new Target( 'author' ) ) );
-
-		wp_update_post( [ 'ID' => $open, 'post_status' => 'draft' ] ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
-		( new ReflectionProperty( Archives::class, 'resolved' ) )->setValue( Archives::instance(), [] );
-
+		// The newest is protected: the archive has no entry (the default
+		// content), not an older one the editor replaced.
 		$this->assertNull( Archives::instance()->resolve( new Target( 'author' ) ) );
+		$this->assertStringNotContainsString( (string) $protected, (string) Archives::instance()->content_for( new Target( 'author' ) ) );
 	}
 }

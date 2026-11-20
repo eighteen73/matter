@@ -39,6 +39,7 @@
 
 namespace Eighteen73\Matter\Blocks;
 
+use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Live\Live;
 use Eighteen73\Matter\Singleton;
 use WP_Block;
@@ -247,7 +248,13 @@ final class LoopItem {
 	public static function can_preview( int $post_id ): bool {
 		$type = get_post_type( $post_id );
 
-		return $type && is_post_type_viewable( $type ) && current_user_can( 'read_post', $post_id );
+		// Not archive entries (their titles and excerpts are for editors), nor
+		// protected posts, which the preview would show to anyone who may read.
+		return $type
+			&& Archives::POST_TYPE !== $type
+			&& '' === (string) get_post_field( 'post_password', $post_id )
+			&& is_post_type_viewable( $type )
+			&& current_user_can( 'read_post', $post_id );
 	}
 
 	/**

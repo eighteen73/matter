@@ -73,6 +73,7 @@ class Archives {
 		add_action( 'init', [ $this, 'register_bindings_source' ] );
 		add_action( 'template_redirect', [ $this, 'redirect_single' ], 9 );
 		add_action( 'template_redirect', [ $this, 'deny_listing' ], 9 );
+		add_filter( 'posts_results', [ $this, 'keep_entries_out_of_the_page' ], 10, 2 );
 		add_filter( 'wp_sitemaps_post_types', [ $this, 'leave_out_of_sitemap' ] );
 		add_filter( 'post_type_link', [ $this, 'permalink' ], 10, 2 );
 		add_filter( 'preview_post_link', [ $this, 'preview_link' ], 10, 2 );
@@ -266,10 +267,6 @@ class Archives {
 			]
 		);
 
-		// A password-protected entry would show to everyone: it isn't a
-		// public page to hold back, and an archive has no password form.
-		$posts = array_filter( $posts, fn( WP_Post $post ) => '' === $post->post_password );
-
 		$this->resolved[ $key ] = null;
 
 		foreach ( $target->chain() as $index => $candidate ) {
@@ -279,7 +276,10 @@ class Archives {
 				array_filter( $posts, fn( WP_Post $post ) => get_post_meta( $post->ID, self::META, true ) === $candidate->key() )
 			);
 
-			if ( ! $entry ) {
+			// A password-protected entry would show to everyone (an archive has
+			// no password form). It's skipped after the newest is picked, so a
+			// protected newest entry doesn't bring back an older one.
+			if ( ! $entry || '' !== $entry->post_password ) {
 				continue;
 			}
 
@@ -804,6 +804,24 @@ class Archives {
 	}
 
 	/**
+	 * Entries never reach the front end's main query, so they can't reach a
+	 * feed or a loop in a theme's 404 or search template. A 404 only resets
+	 * the query's flags: its posts stay, and `do_feed()` runs after the
+	 * redirects. An entry someone may preview is kept.
+	 *
+	 * @param WP_Post[] $posts Results.
+	 * @param WP_Query  $query The query.
+	 * @return WP_Post[]
+	 */
+	public function keep_entries_out_of_the_page( $posts, $query ) {
+		if ( is_admin() || ! $query instanceof WP_Query || ! $query->is_main_query() || ! is_array( $posts ) || null !== $this->requested_entry() ) {
+			return $posts;
+		}
+
+		return array_values( array_filter( $posts, fn( $post ) => ! ( $post instanceof WP_Post && self::POST_TYPE === $post->post_type ) ) );
+	}
+
+	/**
 	 * Entries can't be listed: a request for the post type that isn't a
 	 * single entry (redirected to its archive above) is a 404, whatever form
 	 * it takes (`?post_type=matter_archive`, its feed, `?p=<ID>` of an entry
@@ -819,10 +837,10 @@ class Archives {
 			return;
 		}
 
-		$asked = in_array( self::POST_TYPE, (array) $wp_query->get( 'post_type' ), true );
-		$found = array_filter( (array) $wp_query->posts, fn( $post ) => $post instanceof WP_Post && self::POST_TYPE === $post->post_type );
-
-		if ( ! $asked && ! $found ) {
+		// Entries are already out of the main query's posts (above), so only a
+		// request that asks for the type is a 404: a search plugin that adds
+		// one to the results doesn't 404 the page.
+		if ( ! in_array( self::POST_TYPE, (array) $wp_query->get( 'post_type' ), true ) ) {
 			return;
 		}
 

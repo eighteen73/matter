@@ -1326,7 +1326,9 @@ test.describe('archive entries are not pages, logged out', () => {
 
 	test.beforeAll(async ({ requestUtils }) => {
 		await deleteArchiveEntries(requestUtils);
-		published = await createArchiveEntry(requestUtils, 'search');
+		published = await createArchiveEntry(requestUtils, 'search', {
+			title: 'Entry title that must not leak',
+		});
 		draft = await createArchiveEntry(requestUtils, 'date', {
 			status: 'draft',
 		});
@@ -1353,6 +1355,23 @@ test.describe('archive entries are not pages, logged out', () => {
 			await expect(page.locator('body'), path).not.toHaveClass(
 				/\bblog\b/
 			);
+		}
+
+		// A feed is a 404 with no entry in it: nothing in the body to read.
+		for (const path of [
+			'/?post_type=matter_archive&feed=rss2',
+			'/?post_type=matter_archive&feed=atom',
+			'/feed/?post_type=matter_archive',
+			'/?post_type[]=matter_archive&post_type[]=post&feed=rss2',
+			'/?post_type=matter_archive&feed=rss2&s=entry',
+		]) {
+			const feed = await request.get(path);
+			const body = await feed.text();
+
+			expect(feed.status(), path).toBe(404);
+			expect(body, path).not.toContain('<item>');
+			expect(body, path).not.toContain('<entry>');
+			expect(body, path).not.toContain('Entry title that must not leak');
 		}
 
 		// A published entry's own address goes to its archive.

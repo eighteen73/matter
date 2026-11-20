@@ -51,6 +51,34 @@ class PreviewsTest extends TestCase {
 	}
 
 	/**
+	 * A published archive entry, and a password-protected post, aren't
+	 * previewed: an author could read their title, link and excerpt.
+	 *
+	 * @return void
+	 */
+	public function test_loop_items_leave_out_entries_and_protected_posts(): void {
+		$post      = self::factory()->post->create( [ 'post_title' => 'Visible post' ] );
+		$entry     = self::factory()->post->create(
+			[
+				'post_type'   => 'matter_archive',
+				'post_status' => 'publish',
+				'post_title'  => 'An entry',
+			]
+		);
+		$protected = self::factory()->post->create(
+			[
+				'post_title'    => 'Protected post',
+				'post_password' => 'secret',
+			]
+		);
+
+		$request = new WP_REST_Request( 'GET', '/matter/v1/loop-items' );
+		$request->set_param( 'ids', [ $post, $entry, $protected ] );
+
+		$this->assertSame( [ $post ], array_column( rest_get_server()->dispatch( $request )->get_data(), 'id' ) );
+	}
+
+	/**
 	 * Term previews: terms of viewable taxonomies only, rendered as the
 	 * theme's term loop item; anyone who can't edit posts gets nothing.
 	 *
