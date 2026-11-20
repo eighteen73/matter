@@ -168,6 +168,23 @@ class SectionsTest extends TestCase {
 	}
 
 	/**
+	 * Thousands of markers that are never closed don't each rescan the rest of
+	 * the content: the scan stays linear, and a slot after them is found.
+	 *
+	 * @return void
+	 */
+	public function test_many_unclosed_markers_are_scanned_once(): void {
+		$content = str_repeat( '<!--matter-slot:stray--><p>x</p>', 20000 ) . Sections::mark_slot( 'content', '<p>Real</p>' );
+
+		$started = microtime( true );
+		$slots   = Sections::slots( $content );
+		$elapsed = microtime( true ) - $started;
+
+		$this->assertSame( [ 'content' => '<p>Real</p>' ], $slots );
+		$this->assertLessThan( 0.5, $elapsed, 'the scan took ' . round( $elapsed, 2 ) . ' s' );
+	}
+
+	/**
 	 * A slot name other than letters, numbers, hyphens and underscores can't
 	 * be matched by its marker, so declaring one is reported.
 	 *

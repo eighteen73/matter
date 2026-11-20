@@ -480,6 +480,11 @@ class Sections {
 		$found  = [];
 		$pos    = 0;
 
+		// Names with no closing marker after a point have none after a later
+		// one, so they're not searched for again (thousands of stray markers
+		// would otherwise each scan to the end).
+		$unclosed = [];
+
 		while ( true ) {
 			$start = strpos( $content, $prefix, $pos );
 
@@ -497,7 +502,7 @@ class Sections {
 			$name = substr( $content, $name_at, $end - $name_at );
 			$pos  = $name_at;
 
-			if ( ! preg_match( '/^[\w-]+$/', $name ) ) {
+			if ( ! preg_match( '/^[\w-]+$/', $name ) || isset( $unclosed[ $name ] ) ) {
 				continue;
 			}
 
@@ -512,6 +517,7 @@ class Sections {
 				$next_close = strpos( $content, $close, $cursor );
 
 				if ( false === $next_close ) {
+					$unclosed[ $name ] = true;
 					break;
 				}
 
