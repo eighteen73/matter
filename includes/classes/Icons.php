@@ -24,12 +24,37 @@ class Icons {
 	use Singleton;
 
 	/**
+	 * Whether the theme's icons are registered.
+	 *
+	 * @var bool
+	 */
+	private bool $registered = false;
+
+	/**
 	 * Setup hooks.
+	 *
+	 * Registering reads a folder of SVG files, so it happens where icons are
+	 * used: the editor (the admin, and the REST requests it makes for the icon
+	 * library) and on the first icon rendered (see render()). A page without
+	 * icons doesn't pay for it.
 	 *
 	 * @return void
 	 */
 	public function setup(): void {
-		add_action( 'init', [ $this, 'register_theme_icons' ] );
+		if ( is_admin() ) {
+			add_action( 'init', [ $this, 'register_theme_icons' ] );
+		}
+
+		// Only a REST request of its own: a page can run internal ones (a cart
+		// block's, say) that don't need icons.
+		add_action(
+			'rest_api_init',
+			function (): void {
+				if ( wp_is_serving_rest_request() ) {
+					$this->register_theme_icons();
+				}
+			}
+		);
 	}
 
 	/**
@@ -38,6 +63,12 @@ class Icons {
 	 * @return void
 	 */
 	public function register_theme_icons(): void {
+		if ( $this->registered ) {
+			return;
+		}
+
+		$this->registered = true;
+
 		if ( ! function_exists( 'wp_register_icon_collection' ) || ! function_exists( 'wp_register_icon' ) ) {
 			return;
 		}
@@ -141,6 +172,8 @@ class Icons {
 		if ( '' === $name || ! function_exists( 'wp_get_icon' ) ) {
 			return '';
 		}
+
+		self::instance()->register_theme_icons();
 
 		$svg = (string) wp_get_icon( $name, [ 'size' => null ] );
 

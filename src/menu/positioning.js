@@ -62,10 +62,10 @@ const getViewportRect = () => {
 	return { top: 0, left: 0, right: width, bottom: height, width, height };
 };
 
-const getBoundary = (element) => {
+const getBoundary = (ancestors) => {
 	let rect = getViewportRect();
 
-	getClippingAncestors(element).forEach((ancestor) => {
+	ancestors.forEach((ancestor) => {
 		const ancestorRect = ancestor.getBoundingClientRect();
 		const top = Math.max(rect.top, ancestorRect.top);
 		const left = Math.max(rect.left, ancestorRect.left);
@@ -86,10 +86,16 @@ const getBoundary = (element) => {
 const clamp = (value, min, max) =>
 	max < min ? min : Math.min(Math.max(value, min), max);
 
-const reset = (submenu) => {
-	Object.values(CLASSES).forEach((className) =>
-		submenu.classList.remove(className)
-	);
+// Placement is cleared to measure the submenu where the stylesheet puts it. A
+// submenu that is already showing keeps `is-positioned` while it's measured
+// again: dropping it would restart its fade (the measuring forces a style
+// recalculation), and the panel would flicker on every scroll.
+const reset = (submenu, keepPositioned = false) => {
+	Object.values(CLASSES).forEach((className) => {
+		if (!keepPositioned || className !== CLASSES.positioned) {
+			submenu.classList.remove(className);
+		}
+	});
 	Object.values(PROPERTIES).forEach((property) =>
 		submenu.style.removeProperty(property)
 	);
@@ -114,20 +120,21 @@ const capHeight = (submenu, rect, boundary, offsetY) => {
 /**
  * Position one open submenu.
  *
- * @param {Element} item       Menu item owning the submenu.
- * @param {Element} navigation The menu's <nav>.
+ * @param {Element}   item        Menu item owning the submenu.
+ * @param {Element}   navigation  The menu's <nav>.
+ * @param {Element[]} [ancestors] The submenu's clipping ancestors, if already known.
  */
-export const positionSubmenu = (item, navigation) => {
+export const positionSubmenu = (item, navigation, ancestors) => {
 	const submenu = item.querySelector(SUBMENU);
 
 	if (!submenu) {
 		return;
 	}
 
-	reset(submenu);
+	reset(submenu, submenu.classList.contains(CLASSES.positioned));
 	submenu.classList.add(MEASURING);
 
-	const boundary = getBoundary(submenu);
+	const boundary = getBoundary(ancestors ?? getClippingAncestors(submenu));
 	const isMegamenu = item.classList.contains('is-megamenu');
 
 	if (isMegamenu) {
@@ -211,7 +218,26 @@ export const positionSubmenu = (item, navigation) => {
 };
 
 /**
+ * What a placement depends on, besides the clipping ancestors (found once,
+ * when the submenu opens): where the item is, and the size of the viewport.
+ *
+ * @param {Element} item Menu item owning the submenu.
+ * @return {string} A value that changes when the placement may need to change.
+ */
+const getSignature = (item) => {
+	const { left, top, width, height } = item.getBoundingClientRect();
+	const { clientWidth, clientHeight } = document.documentElement;
+
+	return [left, top, width, height, clientWidth, clientHeight].join();
+};
+
+/**
  * Position a submenu and keep it positioned while it's open.
+ *
+ * The clipping ancestors are found once, on opening. Scrolling and resizing
+ * then measure the item alone, and the submenu is placed again only when the
+ * item has moved or the viewport has changed size (a sticky header's menu
+ * doesn't move while the page scrolls).
  *
  * @param {Element} item       Menu item owning the submenu.
  * @param {Element} navigation The menu's <nav>.
@@ -224,11 +250,30 @@ export const watchSubmenu = (item, navigation) => {
 	}
 
 	unwatchSubmenu(item);
-	positionSubmenu(item, navigation);
 
-	const update = () =>
-		window.requestAnimationFrame(() => positionSubmenu(item, navigation));
-	const targets = [window, ...getClippingAncestors(submenu)];
+	const ancestors = getClippingAncestors(submenu);
+	let signature = getSignature(item);
+	let frame = 0;
+
+	positionSubmenu(item, navigation, ancestors);
+
+	const measure = () => {
+		frame = 0;
+
+		const next = getSignature(item);
+
+		if (next !== signature) {
+			signature = next;
+			positionSubmenu(item, navigation, ancestors);
+		}
+	};
+	// One check per frame, however many scroll events arrive.
+	const update = () => {
+		if (!frame) {
+			frame = window.requestAnimationFrame(measure);
+		}
+	};
+	const targets = [window, ...ancestors];
 
 	targets.forEach((target) =>
 		target.addEventListener('scroll', update, {
@@ -239,6 +284,7 @@ export const watchSubmenu = (item, navigation) => {
 	window.addEventListener('resize', update, { passive: true });
 
 	watchers.set(item, () => {
+		window.cancelAnimationFrame(frame);
 		targets.forEach((target) =>
 			target.removeEventListener('scroll', update, { capture: true })
 		);

@@ -2,7 +2,7 @@
  * Dropdown placement flips on the edge a submenu overflows: the right in
  * left-to-right menus, the left in right-to-left ones.
  */
-import { positionSubmenu } from '../positioning';
+import { positionSubmenu, unwatchSubmenu, watchSubmenu } from '../positioning';
 
 const VIEWPORT = 1000;
 
@@ -141,5 +141,54 @@ describe('positionSubmenu', () => {
 		positionSubmenu(item, navigation);
 		// Overflows the left edge, with more room on the right.
 		expect(submenu.classList.contains('is-flipped')).toBe(true);
+	});
+});
+
+describe('watchSubmenu', () => {
+	const frame = () =>
+		new Promise((resolve) => window.requestAnimationFrame(resolve));
+	const scroll = async () => {
+		window.dispatchEvent(new Event('scroll'));
+		await frame();
+		await frame();
+	};
+
+	it('measures the item alone while it stays where it is', async () => {
+		const { navigation, item, submenu } = build({
+			rtl: false,
+			itemAt: 100,
+			width: 300,
+		});
+
+		watchSubmenu(item, navigation);
+
+		const measured = jest.spyOn(window, 'getComputedStyle');
+		const before = measured.mock.calls.length;
+
+		await scroll();
+		await scroll();
+
+		expect(measured.mock.calls.length).toBe(before);
+		expect(submenu.classList.contains('is-positioned')).toBe(true);
+		unwatchSubmenu(item);
+	});
+
+	it('places the submenu again when the item moves, keeping it positioned', async () => {
+		const { navigation, item, submenu } = build({
+			rtl: false,
+			itemAt: 100,
+			width: 300,
+		});
+
+		watchSubmenu(item, navigation);
+
+		const movedTo = 850;
+		item.getBoundingClientRect = () => rect(movedTo, 100);
+		submenu.getBoundingClientRect = () => rect(movedTo, 300);
+		await scroll();
+
+		expect(submenu.classList.contains('is-flipped')).toBe(true);
+		expect(submenu.classList.contains('is-positioned')).toBe(true);
+		unwatchSubmenu(item);
 	});
 });

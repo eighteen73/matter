@@ -46,37 +46,52 @@ addFilter(
 	)
 );
 
+/**
+ * The icon preview of a button. A component of its own so that the icon lookup
+ * (a store subscription) only runs for buttons.
+ *
+ * @param {Object}   props
+ * @param {Function} props.BlockListBlock Core's block wrapper.
+ * @param {Object}   props.blockProps     The wrapper's props.
+ * @return {Element} The wrapper, with the icon as a style variable.
+ */
+function ButtonIconPreview({ BlockListBlock, blockProps }) {
+	const icon = useIcon(blockProps.attributes.matterIcon);
+
+	if (!icon?.content) {
+		return <BlockListBlock {...blockProps} />;
+	}
+
+	return (
+		<BlockListBlock
+			{...blockProps}
+			className={[blockProps.className, 'has-icon']
+				.filter(Boolean)
+				.join(' ')}
+			wrapperProps={{
+				...blockProps.wrapperProps,
+				style: {
+					...blockProps.wrapperProps?.style,
+					'--button-icon': svgToDataUri(icon.content),
+				},
+			}}
+		/>
+	);
+}
+
 addFilter(
 	'editor.BlockListBlock',
 	'matter/button-icon/preview',
 	createHigherOrderComponent(
-		(BlockListBlock) => (props) => {
-			const icon = useIcon(
-				props.name === 'core/button'
-					? props.attributes.matterIcon
-					: undefined
-			);
-
-			if (!icon?.content) {
-				return <BlockListBlock {...props} />;
-			}
-
-			return (
-				<BlockListBlock
-					{...props}
-					className={[props.className, 'has-icon']
-						.filter(Boolean)
-						.join(' ')}
-					wrapperProps={{
-						...props.wrapperProps,
-						style: {
-							...props.wrapperProps?.style,
-							'--button-icon': svgToDataUri(icon.content),
-						},
-					}}
+		(BlockListBlock) => (props) =>
+			props.name === 'core/button' ? (
+				<ButtonIconPreview
+					BlockListBlock={BlockListBlock}
+					blockProps={props}
 				/>
-			);
-		},
+			) : (
+				<BlockListBlock {...props} />
+			),
 		'withButtonIconPreview'
 	)
 );
