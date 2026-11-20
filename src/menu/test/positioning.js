@@ -191,4 +191,58 @@ describe('watchSubmenu', () => {
 		expect(submenu.classList.contains('is-positioned')).toBe(true);
 		unwatchSubmenu(item);
 	});
+
+	describe('when the submenu itself resizes', () => {
+		let observers;
+
+		beforeEach(() => {
+			observers = [];
+			window.ResizeObserver = class {
+				constructor(callback) {
+					this.callback = callback;
+					this.disconnect = jest.fn();
+					this.observe = jest.fn();
+					observers.push(this);
+				}
+			};
+		});
+
+		afterEach(() => {
+			delete window.ResizeObserver;
+		});
+
+		const report = (observer, width, height = 100) =>
+			observer.callback([{ contentRect: { width, height } }]);
+
+		it('places it again, and unwatching disconnects the observer', () => {
+			const { navigation, item, submenu } = build({
+				rtl: false,
+				itemAt: 850,
+				width: 100,
+			});
+
+			watchSubmenu(item, navigation);
+
+			const [observer] = observers;
+
+			expect(observer.observe).toHaveBeenCalledWith(submenu);
+			expect(submenu.classList.contains('is-flipped')).toBe(false);
+
+			// Its first report is the size it already has.
+			report(observer, 100);
+			expect(submenu.classList.contains('is-flipped')).toBe(false);
+
+			// It grows past the room to the right: placed again, flipped.
+			submenu.getBoundingClientRect = () => {
+				const flipped = submenu.classList.contains('is-flipped');
+
+				return flipped ? rect(850 + 100 - 300, 300) : rect(850, 300);
+			};
+			report(observer, 300);
+			expect(submenu.classList.contains('is-flipped')).toBe(true);
+
+			unwatchSubmenu(item);
+			expect(observer.disconnect).toHaveBeenCalled();
+		});
+	});
 });

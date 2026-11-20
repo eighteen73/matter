@@ -275,6 +275,28 @@ export const watchSubmenu = (item, navigation) => {
 	};
 	const targets = [window, ...ancestors];
 
+	// The submenu's own size changes what a placement should be (its content
+	// loads, a font arrives, a viewport query changes its width) without the
+	// item or the viewport moving: place it again, with the clipping
+	// ancestors already found. The first report is its size as it is now.
+	let size = null;
+	const resizeObserver =
+		typeof window.ResizeObserver === 'function'
+			? new window.ResizeObserver(([entry]) => {
+					const { width, height } = entry.contentRect;
+					const next = `${width}x${height}`;
+
+					if (size !== null && next !== size) {
+						positionSubmenu(item, navigation, ancestors);
+						signature = getSignature(item);
+					}
+
+					size = next;
+				})
+			: null;
+
+	resizeObserver?.observe(submenu);
+
 	targets.forEach((target) =>
 		target.addEventListener('scroll', update, {
 			capture: true,
@@ -284,6 +306,7 @@ export const watchSubmenu = (item, navigation) => {
 	window.addEventListener('resize', update, { passive: true });
 
 	watchers.set(item, () => {
+		resizeObserver?.disconnect();
 		window.cancelAnimationFrame(frame);
 		targets.forEach((target) =>
 			target.removeEventListener('scroll', update, { capture: true })
