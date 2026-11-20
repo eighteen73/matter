@@ -59,6 +59,23 @@
 	display: flex;
 }
 
+// Without the script, nothing measures or centres a panel: it hangs from its
+// item and a megamenu, which is as wide as its content, ran off the screen.
+// Static positioning moves the anchor out to the nearest positioned ancestor
+// (the theme's header), and the megamenu spans it. The script's own placement
+// replaces all of this once the menu is enhanced. Not in :where(), so it
+// beats the base rules above.
+.is-type-dropdown:not(#{enhanced(menu)}),
+.is-type-dropdown:not(#{enhanced(menu)}) .is-megamenu-content {
+	position: static;
+}
+
+.is-type-dropdown:not(#{enhanced(menu)}) .is-megamenu > .matter-menu__submenu {
+	box-sizing: border-box;
+	inset-inline: 0;
+	max-inline-size: 100%;
+}
+
 // A parent that is only a label (no link) has nothing to focus, so its
 // submenu would be out of the keyboard's reach: its toggle shows instead, as a
 // button that takes focus (and does nothing else, without the script), in

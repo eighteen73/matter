@@ -461,6 +461,8 @@ Also available: `get_menu()` returns the HTML rather than echoing it.
 }
 ```
 
+Without JavaScript a megamenu isn't centred or measured: it spans its nearest positioned ancestor (the theme's header, so give the header `position: relative` or similar), and a plain dropdown hangs from its item. The enhanced menu places panels itself.
+
 A megamenu can also show a **panel** beside its columns: a PHP file in the theme's `template-parts/megamenu/` with a `Title:` header, chosen in the item's "Megamenu panel" list (`matter_megamenu_panels` filters the list). Panels are read from the parent theme and the child theme, the child's winning a shared name. It receives the menu item as `$args['item']`, so it can use the item's description, and settings from Appearance › Site details:
 
 ```php

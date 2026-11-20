@@ -191,3 +191,36 @@ add_filter(
 	10,
 	2
 );
+
+// A megamenu on the "Services" menu item, switched on by the browser test that
+// checks the megamenu without JavaScript (menu item meta isn't in the REST
+// API).
+add_action(
+	'init',
+	fn() => register_setting(
+		'general',
+		'matter_test_megamenu',
+		[
+			'type'         => 'boolean',
+			'default'      => false,
+			'show_in_rest' => true,
+		]
+	)
+);
+
+add_filter(
+	'get_post_metadata',
+	function ( $value, $object_id, $meta_key ) {
+		if (
+			'_matter_megamenu' === $meta_key
+			&& get_option( 'matter_test_megamenu' )
+			&& 'Services' === get_the_title( $object_id )
+		) {
+			return [ '1' ];
+		}
+
+		return $value;
+	},
+	10,
+	3
+);

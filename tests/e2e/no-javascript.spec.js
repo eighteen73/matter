@@ -1314,3 +1314,46 @@ test.describe('menus and the panel', () => {
 		});
 	});
 });
+
+test.describe('a megamenu without JavaScript', () => {
+	test.use({ ...NO_JAVASCRIPT, viewport: { width: 1280, height: 800 } });
+
+	test.beforeAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({ matter_test_megamenu: true });
+	});
+
+	test.afterAll(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({ matter_test_megamenu: false });
+	});
+
+	test("stays within the page, and the page doesn't scroll sideways", async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+
+		const item = page.locator('#hover-menu .is-megamenu');
+
+		await expect(item).toHaveCount(1);
+		await item.getByRole('link', { name: 'Services' }).hover();
+
+		const submenu = item.locator('> .matter-menu__submenu');
+
+		await expect(submenu).toBeVisible();
+
+		const { right, left } = await submenu.evaluate((element) => {
+			const box = element.getBoundingClientRect();
+
+			return { left: box.left, right: box.right };
+		});
+
+		expect(left).toBeGreaterThanOrEqual(0);
+		expect(right).toBeLessThanOrEqual(1280);
+		expect(
+			await page.evaluate(
+				() =>
+					document.documentElement.scrollWidth >
+					document.documentElement.clientWidth
+			)
+		).toBe(false);
+	});
+});
