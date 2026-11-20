@@ -217,6 +217,48 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: VIEWPORTS.mobile });
 
+	test('Escape in a modal placed outside the panel closes the modal first, then the panel', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		// A modal elsewhere in the page, opened from a button in the panel.
+		await page.evaluate(() => {
+			const holder = document.createElement('div');
+			holder.append(document.querySelector('dialog#in-tab'));
+			document.body.prepend(holder);
+
+			const button = document.createElement('button');
+
+			button.type = 'button';
+			button.id = 'open-modal-from-panel';
+			button.textContent = 'Open the modal';
+			button.setAttribute('aria-controls', 'in-tab');
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.append(button);
+		});
+
+		const panel = page.locator('#test-nav');
+		const modal = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page.locator('#open-modal-from-panel').focus();
+		await page.keyboard.press('Enter');
+		await expect(modal).toBeVisible();
+
+		await page.keyboard.press('Escape');
+		await expect(modal).toBeHidden();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect(page.locator('#open-modal-from-panel')).toBeFocused();
+
+		await page.keyboard.press('Escape');
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+	});
+
 	test('a modal opened from a modal over the panel leaves the first usable when it closes', async ({
 		page,
 	}) => {
@@ -270,7 +312,7 @@ test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
 		await expect(a).toBeVisible();
 		await page.locator('#open-b').click();
 		await expect(b).toBeVisible();
-		await b.getByRole('button', { name: 'Close' }).click();
+		await page.keyboard.press('Escape');
 		await expect(b).toBeHidden();
 
 		// The first is still open, usable, and keeps focus: the panel's trap is
@@ -292,7 +334,7 @@ test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
 		expect(await focusInPanel()).toBe(false);
 
 		// Closing it puts the panel back, and closing that leaves nothing inert.
-		await a.getByRole('button', { name: 'Close' }).click();
+		await page.keyboard.press('Escape');
 		await expect(a).toBeHidden();
 		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
 		expect(await isLive(page, '.matter-panel__close')).toBe(true);

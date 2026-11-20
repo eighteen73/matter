@@ -328,11 +328,13 @@ const { state, actions } = store(
 					return;
 				}
 
-				// Escape in a modal inside the panel closes the modal (the
-				// browser does it), not the panel behind it.
-				const dialog = event.target.closest?.('dialog[open]');
-
-				if (dialog && getElement().ref.contains(dialog)) {
+				// Escape in a modal closes the modal (the browser does it), not
+				// the panel behind it, wherever the modal is in the page: inside
+				// the panel, or opened from a button in it.
+				if (
+					event.target.closest?.('dialog[open]') ||
+					document.querySelector('dialog[open]:modal')
+				) {
 					return;
 				}
 
