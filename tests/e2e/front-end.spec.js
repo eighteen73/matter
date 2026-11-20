@@ -1229,7 +1229,10 @@ test.describe('right to left', () => {
 
 		const box = await drawer.boundingBox();
 
-		expect(Math.round(box.x + box.width)).toBe(DESKTOP.width);
+		// At the right edge, beside the scrollbar's kept space (a classic
+		// scrollbar, up to 17px, where the page had one).
+		expect(box.x).toBeGreaterThan(DESKTOP.width / 2);
+		expect(DESKTOP.width - Math.round(box.x + box.width)).toBeLessThan(18);
 	});
 
 	test('a carousel in a right-to-left section of a left-to-right site scrolls its way', async ({
