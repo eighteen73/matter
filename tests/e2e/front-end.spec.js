@@ -612,6 +612,7 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 
 	test('a drill-down submenu keeps focus while it is open', async ({
 		page,
+		browserName,
 	}) => {
 		await page.goto(kitchenSink.link);
 		await page.locator('[aria-controls="test-nav"]').click();
@@ -642,7 +643,11 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		await expect.poll(focusIn).toBe('in');
 
 		for (let i = 0; i < 6; i++) {
-			await page.keyboard.press('Tab');
+			// Safari's Tab skips links (see the dropdown test): with it, focus
+			// leaves the page, which is the browser's, not the trap's.
+			await page.keyboard.press(
+				'webkit' === browserName ? 'Alt+Tab' : 'Tab'
+			);
 			expect(await focusIn(), `Tab ${i + 1}`).toBe('in');
 		}
 	});
