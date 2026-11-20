@@ -523,9 +523,17 @@ final class QueryDisplay {
 
 		// Only post types with a front end, as a Query Loop lists.
 		foreach ( (array) ( $attributes['query']['postType'] ?? 'post' ) as $post_type ) {
-			if ( ! is_string( $post_type ) || ! post_type_exists( $post_type ) || ! is_post_type_viewable( $post_type ) ) {
+			if ( ! is_string( $post_type ) || ! post_type_exists( $post_type ) || Archives::POST_TYPE === $post_type || ! is_post_type_viewable( $post_type ) ) {
 				return new \WP_Error( 'matter_query_display', __( 'That post type can’t be shown.', 'matter' ), [ 'status' => 400 ] );
 			}
+		}
+
+		// A preview shows a handful of items: whatever the request asks for,
+		// no more than the loop item previews allow.
+		if ( isset( $attributes['query']['perPage'] ) ) {
+			$per_page = (int) $attributes['query']['perPage'];
+
+			$attributes['query']['perPage'] = $per_page < 1 || $per_page > LoopItem::MAX_PREVIEWS ? LoopItem::MAX_PREVIEWS : $per_page;
 		}
 
 		// The page being edited, e.g. for "exclude current".

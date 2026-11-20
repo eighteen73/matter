@@ -266,6 +266,10 @@ class Archives {
 			]
 		);
 
+		// A password-protected entry would show to everyone: it isn't a
+		// public page to hold back, and an archive has no password form.
+		$posts = array_filter( $posts, fn( WP_Post $post ) => '' === $post->post_password );
+
 		$this->resolved[ $key ] = null;
 
 		foreach ( $target->chain() as $index => $candidate ) {

@@ -617,4 +617,51 @@ class ArchivesTest extends TestCase {
 
 		wp_set_current_user( 0 );
 	}
+
+	/**
+	 * Only taxonomies with a front end can have an archive entry: a private
+	 * one's terms have no archive to customise.
+	 *
+	 * @return void
+	 */
+	public function test_targets_need_a_viewable_taxonomy(): void {
+		register_taxonomy( 'matter_private', 'post', [ 'public' => false ] );
+
+		$term = self::factory()->term->create( [ 'taxonomy' => 'matter_private' ] );
+
+		$this->assertNull( Target::from_string( 'taxonomy:matter_private' ) );
+		$this->assertNull( Target::from_string( "term:matter_private:{$term}" ) );
+		$this->assertNotNull( Target::from_string( 'taxonomy:category' ) );
+		$this->assertNotNull( Target::from_string( 'term:category:' . $this->terms['parent'] ) );
+
+		unregister_taxonomy( 'matter_private' );
+	}
+
+	/**
+	 * A password-protected entry doesn't show on its archive, and doesn't hide
+	 * an older one's.
+	 *
+	 * @return void
+	 */
+	public function test_a_password_protected_entry_is_skipped(): void {
+		$open = $this->entry( 'author', false, '2026-01-01 00:00:00' );
+
+		$protected = self::factory()->post->create(
+			[
+				'post_type'     => Archives::POST_TYPE,
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+				'post_date'     => '2026-02-01 00:00:00',
+				'meta_input'    => [ Archives::META => 'author' ],
+			]
+		);
+
+		$this->assertSame( $open, Archives::instance()->resolve( new Target( 'author' ) )?->ID );
+		$this->assertStringNotContainsString( (string) $protected, (string) Archives::instance()->content_for( new Target( 'author' ) ) );
+
+		wp_update_post( [ 'ID' => $open, 'post_status' => 'draft' ] ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+		( new ReflectionProperty( Archives::class, 'resolved' ) )->setValue( Archives::instance(), [] );
+
+		$this->assertNull( Archives::instance()->resolve( new Target( 'author' ) ) );
+	}
 }

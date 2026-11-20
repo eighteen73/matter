@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter\Tests;
 
+use Eighteen73\Matter\Blocks\LoopItem;
 use WP_REST_Request;
 
 /**
@@ -114,5 +115,55 @@ class PreviewsTest extends TestCase {
 		);
 
 		$this->assertSame( 200, rest_get_server()->dispatch( $request )->get_status() );
+	}
+
+	/**
+	 * The accordion and tabs preview lists no more items than a loop preview
+	 * allows, however many the request asks for, and not archive entries.
+	 *
+	 * @return void
+	 */
+	public function test_query_display_clamps_per_page(): void {
+		$asked = [];
+
+		add_filter(
+			'query_loop_block_query_vars',
+			function ( $query ) use ( &$asked ) {
+				$asked[] = $query['posts_per_page'];
+
+				return $query;
+			}
+		);
+
+		foreach ( [ 100000, -1, 0, 7 ] as $per_page ) {
+			$request = new WP_REST_Request( 'POST', '/matter/v1/query-display' );
+			$request->set_body_params(
+				[
+					'attributes' => [
+						'query'         => [
+							'postType' => 'post',
+							'perPage'  => $per_page,
+						],
+						'matterDisplay' => [ 'type' => 'accordion' ],
+					],
+				]
+			);
+
+			$this->assertSame( 200, rest_get_server()->dispatch( $request )->get_status() );
+		}
+
+		$this->assertSame( [ LoopItem::MAX_PREVIEWS, LoopItem::MAX_PREVIEWS, LoopItem::MAX_PREVIEWS, 7 ], $asked );
+
+		$request = new WP_REST_Request( 'POST', '/matter/v1/query-display' );
+		$request->set_body_params(
+			[
+				'attributes' => [
+					'query'         => [ 'postType' => 'matter_archive' ],
+					'matterDisplay' => [ 'type' => 'accordion' ],
+				],
+			]
+		);
+
+		$this->assertSame( 400, rest_get_server()->dispatch( $request )->get_status() );
 	}
 }

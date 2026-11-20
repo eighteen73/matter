@@ -39,7 +39,8 @@ final readonly class Target {
 	 * A target from its stored form.
 	 *
 	 * @param string $value Stored target.
-	 * @return self|null Null when it's invalid or no longer exists.
+	 * @return self|null Null when it's invalid, no longer exists, or is of a
+	 *                   taxonomy without a front end (a private one has no archive).
 	 */
 	public static function from_string( string $value ): ?self {
 		$parts = explode( ':', $value );
@@ -47,8 +48,8 @@ final readonly class Target {
 		return match ( $parts[0] ) {
 			'author', 'date', 'search', '404' => new self( $parts[0] ),
 			'post_type'                       => isset( $parts[1] ) && post_type_exists( $parts[1] ) ? new self( 'post_type', $parts[1] ) : null,
-			'taxonomy'                        => isset( $parts[1] ) && taxonomy_exists( $parts[1] ) ? new self( 'taxonomy', $parts[1] ) : null,
-			'term'                            => isset( $parts[1], $parts[2] ) && get_term( (int) $parts[2], $parts[1] ) instanceof WP_Term
+			'taxonomy'                        => isset( $parts[1] ) && is_taxonomy_viewable( $parts[1] ) ? new self( 'taxonomy', $parts[1] ) : null,
+			'term'                            => isset( $parts[1], $parts[2] ) && is_taxonomy_viewable( $parts[1] ) && get_term( (int) $parts[2], $parts[1] ) instanceof WP_Term
 				? new self( 'term', $parts[1], (int) $parts[2] )
 				: null,
 			default                           => null,
