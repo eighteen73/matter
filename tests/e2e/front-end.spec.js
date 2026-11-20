@@ -77,7 +77,7 @@ test.describe('accessibility', () => {
 	});
 });
 
-test.describe('overlays', () => {
+test.describe('overlays', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: DESKTOP });
 
 	test("a dialog that can't be closed stays open on Escape", async ({
@@ -172,7 +172,13 @@ test.describe('overlays', () => {
 
 	test('a modal opened from the keyboard takes focus, and gives it back on Escape', async ({
 		page,
+		browserName,
 	}) => {
+		test.fixme(
+			'webkit' === browserName,
+			'Baseline: in WebKit, focus is not returned to the link after Escape (plan item 29).'
+		);
+
 		await page.goto(kitchenSink.link);
 
 		const link = page.getByRole('link', {
@@ -380,7 +386,7 @@ test.describe('carousel, reduced motion', () => {
 	});
 });
 
-test.describe('keyboard', () => {
+test.describe('keyboard', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: DESKTOP });
 
 	test('tabs: the arrow keys, Home and End move between tabs and select them', async ({
@@ -423,7 +429,13 @@ test.describe('keyboard', () => {
 
 	test('dropdown menu: the arrow keys move along the menu, and within an open submenu', async ({
 		page,
+		browserName,
 	}) => {
+		test.fixme(
+			'webkit' === browserName,
+			'Baseline: in WebKit, Tab from the open toggle does not reach "View all" (submenu closed or Tab skips links).'
+		);
+
 		await page.goto(kitchenSink.link);
 
 		const menu = page.locator('nav.matter-menu--primary.opens-on-click');
@@ -468,7 +480,7 @@ test.describe('keyboard', () => {
 	});
 });
 
-test.describe('menus', () => {
+test.describe('menus', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: DESKTOP });
 
 	test('click-to-open submenus link to their parent page', async ({
@@ -525,7 +537,7 @@ test.describe('menus', () => {
 	});
 });
 
-test.describe('panel', () => {
+test.describe('panel', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: MOBILE });
 
 	test('following a same-page link closes the panel', async ({ page }) => {
@@ -607,7 +619,15 @@ test.describe('panel', () => {
 		await expect(toggle).toBeFocused();
 	});
 
-	test('Escape closes the submenu, then the panel', async ({ page }) => {
+	test('Escape closes the submenu, then the panel', async ({
+		page,
+		browserName,
+	}) => {
+		test.fixme(
+			'webkit' === browserName,
+			'Baseline: in WebKit, a click does not focus the submenu toggle, so Escape closes the whole panel (plan items 26, 29).'
+		);
+
 		await page.goto(kitchenSink.link);
 
 		const toggle = page.locator('[aria-controls="test-nav"]');
