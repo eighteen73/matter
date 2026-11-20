@@ -305,6 +305,19 @@ test.describe('slot labels', () => {
 
 		expect(labels).toEqual(['Content', 'Media end', 'Side note', 'Slot']);
 
+		// The slots are created after the section is inserted, by the
+		// reconcile effect: wait for them before selecting one.
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() =>
+						window.wp.data
+							.select('core/block-editor')
+							.getBlocks()[0]?.innerBlocks.length
+				)
+			)
+			.toBeGreaterThan(0);
+
 		// The breadcrumbs use the same label as the list view.
 		await page.evaluate(() => {
 			const { select, dispatch } = window.wp.data;
