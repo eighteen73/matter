@@ -100,7 +100,7 @@ class Link {
 	 * @return array
 	 */
 	public function apply( WP_Block_Type $block_type, array $attributes ): array {
-		return self::is_supported( $block_type ) && '' !== self::url( $attributes ) ? [ 'class' => 'has-link' ] : [];
+		return self::is_supported( $block_type ) && '' !== esc_url( self::url( $attributes ) ) ? [ 'class' => 'has-link' ] : [];
 	}
 
 	/**
@@ -142,9 +142,11 @@ class Link {
 	 * @return string
 	 */
 	public function render( string $block_content, array $block ): string {
-		$url = self::url( $block['attrs'] ?? [] );
+		// The address as it will be output: one that's unsafe (`javascript:`)
+		// is empty, and links nothing.
+		$href = esc_url( self::url( $block['attrs'] ?? [] ) );
 
-		if ( '' === $url || '' === $block_content ) {
+		if ( '' === $href || '' === $block_content ) {
 			return $block_content;
 		}
 
@@ -159,12 +161,12 @@ class Link {
 		$new_tab    = ! empty( $block['attrs']['matterLink']['opensInNewTab'] );
 		$attributes = sprintf(
 			'class="matter-link" href="%1$s"%2$s',
-			esc_url( $url ),
+			$href,
 			$new_tab ? ' target="_blank" rel="noopener"' : ''
 		);
 
 		// The first heading's content, unless it already holds a link.
-		if ( preg_match( '/(<h([1-6])\b[^>]*>)(.*?)(<\/h\2>)/s', $block_content, $match, PREG_OFFSET_CAPTURE ) && ! str_contains( $match[3][0], '<a' ) ) {
+		if ( preg_match( '/(<h([1-6])\b[^>]*>)(.*?)(<\/h\2>)/s', $block_content, $match, PREG_OFFSET_CAPTURE ) && ! preg_match( '/<a[\s>]/i', $match[3][0] ) ) {
 			$linked = $match[1][0] . '<a ' . $attributes . '>' . $match[3][0] . '</a>' . $match[4][0];
 
 			return substr_replace( $block_content, $linked, $match[0][1], strlen( $match[0][0] ) );

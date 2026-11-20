@@ -435,7 +435,9 @@ class Settings {
 			return match ( $field['type'] ) {
 				'email' => 'mailto:' . $value,
 				'tel'   => 'tel:' . preg_replace( '/[^0-9+]/', '', (string) $value ),
-				default => (string) $value,
+				// Only a safe address (no `javascript:`). Not HTML-encoded: the
+				// block sets the attribute, which escapes it once.
+				default => esc_url_raw( (string) $value ),
 			};
 		}
 

@@ -76,4 +76,92 @@ class LinkTest extends TestCase {
 		$this->assertStringNotContainsString( 'matter-link', $html );
 		$this->assertStringNotContainsString( 'has-link', $html );
 	}
+
+	/**
+	 * Link rendered block HTML.
+	 *
+	 * @param string $html Rendered block.
+	 * @param string $url  Link URL.
+	 * @param bool   $tab  Opens in a new tab.
+	 * @return string
+	 */
+	private function link( string $html, string $url = 'https://example.com/page/', bool $tab = false ): string {
+		return Link::instance()->render(
+			$html,
+			[
+				'blockName' => self::BLOCK,
+				'attrs'     => [ 'matterLink' => [ 'url' => $url, 'opensInNewTab' => $tab ] ], // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+			]
+		);
+	}
+
+	/**
+	 * An address that isn't safe to output links nothing: the block is
+	 * untouched, with no `has-link` class and no empty link.
+	 *
+	 * @return void
+	 */
+	public function test_an_unsafe_url_links_nothing(): void {
+		$html = '<div class="wp-block-card"><h3>Title</h3></div>';
+
+		$this->assertSame( $html, $this->link( $html, 'javascript:alert(1)' ) );
+		$this->assertSame( $html, $this->link( $html, ' JaVaScRiPt:alert(1)' ) );
+
+		$rendered = $this->render( '<!-- wp:' . self::BLOCK . ' {"matterLink":{"url":"javascript:alert(1)"}} /-->' );
+
+		$this->assertStringNotContainsString( 'has-link', $rendered );
+		$this->assertStringNotContainsString( 'matter-link', $rendered );
+		$this->assertStringNotContainsString( 'javascript', $rendered );
+	}
+
+	/**
+	 * `<abbr>` (and `<article>`, `<aside>`…) in a heading aren't links: the
+	 * heading still becomes the link.
+	 *
+	 * @return void
+	 */
+	public function test_a_heading_with_abbr_is_linked(): void {
+		$html = $this->link( '<div><h3>The <abbr title="Royal Society">RS</abbr> story</h3></div>' );
+
+		$this->assertStringContainsString( '<h3><a class="matter-link" href="https://example.com/page/">The <abbr title="Royal Society">RS</abbr> story</a></h3>', $html );
+		$this->assertStringNotContainsString( 'screen-reader-text', $html );
+	}
+
+	/**
+	 * A heading that already holds a link isn't wrapped in another: the card
+	 * gets the visually hidden link instead.
+	 *
+	 * @return void
+	 */
+	public function test_a_heading_with_a_link_is_not_nested(): void {
+		foreach ( [ '<a href="/x">Title</a>', '<A HREF="/x">Title</A>', '<a>Title</a>' ] as $heading ) {
+			$html = $this->link( "<div><h3>{$heading}</h3><p>Text</p></div>" );
+
+			$this->assertStringContainsString( "<h3>{$heading}</h3>", $html );
+			$this->assertSame( 1, substr_count( $html, 'class="matter-link"' ), $heading );
+			$this->assertStringContainsString( 'screen-reader-text', $html );
+		}
+	}
+
+	/**
+	 * Without a heading, a visually hidden link goes before the closing tag.
+	 *
+	 * @return void
+	 */
+	public function test_without_a_heading_a_hidden_link_is_added(): void {
+		$html = $this->link( '<div><p>Text</p></div>' );
+
+		$this->assertSame( '<div><p>Text</p><a class="matter-link" href="https://example.com/page/"><span class="screen-reader-text">Read more</span></a></div>', $html );
+	}
+
+	/**
+	 * A new tab opens safely.
+	 *
+	 * @return void
+	 */
+	public function test_a_new_tab_link(): void {
+		$html = $this->link( '<div><h3>Title</h3></div>', 'https://example.com/page/', true );
+
+		$this->assertStringContainsString( 'href="https://example.com/page/" target="_blank" rel="noopener"', $html );
+	}
 }
