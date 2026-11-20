@@ -3,7 +3,9 @@
  * in `src/css/tools/mixins/_matter.scss`), so a change to it needs a CHANGELOG
  * line that says the copies must follow. A theme can't `@use` Matter's Sass
  * (its build can't count on Matter's source being there), so the string is
- * kept in step by hand, and by this test.
+ * kept in step by hand. This test reads Matter's files only: it flags a change
+ * on Matter's side, not a theme's copy going stale (Pulsar has its own check,
+ * `npm run lint:gate`).
  */
 const fs = require('fs');
 const path = require('path');
