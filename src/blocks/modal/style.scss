@@ -32,8 +32,13 @@ html.has-overlay-open.has-overlay-gutter {
 // Core layout rules set margins on post content children, including
 // `:root :where(.is-layout-*) > :last-child` (0,2,0), which would zero the
 // bottom margin when this is the last block. This selector outranks them.
+// The same layouts cap children at the content width
+// (`.is-layout-constrained > :where(...)`, 0,1,0), which beats the skin's
+// `:where()` cap and leaves a 40rem modal wider than a phone, with its close
+// button off screen. So the fit to the viewport is a functional rule here.
 :root dialog.wp-block-matter-modal {
 	margin: auto;
+	max-inline-size: calc(100vw - 2rem);
 }
 
 // Without JavaScript, a link to the dialog's #ID shows it in the page.

@@ -38,8 +38,11 @@ html.has-overlay-open.has-overlay-gutter {
 // Core layout rules set margins on post content children, including
 // `:root :where(.is-layout-*) > :last-child` (0,2,0), which would zero the
 // bottom margin when this is the last block. This selector outranks them.
+// // Likewise the content-width cap on constrained layouts' children: the drawer
+// never outgrows the viewport.
 :root dialog.wp-block-matter-drawer {
 	margin: 0;
+	max-inline-size: 100vw;
 }
 
 // Without JavaScript, a link to the dialog's #ID shows it in the page.

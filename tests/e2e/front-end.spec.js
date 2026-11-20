@@ -39,6 +39,7 @@ let ageGate;
 let gatePage;
 let triggersPage;
 let deepTabsPage;
+let constrainedPage;
 
 test.beforeAll(async ({ requestUtils }) => {
 	await requestUtils.deleteAllPages();
@@ -69,6 +70,19 @@ test.beforeAll(async ({ requestUtils }) => {
 		requestUtils,
 		'Gate',
 		'<!-- wp:matter/modal {"overlayId":"gate","label":"Gate","dismissible":false} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Stay <a href="#gate">here</a></p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->'
+	);
+	// A modal and a drawer as children of a constrained layout, as in post
+	// content: core caps such children at the content width.
+	const constrained = (blocks) =>
+		`<!-- wp:group {"layout":{"type":"constrained","contentSize":"768px"}} --><div class="wp-block-group">${blocks}</div><!-- /wp:group -->`;
+	constrainedPage = await createPage(
+		requestUtils,
+		'Constrained overlays',
+		constrained(
+			'<!-- wp:paragraph --><p><a href="#wide-modal">Open modal</a> <a href="#wide-drawer">Open drawer</a></p><!-- /wp:paragraph -->' +
+				'<!-- wp:matter/modal {"overlayId":"wide-modal","label":"Wide modal"} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Modal</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->' +
+				'<!-- wp:matter/drawer {"overlayId":"wide-drawer","label":"Wide drawer"} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Drawer</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/drawer -->'
+		)
 	);
 	ageGate = await createPage(
 		requestUtils,
@@ -344,6 +358,40 @@ test.describe('overlays', { tag: '@cross-browser' }, () => {
 		await page.mouse.click(5, 5);
 		await expect(dialog).toBeHidden();
 	});
+});
+
+test.describe('overlays on a phone', { tag: '@cross-browser' }, () => {
+	test.use({ viewport: { width: 375, height: 700 } });
+
+	for (const [name, link] of [
+		['modal', 'Open modal'],
+		['drawer', 'Open drawer'],
+	]) {
+		test(`a ${name} in a constrained layout fits the screen, and its close button works`, async ({
+			page,
+		}) => {
+			await page.goto(constrainedPage.link);
+			await page.getByRole('link', { name: link }).click();
+
+			const dialog = page.getByRole('dialog', { name: `Wide ${name}` });
+
+			await expect(dialog).toBeVisible();
+
+			const box = await dialog.boundingBox();
+
+			expect(box.x).toBeGreaterThanOrEqual(0);
+			expect(box.x + box.width).toBeLessThanOrEqual(375);
+
+			const close = dialog.getByRole('button', { name: /close/i });
+			const closeBox = await close.boundingBox();
+
+			expect(closeBox.x).toBeGreaterThanOrEqual(0);
+			expect(closeBox.x + closeBox.width).toBeLessThanOrEqual(375);
+
+			await close.click();
+			await expect(dialog).toBeHidden();
+		});
+	}
 });
 
 test.describe('overlays, with motion', () => {
