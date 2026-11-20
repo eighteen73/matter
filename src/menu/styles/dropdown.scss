@@ -168,7 +168,9 @@
 	transition:
 		opacity 300ms,
 		visibility 300ms,
-		display 300ms allow-discrete;
+		display 300ms;
+	// stylelint-disable-next-line property-no-unknown
+	transition-behavior: allow-discrete;
 	width: max-content;
 	z-index: 100;
 }

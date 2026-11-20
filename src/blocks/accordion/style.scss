@@ -80,7 +80,12 @@
 	transition:
 		grid-template-rows 300ms,
 		visibility 300ms,
-		content-visibility 300ms allow-discrete;
+		content-visibility 300ms;
+	// Apart from the shorthand: a browser that doesn't know
+	// `transition-behavior` drops a declaration with it in, and with it the
+	// rows animation.
+	// stylelint-disable-next-line property-no-unknown
+	transition-behavior: allow-discrete;
 }
 
 // Without JavaScript the headings are plain text: nothing to click, nothing
