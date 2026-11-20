@@ -49,6 +49,15 @@ final class RatingSource implements Source, QueryParams {
 	}
 
 	/**
+	 * Its icon in the editor: a star.
+	 *
+	 * @return string
+	 */
+	public function icon(): string {
+		return 'rating';
+	}
+
+	/**
 	 * Products.
 	 *
 	 * @return string[]

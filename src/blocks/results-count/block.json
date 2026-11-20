@@ -4,8 +4,7 @@
 	"name": "matter/results-count",
 	"version": "1.0.0",
 	"title": "Results count",
-	"category": "theme",
-	"icon": "editor-ol",
+	"category": "matter-filters",
 	"description": "How many results the list has, e.g. \"Showing 1–12 of 48 results\".",
 	"usesContext": [
 		"queryId",

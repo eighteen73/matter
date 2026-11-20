@@ -26,6 +26,17 @@
  *
  * Core has TaxonomySource; integrations register more (see Sources).
  *
+ * Optional methods, used when a source has them:
+ *
+ * - `ordered(): bool`: its values are ordered (ratings), so its filter can
+ *   show stars and "4 & up" options.
+ * - `default_display(): string`: how its filter shows when inserted.
+ * - `icon(): string`: its filter's icon in the editor: `category`, `tag`,
+ *   `brand`, `color`, `attribute`, `currency-pound`, `currency-euro`,
+ *   `currency-dollar`, `price`, `stock` or `rating` (else a funnel).
+ * - `examples(): array`: a few options to preview its filter with in the
+ *   editor, each `[ 'id', 'name', 'count', 'parent'?, 'swatch'? ]`.
+ *
  * @package Eighteen73\Matter
  */
 

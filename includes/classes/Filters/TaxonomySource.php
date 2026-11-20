@@ -55,6 +55,47 @@ class TaxonomySource implements Source {
 	}
 
 	/**
+	 * Its icon in the editor: a category's for a hierarchical taxonomy, else
+	 * a tag's.
+	 *
+	 * @return string
+	 */
+	public function icon(): string {
+		return is_taxonomy_hierarchical( $this->taxonomy ) ? 'category' : 'tag';
+	}
+
+	/**
+	 * Terms to preview its filter with in the editor: a dozen with posts,
+	 * with their parents (to nest) and swatches.
+	 *
+	 * @return array<int, array{id: int, name: string, count: int, parent: int, swatch: string}>
+	 */
+	public function examples(): array {
+		$terms = get_terms(
+			[
+				'taxonomy'   => $this->taxonomy,
+				'hide_empty' => true,
+				'number'     => 12,
+			]
+		);
+
+		if ( ! is_array( $terms ) ) {
+			return [];
+		}
+
+		return array_map(
+			fn( \WP_Term $term ) => [
+				'id'     => $term->term_id,
+				'name'   => $term->name,
+				'count'  => (int) $term->count,
+				'parent' => $term->parent,
+				'swatch' => (string) apply_filters( 'matter_filter_swatch', '', $term ),
+			],
+			array_values( $terms )
+		);
+	}
+
+	/**
 	 * The post types the taxonomy is for.
 	 *
 	 * @return string[]

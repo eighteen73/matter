@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Accordion",
 	"category": "widgets",
-	"icon": "list-view",
 	"description": "Expandable items you write here. To list FAQs or other posts automatically, use Posts accordion.",
 	"keywords": [
 		"faq",

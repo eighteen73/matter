@@ -4,8 +4,7 @@
 	"name": "matter/filters",
 	"version": "1.0.0",
 	"title": "Filters",
-	"category": "theme",
-	"icon": "filter",
+	"category": "matter-filters",
 	"description": "Filters for the list they're in: a sidebar on larger screens, and below the theme's breakpoint a panel opened by the Filters button.",
 	"keywords": [
 		"facet",

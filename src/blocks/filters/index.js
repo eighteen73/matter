@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { registerBlockType } from '@wordpress/blocks';
+import { funnel } from '@wordpress/icons';
 import { InnerBlocks } from '@wordpress/block-editor';
 
 /**
@@ -13,6 +14,7 @@ import './editor.scss';
 import './style.scss';
 
 registerBlockType(metadata.name, {
+	icon: funnel,
 	edit: Edit,
 	save: () => <InnerBlocks.Content />,
 });

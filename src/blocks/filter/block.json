@@ -4,8 +4,7 @@
 	"name": "matter/filter",
 	"version": "1.0.0",
 	"title": "Filter",
-	"category": "theme",
-	"icon": "filter",
+	"category": "matter-filters",
 	"description": "Filter the list by a category, tag, attribute or other choice, with how many results each option has.",
 	"parent": [
 		"matter/filters"

@@ -71,6 +71,7 @@ final class Filters {
 		add_filter( 'render_block_data', [ $this, 'start' ], 5 );
 		add_filter( 'render_block', [ $this, 'finish' ], 10, 2 );
 		add_filter( 'register_block_type_args', [ $this, 'block_args' ], 10, 2 );
+		add_filter( 'block_categories_all', [ self::class, 'category' ] );
 	}
 
 	/**
@@ -483,24 +484,70 @@ final class Filters {
 	}
 
 	/**
-	 * The filter block's variations: one per source.
+	 * A "Filters" category for the filter blocks, after core's Theme: the
+	 * inserter lists them together, and first inside a listing's filters.
+	 *
+	 * @param array<int, array<string, mixed>> $categories Block categories.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function category( array $categories ): array {
+		if ( in_array( 'matter-filters', array_column( $categories, 'slug' ), true ) ) {
+			return $categories;
+		}
+
+		$category = [
+			'slug'  => 'matter-filters',
+			'title' => __( 'Filters', 'matter' ),
+			'icon'  => null,
+		];
+		$after    = array_search( 'theme', array_column( $categories, 'slug' ), true );
+
+		if ( false === $after ) {
+			$categories[] = $category;
+
+			return $categories;
+		}
+
+		array_splice( $categories, (int) $after + 1, 0, [ $category ] );
+
+		return $categories;
+	}
+
+	/**
+	 * The filter block's variations: one per source ("Category filter"). Two
+	 * sources with one name (a post's category and a product's) are told
+	 * apart by what they list: "Category filter (Products)".
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function variations(): array {
+		$sources    = Sources::all();
+		$labels     = array_count_values( array_map( fn( Source $source ) => $source->label(), $sources ) );
 		$variations = [];
 
-		foreach ( Sources::all() as $key => $source ) {
+		foreach ( $sources as $key => $source ) {
+			$label = $source->label();
+			/* translators: %s: what's filtered by, e.g. "Category". */
+			$title = sprintf( __( '%s filter', 'matter' ), $label );
+
+			if ( $labels[ $label ] > 1 ) {
+				$type  = get_post_type_object( (string) ( $source->post_types()[0] ?? '' ) );
+				$title = $type
+					/* translators: 1: what's filtered by, e.g. "Category"; 2: what's listed, e.g. "Products". */
+					? sprintf( __( '%1$s filter (%2$s)', 'matter' ), $label, $type->labels->name )
+					: $title;
+			}
+
 			$variations[] = [
 				'name'       => sanitize_key( str_replace( ':', '-', $key ) ),
-				/* translators: %s: what's filtered by, e.g. "Category". */
-				'title'      => sprintf( __( '%s filter', 'matter' ), $source->label() ),
+				'title'      => $title,
 				'attributes' => [
 					'source'  => $key,
-					'display' => method_exists( $source, 'default_display' ) ? (string) $source->default_display() : ( 'range' === $source->kind() ? 'range' : 'checkboxes' ),
+					'display' => self::default_display( $source ),
 				],
 				'isActive'   => [ 'source' ],
-				'scope'      => [ 'inserter', 'transform' ],
+				// Inserter only: "Filter by" changes a filter's source.
+				'scope'      => [ 'inserter' ],
 			];
 		}
 
@@ -508,11 +555,28 @@ final class Filters {
 	}
 
 	/**
-	 * The sources, for the filter block's editor: each `key`, `label`, `kind`,
-	 * for a taxonomy's `taxonomy` (to preview its terms), and `ordered` for
-	 * one whose values are (ratings: stars, "& up").
+	 * How a source's filter shows when inserted: its own default, else a
+	 * range for a range and checkboxes for a choice.
 	 *
-	 * @return array<int, array{key: string, label: string, kind: string, taxonomy?: string}>
+	 * @param Source $source Source.
+	 * @return string
+	 */
+	private static function default_display( Source $source ): string {
+		if ( method_exists( $source, 'default_display' ) ) {
+			return (string) $source->default_display();
+		}
+
+		return 'range' === $source->kind() ? 'range' : 'checkboxes';
+	}
+
+	/**
+	 * The sources, for the filter block's editor: each `key`, `label`, `kind`,
+	 * its default `display`, the `postTypes` it's for (a listing offers those
+	 * for its own), its
+	 * `icon`, `examples` to preview it with, and `ordered` for one whose
+	 * values are (ratings: stars, "& up").
+	 *
+	 * @return array<int, array<string, mixed>>
 	 */
 	public static function editor_sources(): array {
 		$sources = [];
@@ -520,12 +584,15 @@ final class Filters {
 		foreach ( Sources::all() as $key => $source ) {
 			$sources[] = array_filter(
 				[
-					'key'      => $key,
-					'label'    => $source->label(),
-					'kind'     => $source->kind(),
-					'taxonomy' => str_starts_with( $key, 'taxonomy:' ) ? substr( $key, 9 ) : null,
+					'key'       => $key,
+					'label'     => $source->label(),
+					'kind'      => $source->kind(),
+					'display'   => self::default_display( $source ),
+					'postTypes' => $source->post_types(),
+					'icon'      => method_exists( $source, 'icon' ) ? (string) $source->icon() : null,
+					'examples'  => method_exists( $source, 'examples' ) ? (array) $source->examples() : null,
 					// Ordered values (ratings): stars, and "4 & up".
-					'ordered'  => method_exists( $source, 'ordered' ) && $source->ordered() ? true : null,
+					'ordered'   => method_exists( $source, 'ordered' ) && $source->ordered() ? true : null,
 				]
 			);
 		}

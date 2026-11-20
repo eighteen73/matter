@@ -63,6 +63,21 @@ final class ProductTaxonomySource extends TaxonomySource implements QueryParams 
 	}
 
 	/**
+	 * Its icon in the editor: a brand's (a shop), a colour's for an attribute
+	 * with swatches, an attribute's, or a category's or tag's.
+	 *
+	 * @return string
+	 */
+	public function icon(): string {
+		return match ( true ) {
+			'product_brand' === $this->taxonomy     => 'brand',
+			WooCommerce::is_visual( $this->taxonomy ) => 'color',
+			str_starts_with( $this->taxonomy, 'pa_' ) => 'attribute',
+			default                                  => parent::icon(),
+		};
+	}
+
+	/**
 	 * Products.
 	 *
 	 * @return string[]

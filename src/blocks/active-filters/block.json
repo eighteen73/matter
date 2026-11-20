@@ -4,8 +4,7 @@
 	"name": "matter/active-filters",
 	"version": "1.0.0",
 	"title": "Active filters",
-	"category": "theme",
-	"icon": "dismiss",
+	"category": "matter-filters",
 	"description": "The filters applied to the list, each removable, and Clear all.",
 	"usesContext": [
 		"queryId",

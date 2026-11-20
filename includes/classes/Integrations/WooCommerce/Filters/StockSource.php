@@ -48,6 +48,34 @@ final class StockSource implements Source, QueryParams {
 	}
 
 	/**
+	 * Its icon in the editor: a box.
+	 *
+	 * @return string
+	 */
+	public function icon(): string {
+		return 'stock';
+	}
+
+	/**
+	 * The stock statuses, to preview its filter with in the editor.
+	 *
+	 * @return array<int, array{id: string, name: string, count: int}>
+	 */
+	public function examples(): array {
+		$examples = [];
+
+		foreach ( wc_get_product_stock_status_options() as $status => $label ) {
+			$examples[] = [
+				'id'    => (string) $status,
+				'name'  => (string) $label,
+				'count' => 0,
+			];
+		}
+
+		return $examples;
+	}
+
+	/**
 	 * Products.
 	 *
 	 * @return string[]

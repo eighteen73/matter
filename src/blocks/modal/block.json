@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Modal",
 	"category": "widgets",
-	"icon": "external",
 	"description": "Content shown in a box over the page, opened by a button or link.",
 	"keywords": [
 		"dialog",

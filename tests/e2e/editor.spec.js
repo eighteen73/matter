@@ -1392,3 +1392,81 @@ test.describe('add buttons on the toolbar', () => {
 		).toHaveCount(0);
 	});
 });
+
+test.describe('filters in the editor', () => {
+	const listing = (filters) =>
+		`<!-- wp:query {"queryId":7,"query":{"perPage":10,"postType":"post","inherit":false}} --><div class="wp-block-query"><!-- wp:matter/filters -->${filters}<!-- /wp:matter/filters --><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --></div><!-- /wp:query -->`;
+	const filterAttributes = (page) =>
+		page.evaluate(() => {
+			const { select } = window.wp.data;
+			const find = (list) =>
+				list.flatMap((block) => [
+					...(block.name === 'matter/filter' ? [block] : []),
+					...find(block.innerBlocks),
+				]);
+
+			return find(select('core/block-editor').getBlocks()).map(
+				({ attributes }) => attributes
+			);
+		});
+
+	test("a filter's name is edited in place, its settings are a tools panel, and a collapsible one previews closed", async ({
+		admin,
+		editor,
+		page,
+	}) => {
+		await admin.createNewPost();
+		await editor.setContent(
+			listing(
+				'<!-- wp:matter/filter {"source":"taxonomy:category"} /--><!-- wp:matter/filter {"source":"taxonomy:post_tag","collapsible":true,"open":false} /-->'
+			)
+		);
+
+		const [category, tag] = await Promise.all([
+			editor.canvas.locator('.wp-block-matter-filter').first(),
+			editor.canvas.locator('.wp-block-matter-filter').nth(1),
+		]);
+
+		// The name is the legend, edited in place; empty, it's the source's.
+		const name = category.getByRole('textbox', { name: 'Filter name' });
+
+		await expect(name).toBeVisible();
+		await name.click();
+		await page.keyboard.type('Topics');
+		await expect
+			.poll(async () => (await filterAttributes(page))[0].label)
+			.toBe('Topics');
+
+		// Settings: a tools panel. "Match" chooses any or all.
+		await editor.openDocumentSettingsSidebar();
+		const settings = page.getByRole('region', { name: 'Editor settings' });
+
+		await expect(
+			settings.getByRole('combobox', { name: 'Filter by' })
+		).toHaveValue('taxonomy:category');
+		await settings.getByRole('radio', { name: 'All' }).click();
+		await expect
+			.poll(async () => (await filterAttributes(page))[0].operator)
+			.toBe('and');
+
+		await settings
+			.getByRole('button', { name: 'Settings options' })
+			.click();
+		await page.getByRole('menuitem', { name: 'Reset all' }).click();
+		await expect
+			.poll(async () => (await filterAttributes(page))[0].operator)
+			.toBe('or');
+
+		// Closed at first: its options hidden until its row is clicked.
+		const group = tag.locator('.wp-block-matter-filter__group');
+
+		await expect(group).not.toHaveAttribute('open');
+		// The end of the row, past its (editable) name.
+		const row = tag.locator('.wp-block-matter-filter__summary');
+		const { width } = await row.boundingBox();
+
+		await row.click({ position: { x: width - 4, y: 4 } });
+		await expect(group).toHaveAttribute('open', '');
+		expect((await filterAttributes(page))[1].open).toBe(false);
+	});
+});

@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Tab",
 	"category": "widgets",
-	"icon": "excerpt-view",
 	"description": "A tab's label and content.",
 	"parent": [
 		"matter/tabs",

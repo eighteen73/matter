@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Drawer",
 	"category": "widgets",
-	"icon": "align-pull-right",
 	"description": "Content that slides in from the edge of the screen, opened by a button or link.",
 	"keywords": [
 		"offcanvas",

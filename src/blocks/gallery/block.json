@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Gallery",
 	"category": "media",
-	"icon": "format-gallery",
 	"description": "Images in a grid or carousel that open in a lightbox, cropped to one aspect ratio.",
 	"keywords": [
 		"images",

@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Tabs",
 	"category": "widgets",
-	"icon": "index-card",
 	"description": "Content split into tabs you write here. To show posts as tabs automatically, use Posts tabs.",
 	"attributes": {
 		"matterId": {

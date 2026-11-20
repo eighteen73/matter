@@ -48,6 +48,24 @@ final class PriceSource implements Source, QueryParams {
 	}
 
 	/**
+	 * Its icon in the editor: the shop's currency (pound, euro or dollar),
+	 * else a card.
+	 *
+	 * @return string
+	 */
+	public function icon(): string {
+		$currency = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
+		$symbol   = function_exists( 'get_woocommerce_currency_symbol' ) ? html_entity_decode( get_woocommerce_currency_symbol( $currency ) ) : '';
+
+		return match ( true ) {
+			'GBP' === $currency          => 'currency-pound',
+			'EUR' === $currency          => 'currency-euro',
+			str_contains( $symbol, '$' ) => 'currency-dollar',
+			default                      => 'price',
+		};
+	}
+
+	/**
 	 * Products.
 	 *
 	 * @return string[]

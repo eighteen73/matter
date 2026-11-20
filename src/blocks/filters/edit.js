@@ -1,7 +1,10 @@
 /**
- * The filters in the editor: a list of filter blocks, with the label the
- * drawer is named by. The panel and drawer are the front end's: in the editor
- * the filters always show inline.
+ * The filters in the editor: a list of filter blocks, inline as on a wide
+ * screen. In a bar (the variant's `layout`), a row of buttons, each filter's
+ * options opening below its button while it's selected; the front end's
+ * classes, so the bar's styles are the front end's (filters/bar.scss, here
+ * unscoped: the editor's width is no guide to the site's). The drawer is the
+ * front end's.
  */
 
 /**
@@ -12,16 +15,34 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { PanelBody, TextControl } from '@wordpress/components';
+import { TextControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-export default function Edit({ attributes: { label }, setAttributes }) {
-	const blockProps = useBlockProps();
+/**
+ * Internal dependencies
+ */
+import { ToolsPanel, ToolsPanelItem } from '../../components/compat';
+import { filtersLayout } from './layout';
+
+export default function Edit({
+	attributes: { label, className },
+	setAttributes,
+}) {
+	const layout = filtersLayout(className);
+	const blockProps = useBlockProps({
+		className: [
+			`is-layout-${layout}`,
+			layout === 'bar' ? 'is-expanded' : '',
+		]
+			.filter(Boolean)
+			.join(' '),
+	});
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'wp-block-matter-filters__form' },
 		{
 			allowedBlocks: ['matter/filter'],
 			template: [['matter/filter']],
+			orientation: layout === 'bar' ? 'horizontal' : 'vertical',
 			renderAppender: undefined,
 		}
 	);
@@ -29,20 +50,32 @@ export default function Edit({ attributes: { label }, setAttributes }) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={__('Filters', 'matter')}>
-					<TextControl
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() => setAttributes({ label: '' })}
+				>
+					<ToolsPanelItem
 						label={__('Name', 'matter')}
-						help={__(
-							'Names the filters panel on small screens, and its button. Default: Filters.',
-							'matter'
-						)}
-						value={label}
-						placeholder={__('Filters', 'matter')}
-						onChange={(value) => setAttributes({ label: value })}
-					/>
-				</PanelBody>
+						hasValue={() => !!label}
+						onDeselect={() => setAttributes({ label: '' })}
+						isShownByDefault
+					>
+						<TextControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							label={__('Name', 'matter')}
+							help={__(
+								'Names the drawer on small screens, and the Filters button.',
+								'matter'
+							)}
+							value={label}
+							placeholder={__('Filters', 'matter')}
+							onChange={(value) =>
+								setAttributes({ label: value })
+							}
+						/>
+					</ToolsPanelItem>
+				</ToolsPanel>
 			</InspectorControls>
 			<div {...blockProps}>
 				<div {...innerBlocksProps} />

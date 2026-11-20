@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { registerBlockType } from '@wordpress/blocks';
+import { archive } from '@wordpress/icons';
 import { InnerBlocks } from '@wordpress/block-editor';
 
 /**
@@ -12,6 +13,7 @@ import metadata from './block.json';
 import './editor.scss';
 
 registerBlockType(metadata.name, {
+	icon: archive,
 	edit: Edit,
 	save: () => <InnerBlocks.Content />,
 });

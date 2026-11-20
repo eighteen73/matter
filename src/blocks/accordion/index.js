@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { registerBlockType } from '@wordpress/blocks';
+import { accordion } from '@wordpress/icons';
 import { InnerBlocks } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
@@ -14,6 +15,7 @@ import './editor.scss';
 import './style.scss';
 
 registerBlockType(metadata.name, {
+	icon: accordion,
 	edit: Edit,
 	save: () => <InnerBlocks.Content />,
 	variations: [

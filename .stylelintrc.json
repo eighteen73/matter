@@ -43,7 +43,9 @@
 			{
 				"ignoreProperties": [
 					"position-area",
-					"position-try-fallbacks"
+					"position-try-fallbacks",
+					"anchor-name",
+					"position-anchor"
 				]
 			}
 		],

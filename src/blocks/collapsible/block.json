@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Collapsible",
 	"category": "widgets",
-	"icon": "arrow-down-alt2",
 	"description": "Content that stays hidden until a button or link reveals it.",
 	"keywords": [
 		"toggle",

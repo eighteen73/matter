@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Accordion item",
 	"category": "widgets",
-	"icon": "minus",
 	"description": "A title and the content it reveals.",
 	"parent": [
 		"matter/accordion",

@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { registerBlockType } from '@wordpress/blocks';
+import { navigationOverlay } from '@wordpress/icons';
 import { InnerBlocks } from '@wordpress/block-editor';
 
 /**
@@ -15,6 +16,7 @@ import '../../overlay/editor/editor.scss';
 import './style.scss';
 
 registerBlockType(metadata.name, {
+	icon: navigationOverlay,
 	edit: Edit,
 	save: () => <InnerBlocks.Content />,
 });

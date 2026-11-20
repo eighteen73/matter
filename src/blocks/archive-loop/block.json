@@ -5,7 +5,6 @@
 	"version": "1.0.0",
 	"title": "Archive list",
 	"category": "theme",
-	"icon": "grid-view",
 	"description": "The archive's posts or products, as the theme lists them. Add content above and below it.",
 	"attributes": {
 		"lock": {
