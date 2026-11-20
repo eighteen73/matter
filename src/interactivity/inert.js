@@ -48,6 +48,12 @@ const holders = new Set();
 const counts = new WeakMap();
 const pausers = new Set();
 
+// The modal dialogs open now, what their suspension let go of, and what it
+// paused.
+let modals = 0;
+let resumes = [];
+const suspended = new Set();
+
 /**
  * Count a holder of an element, making it inert if nobody holds it yet. An
  * element that was inert before any holder is left as it is.
@@ -192,7 +198,14 @@ export function inertAround(element, { root = document.body, keep = '' } = {}) {
  * @return {Function} Puts back what is still held, and resumes what was paused.
  */
 export function suspendForModal(dialog, opener = null) {
-	const suspended = new Set();
+	// One suspension for all the modals that are open at once (one opened from
+	// inside another, or the next of a group opening before the last closes):
+	// it starts with the first and ends with the last, so closing one doesn't
+	// put the page back under another that is still open.
+	const first = 0 === modals;
+	let ended = false;
+
+	++modals;
 
 	holders.forEach((changed) =>
 		changed
@@ -203,16 +216,30 @@ export function suspendForModal(dialog, opener = null) {
 			})
 	);
 
-	const resumes = [...pausers].map((pause) => pause(dialog, opener));
+	if (first) {
+		resumes = [...pausers].map((pause) => pause(dialog, opener));
+	}
 
 	return () => {
+		if (ended) {
+			return;
+		}
+
+		ended = true;
+
+		if (--modals > 0) {
+			return;
+		}
+
 		resumes.forEach((resume) => resume?.());
+		resumes = [];
 		suspended.forEach((element) => {
 			// Not if every holder let go meanwhile.
 			if (counts.has(element)) {
 				element.setAttribute('inert', '');
 			}
 		});
+		suspended.clear();
 	};
 }
 

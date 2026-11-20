@@ -214,6 +214,96 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 	});
 });
 
+test.describe('modals over a panel', { tag: '@cross-browser' }, () => {
+	test.use({ viewport: VIEWPORTS.mobile });
+
+	test('a modal opened from a modal over the panel leaves the first usable when it closes', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		// Two modals in the page, which the open panel holds inert, and a
+		// button in each panel and modal to open the next.
+		await page.evaluate(() => {
+			const holder = document.createElement('div');
+			holder.id = 'modal-holder';
+			document.body.prepend(holder);
+			holder.append(
+				document.querySelector('dialog#in-tab'),
+				document.querySelector('dialog#in-accordion')
+			);
+
+			const add = (parent, id, controls) => {
+				const button = document.createElement('button');
+
+				button.type = 'button';
+				button.id = id;
+				button.textContent = id;
+				button.setAttribute('aria-controls', controls);
+				parent.append(button);
+			};
+
+			add(
+				document.querySelector('#test-nav .matter-panel__content'),
+				'open-a',
+				'in-tab'
+			);
+			add(
+				document.querySelector('dialog#in-tab'),
+				'open-b',
+				'in-accordion'
+			);
+		});
+
+		const before = await inertElements(page);
+
+		await page.locator('[aria-controls="test-nav"]').click();
+		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
+		await expect.poll(() => isLive(page, 'h1')).toBe(false);
+
+		const a = page.getByRole('dialog', { name: 'Modal in a tab' });
+		const b = page.getByRole('dialog', { name: 'Modal in an accordion' });
+
+		await page.locator('#open-a').click();
+		await expect(a).toBeVisible();
+		await page.locator('#open-b').click();
+		await expect(b).toBeVisible();
+		await b.getByRole('button', { name: 'Close' }).click();
+		await expect(b).toBeHidden();
+
+		// The first is still open, usable, and keeps focus: the panel's trap is
+		// still resting and nothing around the first is inert again.
+		await expect(a).toBeVisible();
+		// (WebKit doesn't focus a button on click, so only where focus isn't.)
+		const focusInPanel = () =>
+			page.evaluate(() =>
+				Boolean(
+					window.document.activeElement.closest(
+						'#test-nav .matter-panel__content'
+					)
+				)
+			);
+
+		expect(await focusInPanel()).toBe(false);
+		expect(await isLive(page, 'dialog#in-tab')).toBe(true);
+		await page.waitForTimeout(250);
+		expect(await focusInPanel()).toBe(false);
+
+		// Closing it puts the panel back, and closing that leaves nothing inert.
+		await a.getByRole('button', { name: 'Close' }).click();
+		await expect(a).toBeHidden();
+		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
+		expect(await isLive(page, '.matter-panel__close')).toBe(true);
+		expect(await isLive(page, 'h1')).toBe(false);
+
+		await page.locator('.matter-panel__close').click();
+		await expect(page.locator('#test-nav')).not.toHaveClass(/\bis-open\b/);
+		await expect.poll(() => inertElements(page)).toEqual(before);
+	});
+});
+
 test.describe('drill-down', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: VIEWPORTS.mobile });
 

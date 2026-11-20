@@ -166,6 +166,82 @@ describe('inertAround', () => {
 			suspendForModal(dialog)();
 			expect(pause).toHaveBeenCalledTimes(1);
 		});
+
+		describe('more than one modal at a time', () => {
+			const setup = () => {
+				const content = build();
+
+				document
+					.getElementById('main')
+					.insertAdjacentHTML(
+						'beforeend',
+						'<section id="section"><dialog id="a"></dialog><dialog id="b"></dialog></section>'
+					);
+
+				const resumeTrap = jest.fn();
+				const pause = jest.fn(() => resumeTrap);
+				const stop = onModal(pause);
+
+				inertAround(content);
+
+				return {
+					a: document.getElementById('a'),
+					b: document.getElementById('b'),
+					pause,
+					resumeTrap,
+					stop,
+				};
+			};
+
+			it('stays suspended until the last of nested modals closes', () => {
+				const { a, b, pause, resumeTrap, stop } = setup();
+				const resumeA = suspendForModal(a);
+				const resumeB = suspendForModal(b);
+
+				// One pause for both.
+				expect(pause).toHaveBeenCalledTimes(1);
+
+				resumeB();
+				// A is still open: nothing re-applied, nothing resumed.
+				expect(a.closest('[inert]')).toBeNull();
+				expect(resumeTrap).not.toHaveBeenCalled();
+
+				resumeA();
+				expect(a.closest('[inert]')).not.toBeNull();
+				expect(resumeTrap).toHaveBeenCalledTimes(1);
+				stop();
+			});
+
+			it('stays suspended when the new modal opens before the old one closes', () => {
+				const { a, b, pause, resumeTrap, stop } = setup();
+				const resumeA = suspendForModal(a);
+				const resumeB = suspendForModal(b);
+
+				// Stepping in a group: the old one closes after the new one opened.
+				resumeA();
+				expect(b.closest('[inert]')).toBeNull();
+				expect(resumeTrap).not.toHaveBeenCalled();
+
+				resumeB();
+				expect(b.closest('[inert]')).not.toBeNull();
+				expect(resumeTrap).toHaveBeenCalledTimes(1);
+				expect(pause).toHaveBeenCalledTimes(1);
+				stop();
+			});
+
+			it('suspends again after everything closed, and a resume counts once', () => {
+				const { a, pause, resumeTrap, stop } = setup();
+				const resume = suspendForModal(a);
+
+				resume();
+				resume();
+				expect(resumeTrap).toHaveBeenCalledTimes(1);
+
+				suspendForModal(a)();
+				expect(pause).toHaveBeenCalledTimes(2);
+				stop();
+			});
+		});
 	});
 
 	describe('several holders', () => {
