@@ -309,8 +309,15 @@ class Overlay {
 	private static function give_id( WP_HTML_Tag_Processor $tags, string $id, ?string &$heading ): string {
 		$existing = $tags->get_attribute( 'id' );
 
+		// An ID the author gave is kept, unless this page has it already (a
+		// second copy of the overlay): then the copy's heading gets the next.
 		if ( is_string( $existing ) && '' !== $existing ) {
-			$heading = $existing;
+			$claimed = Ids::claim( $existing );
+			$heading = '' !== $claimed ? $claimed : $existing;
+
+			if ( $heading !== $existing ) {
+				$tags->set_attribute( 'id', $heading );
+			}
 
 			return $tags->get_updated_html();
 		}

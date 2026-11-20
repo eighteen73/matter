@@ -225,4 +225,21 @@ class AccessibilityTest extends TestCase {
 			$this->assertStringContainsString( '<h2 id="join-title" class="wp-block-heading">Real title</h2>', $html, $what );
 		}
 	}
+
+	/**
+	 * Two copies of a modal whose heading has an ID of its own (an anchor):
+	 * the second copy's heading gets a unique one, and its dialog is named by
+	 * that, not by the first copy's.
+	 *
+	 * @return void
+	 */
+	public function test_a_repeated_dialog_with_an_anchored_heading_is_named_by_its_own(): void {
+		$markup = '<!-- wp:matter/modal {"overlayId":"join"} --><!-- wp:matter/slot {"name":"content"} --><!-- wp:heading {"anchor":"mine"} --><h2 class="wp-block-heading" id="mine">Mine</h2><!-- /wp:heading --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->';
+		$html   = $this->render( $markup . $markup );
+
+		$this->assertSame( 1, substr_count( $html, 'id="mine"' ) );
+		$this->assertSame( 1, substr_count( $html, 'id="mine-2"' ) );
+		$this->assertStringContainsString( 'aria-labelledby="mine"', $html );
+		$this->assertStringContainsString( 'aria-labelledby="mine-2"', $html );
+	}
 }
