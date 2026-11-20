@@ -801,7 +801,7 @@ A loop item with another version than `Prerendered::version()` gives today is st
 
 ## Integrations
 
-Matter's own code never names another plugin. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads.
+Matter's PHP never calls another plugin outside an integration. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads. One part of an integration sits with Matter's blocks: the Gravity Form block's source is `src/blocks/gravity-form/` and the block registry lists its folder (`INTEGRATION_BLOCKS`), so it builds like the other blocks, but it registers only when the integration turns it on.
 
 | Integration | Boots when | Adds |
 | --- | --- | --- |

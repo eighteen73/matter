@@ -170,7 +170,7 @@ class IntegrationsTest extends TestCase {
 			}
 		};
 
-		$add = fn( $integrations ) => [ ...$integrations, $booted::class, \stdClass::class ];
+		$add = fn( $integrations ) => [ ...$integrations, $booted::class, \stdClass::class, [ 'not a class name' ], null, 42 ];
 		add_filter( 'matter_integrations', $add );
 		$this->hooks[] = [ 'matter_integrations', $add, 10 ];
 

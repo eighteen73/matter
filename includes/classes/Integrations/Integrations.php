@@ -70,7 +70,7 @@ final class Integrations {
 	 */
 	public function boot(): void {
 		foreach ( self::all() as $class ) {
-			if ( isset( $this->booted[ $class ] ) || ! is_string( $class ) || ! is_subclass_of( $class, Integration::class ) ) {
+			if ( ! is_string( $class ) || isset( $this->booted[ $class ] ) || ! is_subclass_of( $class, Integration::class ) ) {
 				continue;
 			}
 

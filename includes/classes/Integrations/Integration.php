@@ -2,10 +2,12 @@
 /**
  * An integration with another plugin.
  *
- * Matter's own code never names another plugin. What Matter does with one
- * (WooCommerce's products, Gravity Forms' forms) lives in an integration,
- * which boots only when that plugin is active and adds to Matter through its
- * hooks. See Integrations for the list.
+ * Matter's PHP never calls another plugin outside an integration. What Matter
+ * does with one (WooCommerce's products, Gravity Forms' forms) lives in an
+ * integration, which boots only when that plugin is active and adds to Matter
+ * through its hooks. See Integrations for the list. (The Gravity Form block's
+ * source stays with Matter's blocks, and registers only when its integration
+ * turns it on.)
  *
  * @package Eighteen73\Matter
  */
