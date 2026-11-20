@@ -89,7 +89,14 @@ class FocalPoint {
 	 */
 	public function render_featured_image( string $block_content, array $block, WP_Block $instance ): string {
 		$post_id = (int) ( $instance->context['postId'] ?? get_the_ID() );
-		$point   = $post_id ? get_post_meta( $post_id, self::META_KEY, true ) : null;
+
+		// A point kept after the image was removed has nothing to apply to
+		// (and a placeholder or fallback image isn't the one it was set on).
+		if ( ! $post_id || ! has_post_thumbnail( $post_id ) ) {
+			return $block_content;
+		}
+
+		$point = get_post_meta( $post_id, self::META_KEY, true );
 
 		return self::apply( $block_content, $point );
 	}

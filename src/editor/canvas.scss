@@ -92,9 +92,15 @@
 	width: 100%;
 }
 
-// Image focal point preview.
+// Image and featured image focal point preview.
 .wp-block-image[style*="--image-focal-point"] img {
 	object-position: var(--image-focal-point);
+}
+
+// (The featured image's is set by a rule from its edit component, as the
+// block isn't given the post's point.)
+.wp-block-post-featured-image img {
+	object-position: var(--image-focal-point, 50% 50%);
 }
 
 // Slot labels (e.g. an overlay's "Trigger" and "Content" areas).

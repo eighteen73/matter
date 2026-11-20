@@ -89,4 +89,37 @@ class ExtensionsTest extends TestCase {
 		remove_filter( 'wp_theme_json_data_theme', $theme_json );
 		wp_clean_theme_json_cache();
 	}
+
+	/**
+	 * A featured image's focal point applies only while the post has a
+	 * featured image.
+	 *
+	 * @return void
+	 */
+	public function test_featured_image_focal_point_needs_an_image(): void {
+		$post       = self::factory()->post->create();
+		$attachment = self::factory()->attachment->create( [ 'post_mime_type' => 'image/jpeg' ] );
+		$html       = '<figure class="wp-block-post-featured-image"><img src="a.jpg" alt=""/></figure>';
+		$block      = new \WP_Block(
+			[ 'blockName' => 'core/post-featured-image' ],
+			[ 'postId' => $post ]
+		);
+		$focal      = \Eighteen73\Matter\Extensions\FocalPoint::instance();
+
+		update_post_meta(
+			$post,
+			\Eighteen73\Matter\Extensions\FocalPoint::META_KEY,
+			[
+				'x' => 0.2,
+				'y' => 0.8,
+			]
+		);
+
+		// A point is kept after the image is removed: it applies to nothing.
+		$this->assertStringNotContainsString( 'object-position', $focal->render_featured_image( $html, [], $block ) );
+
+		update_post_meta( $post, '_thumbnail_id', $attachment );
+
+		$this->assertStringContainsString( 'object-position:20% 80%', $focal->render_featured_image( $html, [], $block ) );
+	}
 }

@@ -97,6 +97,48 @@ addFilter(
 	)
 );
 
+/**
+ * The featured image block previews the post's focal point (an unsaved change
+ * included, as the document panel edits the post's meta). A block's list
+ * entry isn't given its context, but its edit component is, so the point goes
+ * to the canvas as a custom property on the block (canvas.scss uses it).
+ *
+ * @param {Object} props Block edit props, and `BlockEdit`, the block's edit
+ *                       component; `context` has the block's post.
+ * @return {Element} The block.
+ */
+function FeaturedImageEdit(props) {
+	const { BlockEdit, ...rest } = props;
+	const { postId, postType } = rest.context ?? {};
+	const [meta] = useEntityProp('postType', postType, 'meta', postId);
+	const focalPoint = meta?.[META_KEY];
+
+	return (
+		<>
+			<BlockEdit {...rest} />
+			{focalPoint && (
+				<style>
+					{`[data-block="${rest.clientId}"]{--image-focal-point:${toPosition(focalPoint)}}`}
+				</style>
+			)}
+		</>
+	);
+}
+
+addFilter(
+	'editor.BlockEdit',
+	'matter/focal-point/featured-image-preview',
+	createHigherOrderComponent(
+		(BlockEdit) => (props) =>
+			props.name === 'core/post-featured-image' ? (
+				<FeaturedImageEdit BlockEdit={BlockEdit} {...props} />
+			) : (
+				<BlockEdit {...props} />
+			),
+		'withFeaturedImageFocalPointPreview'
+	)
+);
+
 function FeaturedImageFocalPoint() {
 	const { postType, featuredImageUrl } = useSelect((select) => {
 		const { getCurrentPostType, getEditedPostAttribute } =
