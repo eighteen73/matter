@@ -31,7 +31,11 @@ addFilter(
 			return (
 				<BlockListBlock
 					{...props}
-					className={[props.className, 'matter-needs-link']
+					className={[
+						props.className,
+						'matter-has-hint',
+						'matter-needs-link',
+					]
 						.filter(Boolean)
 						.join(' ')}
 					wrapperProps={{

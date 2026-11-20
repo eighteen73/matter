@@ -14,13 +14,12 @@
 	width: 1em;
 }
 
-// A button with text but no link (extensions/button-link.js): an outline in
-// the admin colour with a "No link" tag in its top corner, both inside the
-// block's box so they don't change its spacing. Editor UI, so not left to the
-// theme.
-.wp-block-button.matter-needs-link {
-	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
-	outline-offset: -2px;
+// A hint on a block in the editor: a tag in its top corner (its
+// `data-matter-hint`), inside the block's box so it doesn't change its
+// spacing. Editor UI, so not left to the theme. Used for a button with text
+// but no link (extensions/button-link.js), which is outlined too, and for
+// archive content (where editors add content around it).
+.matter-has-hint {
 	position: relative;
 
 	&::before {
@@ -42,6 +41,11 @@
 		white-space: nowrap;
 		z-index: 1;
 	}
+}
+
+.wp-block-button.matter-needs-link {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: -2px;
 }
 
 // "Add tab" and "Add item" (components/add-button.js): core's block appender
