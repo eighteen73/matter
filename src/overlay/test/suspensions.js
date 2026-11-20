@@ -131,3 +131,25 @@ describe('suspensions', () => {
 		expect(resumed).toBe(1);
 	});
 });
+
+describe('prune, with a resume that throws', () => {
+	it('puts the rest back, then throws the first error', () => {
+		document.body.innerHTML = '';
+
+		const suspensions = createSuspensions();
+		const first = dialog('a');
+		const second = dialog('b');
+		const resumed = jest.fn();
+
+		suspensions.hold(first, () => {
+			throw new Error('first');
+		});
+		suspensions.hold(second, resumed);
+		first.remove();
+		second.remove();
+
+		expect(() => suspensions.prune()).toThrow('first');
+		expect(resumed).toHaveBeenCalledTimes(1);
+		expect(suspensions.size).toBe(0);
+	});
+});

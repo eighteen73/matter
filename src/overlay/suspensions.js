@@ -53,13 +53,26 @@ export const createSuspensions = () => {
 		 *                        its suspension stays.
 		 */
 		prune(keep = () => false) {
+			const errors = [];
+
 			[...resumes.keys()]
 				.filter(
 					(dialog) =>
 						(!dialog.isConnected || !dialog.open) &&
 						!(dialog.isConnected && keep(dialog))
 				)
-				.forEach((dialog) => this.release(dialog));
+				.forEach((dialog) => {
+					// One that throws doesn't leave the rest held.
+					try {
+						this.release(dialog);
+					} catch (error) {
+						errors.push(error);
+					}
+				});
+
+			if (errors.length) {
+				throw errors[0];
+			}
 		},
 
 		get size() {

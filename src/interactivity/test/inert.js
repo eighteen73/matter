@@ -439,3 +439,43 @@ describe('supports', () => {
 		expect(supports(':not-a-pseudo-class')).toBe(false);
 	});
 });
+
+describe('a resume that throws', () => {
+	it('still puts the rest back, then throws the first error', () => {
+		const content = build();
+		const main = document.getElementById('main');
+		const dialog = document.createElement('dialog');
+		const resumed = jest.fn();
+
+		main.append(dialog);
+
+		const release = inertAround(content);
+		const stopFirst = onModal(() => () => {
+			throw new Error('first');
+		});
+		const stopSecond = onModal(() => resumed);
+		const finish = suspendForModal(dialog);
+
+		// The page is usable under the modal while it's open.
+		expect(main.hasAttribute('inert')).toBe(false);
+
+		expect(finish).toThrow('first');
+		expect(resumed).toHaveBeenCalledTimes(1);
+		// And the held page is inert again, as it was.
+		expect(main.hasAttribute('inert')).toBe(true);
+
+		stopFirst();
+		stopSecond();
+
+		// The depth is back to 0: the next modal pauses what is paused again.
+		const again = jest.fn(() => () => {});
+		const stopThird = onModal(again);
+		const next = suspendForModal(dialog);
+
+		expect(again).toHaveBeenCalled();
+		next();
+
+		stopThird();
+		release();
+	});
+});

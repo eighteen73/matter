@@ -238,8 +238,21 @@ export function suspendForModal(dialog, opener = null) {
 		}
 
 		firstModal = null;
-		resumes.forEach((resume) => resume?.());
+
+		// A resume that throws mustn't leave the others, or the page's inert,
+		// undone: each runs, the page is put back whatever happens, and the
+		// first error is thrown after.
+		const pending = resumes;
+		const errors = [];
+
 		resumes = [];
+		pending.forEach((resume) => {
+			try {
+				resume?.();
+			} catch (error) {
+				errors.push(error);
+			}
+		});
 		suspended.forEach((element) => {
 			// Not if every holder let go meanwhile.
 			if (counts.has(element)) {
@@ -247,6 +260,10 @@ export function suspendForModal(dialog, opener = null) {
 			}
 		});
 		suspended.clear();
+
+		if (errors.length) {
+			throw errors[0];
+		}
 	};
 
 	if (first) {

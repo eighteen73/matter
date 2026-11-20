@@ -151,15 +151,25 @@ const syncDocumentClass = () => {
 	// A dialog removed while open is no longer holding anything back. One that
 	// can't be closed, and was closed by the browser (Chromium on a repeated
 	// Escape), is shown again by its close event: it keeps its suspension.
-	suspensions.prune((dialog) => {
-		const id = [...elements].find(([, element]) => element === dialog)?.[0];
+	// If putting the page back throws, the lock below is still brought up to
+	// date, and the error is thrown after.
+	let failure = null;
 
-		return (
-			!!id &&
-			!!state.items[id]?.isOpen &&
-			state.items[id].dismissible === false
-		);
-	});
+	try {
+		suspensions.prune((dialog) => {
+			const id = [...elements].find(
+				([, element]) => element === dialog
+			)?.[0];
+
+			return (
+				!!id &&
+				!!state.items[id]?.isOpen &&
+				state.items[id].dismissible === false
+			);
+		});
+	} catch (error) {
+		failure = error;
+	}
 
 	const open = [...elements.entries()].some(
 		([id, element]) => isDialog(id) && element.isConnected && element.open
@@ -186,6 +196,10 @@ const syncDocumentClass = () => {
 	} else if (!open && removalWatcher) {
 		removalWatcher.disconnect();
 		removalWatcher = null;
+	}
+
+	if (failure) {
+		throw failure;
 	}
 };
 
@@ -812,8 +826,11 @@ const { state, actions } = store('matter/overlay', {
 
 				// This element's own, whether or not it is still the one for
 				// its ID (a same-ID replacement starts before this runs).
-				suspensions.release(ref);
-				syncDocumentClass();
+				try {
+					suspensions.release(ref);
+				} finally {
+					syncDocumentClass();
+				}
 			};
 		},
 
@@ -883,10 +900,15 @@ const { state, actions } = store('matter/overlay', {
 				item.autoOpened = false;
 			}
 
-			suspensions.release(ref);
-			syncDocumentClass();
-			restoreFocus(id);
-			emit(ref, 'overlay', 'close');
+			// Whatever a resume does, the page's lock is looked at again and
+			// focus goes back.
+			try {
+				suspensions.release(ref);
+			} finally {
+				syncDocumentClass();
+				restoreFocus(id);
+				emit(ref, 'overlay', 'close');
+			}
 		},
 		// Escape: ignored by dialogs that can't be closed; others close as
 		// any close does, with their closing transition. (Chromium may not
