@@ -1002,6 +1002,9 @@ test.describe('collections: galleries, vertical tabs and posts displays', () => 
 	let collectionsPage;
 
 	test.beforeAll(async ({ requestUtils }) => {
+		// Posts left by an earlier run would push these out of the accordion.
+		await requestUtils.deleteAllPosts();
+
 		const ids = await createPosts(requestUtils, [
 			'Matter post one',
 			'Matter post two',
@@ -1540,7 +1543,11 @@ test.describe('archive entries are not pages, logged out', () => {
 			const body = await feed.text();
 
 			expect(feed.status(), path).toBe(404);
-			expect(body, path).not.toContain('<item>');
+			// (A feed that also asks for posts lists those, but never an entry.)
+			if (!path.includes('post_type[]=post')) {
+				expect(body, path).not.toContain('<item>');
+			}
+
 			expect(body, path).not.toContain('<entry>');
 			expect(body, path).not.toContain('Entry title that must not leak');
 		}
