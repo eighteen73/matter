@@ -40,7 +40,7 @@ class Registry {
 	/**
 	 * Matter's blocks for another plugin's content (folder names), which
 	 * register only when that plugin's integration turns them on with
-	 * `matter_register_{$block_slug}` (see Integrations).
+	 * `matter_register_block` (see Integrations).
 	 *
 	 * @var string[]
 	 */

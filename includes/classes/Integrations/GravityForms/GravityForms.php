@@ -40,12 +40,12 @@ final class GravityForms implements Integration {
 	/**
 	 * Turn on Matter's Gravity Form block, which is off without this plugin.
 	 *
-	 * @param bool   $register Whether the block registers.
+	 * @param mixed  $register Whether the block registers (an earlier filter may return anything).
 	 * @param string $name     Block name.
 	 * @return bool
 	 */
-	public function register_form_block( bool $register, string $name ): bool {
-		return 'matter/gravity-form' === $name ? true : $register;
+	public function register_form_block( $register, string $name ): bool {
+		return 'matter/gravity-form' === $name ? true : (bool) $register;
 	}
 
 	/**

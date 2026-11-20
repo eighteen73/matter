@@ -984,7 +984,7 @@ Every hook Matter fires, with its arguments, except the [Filters](#filters), [Li
 | --- | --- |
 | `matter_archive_default_content` | `string $content, Target $target`: the content of an archive without an entry. `Target` is `Eighteen73\Matter\Archives\Target`. |
 | `matter_archive_paged_content` | `string $content, Target $target`: the content around the list on page 2 and later, in place of the entry's. Default: the archive's title as the H1, then the list. |
-| `matter_archive_term_image_id` | `int $image, ?WP_Term $term`: a term archive's image (attachment ID). |
+| `matter_archive_term_image_id` | `int $image, WP_Term $term`: a term archive's image (attachment ID). |
 | `matter_archive_post_type_title` | `?string $title, string $post_type`: a post type archive's title; null works it out. |
 
 **Integrations**
