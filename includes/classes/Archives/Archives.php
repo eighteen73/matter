@@ -115,8 +115,9 @@ class Archives {
 	}
 
 	/**
-	 * The archive list block can be added only to an entry, and there only
-	 * once (`supports.multiple`), so it can be put back if it's removed (it
+	 * The archive list block can be added only to an entry (when blocks are a
+	 * list; with every block allowed it's left alone and the editor's own filter
+	 * keeps it to entries), and there only once (`supports.multiple`), so it can be put back if it's removed (it
 	 * can't be deleted on its own, but can by grouping it first).
 	 *
 	 * @param array|bool               $allowed_blocks Block names, or true/false for all/none.
@@ -134,8 +135,13 @@ class Archives {
 			return is_array( $allowed_blocks ) ? array_values( array_unique( [ ...$allowed_blocks, $block ] ) ) : $allowed_blocks;
 		}
 
-		if ( true === $allowed_blocks ) {
-			$allowed_blocks = array_keys( \WP_Block_Type_Registry::get_instance()->get_all_registered() );
+		// Every block is allowed: leave it so. Turning `true` into a list of the
+		// registered blocks would restrict the editor to JavaScript-less blocks
+		// (a block registered only in JavaScript isn't on the server's list).
+		// The block is kept out of other editors in JavaScript instead
+		// (editor/extensions/archive-loop.js).
+		if ( ! is_array( $allowed_blocks ) ) {
+			return $allowed_blocks;
 		}
 
 		return array_values( array_diff( $allowed_blocks, [ $block ] ) );

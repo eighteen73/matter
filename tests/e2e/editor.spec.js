@@ -209,6 +209,60 @@ test.describe('section markup in the editor', () => {
 	});
 });
 
+test.describe('allowed blocks when every block is allowed', () => {
+	test('a block registered only in JavaScript stays insertable, and the Archive list only in an archive entry', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		const probe = () =>
+			page.evaluate(() => {
+				const { blocks: wpBlocks, data } = window.wp;
+
+				if (!wpBlocks.getBlockType('matter-test/js-only')) {
+					wpBlocks.registerBlockType('matter-test/js-only', {
+						title: 'JS only',
+						category: 'text',
+						edit: () => null,
+						save: () => null,
+					});
+				}
+
+				const { canInsertBlockType } = data.select('core/block-editor');
+
+				return {
+					settings: data.select('core/block-editor').getSettings()
+						.allowedBlockTypes,
+					jsOnly: canInsertBlockType('matter-test/js-only'),
+					loop: canInsertBlockType('matter/archive-loop'),
+				};
+			});
+
+		await admin.createNewPost();
+		expect(await probe()).toEqual({
+			settings: true,
+			jsOnly: true,
+			loop: false,
+		});
+
+		const entry = await createArchiveEntry(requestUtils, 'search', {
+			content: '<!-- wp:paragraph --><p>Entry</p><!-- /wp:paragraph -->',
+		});
+
+		await page.goto(`/wp-admin/post.php?post=${entry.id}&action=edit`);
+		await page.waitForFunction(() =>
+			window.wp?.data?.select('core/editor')?.getCurrentPostId()
+		);
+		expect(await probe()).toEqual({
+			settings: true,
+			jsOnly: true,
+			loop: true,
+		});
+
+		await deleteArchiveEntries(requestUtils);
+	});
+});
+
 test.describe('slot-only blocks', () => {
 	test.beforeAll(async ({ requestUtils }) => {
 		await requestUtils.updateSiteSettings({

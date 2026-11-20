@@ -26,6 +26,7 @@ import { sectionLabel } from './section-label';
 import './archives/bindings';
 import './archives/bound-source';
 import './archives/shows-on';
+import './extensions/archive-loop';
 import './extensions/block-link';
 import './extensions/button-icon';
 import './extensions/button-link';

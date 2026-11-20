@@ -70,16 +70,14 @@ class AllowedBlocksTest extends TestCase {
 	}
 
 	/**
-	 * Without a theme list, everything but the archive list outside entries.
+	 * Without a theme list, every block is allowed.
 	 *
 	 * @return void
 	 */
 	public function test_unrestricted(): void {
-		$page = $this->allowed( 'page' );
-
-		$this->assertIsArray( $page );
-		$this->assertContains( 'core/group', $page );
-		$this->assertNotContains( 'matter/archive-loop', $page );
+		// Left as "every block", so a block registered only in JavaScript is
+		// still allowed; the Archive list is kept to entries in the editor.
+		$this->assertTrue( $this->allowed( 'page' ) );
 		$this->assertTrue( $this->allowed( 'matter_archive' ) );
 	}
 }

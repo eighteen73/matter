@@ -564,6 +564,26 @@ class ArchivesTest extends TestCase {
 	}
 
 	/**
+	 * With every block allowed (`true`), the editor's list is left alone
+	 * outside entries: turning it into the server's registered blocks would
+	 * drop blocks registered only in JavaScript. In an entry the Archive list
+	 * is added to a list; a list elsewhere never has it.
+	 *
+	 * @return void
+	 */
+	public function test_allowed_blocks_outside_entries_are_left_alone(): void {
+		$page  = new \WP_Block_Editor_Context( [ 'post' => self::factory()->post->create_and_get( [ 'post_type' => 'page' ] ) ] );
+		$entry = new \WP_Block_Editor_Context( [ 'post' => get_post( $this->entry( 'date' ) ) ] );
+		$run   = fn( $allowed, $context ) => apply_filters( 'allowed_block_types_all', $allowed, $context );
+
+		$this->assertTrue( $run( true, $page ) );
+		$this->assertTrue( $run( true, $entry ) );
+		$this->assertFalse( $run( false, $page ) );
+		$this->assertSame( [ 'core/paragraph' ], $run( [ 'core/paragraph', 'matter/archive-loop' ], $page ) );
+		$this->assertSame( [ 'core/paragraph', 'matter/archive-loop' ], $run( [ 'core/paragraph' ], $entry ) );
+	}
+
+	/**
 	 * A search plugin that puts an entry in the main query doesn't make the
 	 * page a 404: the entry is dropped, and the rest is shown.
 	 *
