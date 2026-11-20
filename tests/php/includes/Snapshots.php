@@ -17,6 +17,16 @@ namespace Eighteen73\Matter\Tests;
 trait Snapshots {
 
 	/**
+	 * Whether snapshots are being rewritten: only when UPDATE_SNAPSHOTS is
+	 * exactly `1`, so `0`, `false` or an empty value can't rewrite them.
+	 *
+	 * @return bool
+	 */
+	protected static function updating_snapshots(): bool {
+		return '1' === getenv( 'UPDATE_SNAPSHOTS' );
+	}
+
+	/**
 	 * Assert markup matches its stored snapshot.
 	 *
 	 * @param string $name   Snapshot name (file name without extension).
@@ -29,11 +39,11 @@ trait Snapshots {
 
 		// A missing snapshot fails: written only when asked
 		// (`npm run test:php:update`), so a lost one can't hide a change.
-		if ( ! getenv( 'UPDATE_SNAPSHOTS' ) && ! file_exists( $file ) ) {
+		if ( ! self::updating_snapshots() && ! file_exists( $file ) ) {
 			$this->fail( "No snapshot of the theme contract's {$name} markup. Write it with `npm run test:php:update`." );
 		}
 
-		if ( getenv( 'UPDATE_SNAPSHOTS' ) ) {
+		if ( self::updating_snapshots() ) {
 			wp_mkdir_p( dirname( $file ) );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Test fixture.
 			file_put_contents( $file, $actual );
