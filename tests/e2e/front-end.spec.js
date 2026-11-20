@@ -797,6 +797,53 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		);
 	});
 
+	test('a link in the panel to a collapsible is navigation: it closes the panel', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.evaluate(() =>
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.insertAdjacentHTML(
+					'beforeend',
+					'<a href="#more" id="panel-collapsible-link">More</a>'
+				)
+		);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page.locator('#panel-collapsible-link').click();
+		await expect(panel).not.toHaveClass(/\bis-open\b/);
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-panel-open\b/
+		);
+	});
+
+	test('a modified click on a link in the panel to a modal leaves the panel open, as a new tab does', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await page.evaluate(() =>
+			document
+				.querySelector('#test-nav .matter-panel__content')
+				.insertAdjacentHTML(
+					'beforeend',
+					'<a href="#in-tab" id="panel-modal-link">Offer</a>'
+				)
+		);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const panel = page.locator('#test-nav');
+
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await page
+			.locator('#panel-modal-link')
+			.click({ modifiers: ['Alt'], noWaitAfter: true });
+		await expect(panel).toHaveClass(/\bis-open\b/);
+	});
+
 	test('a drill-down submenu keeps focus while it is open', async ({
 		page,
 		browserName,

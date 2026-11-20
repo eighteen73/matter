@@ -81,18 +81,29 @@ const openers = new Map();
 const isCollapsed = (id) => queries.get(id)?.matches ?? true;
 
 /**
- * Whether a link opens an overlay on this page (the overlay script's own
- * test of a trigger: a link here, in this tab, to an overlay that exists).
+ * Whether a link opens a dialog (a modal or drawer) over the panel: the
+ * overlay script's own test of a trigger (a plain click on a link here, in
+ * this tab, to an overlay that exists, and not a copy's link to the original),
+ * for a dialog. A link to a collapsible, or an ordinary one, is navigation.
  *
- * @param {HTMLAnchorElement} link Link.
+ * @param {HTMLAnchorElement} link  Link.
+ * @param {MouseEvent}        event Click.
  * @return {boolean} Whether it does.
  */
-const opensOverlay = (link) =>
-	link.hash.length > 1 &&
-	!link.hasAttribute('data-wp-on--click') &&
-	opensHere(link) &&
-	isSamePage(link) &&
-	!!window.matter?.overlay?.(hashId(link.hash));
+const opensDialog = (link, event) => {
+	const id = hashId(link.hash);
+
+	return (
+		link.hash.length > 1 &&
+		event.button === 0 &&
+		!(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) &&
+		!link.hasAttribute('data-wp-on--click') &&
+		link.closest('[data-matter-trigger]')?.dataset.matterFrom !== id &&
+		opensHere(link) &&
+		isSamePage(link) &&
+		window.matter?.overlay?.(id)?.element?.localName === 'dialog'
+	);
+};
 
 const getContent = (panel) => panel.querySelector('.matter-panel__content');
 
@@ -526,18 +537,21 @@ const { state, actions } = store(
 					(event) => {
 						const link = event.target.closest?.('a[href]');
 						const newTab =
+							event.button !== 0 ||
 							event.metaKey ||
 							event.ctrlKey ||
 							event.shiftKey ||
+							event.altKey ||
 							link?.target === '_blank';
 
-						// A link to a modal on this page opens it over the panel, as a
-						// button does: the panel stays, and focus returns to the link.
+						// A link to a modal or drawer on this page opens it over the
+						// panel, as a button does: the panel stays, and focus returns
+						// to the link. A link to anything else is navigation.
 						if (
 							link &&
 							ref.contains(link) &&
 							!newTab &&
-							!opensOverlay(link)
+							!opensDialog(link, event)
 						) {
 							closeOnNavigate();
 						}
