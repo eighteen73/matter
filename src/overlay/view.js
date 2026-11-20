@@ -208,6 +208,17 @@ const isSamePage = (link) => {
 };
 
 /**
+ * Whether a link opens in this tab. One for a new tab or window, or a download,
+ * isn't a trigger: its own behaviour is the point of it.
+ *
+ * @param {HTMLAnchorElement} link Link.
+ * @return {boolean} Whether it navigates this page.
+ */
+const opensHere = (link) =>
+	(link.target === '' || link.target === '_self') &&
+	!link.hasAttribute('download');
+
+/**
  * Whether an element that links to or controls an overlay is its trigger.
  *
  * @param {Element} element Link or element with `aria-controls`.
@@ -233,9 +244,13 @@ const isTriggerFor = (element, id) => {
 		return true;
 	}
 
+	// An overlay's ID is ASCII (`Ids::sanitize` strips the rest, as does the
+	// editor), so `href$="#id"` finds every link to it. The hash is compared
+	// decoded, as `triggeredId` reads it.
 	return (
 		element.tagName === 'A' &&
-		element.hash === `#${id}` &&
+		hashId(element.hash) === id &&
+		opensHere(element) &&
 		isSamePage(element)
 	);
 };

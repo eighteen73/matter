@@ -61,7 +61,7 @@ test.beforeAll(async ({ requestUtils }) => {
 	triggersPage = await createPage(
 		requestUtils,
 		'Overlay triggers',
-		'<!-- wp:paragraph --><p><a href="#offer">Same page</a> <a href="https://example.com/#offer">External</a> <a href="?other=1#offer">Other query</a></p><!-- /wp:paragraph -->' +
+		'<!-- wp:paragraph --><p><a href="#offer">Same page</a> <a href="https://example.com/#offer">External</a> <a href="?other=1#offer">Other query</a> <a href="#offer" target="_blank">New tab</a> <a href="#offer" download>Download</a></p><!-- /wp:paragraph -->' +
 			'<!-- wp:matter/modal {"overlayId":"offer","label":"Offer"} --><!-- wp:matter/slot {"name":"trigger"} /--><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>The offer</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->'
 	);
 	ageGate = await createPage(
@@ -729,6 +729,30 @@ test.describe('overlay triggers and teardown', () => {
 		await page.goto(triggersPage.link);
 		await page.getByRole('link', { name: 'Same page' }).click();
 		await expect(page.getByRole('dialog', { name: 'Offer' })).toBeVisible();
+	});
+
+	test('a link that opens elsewhere or downloads is left to the browser', async ({
+		page,
+	}) => {
+		await page.goto(triggersPage.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		// Registered after Matter's listener, so it sees whether Matter took
+		// the click; it also stops the browser opening a tab or downloading.
+		await page.evaluate(() => {
+			window.matterTaken = [];
+			document.addEventListener('click', (event) => {
+				window.matterTaken.push(event.defaultPrevented);
+				event.preventDefault();
+			});
+		});
+		await page.getByRole('link', { name: 'New tab' }).click();
+		await page.getByRole('link', { name: 'Download' }).click();
+		expect(await page.evaluate(() => window.matterTaken)).toEqual([
+			false,
+			false,
+		]);
+		await expect(page.getByRole('dialog', { name: 'Offer' })).toBeHidden();
 	});
 
 	test('a Ctrl or Cmd click is left to the browser', async ({
