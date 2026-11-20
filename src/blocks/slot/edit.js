@@ -15,6 +15,11 @@ import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
+ * Internal dependencies
+ */
+import { nameTree, templateKeepsBlocks } from './template';
+
+/**
  * A slot reads its configuration (allowed blocks, template, lock) from the
  * parent block's `supports.matter.slots[ name ]`, so sections only need
  * block.json.
@@ -45,7 +50,7 @@ export default function Edit({ attributes: { name }, clientId }) {
 		parentId,
 		sectionName,
 		hasInnerBlocks,
-		innerNames,
+		savedTree,
 		isFirstWithName,
 	} = useSelect(
 		(select) => {
@@ -66,8 +71,9 @@ export default function Edit({ attributes: { name }, clientId }) {
 				parentId: rootId,
 				sectionName: getBlockName(rootId),
 				hasInnerBlocks: blocks.length > 0,
-				// A string, so the slot re-renders only when they change.
-				innerNames: blocks.map((block) => block.name).join(','),
+				// The block types at every depth, as a string so the slot
+				// re-renders only when they change.
+				savedTree: JSON.stringify(nameTree(blocks)),
 				isFirstWithName: first === clientId,
 			};
 		},
@@ -102,14 +108,12 @@ export default function Edit({ attributes: { name }, clientId }) {
 
 	const isLocked = !!config.templateLock;
 
-	// Whether the saved blocks are the template's first ones, by type (so the
-	// template can only add to them).
-	const templateNames = (config.template ?? []).map(([block]) => block);
-	const continuesTemplate =
-		innerNames !== '' &&
-		innerNames
-			.split(',')
-			.every((block, index) => block === templateNames[index]);
+	// Whether applying the template would keep every saved block, at every
+	// depth (see templateKeepsBlocks).
+	const keepsSavedBlocks = useMemo(
+		() => templateKeepsBlocks(JSON.parse(savedTree), config.template),
+		[savedTree, config.template]
+	);
 
 	// "Posts carousel", "Posts accordion" and "Posts tabs" are query blocks,
 	// so a slot allowing the carousel, accordion or tabs allows those too.
@@ -145,14 +149,13 @@ export default function Edit({ attributes: { name }, clientId }) {
 		// Nothing new goes into an orphaned slot; its content can be moved out.
 		allowedBlocks: isOrphaned ? [] : allowedBlocks,
 		// Core re-syncs a locked slot with its template, which is how a block
-		// the theme adds to it reaches saved content. A template whose block
-		// types no longer match the saved ones (one replaced by another type)
-		// would replace what's saved, so it's applied only to an empty slot
-		// or one whose saved blocks are the template's first.
-		template:
-			isLocked && (!hasInnerBlocks || continuesTemplate)
-				? config.template
-				: undefined,
+		// the theme adds to it reaches saved content. It rebuilds the slot as
+		// exactly the template's blocks, and an inner template does the same
+		// to a block's inner blocks, so a template that doesn't start with
+		// the saved blocks at every depth (a block replaced by another type,
+		// one with fewer inner blocks) would lose them. It's passed only
+		// when it keeps them all, or the slot is empty.
+		template: isLocked && keepsSavedBlocks ? config.template : undefined,
 		templateLock: isOrphaned ? false : (config.templateLock ?? false),
 		renderAppender:
 			isOrphaned || isLocked || hasInnerBlocks

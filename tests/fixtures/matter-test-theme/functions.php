@@ -153,9 +153,30 @@ add_action(
 	)
 );
 
+// And one whose template is any JSON the browser test sets (blocks with inner
+// templates).
+add_action(
+	'init',
+	fn() => register_setting(
+		'general',
+		'matter_test_media_template',
+		[
+			'type'         => 'string',
+			'default'      => '',
+			'show_in_rest' => true,
+		]
+	)
+);
+
 add_filter(
 	'register_block_type_args',
 	function ( $args, $name ) {
+		$custom = get_option( 'matter_test_media_template' );
+
+		if ( 'matter-test/section' === $name && $custom ) {
+			$args['supports']['matter']['slots']['media']['template'] = json_decode( $custom, true );
+		}
+
 		if ( 'matter-test/section' === $name && get_option( 'matter_test_media_gain' ) ) {
 			$args['supports']['matter']['slots']['media']['template'] = [ [ 'core/image' ], [ 'core/image' ] ];
 		}

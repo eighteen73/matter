@@ -304,6 +304,7 @@ test.describe('a locked slot whose template changes', () => {
 		await requestUtils.updateSiteSettings({
 			matter_test_media_video: false,
 			matter_test_media_gain: false,
+			matter_test_media_template: '',
 		});
 	});
 
@@ -350,15 +351,16 @@ test.describe('a locked slot whose template changes', () => {
 			'Template switch',
 			'<!-- wp:matter-test/section --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>A</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- wp:matter/slot {"name":"media"} --><!-- wp:image {"alt":"Saved"} --><figure class="wp-block-image"><img src="https://example.com/a.jpg" alt="Saved"/></figure><!-- /wp:image --><!-- /wp:matter/slot --><!-- /wp:matter-test/section -->'
 		);
+		// The slots are created after the editor loads: undefined until then.
 		const media = () =>
 			page.evaluate(() =>
 				window.wp.data
 					.select('core/block-editor')
 					.getBlocks()[0]
-					.innerBlocks.find(
+					?.innerBlocks.find(
 						(slot) => slot.attributes.name === 'media'
 					)
-					.innerBlocks.map((block) => block.name)
+					?.innerBlocks.map((block) => block.name)
 			);
 
 		// The theme's template for the slot is now a video, not an image.
@@ -427,6 +429,127 @@ test.describe('a locked slot whose template changes', () => {
 				)
 			)
 			.toEqual(['core/video']);
+	});
+});
+
+// The saved blocks of the test section's locked media slot, as a tree of
+// names, for the tests of a template that has inner blocks.
+const mediaTree = (page) =>
+	page.evaluate(() => {
+		const tree = (list) =>
+			list.map((block) => [block.name, tree(block.innerBlocks)]);
+
+		return tree(
+			window.wp.data
+				.select('core/block-editor')
+				.getBlocks()[0]
+				?.innerBlocks.find((slot) => slot.attributes.name === 'media')
+				?.innerBlocks ?? []
+		);
+	});
+
+const groupOf = (...children) =>
+	`<!-- wp:group --><div class="wp-block-group">${children.join('')}</div><!-- /wp:group -->`;
+const heading =
+	'<!-- wp:heading --><h2 class="wp-block-heading">Saved heading</h2><!-- /wp:heading -->';
+const paragraph =
+	'<!-- wp:paragraph --><p>Saved paragraph</p><!-- /wp:paragraph -->';
+
+const sectionWithMedia = (media) =>
+	`<!-- wp:matter-test/section --><!-- wp:matter/slot {"name":"content"} /--><!-- wp:matter/slot {"name":"media"} -->${media}<!-- /wp:matter/slot --><!-- /wp:matter-test/section -->`;
+
+test.describe('a locked slot whose template has inner blocks', () => {
+	test.afterEach(async ({ requestUtils }) => {
+		await requestUtils.updateSiteSettings({
+			matter_test_media_template: '',
+		});
+	});
+
+	const open = async ({ admin, requestUtils }, media, template) => {
+		const saved = await createPage(
+			requestUtils,
+			'Template inner blocks',
+			sectionWithMedia(media)
+		);
+
+		await requestUtils.updateSiteSettings({
+			matter_test_media_template: JSON.stringify(template),
+		});
+		await admin.editPost(saved.id);
+	};
+
+	test('keeps saved inner blocks that the inner template would replace', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		await open({ admin, requestUtils }, groupOf(heading, paragraph), [
+			['core/group', {}, [['core/paragraph']]],
+		]);
+
+		await expect
+			.poll(() => mediaTree(page))
+			.toEqual([
+				[
+					'core/group',
+					[
+						['core/heading', []],
+						['core/paragraph', []],
+					],
+				],
+			]);
+	});
+
+	test('keeps a third saved inner block when the inner template has two', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		await open(
+			{ admin, requestUtils },
+			groupOf(paragraph, paragraph, paragraph),
+			[['core/group', {}, [['core/paragraph'], ['core/paragraph']]]]
+		);
+
+		await expect
+			.poll(async () => (await mediaTree(page))[0]?.[1].length)
+			.toBe(3);
+	});
+
+	test('keeps the inner blocks when the inner template is empty', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		await open({ admin, requestUtils }, groupOf(heading), [
+			['core/group', {}, []],
+		]);
+
+		await expect
+			.poll(() => mediaTree(page))
+			.toEqual([['core/group', [['core/heading', []]]]]);
+	});
+
+	test('adds an inner block the template only adds, keeping the saved ones', async ({
+		admin,
+		page,
+		requestUtils,
+	}) => {
+		await open({ admin, requestUtils }, groupOf(paragraph), [
+			['core/group', {}, [['core/paragraph'], ['core/heading']]],
+		]);
+
+		await expect
+			.poll(() => mediaTree(page))
+			.toEqual([
+				[
+					'core/group',
+					[
+						['core/paragraph', []],
+						['core/heading', []],
+					],
+				],
+			]);
 	});
 });
 
