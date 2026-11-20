@@ -22,6 +22,14 @@ use Eighteen73\Matter\Blocks\LoopItem;
 $matter_display = (string) ( $block->context['matter/display']['type'] ?? '' );
 $matter_variant = (string) ( $block->context['matter/display']['style'] ?? '' );
 
+// Outside a loop there is no item: `postId` is the page's own post then, and
+// the page would be shown as a card linking to itself. That's what a saved
+// Products carousel does when WooCommerce is inactive (its product template
+// isn't a registered block, so no loop is rendering).
+if ( '' === Instances::loop() ) {
+	return;
+}
+
 // A term, in a Terms Query's term template. Its `termId` wins over `postId`
 // (the page's there), unless a Query Loop inside the term's pattern is the
 // innermost loop: then this is one of its posts.
@@ -30,7 +38,7 @@ $matter_term_id = 'post' !== Instances::loop() ? (int) ( $block->context['termId
 $matter_loop_item = $matter_term_id
 	? LoopItem::render_term( $matter_term_id, (string) ( $block->context['taxonomy'] ?? '' ), $matter_display, $matter_variant )
 	: LoopItem::render(
-		(int) ( $block->context['postId'] ?? get_the_ID() ),
+		(int) ( $block->context['postId'] ?? 0 ),
 		(string) ( $block->context['postType'] ?? '' ),
 		$matter_display,
 		$matter_variant

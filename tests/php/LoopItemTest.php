@@ -174,6 +174,43 @@ class LoopItemTest extends TestCase {
 	}
 
 	/**
+	 * A loop item outside a loop renders nothing. With WooCommerce inactive, a
+	 * saved Products carousel's template is an unregistered block: its loop
+	 * item has the page as its post, and used to show the page as a card.
+	 *
+	 * @return void
+	 */
+	public function test_loop_item_without_a_loop_renders_nothing(): void {
+		$page = self::factory()->post->create_and_get(
+			[
+				'post_type'  => 'page',
+				'post_title' => 'The page title',
+			]
+		);
+
+		$GLOBALS['post'] = $page; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- The page being viewed.
+		setup_postdata( $page );
+
+		$this->assertFalse( \WP_Block_Type_Registry::get_instance()->is_registered( 'woocommerce/product-template' ) );
+
+		$markup = '<!-- wp:woocommerce/product-collection --><div><!-- wp:woocommerce/product-template --><!-- wp:matter/loop-item /--><!-- /wp:woocommerce/product-template --></div><!-- /wp:woocommerce/product-collection -->';
+
+		$this->assertStringNotContainsString( 'loop-item', $this->render( $markup ) );
+		$this->assertStringNotContainsString( 'The page title', $this->render( $markup ) );
+		$this->assertStringNotContainsString( 'The page title', $this->render( '<!-- wp:matter/loop-item /-->' ) );
+
+		// In a Query Loop it still renders its post.
+		$post = self::factory()->post->create( [ 'post_title' => 'A listed post' ] );
+		$html = $this->render(
+			'<!-- wp:query {"query":{"perPage":1,"postType":"post","include":[' . $post . '],"inherit":false}} --><div class="wp-block-query"><!-- wp:post-template --><!-- wp:matter/loop-item /--><!-- /wp:post-template --></div><!-- /wp:query -->'
+		);
+
+		$this->assertStringContainsString( 'A listed post', $html );
+
+		wp_reset_postdata();
+	}
+
+	/**
 	 * A Terms Query of categories, as the editor saves it.
 	 *
 	 * @param int[]  $term_ids Terms to list.
