@@ -29,6 +29,10 @@ class Breakpoints {
 	/**
 	 * Breakpoints as name => min-width (e.g. 'lg' => '1024px'), smallest first.
 	 *
+	 * Widths are given in px, em or rem (or a bare number, as px) and come out
+	 * in px (an em is 16px, as in a media query), so they can be compared and
+	 * ordered. Another unit is refused with a notice, and the breakpoint left out.
+	 *
 	 * @return array<string, string>
 	 */
 	public static function all(): array {
@@ -43,12 +47,78 @@ class Breakpoints {
 		 *
 		 * @param array<string, string> $breakpoints Name => min-width, e.g. [ 'lg' => '1024px' ].
 		 */
-		$breakpoints = (array) apply_filters( 'matter_breakpoints', $defaults );
-		$breakpoints = array_filter( array_map( 'strval', $breakpoints ) );
+		$breakpoints = [];
+
+		foreach ( (array) apply_filters( 'matter_breakpoints', $defaults ) as $name => $width ) {
+			if ( null === $width || '' === $width ) {
+				continue;
+			}
+
+			$px = self::to_px( $width );
+
+			if ( null === $px ) {
+				self::warn_once( (string) $name, $width );
+				continue;
+			}
+
+			$breakpoints[ (string) $name ] = $px;
+		}
 
 		uasort( $breakpoints, fn( $a, $b ) => (float) $a <=> (float) $b );
 
 		return $breakpoints;
+	}
+
+	/**
+	 * A breakpoint width in px.
+	 *
+	 * @param mixed $width Width: `1024px`, `64em`, `64rem` or `1024`.
+	 * @return string|null Null when it isn't one of those.
+	 */
+	private static function to_px( mixed $width ): ?string {
+		if ( ! is_string( $width ) && ! is_int( $width ) && ! is_float( $width ) ) {
+			return null;
+		}
+
+		if ( ! preg_match( '/^\s*(\d*\.?\d+)\s*(px|em|rem)?\s*$/i', (string) $width, $matches ) ) {
+			return null;
+		}
+
+		$px = (float) $matches[1] * ( in_array( strtolower( $matches[2] ?? '' ), [ 'em', 'rem' ], true ) ? 16 : 1 );
+
+		return $px > 0 ? rtrim( rtrim( number_format( $px, 4, '.', '' ), '0' ), '.' ) . 'px' : null;
+	}
+
+	/**
+	 * Say once that a breakpoint's width isn't usable.
+	 *
+	 * @param string $name  Breakpoint name.
+	 * @param mixed  $width Its width.
+	 * @return void
+	 */
+	private static function warn_once( string $name, mixed $width ): void {
+		static $warned = [];
+
+		$key = $name . '=' . wp_json_encode( $width );
+
+		if ( isset( $warned[ $key ] ) ) {
+			return;
+		}
+
+		$warned[ $key ] = true;
+
+		_doing_it_wrong(
+			'matter_breakpoints',
+			esc_html(
+				sprintf(
+					/* translators: 1: breakpoint name, 2: its width. */
+					__( 'The breakpoint “%1$s” (%2$s) is ignored: widths must be in px, em or rem, so they can be ordered.', 'matter' ),
+					$name,
+					is_scalar( $width ) ? (string) $width : gettype( $width )
+				)
+			),
+			'1.0.0'
+		);
 	}
 
 	/**
@@ -88,6 +158,9 @@ class Breakpoints {
 	 * `[ 'drill-down', 'lg' => 'dropdown' ]` becomes
 	 * `[ [ 'value' => 'drill-down', 'query' => '(width < 1024px)' ], [ 'value' => 'dropdown', 'query' => '(width >= 1024px)' ] ]`.
 	 * Integer keys mean "from the smallest screen". Unknown breakpoints are ignored.
+	 * A map with no such entry starts at its first entry's value, so no screen
+	 * below its first breakpoint is left without one (`[ 'lg' => 'dropdown' ]`
+	 * is a dropdown at every width).
 	 *
 	 * @param string|array $value Single value or mobile-first breakpoint map.
 	 * @return array<int, array{value: string, query: string, from: ?string}>
@@ -115,6 +188,11 @@ class Breakpoints {
 		}
 
 		ksort( $steps );
+
+		// No base entry: the first one covers the smaller screens too.
+		if ( $steps && ! isset( $steps[-1] ) ) {
+			$steps = [ -1 => reset( $steps ) ] + array_slice( $steps, 1, null, true );
+		}
 
 		$ranges  = [];
 		$indexes = array_keys( $steps );

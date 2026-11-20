@@ -100,3 +100,25 @@ add_filter(
 		],
 	]
 );
+
+// A menu whose type is set from a breakpoint above the smallest screens only,
+// for the browser test of a map with no base entry.
+add_shortcode(
+	'matter_menu_lg_only',
+	function ( $atts ) {
+		$atts = shortcode_atts( [ 'then' => '' ], $atts );
+		$type = [ 'lg' => 'dropdown' ] + ( $atts['then'] ? [ 'xl' => $atts['then'] ] : [] );
+
+		ob_start();
+		Eighteen73\Matter\menu(
+			[
+				'location' => 'primary',
+				'id'       => 'lg-only-menu',
+				'type'     => $type,
+				'opens_on' => 'click',
+			]
+		);
+
+		return (string) ob_get_clean();
+	}
+);

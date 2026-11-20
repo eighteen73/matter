@@ -80,14 +80,30 @@ class Megamenu {
 	 * @return array<string, string> Slug => title.
 	 */
 	public static function get_panels(): array {
-		$panels    = [];
-		$directory = get_theme_file_path( self::PANEL_DIRECTORY );
+		// Parent theme first, then the child's (its panel of the same name
+		// wins, as get_template_part() finds it first). Read once a request
+		// per pair of folders: menus ask for them for every item.
+		static $found = [];
 
-		foreach ( glob( trailingslashit( $directory ) . '*.php' ) ?: [] as $file ) {
-			$slug            = basename( $file, '.php' );
-			$headers         = get_file_data( $file, [ 'title' => 'Title' ] );
-			$panels[ $slug ] = '' !== $headers['title'] ? $headers['title'] : $slug;
+		$directories = array_unique( [ get_template_directory(), get_stylesheet_directory() ] );
+		$cache_key   = implode( '|', $directories );
+
+		if ( ! isset( $found[ $cache_key ] ) ) {
+			$found[ $cache_key ] = [];
+
+			foreach ( $directories as $theme_directory ) {
+				foreach ( glob( trailingslashit( $theme_directory ) . self::PANEL_DIRECTORY . '/*.php' ) ?: [] as $file ) {
+					$slug    = basename( $file, '.php' );
+					$headers = get_file_data( $file, [ 'title' => 'Title' ] );
+
+					$found[ $cache_key ][ $slug ] = '' !== $headers['title'] ? $headers['title'] : $slug;
+				}
+			}
+
+			ksort( $found[ $cache_key ] );
 		}
+
+		$panels = $found[ $cache_key ];
 
 		/**
 		 * Filters the megamenu panels that can be attached to menu items.

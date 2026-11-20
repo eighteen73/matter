@@ -455,7 +455,7 @@ Also available: `get_menu()` returns the HTML rather than echoing it.
 }
 ```
 
-A megamenu can also show a **panel** beside its columns: a PHP file in the theme's `template-parts/megamenu/` with a `Title:` header, chosen in the item's "Megamenu panel" list (`matter_megamenu_panels` filters the list). It receives the menu item as `$args['item']`, so it can use the item's description, and settings from Appearance › Site details:
+A megamenu can also show a **panel** beside its columns: a PHP file in the theme's `template-parts/megamenu/` with a `Title:` header, chosen in the item's "Megamenu panel" list (`matter_megamenu_panels` filters the list). Panels are read from the parent theme and the child theme, the child's winning a shared name. It receives the menu item as `$args['item']`, so it can use the item's description, and settings from Appearance › Site details:
 
 ```php
 <?php
@@ -921,7 +921,7 @@ Breakpoints are owned by the theme:
 add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'lg' => '1024px' ] );
 ```
 
-`config/breakpoints.json` is the fallback.
+`config/breakpoints.json` is the fallback. Widths may be in `px`, `em` or `rem` and are all used as px (an em is 16px); any other unit is ignored with a `_doing_it_wrong` notice. A responsive value map (a menu's `type`) with no base entry starts at its first entry's value: `[ 'lg' => 'dropdown', 'xl' => 'accordion' ]` is a dropdown below `xl`, not nothing below `lg`.
 
 ## Hooks
 
@@ -955,7 +955,7 @@ Every hook Matter fires, with its arguments, except the [Filters](#filters), [Li
 | `matter_default_scheme` | `string $default, array $schemes`: the default scheme's slug. |
 | `matter_scheme_labels` | `array $labels`: scheme slug => label shown in the editor. |
 | `matter_variants` | `array $variants`: variants keyed by block name, then slug. |
-| `matter_breakpoints` | `array $breakpoints`: name => min-width. |
+| `matter_breakpoints` | `array $breakpoints`: name => min-width, in `px`, `em` or `rem` (a bare number is px; all are used as px, an em being 16px). Another unit is ignored with a notice. |
 | `matter_icon_theme_collection` | `array $args`: the theme's icon collection: `collection` (slug), `label`, `directories`. |
 | `matter_icon_collections` | `string[] $collections`: collections editors can choose icons from; empty allows all. |
 

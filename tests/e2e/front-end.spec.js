@@ -563,6 +563,41 @@ test.describe('menus', { tag: '@cross-browser' }, () => {
 	});
 });
 
+test.describe('menus, a type set from a breakpoint up', () => {
+	// `[ 'lg' => 'dropdown' ]`, and with a second entry from xl on.
+	for (const [name, shortcode] of [
+		['one entry', '[matter_menu_lg_only]'],
+		['two entries', '[matter_menu_lg_only then="accordion"]'],
+	]) {
+		test(`a map with no base entry is a usable menu on a small screen (${name})`, async ({
+			page,
+			requestUtils,
+		}) => {
+			const { link } = await createPage(
+				requestUtils,
+				`Menu from lg ${name}`,
+				`<!-- wp:shortcode -->${shortcode}<!-- /wp:shortcode -->`
+			);
+
+			await page.setViewportSize({ width: 375, height: 800 });
+			await page.goto(link);
+
+			const menu = page.locator('#lg-only-menu');
+			const submenu = menu.getByRole('link', { name: 'Design' });
+
+			// The first entry's type is the base: a dropdown, with its
+			// submenu closed until opened.
+			await expect(
+				menu.getByRole('link', { name: 'Contact' })
+			).toBeVisible();
+			await expect(submenu).toBeHidden();
+
+			await menu.getByRole('button', { name: /Services/ }).click();
+			await expect(submenu).toBeVisible();
+		});
+	}
+});
+
 test.describe('panel', { tag: '@cross-browser' }, () => {
 	test.use({ viewport: MOBILE });
 

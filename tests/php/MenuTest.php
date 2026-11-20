@@ -119,4 +119,44 @@ class MenuTest extends TestCase {
 		$this->assertMatchesRegularExpression( '/<li id="matter-menu-[^"]*-2-item-\d+"/', $other );
 		$this->assertMatchesRegularExpression( '/aria-controls="matter-menu-[^"]*-2-submenu-1"/', $other );
 	}
+
+	/**
+	 * Megamenu panels come from the parent theme and the child's folders, the
+	 * child's winning a name they share.
+	 *
+	 * @return void
+	 */
+	public function test_megamenu_panels_merge_parent_and_child(): void {
+		$base   = trailingslashit( get_temp_dir() ) . 'matter-panels-' . wp_generate_password( 6, false );
+		$parent = "{$base}/parent";
+		$child  = "{$base}/child";
+
+		foreach ( [ $parent, $child ] as $directory ) {
+			wp_mkdir_p( "{$directory}/template-parts/megamenu" );
+		}
+
+		file_put_contents( "{$parent}/template-parts/megamenu/shop.php", "<?php\n/**\n * Title: Parent shop\n */\n" );
+		file_put_contents( "{$parent}/template-parts/megamenu/about.php", "<?php\n/**\n * Title: About\n */\n" );
+		file_put_contents( "{$child}/template-parts/megamenu/shop.php", "<?php\n/**\n * Title: Child shop\n */\n" );
+		file_put_contents( "{$child}/template-parts/megamenu/extra.php", "<?php\n" );
+
+		$directory = fn( string $dir ) => fn() => $dir;
+
+		add_filter( 'template_directory', $directory( $parent ) );
+		add_filter( 'stylesheet_directory', $directory( $child ) );
+
+		$panels = \Eighteen73\Matter\Navigation\Megamenu::get_panels();
+
+		remove_all_filters( 'template_directory' );
+		remove_all_filters( 'stylesheet_directory' );
+
+		$this->assertSame(
+			[
+				'about' => 'About',
+				'extra' => 'extra',
+				'shop'  => 'Child shop',
+			],
+			$panels
+		);
+	}
 }
