@@ -70,6 +70,10 @@ test.beforeAll(async ({ requestUtils }) => {
 // As a visitor.
 test.use({ storageState: { cookies: [], origins: [] } });
 
+// With the scrollbars headless Chromium hides: the scroll lock is about the
+// space a real one takes (Firefox and WebKit ignore the flag).
+test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
+
 test.describe('block link names', () => {
 	test('each card link is named by its text, and a new tab says so', async ({
 		page,
@@ -488,6 +492,38 @@ test.describe('scroll lock', () => {
 			/\bhas-overlay-gutter\b/
 		);
 		expect(await gutter(page)).toBe('auto');
+		expect(await layout(page)).toEqual(before);
+	});
+
+	test('a short page whose theme always shows the scrollbar keeps its space, and nothing shifts', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 1800 });
+		await page.goto(shortPage.link);
+		await page.addStyleTag({ content: 'html { overflow-y: scroll; }' });
+
+		// It doesn't scroll, but the scrollbar is there.
+		expect(
+			await page.evaluate(
+				() =>
+					document.documentElement.scrollHeight >
+					document.documentElement.clientHeight
+			)
+		).toBe(false);
+		expect(
+			await page.evaluate(
+				() => window.innerWidth - document.documentElement.clientWidth
+			)
+		).toBeGreaterThan(0);
+
+		const before = await layout(page);
+
+		await page.getByRole('link', { name: 'Open short' }).click();
+		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
+		await expect(page.locator('html')).toHaveClass(
+			/\bhas-overlay-gutter\b/
+		);
+		expect(await gutter(page)).toBe('stable');
 		expect(await layout(page)).toEqual(before);
 	});
 

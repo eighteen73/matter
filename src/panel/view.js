@@ -37,6 +37,7 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { focused, isUsable } from '../interactivity/focus';
+import { hasScrollbar } from '../interactivity/scrollbar';
 import { inertAround, onModal } from '@matter/inert';
 import { suspendTransitions } from '../interactivity/transitions';
 
@@ -179,10 +180,7 @@ const activate = (panel, id) => {
 	// Keep the scrollbar's space only on a page that has a scrollbar (see the
 	// overlay script), looked at before the lock starts.
 	if (!root.classList.contains(OPEN_CLASS)) {
-		root.classList.toggle(
-			GUTTER_CLASS,
-			root.scrollHeight > root.clientHeight
-		);
+		root.classList.toggle(GUTTER_CLASS, hasScrollbar());
 	}
 
 	root.classList.add(OPEN_CLASS);

@@ -53,6 +53,7 @@ import { suspendForModal } from '@matter/inert';
 import { createSuspensions } from './suspensions';
 import { focusFirst, focused, isUsable } from '../interactivity/focus';
 import { hashId } from '../interactivity/hash';
+import { hasScrollbar } from '../interactivity/scrollbar';
 import {
 	afterTransitions,
 	cancelClose,
@@ -150,14 +151,12 @@ const syncDocumentClass = () => {
 
 	const root = document.documentElement;
 
-	// Keep the scrollbar's space only on a page that has a scrollbar: a short
-	// page would shift sideways for a gutter with nothing in it. Looked at as
-	// the lock starts (the lock itself can't change whether the page scrolls).
+	// Keep the scrollbar's space only on a page that has a scrollbar (measured, so
+	// one a theme always shows counts, and an overlay scrollbar, which takes
+	// no space, doesn't): a page without one would shift sideways for a gutter
+	// with nothing in it. Looked at as the lock starts.
 	if (open && !root.classList.contains('has-overlay-open')) {
-		root.classList.toggle(
-			'has-overlay-gutter',
-			root.scrollHeight > root.clientHeight
-		);
+		root.classList.toggle('has-overlay-gutter', hasScrollbar());
 	} else if (!open) {
 		root.classList.remove('has-overlay-gutter');
 	}
