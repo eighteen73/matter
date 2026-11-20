@@ -4,10 +4,11 @@
  * forced colours.
  */
 const { test, expect } = require('@wordpress/e2e-test-utils-playwright');
-const { createPage } = require('./fixtures');
+const { createMenu, createPage } = require('./fixtures');
 
 let cards;
 let details;
+let panelPage;
 
 const IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 const image = (alt) =>
@@ -34,6 +35,12 @@ const card = (text, url, tab = false) =>
 
 test.beforeAll(async ({ requestUtils }) => {
 	await requestUtils.deleteAllPages();
+	await createMenu(requestUtils);
+	panelPage = await createPage(
+		requestUtils,
+		'Kitchen sink',
+		'kitchen-sink.html'
+	);
 
 	cards = await createPage(
 		requestUtils,
@@ -210,5 +217,105 @@ test.describe('dialog names', () => {
 		await expect(
 			page.getByRole('dialog', { name: 'Browse the shop' })
 		).toBeVisible();
+	});
+});
+
+test.describe('forced colours', () => {
+	test.use({ viewport: { width: 1280, height: 900 } });
+
+	// The border each dialog gets, and where the screenshots go for a look.
+	const edges = async (locator) =>
+		locator.evaluate((element) => {
+			const style = window.getComputedStyle(element);
+
+			return ['Top', 'Right', 'Bottom', 'Left'].map(
+				(side) => style[`border${side}Width`]
+			);
+		});
+
+	test('a modal, drawer and lightbox have an edge', async ({
+		page,
+	}, info) => {
+		await page.emulateMedia({ forcedColors: 'active' });
+		await page.goto(details.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
+
+		const shoot = (name) =>
+			page.screenshot({ path: info.outputPath(`${name}.png`) });
+
+		await page.getByRole('link', { name: 'Open welcome' }).click();
+
+		const modal = page.getByRole('dialog', { name: 'Welcome aboard' });
+
+		await expect(modal).toBeVisible();
+		await page.waitForTimeout(400);
+		expect(await edges(modal)).toEqual(['1px', '1px', '1px', '1px']);
+		await shoot('modal');
+		await page.keyboard.press('Escape');
+		await expect(modal).toBeHidden();
+
+		await page.getByRole('link', { name: 'Open drawer' }).click();
+
+		const drawer = page.getByRole('dialog', { name: 'Browse the shop' });
+
+		await expect(drawer).toBeVisible();
+		await page.waitForTimeout(500);
+		// It opens from the start edge: the edge towards the page is its end.
+		expect(await edges(drawer)).toEqual(['0px', '1px', '0px', '0px']);
+		await shoot('drawer');
+		await page.keyboard.press('Escape');
+		await expect(drawer).toBeHidden();
+
+		await page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 1 of 3' })
+			.click();
+
+		const lightbox = page.locator('#photos dialog');
+
+		await expect(lightbox).toHaveAttribute('open', '');
+		await page.waitForTimeout(400);
+		expect(await edges(lightbox)).toEqual(['1px', '1px', '1px', '1px']);
+		await shoot('lightbox');
+	});
+
+	test('the off-canvas panel has an edge', async ({ page }, info) => {
+		await page.emulateMedia({ forcedColors: 'active' });
+		await page.setViewportSize({ width: 390, height: 800 });
+		await page.goto(panelPage.link);
+		await page.locator('[aria-controls="test-nav"]').click();
+
+		const content = page.locator('#test-nav .matter-panel__content');
+
+		await expect(content).toBeVisible();
+		await page.waitForTimeout(500);
+		expect(await edges(content)).toEqual(['0px', '0px', '0px', '1px']);
+		await page.screenshot({ path: info.outputPath('panel.png') });
+	});
+});
+
+test.describe('scroll lock', () => {
+	const gutter = (page) =>
+		page.evaluate(
+			() =>
+				window.getComputedStyle(document.documentElement)
+					.scrollbarGutter
+		);
+
+	test('the scrollbar space is kept only while a dialog is open', async ({
+		page,
+	}) => {
+		await page.goto(details.link);
+		expect(await gutter(page)).toBe('auto');
+
+		await page.getByRole('link', { name: 'Open welcome' }).click();
+		await expect(page.locator('html')).toHaveClass(/\bhas-overlay-open\b/);
+		expect(await gutter(page)).toBe('stable');
+
+		await page.keyboard.press('Escape');
+		await expect(page.locator('html')).not.toHaveClass(
+			/\bhas-overlay-open\b/
+		);
+		expect(await gutter(page)).toBe('auto');
 	});
 });

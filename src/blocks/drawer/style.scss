@@ -9,6 +9,7 @@
 // The page doesn't scroll behind an open modal or drawer (as behind a panel).
 html.has-overlay-open {
 	overflow: hidden;
+	scrollbar-gutter: stable;
 }
 
 .wp-block-matter-drawer {
@@ -125,6 +126,24 @@ html.has-overlay-open {
 
 :where(.wp-block-matter-drawer__trigger[role="button"]) {
 	cursor: pointer;
+}
+
+// Forced colours drop the background and the backdrop's tint, so the drawer
+// would have no edge against the page: the side it opens towards gets one.
+@media (forced-colors: active) {
+	:where(.wp-block-matter-drawer) {
+		border-inline-start: 1px solid canvastext;
+	}
+
+	:where(.wp-block-matter-drawer.is-position-start, .wp-block-matter-drawer:dir(rtl)) {
+		border-inline-end: 1px solid canvastext;
+		border-inline-start: 0;
+	}
+
+	:where(.wp-block-matter-drawer.is-position-start:dir(rtl)) {
+		border-inline-end: 0;
+		border-inline-start: 1px solid canvastext;
+	}
 }
 
 // Last, so it wins over every transition above.

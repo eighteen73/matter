@@ -853,6 +853,8 @@ Themes restyle Matter with plain class selectors, wherever their stylesheet load
 - Accordion panels are `role="region"` (named by their button) only in an accordion of six or fewer items; a longer one would flood a screen reader's landmark list. A Query Loop accordion counts its posts. Accordion titles and tab labels keep inline formatting only (`strong`, `em`, `span`, `br`, `code`, `abbr`, `sub`, `sup`), as they sit in a button.
 - Tabs and accordions leave keys pressed with Alt, Ctrl or Meta to the browser (Alt+Left is Back).
 - The gallery lightbox has one polite live region that says "Image 2 of 5: the image's description" as the image changes.
+- In forced colours (Windows high contrast), a modal, drawer, off-canvas panel and lightbox get a border, as the dialog's background and backdrop tint aren't shown (in `:where()`, so a theme restyles it).
+- While a modal, drawer or panel is open the page's scrollbar space is kept (`scrollbar-gutter: stable`), so the page doesn't shift sideways when it stops scrolling.
 
 **CSS variables**
 - Colours come from the scheme (`--scheme--{role}`) and other values from theme.json (`--wp--preset--…`, `--wp--custom--…`). The skin's colours fall back to system colours (`Canvas`, `CanvasText`), so Matter works on a theme without schemes.

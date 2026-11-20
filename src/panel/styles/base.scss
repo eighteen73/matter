@@ -9,6 +9,7 @@
 
 html.has-panel-open {
 	overflow: hidden;
+	scrollbar-gutter: stable;
 }
 
 // Only the off-canvas mode uses these.

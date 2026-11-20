@@ -298,6 +298,19 @@
 	text-align: center;
 }
 
+// Forced colours drop the black tint, so the lightbox would have no edge
+// against the page (and its translucent background shows the page through):
+// give it an edge and an opaque background, and text to match.
+@media (forced-colors: active) {
+	:where(.wp-block-matter-gallery__lightbox) {
+		background: canvas;
+		border: 1px solid canvastext;
+		box-sizing: border-box;
+		// The skin's white text and icons would vanish on it.
+		color: canvastext;
+	}
+}
+
 // Last, so it wins over every transition above.
 @media (prefers-reduced-motion: reduce) {
 	:where(.wp-block-matter-gallery__lightbox),

@@ -106,6 +106,29 @@
 	align-self: flex-end;
 }
 
+// Forced colours drop the background and the backdrop's tint, so the panel
+// would have no edge against the page: the side it opens from gets one.
+@media (forced-colors: active) {
+	:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content) {
+		border-inline-start: 1px solid canvastext;
+	}
+
+	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content, .matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content:dir(rtl)) {
+		border-inline-end: 1px solid canvastext;
+		border-inline-start: 0;
+	}
+
+	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-start .matter-panel__content:dir(rtl)) {
+		border-inline-end: 0;
+		border-inline-start: 1px solid canvastext;
+	}
+
+	:where(.matter-panel.is-collapsed#{enhanced(panel)}.is-from-top .matter-panel__content) {
+		border-block-end: 1px solid canvastext;
+		border-inline: 0;
+	}
+}
+
 // Last, so it wins over every transition above.
 @media (prefers-reduced-motion: reduce) {
 	:where(.matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__content, .matter-panel.is-collapsed#{enhanced(panel)} .matter-panel__backdrop) {
