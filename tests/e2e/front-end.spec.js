@@ -1299,3 +1299,58 @@ test.describe('the JavaScript API', () => {
 			]);
 	});
 });
+
+test.describe('archive entries are not pages, logged out', () => {
+	test.use({ storageState: { cookies: [], origins: [] } });
+
+	let published;
+	let draft;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		await deleteArchiveEntries(requestUtils);
+		published = await createArchiveEntry(requestUtils, 'search');
+		draft = await createArchiveEntry(requestUtils, 'date', {
+			status: 'draft',
+		});
+	});
+
+	test.afterAll(async ({ requestUtils }) => {
+		await deleteArchiveEntries(requestUtils);
+	});
+
+	test('no address lists them or shows one, and the REST API does not list them', async ({
+		page,
+		request,
+	}) => {
+		for (const path of [
+			'/?post_type=matter_archive',
+			'/?post_type=matter_archive&paged=2',
+			'/?post_type=matter_archive&feed=rss2',
+			`/?p=${draft.id}&post_type=matter_archive`,
+			`/?p=${draft.id}`,
+		]) {
+			const response = await page.goto(path);
+
+			expect(response.status(), path).toBe(404);
+			await expect(page.locator('body'), path).not.toHaveClass(
+				/\bblog\b/
+			);
+		}
+
+		// A published entry's own address goes to its archive.
+		await page.goto(`/?p=${published.id}&post_type=matter_archive`);
+		expect(new URL(page.url()).searchParams.get('s')).not.toBeNull();
+
+		// Nor is it in the sitemap or the REST API.
+		const sitemap = await request.get('/wp-sitemap.xml');
+
+		expect(await sitemap.text()).not.toContain('matter_archive');
+
+		for (const route of [
+			'/?rest_route=/wp/v2/matter_archive',
+			`/?rest_route=/wp/v2/matter_archive/${published.id}`,
+		]) {
+			expect((await request.get(route)).status(), route).toBe(401);
+		}
+	});
+});

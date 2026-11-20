@@ -71,7 +71,9 @@ class Archives {
 	public function setup(): void {
 		add_action( 'init', [ $this, 'register' ] );
 		add_action( 'init', [ $this, 'register_bindings_source' ] );
-		add_action( 'template_redirect', [ $this, 'redirect_single' ] );
+		add_action( 'template_redirect', [ $this, 'redirect_single' ], 9 );
+		add_action( 'template_redirect', [ $this, 'deny_listing' ], 9 );
+		add_filter( 'wp_sitemaps_post_types', [ $this, 'leave_out_of_sitemap' ] );
 		add_filter( 'post_type_link', [ $this, 'permalink' ], 10, 2 );
 		add_filter( 'preview_post_link', [ $this, 'preview_link' ], 10, 2 );
 		add_filter( 'redirect_canonical', [ $this, 'keep_preview' ] );
@@ -142,7 +144,10 @@ class Archives {
 	 * Register the post type and its target meta.
 	 *
 	 * Not public: entries have no address of their own (their links go to
-	 * their archive), but are publicly queryable so the editor offers Preview.
+	 * their archive), but are publicly queryable (viewable) so the editor
+	 * offers Preview. They can't be listed or read from the front end or the
+	 * REST API without editing rights (see deny_listing() and
+	 * RestController).
 	 *
 	 * @return void
 	 */
@@ -150,7 +155,7 @@ class Archives {
 		register_post_type(
 			self::POST_TYPE,
 			[
-				'labels'              => [
+				'labels'                => [
 					'name'               => __( 'Archives', 'matter' ),
 					'singular_name'      => __( 'Archive', 'matter' ),
 					'menu_name'          => __( 'Archives', 'matter' ),
@@ -169,23 +174,24 @@ class Archives {
 					'item_scheduled'     => __( 'Archive scheduled.', 'matter' ),
 					'item_updated'       => __( 'Archive updated.', 'matter' ),
 				],
-				'description'         => __( 'Content above and below the lists on shop, blog, category, search and 404 pages.', 'matter' ),
-				'public'              => false,
-				'publicly_queryable'  => true,
-				'exclude_from_search' => true,
-				'show_ui'             => true,
-				'show_in_menu'        => 'themes.php',
-				'show_in_admin_bar'   => false,
-				'show_in_nav_menus'   => false,
-				'show_in_rest'        => true,
-				'rewrite'             => false,
-				'query_var'           => false,
-				'has_archive'         => false,
-				'hierarchical'        => false,
-				'capability_type'     => 'page',
-				'map_meta_cap'        => true,
-				'supports'            => [ 'title', 'editor', 'revisions', 'custom-fields' ],
-				'template'            => [ [ 'matter/archive-loop' ] ],
+				'description'           => __( 'Content above and below the lists on shop, blog, category, search and 404 pages.', 'matter' ),
+				'public'                => false,
+				'publicly_queryable'    => true,
+				'exclude_from_search'   => true,
+				'show_ui'               => true,
+				'show_in_menu'          => 'themes.php',
+				'show_in_admin_bar'     => false,
+				'show_in_nav_menus'     => false,
+				'show_in_rest'          => true,
+				'rest_controller_class' => RestController::class,
+				'rewrite'               => false,
+				'query_var'             => false,
+				'has_archive'           => false,
+				'hierarchical'          => false,
+				'capability_type'       => 'page',
+				'map_meta_cap'          => true,
+				'supports'              => [ 'title', 'editor', 'revisions', 'custom-fields' ],
+				'template'              => [ [ 'matter/archive-loop' ] ],
 			]
 		);
 
@@ -791,5 +797,45 @@ class Archives {
 
 		wp_safe_redirect( self::target_of( (int) get_queried_object_id() )?->preview_url() ?? home_url( '/' ) );
 		exit;
+	}
+
+	/**
+	 * Entries can't be listed: a request for the post type that isn't a
+	 * single entry (redirected to its archive above) is a 404, whatever form
+	 * it takes (`?post_type=matter_archive`, its feed, `?p=<ID>` of an entry
+	 * that isn't published). Previews, which are requests for an archive, are
+	 * untouched; so is one for an entry by someone who can edit it.
+	 *
+	 * @return void
+	 */
+	public function deny_listing(): void {
+		global $wp_query;
+
+		if ( ! $wp_query instanceof WP_Query || is_404() || null !== $this->requested_entry() ) {
+			return;
+		}
+
+		$asked = in_array( self::POST_TYPE, (array) $wp_query->get( 'post_type' ), true );
+		$found = array_filter( (array) $wp_query->posts, fn( $post ) => $post instanceof WP_Post && self::POST_TYPE === $post->post_type );
+
+		if ( ! $asked && ! $found ) {
+			return;
+		}
+
+		$wp_query->set_404();
+		status_header( 404 );
+		nocache_headers();
+	}
+
+	/**
+	 * Entries aren't pages to find: their links are archives'.
+	 *
+	 * @param array<string, \WP_Post_Type> $post_types Post types in the sitemap.
+	 * @return array<string, \WP_Post_Type>
+	 */
+	public function leave_out_of_sitemap( array $post_types ): array {
+		unset( $post_types[ self::POST_TYPE ] );
+
+		return $post_types;
 	}
 }

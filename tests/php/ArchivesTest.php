@@ -496,4 +496,125 @@ class ArchivesTest extends TestCase {
 
 		$this->assertNull( $shown );
 	}
+
+	/**
+	 * Every address that asks for the post type, other than an entry's own
+	 * (redirected to its archive), is a 404 on the front end.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function listing_urls(): array {
+		return [
+			'the type'        => [ '/?post_type=matter_archive' ],
+			'the type, paged' => [ '/?post_type=matter_archive&paged=2' ],
+			'its feed'        => [ '/?post_type=matter_archive&feed=rss2' ],
+			'a list of types' => [ '/?post_type[]=matter_archive&post_type[]=post' ],
+			'a draft by ID'   => [ '/?p={draft}&post_type=matter_archive' ],
+			'a draft, no type' => [ '/?p={draft}' ],
+			'a draft by name' => [ '/?name=a-draft&post_type=matter_archive' ],
+		];
+	}
+
+	/**
+	 * Entries can't be listed or found by a visitor.
+	 *
+	 * @dataProvider listing_urls
+	 *
+	 * @param string $url URL, `{draft}` being a draft entry's ID.
+	 * @return void
+	 */
+	public function test_entries_cannot_be_listed( string $url ): void {
+		$this->entry( 'date' );
+
+		$draft = self::factory()->post->create(
+			[
+				'post_type'   => Archives::POST_TYPE,
+				'post_status' => 'draft',
+				'post_name'   => 'a-draft',
+				'meta_input'  => [ Archives::META => 'author' ],
+			]
+		);
+
+		$this->go_to( str_replace( '{draft}', (string) $draft, $url ) );
+		Archives::instance()->deny_listing();
+
+		$this->assertTrue( is_404(), $url );
+		$this->assertFalse( is_home() );
+		$this->assertFalse( is_post_type_archive() );
+
+		$this->go_to( '/' );
+	}
+
+	/**
+	 * An ordinary archive, and its preview by someone who can edit entries,
+	 * are not touched.
+	 *
+	 * @return void
+	 */
+	public function test_archives_and_previews_are_not_denied(): void {
+		$draft  = self::factory()->post->create(
+			[
+				'post_type'   => Archives::POST_TYPE,
+				'post_status' => 'draft',
+				'meta_input'  => [ Archives::META => 'date' ],
+			]
+		);
+		$editor = self::factory()->user->create( [ 'role' => 'editor' ] );
+
+		// A year with a post in it, so the archive isn't a 404 anyway.
+		self::factory()->post->create( [ 'post_date' => '2026-03-01 00:00:00' ] );
+
+		$this->go_to( '/?m=2026' );
+		Archives::instance()->deny_listing();
+		$this->assertFalse( is_404() );
+
+		wp_set_current_user( $editor );
+
+		// The editor's Preview: the archive's address plus the entry.
+		$this->go_to( add_query_arg( [ 'preview' => 'true', 'preview_id' => $draft ], '/?m=2026' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+		$_GET = [ 'preview' => 'true', 'preview_id' => (string) $draft ]; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+		Archives::instance()->deny_listing();
+		$_GET = [];
+
+		$this->assertFalse( is_404() );
+		$this->assertTrue( is_date() );
+
+		wp_set_current_user( 0 );
+		$this->go_to( '/' );
+	}
+
+	/**
+	 * Entries are left out of the sitemap, and of the REST API for anyone who
+	 * can't edit them (a published entry is a fragment of an archive page).
+	 *
+	 * @return void
+	 */
+	public function test_entries_are_not_published_to_visitors(): void {
+		$published = $this->entry( 'date' );
+
+		$this->assertArrayNotHasKey( Archives::POST_TYPE, apply_filters( 'wp_sitemaps_post_types', [ Archives::POST_TYPE => get_post_type_object( Archives::POST_TYPE ) ] ) );
+
+		do_action( 'rest_api_init' );
+		wp_set_current_user( 0 );
+
+		$list = rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wp/v2/matter_archive' ) );
+		$one  = rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wp/v2/matter_archive/' . $published ) );
+
+		$this->assertSame( 401, $list->get_status() );
+		$this->assertSame( 401, $one->get_status() );
+
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'subscriber' ] ) );
+
+		$this->assertSame( 403, rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wp/v2/matter_archive' ) )->get_status() );
+
+		wp_set_current_user( self::factory()->user->create( [ 'role' => 'editor' ] ) );
+
+		$list = rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wp/v2/matter_archive' ) );
+		$one  = rest_get_server()->dispatch( new \WP_REST_Request( 'GET', '/wp/v2/matter_archive/' . $published ) );
+
+		$this->assertSame( 200, $list->get_status() );
+		$this->assertSame( 200, $one->get_status() );
+
+		wp_set_current_user( 0 );
+	}
 }

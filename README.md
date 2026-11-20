@@ -582,6 +582,8 @@ A bound paragraph that comes out empty (a term without a description) isn't outp
 
 Preview shows the entry, including unsaved changes, on its archive. An entry that isn't published has `preview_id=<its ID>` on its link (what the editor reads), so "Preview in new tab" (the link plus `preview=true`) shows exactly that entry, even when there are other drafts for the archive: to a signed-in user who can edit it, with or without a `preview_nonce` (an autosave's preview link has one, and shows the autosave when it is newer), as core does for a draft. It is never cached; nobody else sees it. The entry editor's "Shows on" panel changes which archive it's for.
 
+**Entries aren't pages.** The post type is viewable (the editor offers Preview only for those), but it can't be listed: a front-end request for it that isn't an entry's own address (`/?post_type=matter_archive`, its feed, `?p=<ID>` of an entry that isn't published) is a 404, an entry's own address goes to its archive, and entries are left out of the core sitemap. The REST API (`/wp/v2/matter_archive`) serves them only to users who can edit them.
+
 ## Allowed blocks
 
 The theme lists the blocks content editors can add, and Matter enforces the list in the post editor. Templates are developer-owned and the Site Editor keeps every block. Entries ending in `/*` allow a whole namespace; an empty list leaves the editor unrestricted. A list set earlier by other code still applies (the two are intersected).
