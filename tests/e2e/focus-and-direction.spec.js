@@ -180,6 +180,38 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 			)
 		).toBe('menu');
 	});
+
+	test('Escape in a modal opened from a button in the panel closes the modal, and focus goes back to the button', async ({
+		page,
+	}) => {
+		await openPanel(page);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		const panel = page.locator('#test-nav');
+
+		await page.evaluate(() => {
+			const content = document.querySelector(
+				'#test-nav .matter-panel__content'
+			);
+			const button = document.createElement('button');
+
+			button.type = 'button';
+			button.id = 'open-modal-from-panel';
+			button.textContent = 'Open the modal';
+			button.setAttribute('aria-controls', 'in-tab');
+			content.append(button, document.querySelector('dialog#in-tab'));
+		});
+
+		const button = page.locator('#open-modal-from-panel');
+		const modal = page.getByRole('dialog', { name: 'Modal in a tab' });
+
+		await button.click();
+		await expect(modal).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(modal).toBeHidden();
+		await expect(panel).toHaveClass(/\bis-open\b/);
+		await expect(button).toBeFocused();
+	});
 });
 
 test.describe('drill-down', { tag: '@cross-browser' }, () => {
@@ -275,6 +307,31 @@ test.describe('drill-down', { tag: '@cross-browser' }, () => {
 		await expect(parent).not.toHaveClass(/\bis-open\b/);
 		expect(await closedSubmenus()).toBe(0);
 		await expect(page.locator('html')).not.toHaveClass(/has-panel-open/);
+	});
+});
+
+test.describe('focus return after a click', { tag: '@cross-browser' }, () => {
+	test.use({ viewport: VIEWPORTS.desktop });
+
+	test('a modal opened with the mouse gives focus back to its trigger on Escape', async ({
+		page,
+	}) => {
+		await page.goto(kitchenSink.link);
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
+
+		const link = page.getByRole('link', {
+			name: 'Open the modal in the collapsible',
+		});
+		const dialog = page.getByRole('dialog', {
+			name: 'Modal in a collapsible',
+		});
+
+		// A click doesn't focus a link in Safari.
+		await link.click();
+		await expect(dialog).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(link).toBeFocused();
 	});
 });
 

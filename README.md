@@ -59,6 +59,7 @@ A must-use plugin in a subfolder needs a loader; Nebula's autoloader (`nebula-au
 - **Moving between grouped modals** keeps the backdrop: the current modal goes at once and the next fades in from the side it comes from.
 - **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate): the dialog has `closedby="none"`, and reopens if the browser closes it anyway. A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
 - **Backdrop clicks** close a modal or drawer only when pressed on the backdrop, not when a drag (e.g. selecting text) ends there.
+- **Focus return:** closing a modal or drawer gives focus back to the control that opened it (a click, Enter or a script: the trigger is remembered, as a click doesn't focus a button or link in Safari, so the browser has nothing to return to). If the trigger has gone, the first visible control that opens it takes focus.
 - **Scroll lock:** while a modal or drawer is open, `<html>` has `has-overlay-open` and the page doesn't scroll.
 - **Closing animates in every browser:** a closing modal, drawer or gallery lightbox stays open with `is-closing` while its transitions run, then closes (up to a second). Style a theme's exit on `[open].is-closing` (e.g. `.wp-block-matter-modal[open].is-closing { opacity: 0; }`); the entry uses `@starting-style`. Without a transition (reduced motion) it closes at once, and reopening while closing cancels it.
 
@@ -484,8 +485,8 @@ $phone = setting( 'contact.phone' );
 The panel sits in `.matter-menu__panel`; give it a width beside the columns, e.g. `@media (--lg) { .matter-menu__panel { flex: 0 0 18rem; } }`.
 
 **Accessibility:**
-- Arrow, Home and End keys move between items (not inside a field, such as a search in a megamenu panel); Escape closes the innermost submenu, and closes open dropdowns wherever focus is.
-- Drill-down panels trap focus.
+- Arrow, Home and End keys move between items (not inside a field, such as a search in a megamenu panel); Escape closes the innermost submenu, and closes open dropdowns wherever focus is. Left and Right follow the screen: in a right-to-left menu (the direction is the menu's own, so a right-to-left section in a left-to-right page works) Left is the next item. A dropdown that would run off the inline end of the screen (the right edge, or the left in a right-to-left menu) opens the other way.
+- Drill-down panels trap focus, and expose only the open level: while a submenu is open the level it covers (the other items, its toggle) is `inert`, and focus is on its Back button, whose name says which level it is. Back, Escape, closing the panel and a change of menu type all put it back.
 - `aria-expanded` and `inert` are rendered on the server.
 - The default skin gives toggles, back buttons and links at least a 24px target (WCAG 2.5.8).
 
@@ -503,7 +504,7 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 ```
 
 - **Arguments** (both functions): `collapse_below` (a breakpoint; empty for always off-canvas); for `panel()`, `position` (`end`, the default, `start` or `top`: where it comes in from; start and end are the left and right in left-to-right languages), `label`, `close_label` and `class`.
-- **Off-canvas:** a dialog with a focus trap, Escape to close, backdrop, scroll lock and a close button. It sits below the admin bar. Following a link inside it (except into a new tab), or a `#hash` change, closes it. When it closes, focus returns to its toggle, even with a drill-down submenu open.
+- **Off-canvas:** a dialog (`role="dialog"`, `aria-modal`) with a focus trap, Escape to close, backdrop, scroll lock and a close button, which is inside the dialog, not part of the page. It sits below the admin bar. While it is open the rest of the page is `inert` (its toggle included), so only the dialog is exposed to assistive technology; what was inert before stays so, and Matter's `inert` comes off exactly where it went on. Following a link inside it (except into a new tab), or a `#hash` change, closes it. Escape closes a submenu open in it first, a modal opened from it, then the panel, and with several panels open only the topmost. When it closes, focus returns to the control that opened it (its toggle, even in Safari, where a click doesn't focus a button), even with a drill-down submenu open. When the screen grows past the breakpoint with it open, it closes and focus stays where it was.
 - **Inside a panel:** `.is-panel-only` and `.is-inline-only` show content in one mode only.
 - **Events:** `matter-panel-open` and `matter-panel-close`, with `detail.id` and `detail.instance`.
 

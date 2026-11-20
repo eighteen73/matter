@@ -194,14 +194,10 @@ test.describe('overlays', { tag: '@cross-browser' }, () => {
 
 	test('a modal opened from the keyboard takes focus, and gives it back on Escape', async ({
 		page,
-		browserName,
 	}) => {
-		test.fixme(
-			'webkit' === browserName,
-			'Baseline: in WebKit, focus is not returned to the link after Escape (plan item 29).'
-		);
-
 		await page.goto(kitchenSink.link);
+		// Until the script has started a link just goes to its hash.
+		await expect(page.locator('html')).toHaveClass(/matter-ready-overlay/);
 
 		const link = page.getByRole('link', {
 			name: 'Open the modal in the collapsible',
@@ -456,11 +452,6 @@ test.describe('keyboard', { tag: '@cross-browser' }, () => {
 		page,
 		browserName,
 	}) => {
-		test.fixme(
-			'webkit' === browserName,
-			'Baseline: in WebKit, Tab from the open toggle does not reach "View all" (submenu closed or Tab skips links).'
-		);
-
 		await page.goto(kitchenSink.link);
 
 		const menu = page.locator('nav.matter-menu--primary.opens-on-click');
@@ -475,7 +466,11 @@ test.describe('keyboard', { tag: '@cross-browser' }, () => {
 
 		await page.keyboard.press('Enter');
 		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-		await page.keyboard.press('Tab');
+		// Safari doesn't Tab to links unless "Press Tab to highlight each
+		// item" is on (Option+Tab always does), and the WebKit the tests run
+		// has the default. Not Matter's: with Tab the focus goes to the next
+		// control that isn't a link, out of the menu, which closes it.
+		await page.keyboard.press('webkit' === browserName ? 'Alt+Tab' : 'Tab');
 		await expect(
 			menu.getByRole('link', { name: 'View all Services' })
 		).toBeFocused();
@@ -680,15 +675,7 @@ test.describe('panel', { tag: '@cross-browser' }, () => {
 		await expect(toggle).toBeFocused();
 	});
 
-	test('Escape closes the submenu, then the panel', async ({
-		page,
-		browserName,
-	}) => {
-		test.fixme(
-			'webkit' === browserName,
-			'Baseline: in WebKit, a click does not focus the submenu toggle, so Escape closes the whole panel (plan items 26, 29).'
-		);
-
+	test('Escape closes the submenu, then the panel', async ({ page }) => {
 		await page.goto(kitchenSink.link);
 
 		const toggle = page.locator('[aria-controls="test-nav"]');

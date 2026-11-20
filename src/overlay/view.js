@@ -49,6 +49,7 @@ import {
 	registerType,
 } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
+import { focusFirst, focused, isUsable } from '../interactivity/focus';
 import { hashId } from '../interactivity/hash';
 import {
 	afterTransitions,
@@ -67,6 +68,9 @@ const DAY = 24 * 60 * 60 * 1000;
 
 const elements = new Map();
 const lastStates = new Map();
+
+// The control that opened each dialog.
+const openers = new Map();
 
 const isDialog = (id) => elements.get(id)?.tagName === 'DIALOG';
 
@@ -246,7 +250,7 @@ const isTriggerFor = (element, id) => {
 
 	// An overlay's ID is ASCII (`Ids::sanitize` strips the rest, as does the
 	// editor), so `href$="#id"` finds every link to it. The hash is compared
-	// decoded, as `triggeredId` reads it.
+	// decoded, as `triggeredBy` reads it.
 	return (
 		element.tagName === 'A' &&
 		hashId(element.hash) === id &&
@@ -300,19 +304,19 @@ const syncTriggers = (id, isOpen) => {
 };
 
 /**
- * The overlay a click is a trigger of, if any.
+ * The overlay a click is a trigger of, if any, and the control that triggers it.
  *
  * @param {Element} target Click target.
- * @return {string|undefined} Overlay ID.
+ * @return {{id: string, element: Element}|undefined} Overlay ID and trigger.
  */
-const triggeredId = (target) => {
+const triggeredBy = (target) => {
 	const area = target.closest('[data-matter-trigger]');
 	const areaId = area?.dataset.matterTrigger;
 
 	// A block's trigger area: its control (a click elsewhere in the area
 	// isn't a trigger, so its other links keep working).
 	if (areaId && elements.has(areaId) && areaControl(area).contains(target)) {
-		return areaId;
+		return { id: areaId, element: areaControl(area) };
 	}
 
 	const element = target.closest('a[href], [aria-controls]');
@@ -324,13 +328,15 @@ const triggeredId = (target) => {
 	const controls = element.getAttribute('aria-controls');
 
 	if (controls && elements.has(controls) && isTriggerFor(element, controls)) {
-		return controls;
+		return { id: controls, element };
 	}
 
 	if (element.tagName === 'A' && element.hash.length > 1) {
 		const id = hashId(element.hash);
 
-		return elements.has(id) && isTriggerFor(element, id) ? id : undefined;
+		return elements.has(id) && isTriggerFor(element, id)
+			? { id, element }
+			: undefined;
 	}
 
 	return undefined;
@@ -350,7 +356,8 @@ document.addEventListener('click', (event) => {
 		return;
 	}
 
-	const id = triggeredId(event.target);
+	const trigger = triggeredBy(event.target);
+	const id = trigger?.id;
 	const item = id ? state.items[id] : undefined;
 
 	if (!item) {
@@ -358,6 +365,12 @@ document.addEventListener('click', (event) => {
 	}
 
 	event.preventDefault();
+
+	// Remembered for the close: a click doesn't focus a button or link in
+	// Safari, so the browser has nothing to give focus back to.
+	if (!item.isOpen) {
+		openers.set(id, trigger.element);
+	}
 
 	// Opening by hand isn't an automatic open; closing an automatic one
 	// (e.g. an age gate's own link) dismisses it.
@@ -488,6 +501,33 @@ const isRendered = (element) => {
 };
 
 /**
+ * Give focus back to what opened a dialog when the browser hasn't: a browser
+ * that didn't focus the trigger on click (Safari) has nothing to restore, and
+ * leaves focus on the page. The control that opened it, if it's still there,
+ * else the first visible control that opens it.
+ *
+ * @param {string} id Overlay ID.
+ */
+const restoreFocus = (id) => {
+	const opener = openers.get(id);
+
+	openers.delete(id);
+
+	// A frame later, once the browser has finished moving focus (Safari
+	// does it after the close event).
+	window.requestAnimationFrame(() => {
+		const current = focused();
+
+		// Lost: on the page, on something in the closed dialog, or on a
+		// container that only takes focus as a fallback (tabindex="-1", as
+		// a panel's content does when the trap holding it finds none).
+		if (!isUsable(current) || current.getAttribute('tabindex') === '-1') {
+			focusFirst([opener, ...findTriggers(id)]);
+		}
+	});
+};
+
+/**
  * Show a dialog as a modal, unless it still can't be seen (e.g. the theme
  * hides its container), which would leave the page blocked behind an
  * invisible dialog.
@@ -507,6 +547,12 @@ const showDialog = (dialog, id) => {
 		);
 		state.items[id].isOpen = false;
 		return;
+	}
+
+	// An open that didn't come from a click (the hash, a script, a delay)
+	// goes back to whatever had focus.
+	if (!openers.has(id) && focused()) {
+		openers.set(id, focused());
 	}
 
 	dialog.showModal();
@@ -718,6 +764,7 @@ const { state, actions } = store('matter/overlay', {
 				if (elements.get(id) === ref) {
 					elements.delete(id);
 					lastStates.delete(id);
+					openers.delete(id);
 				}
 
 				syncDocumentClass();
@@ -791,6 +838,7 @@ const { state, actions } = store('matter/overlay', {
 			}
 
 			syncDocumentClass();
+			restoreFocus(id);
 			emit(ref, 'overlay', 'close');
 		},
 		// Escape: ignored by dialogs that can't be closed; others close as
