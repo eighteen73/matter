@@ -11,6 +11,11 @@
 
 namespace Eighteen73\Matter\Tests;
 
+use Eighteen73\Matter\Breakpoints;
+use Eighteen73\Matter\Ids;
+use Eighteen73\Matter\Supports\Link;
+use Eighteen73\Matter\Supports\Scheme;
+
 /**
  * Contract markup.
  */
@@ -312,5 +317,287 @@ class ContractMarkupTest extends TestCase {
 
 		$this->assertSame( 1, substr_count( $query, 'id="accordion-a1b2c"' ) );
 		$this->assertStringContainsString( "id=\"accordion-a1b2c-post-{$post}\"", $query );
+	}
+
+	/**
+	 * A menu with a parent that has a child, and a leaf. A fixed name, so the
+	 * menu's IDs are the same on every run.
+	 *
+	 * @return int Menu ID.
+	 */
+	private function menu(): int {
+		$menu   = wp_create_nav_menu( 'Snapshot menu' );
+		$item   = fn( string $title, string $url, int $parent = 0 ) => wp_update_nav_menu_item(
+			$menu,
+			0,
+			[
+				'menu-item-title'     => $title,
+				'menu-item-url'       => $url,
+				'menu-item-parent-id' => $parent,
+				'menu-item-status'    => 'publish',
+			]
+		);
+		$parent = $item( 'Services', 'https://example.com/services/' );
+
+		$item( 'Design', 'https://example.com/services/design/', $parent );
+		$item( 'Contact', 'https://example.com/contact/' );
+
+		return $menu;
+	}
+
+	/**
+	 * Each menu type: the nav's classes and directives, the items, and each
+	 * submenu's toggle and header.
+	 *
+	 * @return void
+	 */
+	public function test_menu_types(): void {
+		$menu = $this->menu();
+
+		foreach ( [ 'dropdown', 'accordion', 'drill-down' ] as $type ) {
+			Ids::reset();
+
+			$this->assertMatchesSnapshot(
+				'menu-' . $type,
+				\Eighteen73\Matter\get_menu(
+					[
+						'menu'  => $menu,
+						'type'  => $type,
+						'label' => 'Main',
+					]
+				)
+			);
+		}
+	}
+
+	/**
+	 * A menu whose type changes with the screen: the responsive classes and
+	 * the types and queries in its context.
+	 *
+	 * @return void
+	 */
+	public function test_responsive_menu(): void {
+		add_filter(
+			'matter_breakpoints',
+			fn() => [
+				'md' => '768px',
+				'lg' => '1024px',
+			]
+		);
+
+		$this->assertMatchesSnapshot(
+			'menu-responsive',
+			\Eighteen73\Matter\get_menu(
+				[
+					'menu'     => $this->menu(),
+					'type'     => [
+						'drill-down',
+						'lg' => 'dropdown',
+					],
+					'opens_on' => 'click',
+					'label'    => 'Main',
+				]
+			)
+		);
+	}
+
+	/**
+	 * The responsive panel, and the button that opens it.
+	 *
+	 * @return void
+	 */
+	public function test_panel_and_toggle(): void {
+		add_filter( 'matter_breakpoints', fn() => [ 'lg' => '1024px' ] );
+
+		$toggle = \Eighteen73\Matter\get_panel_toggle( 'site-nav', [ 'collapse_below' => 'lg' ] );
+		$panel  = \Eighteen73\Matter\get_panel( 'site-nav', '<p>Inside</p>', [ 'collapse_below' => 'lg' ] );
+
+		$this->assertMatchesSnapshot( 'panel-toggle', $toggle );
+		$this->assertMatchesSnapshot( 'panel', $panel );
+
+		// A toggle with a visible label and no icon, and a panel that is always
+		// off-canvas from the top.
+		Ids::reset();
+
+		$this->assertMatchesSnapshot(
+			'panel-toggle-labelled',
+			\Eighteen73\Matter\get_panel_toggle(
+				'filters',
+				[
+					'label'      => 'Filters',
+					'show_label' => true,
+					'hamburger'  => false,
+					'class'      => 'is-small',
+					'content'    => '<span>3</span>',
+				]
+			)
+		);
+		$this->assertMatchesSnapshot( 'panel-always', \Eighteen73\Matter\get_panel( 'filters', '<p>Inside</p>', [ 'position' => 'top' ] ) );
+	}
+
+	/**
+	 * Gallery images, as the editor saves them: not in the media library, so
+	 * the markup doesn't depend on attachment IDs.
+	 *
+	 * @return string
+	 */
+	private function gallery_images(): string {
+		$image = fn( string $name, string $caption = '' ) => '<!-- wp:image --><figure class="wp-block-image"><img src="https://example.com/' . $name . '.jpg" alt="Image ' . $name . '"/>'
+			. ( $caption ? '<figcaption class="wp-element-caption">' . $caption . '</figcaption>' : '' ) . '</figure><!-- /wp:image -->';
+
+		return $image( 'one', 'First' ) . $image( 'two' ) . $image( 'three' );
+	}
+
+	/**
+	 * The gallery's grid with its lightbox, and without one.
+	 *
+	 * @return void
+	 */
+	public function test_gallery_grid_and_lightbox(): void {
+		$this->assertMatchesSnapshot(
+			'gallery-grid',
+			$this->render( '<!-- wp:matter/gallery {"limit":2,"columns":3,"label":"Our work"} -->' . $this->gallery_images() . '<!-- /wp:matter/gallery -->' )
+		);
+		$this->assertMatchesSnapshot(
+			'gallery-grid-without-lightbox',
+			$this->render( '<!-- wp:matter/gallery {"lightbox":false,"captions":"overlay"} -->' . $this->gallery_images() . '<!-- /wp:matter/gallery -->' )
+		);
+	}
+
+	/**
+	 * The gallery in its carousel layout.
+	 *
+	 * @return void
+	 */
+	public function test_gallery_carousel(): void {
+		$this->assertMatchesSnapshot(
+			'gallery-carousel',
+			$this->render( '<!-- wp:matter/gallery {"layout":"carousel","label":"Our work"} -->' . $this->gallery_images() . '<!-- /wp:matter/gallery -->' )
+		);
+	}
+
+	/**
+	 * The scheme CSS the theme's schemes generate.
+	 *
+	 * @return void
+	 */
+	public function test_scheme_css(): void {
+		$this->assertMatchesSnapshot( 'scheme-css', Scheme::instance()->get_css(), 'css' );
+	}
+
+	/**
+	 * A block with a whole-block link: with a heading (the heading is the
+	 * link), without one (a hidden link), and in a new tab.
+	 *
+	 * @return void
+	 */
+	public function test_block_link(): void {
+		register_block_type(
+			'matter-test/snapshot-card',
+			[
+				'supports'        => [ 'matter' => [ 'link' => true ] ],
+				'render_callback' => fn( $attributes, $content ) => '<div ' . get_block_wrapper_attributes() . '>' . $content . '</div>',
+			]
+		);
+
+		Link::instance()->register_attribute( \WP_Block_Type_Registry::get_instance()->get_registered( 'matter-test/snapshot-card' ) );
+
+		$card = fn( string $attrs, string $inner ) => $this->render( '<!-- wp:matter-test/snapshot-card ' . $attrs . ' -->' . $inner . '<!-- /wp:matter-test/snapshot-card -->' );
+
+		try {
+			$this->assertMatchesSnapshot( 'link-heading', $card( '{"matterLink":{"url":"https://example.com/page/"}}', '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">Title</h3><!-- /wp:heading --><!-- wp:paragraph --><p>Text</p><!-- /wp:paragraph -->' ) );
+			$this->assertMatchesSnapshot( 'link-no-heading', $card( '{"matterLink":{"url":"https://example.com/page/"}}', '<!-- wp:paragraph --><p>Text</p><!-- /wp:paragraph -->' ) );
+			$this->assertMatchesSnapshot( 'link-new-tab', $card( '{"matterLink":{"url":"https://example.com/page/","opensInNewTab":true}}', '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">Title</h3><!-- /wp:heading -->' ) );
+		} finally {
+			unregister_block_type( 'matter-test/snapshot-card' );
+		}
+	}
+
+	/**
+	 * A button with an icon.
+	 *
+	 * @return void
+	 */
+	public function test_button_icon(): void {
+		$button = fn( string $attrs ) => $this->render( '<!-- wp:button ' . $attrs . ' --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="#">Go</a></div><!-- /wp:button -->' );
+
+		$this->assertMatchesSnapshot( 'button-icon', $button( '{"matterIcon":"matter-test-theme/star"}' ) );
+	}
+
+	/**
+	 * A section with a chosen variant and a slot with nothing in it.
+	 *
+	 * @return void
+	 */
+	public function test_empty_slot_and_variant(): void {
+		register_block_type(
+			'matter-test/snapshot-variants',
+			[
+				'styles'   => [
+					[
+						'name'      => 'default',
+						'label'     => 'Default',
+						'isDefault' => true,
+					],
+					[
+						'name'  => 'split',
+						'label' => 'Split',
+					],
+				],
+				'supports' => [ 'matter' => [ 'slots' => [ 'content' => [], 'media' => [] ] ] ], // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing
+			]
+		);
+
+		$section = fn( string $attrs ) => $this->render(
+			'<!-- wp:matter-test/snapshot-variants ' . $attrs . ' -->'
+			. '<!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Text</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->'
+			. '<!-- wp:matter/slot {"name":"media"} --><!-- /wp:matter/slot -->'
+			. '<!-- /wp:matter-test/snapshot-variants -->'
+		);
+
+		try {
+			$this->assertMatchesSnapshot( 'slot-empty-default-variant', $section( '' ) );
+			$this->assertMatchesSnapshot( 'slot-empty-variant', $section( '{"className":"is-style-split"}' ) );
+		} finally {
+			unregister_block_type( 'matter-test/snapshot-variants' );
+		}
+	}
+
+	/**
+	 * The list a Query Loop renders inside a carousel and an accordion is
+	 * marked `matter-query-list`, which the blocks around it look for.
+	 *
+	 * @return void
+	 */
+	public function test_query_list_class(): void {
+		foreach ( [ 'One', 'Two' ] as $title ) {
+			self::factory()->post->create( [ 'post_title' => $title ] );
+		}
+
+		$query = fn( string $display, string $item ) => '<!-- wp:query {"queryId":7,"query":{"perPage":2,"postType":"post","order":"asc","orderBy":"title","inherit":false},"matterDisplay":' . $display . '} -->'
+			. '<div class="wp-block-query"><!-- wp:post-template -->' . $item . '<!-- /wp:post-template --></div>'
+			. '<!-- /wp:query -->';
+
+		$title = '<!-- wp:post-title {"isLink":false} /-->';
+
+		$this->assertMatchesSnapshot( 'query-list-carousel', $this->render( $query( '{"type":"carousel"}', $title ) ) );
+
+		Ids::reset();
+
+		$this->assertMatchesSnapshot( 'query-list-accordion', $this->render( $query( '{"type":"accordion","headingLevel":3}', '<!-- wp:matter/accordion-item -->' . $title . '<!-- /wp:matter/accordion-item -->' ) ) );
+	}
+
+	/**
+	 * A compiled stylesheet re-scoped to an instance class and a media query:
+	 * the placeholder swapped (only whole class names), relative URLs made
+	 * absolute, the source map comment dropped.
+	 *
+	 * @return void
+	 */
+	public function test_scope_stylesheet(): void {
+		$path = dirname( __DIR__ ) . '/fixtures/scope-stylesheet.css';
+
+		$this->assertMatchesSnapshot( 'scope-stylesheet', Breakpoints::scope_stylesheet( $path, 'is-type-x', 'is-types-abc123' ), 'css' );
+		$this->assertMatchesSnapshot( 'scope-stylesheet-query', Breakpoints::scope_stylesheet( $path, 'is-type-x', 'is-types-abc123', '(min-width: 1024px)' ), 'css' );
 	}
 }

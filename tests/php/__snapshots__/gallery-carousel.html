@@ -1,0 +1,64 @@
+<div style="--image-aspect-ratio:var(--wp--preset--aspect-ratio--square)" class="is-carousel has-captions-tooltip wp-block-matter-gallery" data-wp-interactive="matter/gallery" data-wp-context='{"images":[{"src":"https:\/\/example.com\/one.jpg","srcset":"","alt":"Image one","caption":"First"},{"src":"https:\/\/example.com\/two.jpg","srcset":"","alt":"Image two","caption":""},{"src":"https:\/\/example.com\/three.jpg","srcset":"","alt":"Image three","caption":""}],"index":0,"opened":false,"announcing":false,"limit":0,"counter":"%1$d \/ %2$d","announce":"Image %1$d of %2$d","announceAlt":"Image %1$d of %2$d: %3$s"}' data-wp-init---api="callbacks.init" data-wp-init---rows="callbacks.fitRows" data-wp-watch="callbacks.announce">
+<div class="wp-block-matter-gallery__items wp-block-matter-carousel" role="region" aria-roledescription="carousel" aria-label="Our work" data-wp-interactive="matter/carousel" data-wp-context='{"options":{"loop":false,"align":"start","slidesToScroll":1,"direction":"ltr"},"autoplay":0,"autoScroll":0,"isPlaying":false,"canPrev":false,"canNext":true,"isScrollable":true,"labels":{"slide":"%1$d of %2$d","goTo":"Go to slide %d"}}' data-wp-init="callbacks.init">
+<div class="wp-block-matter-carousel__stage">
+<div class="wp-block-matter-carousel__viewport">
+<div class="wp-block-matter-carousel__track">
+<figure class="wp-block-image">
+<button type="button" class="wp-block-matter-gallery__open" data-wp-on--click="matter/gallery::actions.open" data-wp-context='matter/gallery::{"imageIndex":0}'>
+<span class="screen-reader-text">Enlarge image 1 of 3</span>
+</button>
+<img src="https://example.com/one.jpg" alt="Image one"/>
+<button type="button" class="wp-block-matter-gallery__caption-toggle" aria-expanded="false" aria-controls="matter-gallery-caption-N" data-wp-on--click="matter/gallery::actions.toggleCaption">
+<span class="screen-reader-text">Caption</span>
+</button>
+<figcaption id="matter-gallery-caption-N" class="wp-element-caption">First</figcaption>
+</figure>
+<figure class="wp-block-image">
+<button type="button" class="wp-block-matter-gallery__open" data-wp-on--click="matter/gallery::actions.open" data-wp-context='matter/gallery::{"imageIndex":1}'>
+<span class="screen-reader-text">Enlarge image 2 of 3</span>
+</button>
+<img src="https://example.com/two.jpg" alt="Image two"/>
+</figure>
+<figure class="wp-block-image">
+<button type="button" class="wp-block-matter-gallery__open" data-wp-on--click="matter/gallery::actions.open" data-wp-context='matter/gallery::{"imageIndex":2}'>
+<span class="screen-reader-text">Enlarge image 3 of 3</span>
+</button>
+<img src="https://example.com/three.jpg" alt="Image three"/>
+</figure>
+</div>
+</div>
+</div>
+<div class="wp-block-matter-carousel__controls is-after">
+<button disabled type="button" class="wp-block-matter-carousel__prev" data-wp-on--click="actions.prev" data-wp-bind--disabled="!context.canPrev">
+<span class="screen-reader-text">Previous slide</span>
+</button>
+<div class="wp-block-matter-carousel__dots">
+</div>
+<button type="button" class="wp-block-matter-carousel__next" data-wp-on--click="actions.next" data-wp-bind--disabled="!context.canNext">
+<span class="screen-reader-text">Next slide</span>
+</button>
+</div>
+</div>
+<dialog class="wp-block-matter-gallery__lightbox" aria-label="Image viewer" data-wp-on--close="actions.onClose" data-wp-on--click="actions.onBackdropClick" data-wp-on--keydown="actions.onKeydown">
+<button type="button" class="wp-block-matter-gallery__close" data-wp-on--click="actions.close">
+<span class="screen-reader-text">Close</span>
+</button>
+<figure class="wp-block-matter-gallery__figure">
+<img data-wp-bind--src="state.image.src" data-wp-bind--srcset="state.image.srcset" data-wp-bind--alt="state.image.alt" sizes="100vw" />
+<figcaption hidden data-wp-text="state.image.caption" data-wp-bind--hidden="!state.image.caption">
+</figcaption>
+</figure>
+<div class="screen-reader-text" role="status" aria-live="polite" aria-atomic="true" data-wp-text="state.announcement">
+</div>
+<div class="wp-block-matter-gallery__nav">
+<button type="button" class="wp-block-matter-gallery__prev" data-wp-on--click="actions.prev">
+<span class="screen-reader-text">Previous image</span>
+</button>
+<span class="wp-block-matter-gallery__counter" style="--gallery-counter-width:5ch" data-wp-text="state.counter">
+</span>
+<button type="button" class="wp-block-matter-gallery__next" data-wp-on--click="actions.next">
+<span class="screen-reader-text">Next image</span>
+</button>
+</div>
+</dialog>
+</div>

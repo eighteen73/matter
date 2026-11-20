@@ -8,6 +8,8 @@
 namespace Eighteen73\Matter\Tests;
 
 use Eighteen73\Matter\Ids;
+use Eighteen73\Matter\Navigation\Menu;
+use Eighteen73\Matter\Overlays\Panel;
 use WP_UnitTestCase;
 
 /**
@@ -26,6 +28,25 @@ abstract class TestCase extends WP_UnitTestCase {
 		parent::set_up();
 
 		Ids::reset();
+		self::reset_static_caches();
+	}
+
+	/**
+	 * Forget what the panel and menu classes remember between renders (the
+	 * panel settings, and the generated CSS already printed), so a render
+	 * doesn't depend on the tests that ran before it.
+	 *
+	 * @return void
+	 */
+	protected static function reset_static_caches(): void {
+		foreach ( [
+			Panel::class => [ 'panels', 'printed_css', 'rendered' ],
+			Menu::class  => [ 'printed_css' ],
+		] as $class => $properties ) {
+			foreach ( $properties as $property ) {
+				( new \ReflectionProperty( $class, $property ) )->setValue( null, [] );
+			}
+		}
 	}
 
 	/**

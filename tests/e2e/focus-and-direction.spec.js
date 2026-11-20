@@ -73,20 +73,53 @@ const isLive = (page, selector) =>
 	);
 
 /**
- * Open the panel with the mouse and wait until it has taken focus (it moves
- * it in a frame after opening, once it is in place).
+ * Load the kitchen sink and wait until the scripts that make the panel and
+ * its menu run have finished: the panel and the menu mark the page when they
+ * start, and the panel, its dialog role and the closed submenus' `inert` are
+ * all set by then. Anything measured earlier (what is inert, what is focused)
+ * is a snapshot of a page still being set up.
+ *
+ * @param {Object} page Page.
+ * @return {Promise<void>}
+ */
+const loadPanelPage = async (page) => {
+	await page.goto(kitchenSink.link);
+	await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+	await expect(page.locator('html')).toHaveClass(/matter-ready-panel/);
+	await expect(page.locator('html')).toHaveClass(/matter-ready-menu/);
+	await expect(
+		page.locator('#test-nav .matter-panel__content')
+	).toHaveAttribute('role', 'dialog');
+};
+
+/**
+ * Open the loaded page's panel with the mouse and wait until it has settled:
+ * open, the page behind it inert and locked, and focus moved into it (the
+ * panel's focus trap takes hold, and moves focus, a frame after it opens,
+ * once it is in place).
+ *
+ * @param {Object} page Page.
+ * @return {Promise<void>}
+ */
+const openLoadedPanel = async (page) => {
+	await page.locator('[aria-controls="test-nav"]').click();
+	await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
+	await expect(page.locator('html')).toHaveClass(/has-panel-open/);
+	await expect.poll(() => isLive(page, 'h1')).toBe(false);
+	await expect(
+		page.locator('#test-nav .matter-menu__toggle').first()
+	).toBeFocused();
+};
+
+/**
+ * Load the kitchen sink and open its panel.
  *
  * @param {Object} page Page.
  * @return {Promise<void>}
  */
 const openPanel = async (page) => {
-	await page.goto(kitchenSink.link);
-	await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
-	await page.locator('[aria-controls="test-nav"]').click();
-	await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
-	await expect(
-		page.locator('#test-nav .matter-menu__toggle').first()
-	).toBeFocused();
+	await loadPanelPage(page);
+	await openLoadedPanel(page);
 };
 
 test.describe('panel dialog', { tag: '@cross-browser' }, () => {
@@ -95,14 +128,11 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 	test('only the dialog is exposed while the panel is open, and all is back when it closes', async ({
 		page,
 	}) => {
-		await page.goto(kitchenSink.link);
-		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await loadPanelPage(page);
 
 		const before = await inertElements(page);
 
-		await page.locator('[aria-controls="test-nav"]').click();
-		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
-		await expect.poll(() => isLive(page, 'h1')).toBe(false);
+		await openLoadedPanel(page);
 
 		// The page, the header's toggle included, is out; the dialog's own
 		// close control and menu are in.
@@ -162,6 +192,13 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 
 		await page.evaluate(() => window.matter.panel('test-nav').open());
 		await page.setViewportSize({ width: 760, height: 900 });
+
+		// Wait until the panel has switched to its off-canvas layout (the
+		// dialog role is set as it does), or the checks below would pass
+		// before the narrowing has been seen at all.
+		await expect(
+			page.locator('#test-nav .matter-panel__content')
+		).toHaveAttribute('role', 'dialog');
 		await expect(page.locator('#test-nav')).not.toHaveClass(/\bis-open\b/);
 		expect(
 			await page.evaluate(() => window.matter.panel('test-nav').isOpen)
@@ -172,17 +209,11 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 	test('resizing to the inline layout with the panel open lets go without moving focus', async ({
 		page,
 	}) => {
-		await page.goto(kitchenSink.link);
-		await expect(page.locator('#test-nav')).toHaveClass(/is-enhanced/);
+		await loadPanelPage(page);
 
 		const before = await inertElements(page);
 
-		await page.locator('[aria-controls="test-nav"]').click();
-		await expect(page.locator('#test-nav')).toHaveClass(/\bis-open\b/);
-		await expect(
-			page.locator('#test-nav .matter-menu__toggle').first()
-		).toBeFocused();
-
+		await openLoadedPanel(page);
 		await page.setViewportSize(VIEWPORTS.atLg);
 		await expect(page.locator('#test-nav')).not.toHaveClass(/\bis-open\b/);
 		await expect(page.locator('html')).not.toHaveClass(/has-panel-open/);
@@ -235,6 +266,17 @@ test.describe('panel dialog', { tag: '@cross-browser' }, () => {
 
 		await button.click();
 		await expect(modal).toBeVisible();
+		// Focus is in the modal (it moves a moment after it opens), so Escape
+		// reaches it, not the page behind.
+		await expect
+			.poll(() =>
+				page
+					.locator('dialog#in-tab')
+					.evaluate((dialog) =>
+						dialog.contains(dialog.ownerDocument.activeElement)
+					)
+			)
+			.toBe(true);
 		await page.keyboard.press('Escape');
 		await expect(modal).toBeHidden();
 		await expect(panel).toHaveClass(/\bis-open\b/);
