@@ -360,17 +360,38 @@ class ArchivesTest extends TestCase {
 	}
 
 	/**
-	 * Labels use the registered names as written: lowercasing a translated noun
-	 * is wrong in languages that capitalise them.
+	 * Registered names are lowercased mid-sentence in English, where labels are
+	 * written as titles; other languages keep the registered case (lowercasing
+	 * a noun is wrong where nouns are capitalised).
 	 *
 	 * @return void
 	 */
-	public function test_labels_keep_the_case_of_registered_names(): void {
-		$names = get_taxonomy( 'category' )->labels->name;
+	public function test_labels_lowercase_registered_names_in_english_only(): void {
+		$names    = get_taxonomy( 'category' )->labels->name;
+		$items    = get_post_type_object( 'post' )->labels->name;
+		$category = new Target( 'taxonomy', 'category' );
 
+		// English: mid-sentence names are lowercase.
+		$this->assertSame( 'All ' . mb_strtolower( $names ), $category->label() );
+		$this->assertStringContainsString( mb_strtolower( $names ), $category->description() );
+		$this->assertStringContainsString( mb_strtolower( $items ), ( new Target( 'post_type', 'post' ) )->description() );
+		$this->assertSame( 'Include category, tag, author, and date pages', ( new Target( 'post_type', 'post' ) )->cascade_label() );
+
+		// Another locale keeps the case the name was registered with.
+		switch_to_locale( 'de_DE' );
+
+		try {
+			$this->assertSame( 'de_DE', determine_locale() );
+			$this->assertStringContainsString( $names, ( new Target( 'taxonomy', 'category' ) )->description() );
+			$this->assertStringContainsString( $items, ( new Target( 'post_type', 'post' ) )->description() );
+		} finally {
+			restore_previous_locale();
+		}
+
+		// And a site can choose either.
+		add_filter( 'matter_archive_lowercase_names', '__return_false' );
 		$this->assertSame( "All {$names}", ( new Target( 'taxonomy', 'category' ) )->label() );
-		$this->assertStringContainsString( $names, ( new Target( 'taxonomy', 'category' ) )->description() );
-		$this->assertStringContainsString( get_post_type_object( 'post' )->labels->name, ( new Target( 'post_type', 'post' ) )->description() );
+		remove_filter( 'matter_archive_lowercase_names', '__return_false' );
 	}
 
 	/**
@@ -381,11 +402,10 @@ class ArchivesTest extends TestCase {
 	public function test_blog_cascade_label_names_author_and_date(): void {
 		$label = ( new Target( 'post_type', 'post' ) )->cascade_label();
 
-		// Names are the registered labels, as written (not lowercased).
-		$this->assertStringContainsString( 'Category', $label );
-		$this->assertStringContainsString( 'Author', $label );
-		$this->assertStringContainsString( 'Date', $label );
-		$this->assertStringNotContainsString( 'Author', ( new Target( 'post_type', 'page' ) )->cascade_label() );
+		$this->assertStringContainsString( 'category', $label );
+		$this->assertStringContainsString( 'author', $label );
+		$this->assertStringContainsString( 'date', $label );
+		$this->assertStringNotContainsString( 'author', ( new Target( 'post_type', 'page' ) )->cascade_label() );
 	}
 
 	/**

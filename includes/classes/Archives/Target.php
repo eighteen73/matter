@@ -193,10 +193,9 @@ final readonly class Target {
 	}
 
 	/**
-	 * A name for editors, e.g. "Shop", "All Product categories",
-	 * "Christmas (Product categories)". Taxonomy and post type names are the
-	 * registered labels, as written: they aren't lowercased, which would be
-	 * wrong in languages that capitalise nouns.
+	 * A name for editors, e.g. "Shop", "All product categories",
+	 * "Christmas (Product categories)". See `name()` for when a registered
+	 * name is lowercased in the middle of a sentence.
 	 *
 	 * @return string
 	 */
@@ -206,7 +205,7 @@ final readonly class Target {
 		return match ( $this->type ) {
 			'post_type' => Archives::post_type_title( $this->name ),
 			/* translators: %s: taxonomy name, e.g. "Product categories". */
-			'taxonomy'  => sprintf( __( 'All %s', 'matter' ), (string) ( $taxonomy->labels->name ?? $this->name ) ),
+			'taxonomy'  => sprintf( __( 'All %s', 'matter' ), self::name( (string) ( $taxonomy->labels->name ?? $this->name ) ) ),
 			// The taxonomy's plural: singular names can clash (WooCommerce's
 			// product categories are "Category").
 			'term'      => sprintf(
@@ -224,22 +223,22 @@ final readonly class Target {
 	}
 
 	/**
-	 * Where it shows, for editors, e.g. "Each of the Product categories,
+	 * Where it shows, for editors, e.g. "Each of the product categories,
 	 * unless it has its own".
 	 *
 	 * @return string
 	 */
 	public function description(): string {
 		$taxonomy = in_array( $this->type, [ 'term', 'taxonomy' ], true ) ? get_taxonomy( $this->name ) : null;
-		$items    = (string) ( get_post_type_object( (string) $this->post_type() )->labels->name ?? '' );
+		$items    = self::name( (string) ( get_post_type_object( (string) $this->post_type() )->labels->name ?? '' ) );
 
 		return match ( $this->type ) {
 			/* translators: %s: items listed, e.g. "products". */
 			'post_type' => sprintf( __( 'The page listing all %s', 'matter' ), $items ),
 			/* translators: %s: taxonomy name, e.g. "product categories". */
-			'taxonomy'  => sprintf( __( 'Each of the %s, unless it has its own', 'matter' ), (string) ( $taxonomy->labels->name ?? $this->name ) ),
+			'taxonomy'  => sprintf( __( 'Each of the %s, unless it has its own', 'matter' ), self::name( (string) ( $taxonomy->labels->name ?? $this->name ) ) ),
 			/* translators: %s: taxonomy singular name, e.g. "category". */
-			'term'      => sprintf( __( 'This %s’s page', 'matter' ), (string) ( $taxonomy->labels->singular_name ?? $this->name ) ),
+			'term'      => sprintf( __( 'This %s’s page', 'matter' ), self::name( (string) ( $taxonomy->labels->singular_name ?? $this->name ) ) ),
 			'author'    => __( 'Each author’s page, unless it’s the blog’s to share', 'matter' ),
 			'date'      => __( 'The year, month and day archives, unless it’s the blog’s to share', 'matter' ),
 			'search'    => __( 'Shown when someone searches the site', 'matter' ),
@@ -267,7 +266,7 @@ final readonly class Target {
 		}
 
 		$names = array_map(
-			fn( $taxonomy ) => (string) $taxonomy->labels->singular_name,
+			fn( $taxonomy ) => self::name( (string) $taxonomy->labels->singular_name ),
 			array_filter(
 				get_object_taxonomies( $this->name, 'objects' ),
 				fn( $taxonomy ) => $taxonomy->public && $taxonomy->publicly_queryable && $taxonomy->show_ui
@@ -276,12 +275,36 @@ final readonly class Target {
 
 		// The blog's entry can also show on the author and date archives.
 		if ( 'post' === $this->name ) {
-			$names[] = __( 'Author', 'matter' );
-			$names[] = __( 'Date', 'matter' );
+			/* translators: an archive kind in a list, in the middle of a sentence: "Include category, tag, author, and date pages". Lowercase in English. */
+			$names[] = __( 'author', 'matter' );
+			/* translators: an archive kind in a list, in the middle of a sentence: "Include category, tag, author, and date pages". Lowercase in English. */
+			$names[] = __( 'date', 'matter' );
 		}
 
-		/* translators: %l: archive names, e.g. "Category and Tag". */
+		/* translators: %l: archive names, e.g. "category and tag". */
 		return $names ? wp_sprintf( __( 'Include %l pages', 'matter' ), array_values( $names ) ) : '';
+	}
+
+	/**
+	 * A registered name (a taxonomy's or post type's) for the middle of a
+	 * sentence. English labels are written as titles ("Product categories") and
+	 * read wrongly there, so they are lowercased; other languages keep the
+	 * registered case, which may be right (German nouns are capitalised), and
+	 * a site can choose either.
+	 *
+	 * @param string $name Registered name.
+	 * @return string
+	 */
+	private static function name( string $name ): string {
+		/**
+		 * Filters whether registered taxonomy and post type names are lowercased
+		 * where Matter uses them mid-sentence (the archive entries' descriptions).
+		 *
+		 * @param bool $lowercase True for English locales (`en_*`) by default.
+		 */
+		return apply_filters( 'matter_archive_lowercase_names', str_starts_with( determine_locale(), 'en' ) )
+			? mb_strtolower( $name )
+			: $name;
 	}
 
 	/**
