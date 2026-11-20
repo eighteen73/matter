@@ -384,3 +384,142 @@ test.describe('closed panels degrade @cross-browser', () => {
 		await expect(page.getByText('The rest of it')).toBeHidden();
 	});
 });
+
+const BUTTON_TRIGGER =
+	'<!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button">Get the offer</a></div><!-- /wp:button --></div><!-- /wp:buttons -->';
+
+let overlays;
+
+test.describe('overlays', () => {
+	test.beforeAll(async ({ requestUtils }) => {
+		overlays = await createPage(
+			requestUtils,
+			'Overlays',
+			`<!-- wp:matter/modal {"overlayId":"offer","label":"The offer"} --><!-- wp:matter/slot {"name":"trigger"} -->${BUTTON_TRIGGER}<!-- /wp:matter/slot --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Offer details</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->` +
+				'<!-- wp:paragraph --><p>Page text after the offer</p><!-- /wp:paragraph -->'
+		);
+	});
+
+	test.describe('without JavaScript', () => {
+		test.use({ ...NO_JAVASCRIPT, viewport: VIEWPORTS.desktop });
+
+		test('a trigger with no URL is a real link to the dialog', async ({
+			page,
+		}) => {
+			await page.goto(overlays.link);
+
+			const link = page.getByRole('link', { name: 'Get the offer' });
+
+			await expect(link).toHaveAttribute('href', '#offer');
+			await link.focus();
+			await expect(link).toBeFocused();
+			await expect(page.getByText('Offer details')).toBeHidden();
+		});
+
+		test('following it shows the dialog in the page, as content', async ({
+			page,
+		}) => {
+			await page.goto(overlays.link);
+			await page.getByRole('link', { name: 'Get the offer' }).click();
+
+			await expect(page).toHaveURL(/#offer$/);
+			await expect(page.getByText('Offer details')).toBeVisible();
+			await expect(page.locator('#offer')).toBeInViewport();
+			// In the flow of the page (not over it), with nothing that needs a script.
+			expect(
+				await page
+					.locator('#offer')
+					.evaluate(
+						(dialog) => window.getComputedStyle(dialog).position
+					)
+			).toBe('static');
+			await expect(
+				page.locator('#offer .wp-block-matter-modal__close')
+			).toBeHidden();
+			await expect(
+				page.getByText('Page text after the offer')
+			).toBeVisible();
+			await expectNothingHidden(page, '.wp-block-matter-modal-host');
+		});
+
+		test('a link to a dialog in a tab, an accordion and a collapsible shows it', async ({
+			page,
+		}) => {
+			await page.goto(kitchenSink.link);
+
+			for (const [link, text] of [
+				['Open the modal in tab two', /Inside the tab.s modal/],
+				[
+					'Open the modal in the accordion',
+					/Inside the accordion.s modal/,
+				],
+				[
+					'Open the modal in the collapsible',
+					/Inside the collapsible.s modal/,
+				],
+			]) {
+				await expect(page.getByText(text)).toBeHidden();
+				await page.getByRole('link', { name: link }).click();
+				await expect(page.getByText(text)).toBeVisible();
+			}
+		});
+
+		test('a drawer shows the same way', async ({ page }) => {
+			await page.goto(kitchenSink.link);
+			await expect(page.getByText('Drawer content')).toBeHidden();
+			await page.getByRole('link', { name: 'Filters' }).click();
+
+			await expect(page.getByText('Drawer content')).toBeVisible();
+			expect(
+				await page
+					.locator('#filters')
+					.evaluate(
+						(dialog) => window.getComputedStyle(dialog).position
+					)
+			).toBe('static');
+		});
+	});
+
+	test.describe('when the scripts do not start', () => {
+		test.use({ viewport: VIEWPORTS.desktop });
+
+		test('the link shows the dialog in the page', async ({ page }) => {
+			await page.route(BLOCK_SCRIPTS, (route) => route.abort());
+			await page.goto(overlays.link);
+			await page.getByRole('link', { name: 'Get the offer' }).click();
+
+			await expect(page.getByText('Offer details')).toBeVisible();
+			await expect(page.locator('#offer')).not.toHaveAttribute(
+				'open',
+				''
+			);
+		});
+	});
+
+	test.describe('with JavaScript', () => {
+		test.use({ viewport: VIEWPORTS.desktop });
+
+		test('the trigger opens the dialog over the page, and the address stays', async ({
+			page,
+		}) => {
+			await page.goto(overlays.link);
+			await page.getByRole('link', { name: 'Get the offer' }).click();
+
+			const dialog = page.getByRole('dialog', { name: 'The offer' });
+
+			await expect(dialog).toBeVisible();
+			await expect(page.locator('#offer')).toHaveAttribute('open', '');
+			expect(
+				await page
+					.locator('#offer')
+					.evaluate(
+						(element) => window.getComputedStyle(element).position
+					)
+			).not.toBe('static');
+			expect(new URL(page.url()).hash).toBe('');
+
+			await page.keyboard.press('Escape');
+			await expect(dialog).toBeHidden();
+		});
+	});
+});

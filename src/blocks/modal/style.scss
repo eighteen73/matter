@@ -5,6 +5,7 @@
 // it changes (`[open]`, `[open].is-closing`), as the rules below do.
 
 @use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
 
 // The page doesn't scroll behind an open modal or drawer (as behind a panel).
 html.has-overlay-open {
@@ -28,6 +29,9 @@ html.has-overlay-open {
 :root dialog.wp-block-matter-modal {
 	margin: auto;
 }
+
+// Without JavaScript, a link to the dialog's #ID shows it in the page.
+@include shown-in-place("wp-block-matter-modal");
 
 // Default skin. The modal fades in and scales up from 95%.
 :where(.wp-block-matter-modal) {

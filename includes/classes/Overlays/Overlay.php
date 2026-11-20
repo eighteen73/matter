@@ -20,6 +20,7 @@ use Eighteen73\Matter\Blocks\Instances;
 use Eighteen73\Matter\Ids;
 use Eighteen73\Matter\Sections\Sections;
 use WP_Block;
+use WP_HTML_Tag_Processor;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -69,7 +70,7 @@ class Overlay {
 		wp_interactivity_state(
 			'matter/overlay',
 			[
-				'items'  => [
+				'items'    => [
 					$id => [
 						'isOpen'          => false,
 						'dismissible'     => (bool) ( $config['dismissible'] ?? true ),
@@ -82,7 +83,7 @@ class Overlay {
 						'dismissDays'     => max( 0, (int) ( $config['dismissDays'] ?? 0 ) ),
 					],
 				],
-				'isOpen' => function () {
+				'isOpen'   => function () {
 					$context = wp_interactivity_get_context();
 					$state   = wp_interactivity_state( 'matter/overlay' );
 
@@ -159,7 +160,7 @@ class Overlay {
 				'<div class="%1$s__trigger" data-matter-trigger="%2$s"%4$s>%3$s</div>',
 				esc_attr( $class ),
 				esc_attr( $id ),
-				$slots['trigger'],
+				self::link_trigger( $slots['trigger'], $id ),
 				$id !== $wanted ? ' data-matter-from="' . esc_attr( $wanted ) . '"' : ''
 			)
 			: '';
@@ -196,6 +197,49 @@ class Overlay {
 		return '' !== $trigger
 			? sprintf( '<div class="%1$s-host">%2$s%3$s</div>', esc_attr( $class ), $trigger, $dialog )
 			: $dialog;
+	}
+
+	/**
+	 * Make a trigger area's first control a link to the overlay. The trigger is
+	 * its first link or button (view.js); a link the author left without a
+	 * destination (a button block with no URL renders `<a>` with no `href`, or
+	 * the placeholder `#`) gets `#{id}`, so without JavaScript it still goes
+	 * to the overlay, which a dialog shows in the page (see the modal's CSS).
+	 * Anything else is left alone: a button, a link to a destination (even to
+	 * the saved ID of a copy that was renamed, which view.js knows is the
+	 * copy's own), a trigger area with neither.
+	 *
+	 * @param string $html Trigger area content.
+	 * @param string $id   Overlay's ID on this page.
+	 * @return string
+	 */
+	private static function link_trigger( string $html, string $id ): string {
+		$tags = new WP_HTML_Tag_Processor( $html );
+
+		while ( $tags->next_tag() ) {
+			$tag = $tags->get_tag();
+
+			if ( 'BUTTON' === $tag ) {
+				return $html;
+			}
+
+			if ( 'A' !== $tag ) {
+				continue;
+			}
+
+			$href = $tags->get_attribute( 'href' );
+			$href = is_string( $href ) ? trim( $href ) : '';
+
+			if ( '' !== $href && '#' !== $href ) {
+				return $html;
+			}
+
+			$tags->set_attribute( 'href', '#' . $id );
+
+			return $tags->get_updated_html();
+		}
+
+		return $html;
 	}
 
 	/**

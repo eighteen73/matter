@@ -406,6 +406,7 @@ Per block, with no JavaScript:
 
 - **Accordion:** every answer shows. An item the accordion opens by default says so (`is-open`, `aria-expanded="true"`); the others say nothing about their state, since their answer isn't collapsed. The headings have no caret, since they do nothing.
 - **Collapsible:** the content shows.
+- **Modal and drawer:** a closed `<dialog>` is closed by the browser, so nothing shows until it is linked to. The trigger area's first link is rendered as a real link to the dialog (`href="#{id}"`): a link with no URL, or the `#` placeholder (a button block with no URL renders an `<a>` with neither a role nor an `href`), gets `#{id}`. Following the link shows the dialog in the page, where it is, as ordinary content (`.wp-block-matter-modal:not(.is-enhanced):target`, and the drawer's), without its close and group buttons. A trigger area with no link or button is only a button once the script runs. Dialogs that open on load, on scroll or from a URL parameter aren't shown.
 - **Tabs:** every panel shows, each under its tab's name (`.wp-block-matter-tab__label`, which the script hides); the tab list, and the dropdown button, aren't shown, since they can't switch anything. The server marks the active panel `is-active`, as the script does.
 - **Carousel:** the slides scroll natively.
 - **Filters:** a form with an Apply button, which the server filters.

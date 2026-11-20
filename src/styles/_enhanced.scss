@@ -19,3 +19,28 @@ $enhanced: ":is(.is-enhanced, html.matter-js:not(.matter-late) *, .editor-styles
 $in-enhanced: ":is(.is-enhanced, html.matter-js:not(.matter-late), .editor-styles-wrapper)";
 $enhanced-front: ":is(.is-enhanced, html.matter-js:not(.matter-late) *)";
 $in-enhanced-front: ":is(.is-enhanced, html.matter-js:not(.matter-late))";
+
+// A dialog (modal or drawer) that nothing has opened: a link to its #ID, with
+// JavaScript off or a script that didn't start, shows it in the page where it
+// is, as content, instead of leaving the link with nothing to do.
+@mixin shown-in-place($block) {
+	.#{$block}:not(.is-enhanced):target {
+		display: block;
+		height: auto;
+		inset: auto;
+		margin: 1em 0;
+		max-height: none;
+		max-width: none;
+		opacity: 1;
+		position: static;
+		scale: none;
+		transition: none;
+		translate: none;
+		width: auto;
+	}
+
+	// Their buttons need the script.
+	.#{$block}:not(.is-enhanced):target :is(.#{$block}__close, .#{$block}__group-nav) {
+		display: none;
+	}
+}

@@ -31,7 +31,7 @@ if ( ! $matter_tabs ) {
 wp_interactivity_state(
 	'matter/tabs',
 	[
-		'isActive' => function () {
+		'isActive'      => function () {
 			$context = wp_interactivity_get_context();
 
 			return ( $context['active'] ?? '' ) === ( $context['tabId'] ?? null );
@@ -39,7 +39,7 @@ wp_interactivity_state(
 		// A panel is only hidden once the script runs (view.js), so without
 		// JavaScript every panel can be read.
 		'isPanelHidden' => fn() => false,
-		'tabIndex' => function () {
+		'tabIndex'      => function () {
 			$context = wp_interactivity_get_context();
 
 			return ( $context['active'] ?? '' ) === ( $context['tabId'] ?? null ) ? 0 : -1;

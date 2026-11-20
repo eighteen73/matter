@@ -4,6 +4,7 @@
 // the default skin, all in :where(), including the motion (see modal).
 
 @use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
 
 // The page doesn't scroll behind an open modal or drawer (as behind a panel).
 html.has-overlay-open {
@@ -36,6 +37,9 @@ html.has-overlay-open {
 :root dialog.wp-block-matter-drawer {
 	margin: 0;
 }
+
+// Without JavaScript, a link to the dialog's #ID shows it in the page.
+@include shown-in-place("wp-block-matter-drawer");
 
 // Default skin. The drawer slides in from its edge (`--_drawer-from`: the
 // distance off screen, negative towards the left).

@@ -101,4 +101,89 @@ class WithoutJavaScriptTest extends TestCase {
 		$this->assertStringNotContainsString( 'is-active"', str_replace( 'data-wp-class--is-active', '', $panels[0][1] ) );
 		$this->assertStringContainsString( '<div class="wp-block-matter-tab__label">Colour</div>', $html );
 	}
+
+	/**
+	 * A modal's trigger markup.
+	 *
+	 * @param string $trigger Trigger slot content.
+	 * @param string $id      Overlay ID.
+	 * @return string The rendered block.
+	 */
+	private function modal( string $trigger, string $id = 'offer' ): string {
+		return $this->render(
+			sprintf( '<!-- wp:matter/modal {"overlayId":"%s"} -->', $id )
+			. '<!-- wp:matter/slot {"name":"trigger"} -->' . $trigger . '<!-- /wp:matter/slot -->'
+			. '<!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Inside</p><!-- /wp:paragraph --><!-- /wp:matter/slot -->'
+			. '<!-- /wp:matter/modal -->'
+		);
+	}
+
+	/**
+	 * A trigger link with no destination, or the placeholder `#`, goes to the
+	 * overlay, so without JavaScript it takes the visitor to a dialog the CSS
+	 * shows in the page.
+	 *
+	 * @return void
+	 */
+	public function test_a_trigger_link_without_a_destination_links_to_the_overlay(): void {
+		foreach ( [ '<a href="#">Open</a>', '<a>Open</a>', '<a href="">Open</a>', '<a class="wp-block-button__link">Open</a>' ] as $index => $link ) {
+			$id   = 'offer-' . $index;
+			$html = $this->modal( '<!-- wp:html -->' . $link . '<!-- /wp:html -->', $id );
+
+			$this->assertMatchesRegularExpression( '/<a [^>]*href="#' . $id . '"[^>]*>Open<\/a>/', $html, $link );
+			$this->assertStringNotContainsString( 'href="#"', $html, $link );
+		}
+	}
+
+	/**
+	 * Only the first control is the trigger, and a real destination is the author's.
+	 *
+	 * @return void
+	 */
+	public function test_other_triggers_are_left_alone(): void {
+		// A link elsewhere, and a link to another overlay.
+		$this->assertStringContainsString( 'href="https://example.com/"', $this->modal( '<!-- wp:html --><a href="https://example.com/">Away</a><!-- /wp:html -->' ) );
+		$this->assertStringContainsString( 'href="#other"', $this->modal( '<!-- wp:html --><a href="#other">Other</a><!-- /wp:html -->' ) );
+
+		// A button stays a button, and a later link isn't the trigger.
+		$html = $this->modal( '<!-- wp:html --><button type="button">Open</button> <a href="#">Later</a><!-- /wp:html -->' );
+
+		$this->assertStringContainsString( '<button type="button">Open</button>', $html );
+		$this->assertStringContainsString( 'href="#"', $html );
+
+		// A trigger area with neither (the whole area is the button, in view.js).
+		$this->assertStringContainsString( '<p>Just text</p>', $this->modal( '<!-- wp:html --><p>Just text</p><!-- /wp:html -->' ) );
+	}
+
+	/**
+	 * A copy of a block (its overlay renamed `offer-2`) points a trigger link
+	 * with no destination at itself; one that says the saved ID is left for
+	 * the script, which knows it's the copy's own.
+	 *
+	 * @return void
+	 */
+	public function test_a_repeated_overlay_links_its_own_trigger_to_itself(): void {
+		$html = $this->modal( '<!-- wp:html --><a href="#">Open</a><!-- /wp:html -->' ) . $this->modal( '<!-- wp:html --><a href="#">Open</a><!-- /wp:html -->' );
+
+		$this->assertSame( 1, substr_count( $html, 'href="#offer"' ) );
+		$this->assertSame( 1, substr_count( $html, 'href="#offer-2"' ) );
+
+		$saved = $this->modal( '<!-- wp:html --><a href="#saved">Open</a><!-- /wp:html -->', 'saved' ) . $this->modal( '<!-- wp:html --><a href="#saved">Open</a><!-- /wp:html -->', 'saved' );
+
+		$this->assertSame( 2, substr_count( $saved, 'href="#saved"' ) );
+		$this->assertStringContainsString( 'data-matter-from="saved"', $saved );
+	}
+
+	/**
+	 * Modals and drawers show no `inert` or `hidden`: a closed `<dialog>` is
+	 * closed by the browser, and a link to its ID shows it in place.
+	 *
+	 * @return void
+	 */
+	public function test_dialogs_render_closed_without_inert_or_hidden(): void {
+		$html = $this->modal( '<!-- wp:html --><a href="#">Open</a><!-- /wp:html -->' );
+
+		$this->assertSame( [], $this->hiding( $html ) );
+		$this->assertStringNotContainsString( ' open', $html );
+	}
 }
