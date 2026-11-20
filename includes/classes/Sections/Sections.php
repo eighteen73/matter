@@ -464,6 +464,88 @@ class Sections {
 	}
 
 	/**
+	 * The slot markers in content, in order.
+	 *
+	 * The regular expression gives up (returns false) on some input, such as a
+	 * stray opening marker followed by more than a million word characters
+	 * with no closing `-->`, when the JIT is off. The markers are then found
+	 * by a plain scan, so the slots are still found, and the developer is told
+	 * once.
+	 *
+	 * @param string $content Section inner content.
+	 * @return array<int, array{0: bool, 1: string, 2: int, 3: int}> Each: whether it closes, the name, its offset and its length.
+	 */
+	private static function find_markers( string $content ): array {
+		$found = [];
+
+		if ( false !== preg_match_all( '/<!--(\/?)matter-slot:([\w-]+)-->/', $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE ) ) {
+			foreach ( $matches as $match ) {
+				$found[] = [ '' !== $match[1][0], $match[2][0], $match[0][1], strlen( $match[0][0] ) ];
+			}
+
+			return $found;
+		}
+
+		static $warned = false;
+
+		if ( ! $warned ) {
+			$warned = true;
+
+			_doing_it_wrong(
+				'matter_slots',
+				esc_html(
+					sprintf(
+						/* translators: %s: the regular expression error. */
+						__( 'Finding slots with a regular expression failed (%s), so they were found by a slower scan. Check the content for a stray slot marker.', 'matter' ),
+						preg_last_error_msg()
+					)
+				),
+				'1.0.0'
+			);
+		}
+
+		$at = 0;
+
+		while ( true ) {
+			$at = strpos( $content, '<!--', $at );
+
+			if ( false === $at ) {
+				break;
+			}
+
+			$start   = $at;
+			$name_at = $at + 4;
+			$closing = '/' === ( $content[ $name_at ] ?? '' );
+
+			if ( $closing ) {
+				++$name_at;
+			}
+
+			// Past this much either way, so no marker is looked at twice.
+			$at = $name_at;
+
+			if ( 'matter-slot:' !== substr( $content, $name_at, 12 ) ) {
+				continue;
+			}
+
+			$name_at += 12;
+			$size     = strspn( $content, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-', $name_at );
+
+			// A name, then `-->`: the hyphens of the end belong to the run of
+			// name characters, and the `>` ends it.
+			if ( $size < 3 || '--' !== substr( $content, $name_at + $size - 2, 2 ) || '>' !== ( $content[ $name_at + $size ] ?? '' ) ) {
+				continue;
+			}
+
+			$end     = $name_at + $size + 1;
+			$found[] = [ $closing, substr( $content, $name_at, $size - 2 ), $start, $end - $start ];
+			$at      = $end;
+		}
+
+		return $found;
+	}
+
+	/**
 	 * The slots in rendered content, outermost only, by name (the first of a
 	 * name wins).
 	 *
@@ -484,17 +566,14 @@ class Sections {
 		// marker ends the latest still-open marker of its name. An opening
 		// marker with no closing marker is stray and pairs with nothing, so it
 		// can't hide a valid pair after it, and no marker is scanned twice.
-		preg_match_all( '/<!--(\/?)matter-slot:([\w-]+)-->/', $content, $markers, PREG_SET_ORDER | PREG_OFFSET_CAPTURE );
+		$markers = self::find_markers( $content );
 
 		$open  = [];
 		$spans = [];
 
-		foreach ( $markers as $marker ) {
-			$name = $marker[2][0];
-			$at   = $marker[0][1];
-
-			if ( '' === $marker[1][0] ) {
-				$open[ $name ][] = [ $at, $at + strlen( $marker[0][0] ) ];
+		foreach ( $markers as [ $closing, $name, $at, $length ] ) {
+			if ( ! $closing ) {
+				$open[ $name ][] = [ $at, $at + $length ];
 				continue;
 			}
 

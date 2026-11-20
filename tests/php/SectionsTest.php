@@ -229,6 +229,36 @@ class SectionsTest extends TestCase {
 	}
 
 	/**
+	 * A stray opening marker followed by more than a million word characters
+	 * makes the regular expression give up (with the JIT off), so the markers
+	 * are found by a plain scan: the slots are still there, and the developer
+	 * is told once.
+	 *
+	 * @return void
+	 */
+	public function test_slots_are_found_when_the_regular_expression_gives_up(): void {
+		$this->setExpectedIncorrectUsage( 'matter_slots' );
+
+		$jit = ini_get( 'pcre.jit' );
+
+		ini_set( 'pcre.jit', '0' ); // phpcs:ignore WordPress.PHP.IniSet.Risky -- Forces the interpreter, which has the lower limit.
+
+		try {
+			$content = '<!--matter-slot:' . str_repeat( 'a', 1100000 ) . Sections::mark_slot( 'content', '<p>Real</p>' ) . '<!--/matter-slot:stray-->' . Sections::mark_slot( 'media', '<img>' );
+
+			$this->assertSame(
+				[
+					'content' => '<p>Real</p>',
+					'media'   => '<img>',
+				],
+				Sections::slots( $content )
+			);
+		} finally {
+			ini_set( 'pcre.jit', false === $jit ? '1' : $jit ); // phpcs:ignore WordPress.PHP.IniSet.Risky
+		}
+	}
+
+	/**
 	 * A slot name other than letters, numbers, hyphens and underscores can't
 	 * be matched by its marker, so declaring one is reported.
 	 *
