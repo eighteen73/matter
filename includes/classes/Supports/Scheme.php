@@ -264,13 +264,29 @@ class Scheme {
 	 */
 	private function get_declarations( string $slug, array $tokens ): string {
 		$declarations = '';
-		$slug         = _wp_to_kebab_case( $slug );
+		$slug         = self::kebab( $slug );
 
 		foreach ( array_keys( $tokens ) as $token ) {
-			$token         = _wp_to_kebab_case( (string) $token );
+			$token         = self::kebab( (string) $token );
 			$declarations .= sprintf( '--scheme--%1$s:var(--wp--custom--scheme--%2$s--%1$s);', $token, $slug );
 		}
 
 		return $declarations;
+	}
+
+	/**
+	 * A name as the CSS variable WordPress makes from it: `textMuted` and
+	 * `text_muted` become `text-muted`, `accent2` becomes `accent-2`. The same
+	 * result as core's private `_wp_to_kebab_case()` for names like these.
+	 *
+	 * @param string $name Slug or token.
+	 * @return string
+	 */
+	public static function kebab( string $name ): string {
+		$name = (string) preg_replace( '/([a-z])([A-Z])|([A-Z]+)([A-Z][a-z])/', '$1$3-$2$4', $name );
+		$name = (string) preg_replace( '/([a-zA-Z])(\d)|(\d)([a-zA-Z])/', '$1$3-$2$4', $name );
+		$name = (string) preg_replace( '/[^a-zA-Z0-9]+/', '-', $name );
+
+		return strtolower( trim( $name, '-' ) );
 	}
 }

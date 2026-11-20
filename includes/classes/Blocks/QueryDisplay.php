@@ -452,9 +452,10 @@ final class QueryDisplay {
 	}
 
 	/**
-	 * An accordion query's items get the accordion's settings (heading level,
-	 * one open at a time, open first) as a nested accordion block provides
-	 * them, unless an accordion block around them already did.
+	 * An accordion query's items get the accordion's heading level as a nested
+	 * accordion block provides it, unless an accordion block around them
+	 * already did. (One open at a time and open first are the accordion's, not
+	 * the items'.)
 	 *
 	 * @param array $context      Block context.
 	 * @param array $parsed_block Parsed block.
@@ -473,8 +474,6 @@ final class QueryDisplay {
 
 		return $context + [
 			'matter/headingLevel' => $settings['headingLevel'] ?? 3,
-			'matter/autoclose'    => $settings['autoclose'] ?? false,
-			'matter/openFirst'    => $settings['openFirst'] ?? false,
 		];
 	}
 

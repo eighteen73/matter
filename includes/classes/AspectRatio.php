@@ -9,6 +9,8 @@
 
 namespace Eighteen73\Matter;
 
+use Eighteen73\Matter\Supports\Scheme;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -32,7 +34,7 @@ class AspectRatio {
 		foreach ( (array) $presets as $origin ) {
 			foreach ( (array) $origin as $preset ) {
 				if ( ( $preset['slug'] ?? '' ) === $slug && '' !== $slug ) {
-					return sprintf( 'var(--wp--preset--aspect-ratio--%s)', _wp_to_kebab_case( $slug ) );
+					return sprintf( 'var(--wp--preset--aspect-ratio--%s)', Scheme::kebab( $slug ) );
 				}
 			}
 		}

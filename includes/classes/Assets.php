@@ -64,14 +64,16 @@ class Assets {
 	/**
 	 * A small `window.matter` for theme scripts that run before Matter's
 	 * modules load, or on pages without the block: `matter.ready()` queues
-	 * until a module takes over (src/interactivity/api.js), and each
-	 * `matter.{type}()` returns null until then.
+	 * (privately, under `Symbol.for( 'matter' )`) until a module takes over
+	 * (src/interactivity/api.js), and each `matter.{type}()` returns null until
+	 * then. On pages where no module ever loads, the queue settles with `null`
+	 * when the page has loaded.
 	 *
 	 * @return string
 	 */
 	public static function api_stub(): string {
 		return sprintf(
-			'(function(m){if(m.ready)return;var q=m._queue=[];m._stub=true;m.ready=function(t){return new Promise(function(r){q.push([t,r]);});};%s.forEach(function(t){var f=function(){return null;};f._stub=true;m[t]=f;});})(window.matter=window.matter||{});',
+			'(function(m){if(m.ready)return;var s=m[Symbol.for("matter")]={stub:true,queue:[]};m.ready=function(t){return new Promise(function(r){s.queue.push([t,r]);});};window.addEventListener("load",function(){s.queue.splice(0).forEach(function(q){q[1](null);});});%s.forEach(function(t){var f=function(){return null;};f._stub=true;m[t]=f;});})(window.matter=window.matter||{});',
 			wp_json_encode( self::API_TYPES )
 		);
 	}

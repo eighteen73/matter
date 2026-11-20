@@ -22,7 +22,9 @@
  * or `matter.overlay( 'newsletter' )?.open()` (see README).
  *
  * Events `matter-overlay-ready`, `matter-overlay-open` and
- * `matter-overlay-close` bubble from the overlay.
+ * `matter-overlay-close` bubble from the overlay. A dialog's open event fires
+ * once it is shown (including an open from the URL hash on load) and its close
+ * event once it is closed; a collapsible's when it opens and closes.
  */
 
 /**
@@ -39,7 +41,7 @@ import {
 /**
  * Internal dependencies
  */
-import { registerInstance, registerType } from '../interactivity/api';
+import { emit, registerInstance, registerType } from '../interactivity/api';
 import { isBackdropClick } from '../interactivity/backdrop';
 import {
 	afterTransitions,
@@ -330,6 +332,7 @@ const showDialog = (dialog, id) => {
 
 	dialog.showModal();
 	syncDocumentClass();
+	emit(dialog, 'overlay', 'open');
 };
 
 /**
@@ -449,7 +452,7 @@ const { state, actions } = store('matter/overlay', {
 		next(idOrEvent) {
 			stepGroup(resolveId(idOrEvent), 1);
 		},
-		previous(idOrEvent) {
+		prev(idOrEvent) {
 			stepGroup(resolveId(idOrEvent), -1);
 		},
 		closeAll() {
@@ -478,7 +481,8 @@ const { state, actions } = store('matter/overlay', {
 				close: () => actions.close(id),
 				toggle: () => actions.toggle(id),
 				next: () => actions.next(id),
-				previous: () => actions.previous(id),
+				prev: () => actions.prev(id),
+				closeAll: () => actions.closeAll(),
 			});
 
 			// Listeners outside the overlay (triggers, the window) and timers
@@ -567,17 +571,12 @@ const { state, actions } = store('matter/overlay', {
 
 			syncTriggers(id, isOpen);
 
-			// Only announce real changes, not the initial closed state.
-			if (
-				lastStates.get(id) !== undefined &&
-				lastStates.get(id) !== isOpen
-			) {
-				ref.dispatchEvent(
-					new CustomEvent(
-						isOpen ? 'matter-overlay-open' : 'matter-overlay-close',
-						{ bubbles: true, detail: { id } }
-					)
-				);
+			// A collapsible announces here. A dialog announces when the
+			// browser shows or closes it (showDialog(), onClose()), which can
+			// be later than the state changes, or not at all if it can't be
+			// shown.
+			if (!isDialog(id) && (lastStates.get(id) ?? false) !== isOpen) {
+				emit(ref, 'overlay', isOpen ? 'open' : 'close');
 			}
 
 			lastStates.set(id, isOpen);
@@ -611,6 +610,7 @@ const { state, actions } = store('matter/overlay', {
 			}
 
 			syncDocumentClass();
+			emit(ref, 'overlay', 'close');
 		},
 		// Escape: ignored by dialogs that can't be closed; others close as
 		// any close does, with their closing transition. (Chromium may not

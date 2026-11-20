@@ -216,7 +216,7 @@ class Overlay {
 	 */
 	private static function group_nav( string $block_class ): string {
 		return sprintf(
-			'<nav class="%1$s__group-nav" aria-label="%2$s"><button type="button" class="%1$s__previous" data-wp-on--click="actions.previous"><span class="screen-reader-text">%3$s</span></button><span class="%1$s__position" data-wp-text="state.groupPosition"></span><button type="button" class="%1$s__next" data-wp-on--click="actions.next"><span class="screen-reader-text">%4$s</span></button></nav>',
+			'<nav class="%1$s__group-nav" aria-label="%2$s"><button type="button" class="%1$s__previous" data-wp-on--click="actions.prev"><span class="screen-reader-text">%3$s</span></button><span class="%1$s__position" data-wp-text="state.groupPosition"></span><button type="button" class="%1$s__next" data-wp-on--click="actions.next"><span class="screen-reader-text">%4$s</span></button></nav>',
 			esc_attr( $block_class ),
 			esc_attr__( 'More in this group', 'matter' ),
 			esc_html__( 'Previous', 'matter' ),

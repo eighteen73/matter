@@ -3,7 +3,7 @@
  * Whole-block links: a section (e.g. a card) that links somewhere as a whole.
  *
  * Blocks opt in with `"supports": { "matter": { "link": true } }`. Editors set
- * the link on the block toolbar; it's stored in a `link` attribute
+ * the link on the block toolbar; it's stored in a `matterLink` attribute
  * (`{ url, opensInNewTab }`).
  *
  * On the front end the block's first heading becomes the link (so the link's
@@ -50,7 +50,7 @@ class Link {
 	}
 
 	/**
-	 * Register the link block support: the `link` attribute and `has-link`.
+	 * Register the link block support: the `matterLink` attribute and `has-link`.
 	 *
 	 * @return void
 	 */
@@ -75,7 +75,7 @@ class Link {
 	}
 
 	/**
-	 * Add the `link` attribute to supporting blocks.
+	 * Add the `matterLink` attribute to supporting blocks.
 	 *
 	 * @param WP_Block_Type $block_type Block type.
 	 * @return void
@@ -87,8 +87,8 @@ class Link {
 
 		$block_type->attributes ??= [];
 
-		if ( ! isset( $block_type->attributes['link'] ) ) {
-			$block_type->attributes['link'] = [ 'type' => 'object' ];
+		if ( ! isset( $block_type->attributes['matterLink'] ) ) {
+			$block_type->attributes['matterLink'] = [ 'type' => 'object' ];
 		}
 	}
 
@@ -110,7 +110,7 @@ class Link {
 	 * @return string
 	 */
 	private static function url( array $attributes ): string {
-		return trim( (string) ( $attributes['link']['url'] ?? '' ) );
+		return trim( (string) ( $attributes['matterLink']['url'] ?? '' ) );
 	}
 
 	/**
@@ -156,7 +156,7 @@ class Link {
 
 		wp_enqueue_style( self::HANDLE );
 
-		$new_tab    = ! empty( $block['attrs']['link']['opensInNewTab'] );
+		$new_tab    = ! empty( $block['attrs']['matterLink']['opensInNewTab'] );
 		$attributes = sprintf(
 			'class="matter-link" href="%1$s"%2$s',
 			esc_url( $url ),

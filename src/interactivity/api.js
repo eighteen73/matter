@@ -2,55 +2,79 @@
  * Matter's public JavaScript API, shared by every interactive block.
  *
  *     matter.carousel( 'hero' )?.goTo( 2 );
- *     matter.ready( 'faq' ).then( ( accordion ) => accordion.open( 0 ) );
+ *     matter.ready( 'faq' ).then( ( accordion ) => accordion?.open( 0 ) );
  *     document.addEventListener( 'matter-tabs-change', ( event ) => … );
  *
  * `matter.{type}( target )` returns a block's instance: methods plus read-only
- * state. `target` is an element ID (usually the block's HTML anchor) or an
- * element; it resolves to that block, or the first one of the type inside it.
+ * state. `target` is an element ID (usually the block's HTML anchor; a leading
+ * `#` is allowed) or an element. It resolves to that block itself if it is
+ * one, else the first one of the type inside it, else the one around it.
  * Instances exist once the block has started (after hydration), when it
- * dispatches `matter-{type}-ready`; `matter.ready( target )` waits for that.
+ * dispatches `matter-{type}-ready`; `matter.ready( target )` waits for that,
+ * and resolves with `null` once the page has loaded and the target isn't, or
+ * isn't in, a block (a typo, a block that isn't on this page).
  *
- * Each block's script module bundles this file, so state lives on
- * `window.matter`, shared between them. A small stub printed in the page's
- * head (Assets::api_stub()) defines `matter.ready()` and the accessors before
- * any module loads, so theme scripts can call them early, or on pages
- * without the block; the first module to load takes over its queue.
+ * Each block's script module bundles this file, so the copies share their
+ * state through one object under a symbol on `window.matter`
+ * (`Symbol.for( 'matter' )`), which keeps it out of the public API. A small
+ * stub printed in the page's head (Assets::api_stub()) defines
+ * `matter.ready()` and the accessors before any module loads, so theme
+ * scripts can call them early, or on pages without the block; its calls wait
+ * in the same state object, and the first module to load takes them over.
  */
 
-const api = () => {
+const KEY = Symbol.for('matter');
+
+/**
+ * The state every copy of this file shares, and the public object.
+ *
+ * @return {{matter: Object, state: Object}} `window.matter` and its private state.
+ */
+const shared = () => {
 	window.matter ??= {};
 
 	const matter = window.matter;
+	// Element => { type, instance }, type => selector, and the `ready()`
+	// calls still waiting (each a function returning whether it settled).
+	const state = (matter[KEY] ??= {});
 
-	// Element => { type, instance }.
-	matter._instances ??= new WeakMap();
-	matter._selectors ??= {};
-	matter._waiting ??= [];
+	state.instances ??= new WeakMap();
+	state.selectors ??= {};
+	state.waiting ??= [];
 
-	if (matter._stub || !matter.ready) {
-		const queued = matter._queue ?? [];
+	// The head stub (or nothing) defined `ready`: take over its queue.
+	if (state.stub || !matter.ready) {
+		const queued = state.queue ?? [];
 
-		matter._stub = false;
-		matter._queue = [];
+		state.stub = false;
+		state.queue = [];
 		matter.ready = ready;
-		queued.forEach(([target, resolvePromise]) =>
-			ready(target).then(resolvePromise)
+		// After the module has registered its block type, so a queued call
+		// can find the block.
+		Promise.resolve().then(() =>
+			queued.forEach(([target, resolvePromise]) =>
+				ready(target).then(resolvePromise)
+			)
 		);
 	}
 
-	return matter;
+	return { matter, state };
 };
 
 /**
  * A target as an element.
  *
- * @param {string|Element} target Element ID or element.
+ * @param {string|Element} target Element ID (or `#id`) or element.
  * @return {Element|null} Element.
  */
 const toElement = (target) => {
 	const element =
-		typeof target === 'string' ? document.getElementById(target) : target;
+		typeof target === 'string'
+			? (document.getElementById(target) ??
+				(target.startsWith('#')
+					? document.getElementById(target.slice(1))
+					: null))
+			: target;
 
 	return element instanceof window.Element ? element : null;
 };
@@ -66,7 +90,7 @@ const toElement = (target) => {
  */
 const blockFor = (target) => {
 	const element = toElement(target);
-	const selectors = Object.values(api()._selectors);
+	const selectors = Object.values(shared().state.selectors);
 
 	if (!element || !selectors.length) {
 		return null;
@@ -101,28 +125,49 @@ export function resolve(target, selector) {
 }
 
 /**
- * Resolves with a block's instance once it has started.
+ * Resolves with a block's instance once it has started. Once the page has
+ * loaded, a target that isn't (and isn't in or around) a block resolves with
+ * `null`; a block that exists but hasn't started yet is still waited for.
  *
  * @param {string|Element} target Element ID or element.
- * @return {Promise<Object>} Instance.
+ * @return {Promise<Object|null>} Instance.
  */
 function ready(target) {
-	const matter = api();
+	const { state } = shared();
 
 	return new Promise((resolvePromise) => {
-		const find = () => {
+		const find = (loaded) => {
 			const element = blockFor(target);
-			const entry = element && matter._instances.get(element);
+			const entry = element && state.instances.get(element);
 
 			if (entry) {
 				resolvePromise(entry.instance);
+				return true;
 			}
 
-			return !!entry;
+			if (loaded && !element) {
+				resolvePromise(null);
+				return true;
+			}
+
+			return false;
 		};
 
-		if (!find()) {
-			matter._waiting.push(find);
+		if (find(document.readyState === 'complete')) {
+			return;
+		}
+
+		state.waiting.push(find);
+
+		if (!state.waitingForLoad && document.readyState !== 'complete') {
+			state.waitingForLoad = true;
+			window.addEventListener(
+				'load',
+				() => {
+					state.waiting = state.waiting.filter((wait) => !wait(true));
+				},
+				{ once: true }
+			);
 		}
 	});
 }
@@ -134,9 +179,9 @@ function ready(target) {
  * @param {string} selector Block selector.
  */
 export function registerType(type, selector) {
-	const matter = api();
+	const { matter, state } = shared();
 
-	matter._selectors[type] = selector;
+	state.selectors[type] = selector;
 
 	// The head stub's placeholder (returns null) gives way to the real one.
 	if (matter[type] && !matter[type]._stub) {
@@ -147,7 +192,7 @@ export function registerType(type, selector) {
 		const element = resolve(target, selector);
 
 		return element
-			? (matter._instances.get(element)?.instance ?? null)
+			? (state.instances.get(element)?.instance ?? null)
 			: null;
 	};
 }
@@ -160,15 +205,17 @@ export function registerType(type, selector) {
  * @param {Object}  instance Instance.
  */
 export function registerInstance(type, element, instance) {
-	const matter = api();
+	const { state } = shared();
 
-	matter._instances.set(element, { type, instance });
-	matter._waiting = matter._waiting.filter((find) => !find());
+	state.instances.set(element, { type, instance });
+	state.waiting = state.waiting.filter((find) => !find(false));
 	emit(element, type, 'ready', { instance });
 }
 
 /**
- * Dispatch `matter-{type}-{name}` from a block. `detail.id` is the block's ID.
+ * Dispatch `matter-{type}-{name}` from a block. `detail.id` is the element's
+ * ID (or `null`), and `detail.instance` the block's instance (`null` before
+ * it has registered).
  *
  * @param {Element} element Block element.
  * @param {string}  type    Type.
@@ -176,10 +223,16 @@ export function registerInstance(type, element, instance) {
  * @param {Object}  detail  Event detail.
  */
 export function emit(element, type, name, detail = {}) {
+	const { state } = shared();
+
 	element.dispatchEvent(
 		new CustomEvent(`matter-${type}-${name}`, {
 			bubbles: true,
-			detail: { id: element.id || null, ...detail },
+			detail: {
+				id: element.id || null,
+				instance: state.instances.get(element)?.instance ?? null,
+				...detail,
+			},
 		})
 	);
 }

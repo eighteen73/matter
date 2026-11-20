@@ -1071,3 +1071,119 @@ test.describe('author and date archives', () => {
 		await expect(page.getByText('Shared blog intro')).toBeVisible();
 	});
 });
+
+test.describe('the JavaScript API', () => {
+	test.use({ viewport: DESKTOP });
+
+	let overlays;
+
+	const modal = (id, group) =>
+		`<!-- wp:matter/modal {"overlayId":"${id}","group":"${group}"} --><!-- wp:matter/slot {"name":"content"} --><!-- wp:paragraph --><p>Content of ${id}</p><!-- /wp:paragraph --><!-- /wp:matter/slot --><!-- /wp:matter/modal -->`;
+
+	test.beforeAll(async ({ requestUtils }) => {
+		overlays = await createPage(
+			requestUtils,
+			'API overlays',
+			modal('api-one', 'api') + modal('api-two', 'api')
+		);
+	});
+
+	test('has no underscore members, and overlays have prev() but not previous()', async ({
+		page,
+	}) => {
+		await page.goto(overlays.link);
+
+		const api = await page.evaluate(async () => {
+			const one = await window.matter.ready('api-one');
+
+			return {
+				keys: Object.keys(window.matter),
+				methods: Object.keys(one),
+				prev: typeof one.prev,
+				previous: typeof one.previous,
+				closeAll: typeof one.closeAll,
+			};
+		});
+
+		expect(api.keys.filter((key) => key.startsWith('_'))).toEqual([]);
+		expect(api.prev).toBe('function');
+		expect(api.closeAll).toBe('function');
+		expect(api.previous).toBe('undefined');
+
+		// prev() moves to the other modal in the group.
+		await page.evaluate(() => window.matter.overlay('api-two').open());
+		await expect(page.locator('dialog#api-two')).toHaveJSProperty(
+			'open',
+			true
+		);
+		await page.evaluate(() => window.matter.overlay('api-two').prev());
+		await expect(page.locator('dialog#api-one')).toHaveJSProperty(
+			'open',
+			true
+		);
+	});
+
+	test('ready() settles for a present, a hashed and an unknown target', async ({
+		page,
+	}) => {
+		await page.goto(overlays.link);
+
+		const settled = await page.evaluate(async () => {
+			const forms = [
+				'api-one',
+				'#api-one',
+				document.getElementById('api-one'),
+			];
+			const found = await Promise.all(
+				forms.map((form) => window.matter.ready(form))
+			);
+
+			return {
+				found: found.map((instance) => instance?.id),
+				missing: await window.matter.ready('#missing'),
+			};
+		});
+
+		expect(settled.found).toEqual(['api-one', 'api-one', 'api-one']);
+		expect(settled.missing).toBeNull();
+	});
+
+	test('a hash-open on load fires matter-overlay-open once, and closing fires -close', async ({
+		page,
+	}) => {
+		await page.addInitScript(() => {
+			window.matterSeen = [];
+
+			for (const name of ['open', 'close']) {
+				document.addEventListener(`matter-overlay-${name}`, (event) =>
+					window.matterSeen.push([
+						name,
+						event.detail.id,
+						event.detail.instance?.id,
+					])
+				);
+			}
+		});
+
+		await page.goto(`${overlays.link}#api-two`);
+		await expect(page.locator('dialog#api-two')).toHaveJSProperty(
+			'open',
+			true
+		);
+		expect(await page.evaluate(() => window.matterSeen)).toEqual([
+			['open', 'api-two', 'api-two'],
+		]);
+
+		await page.keyboard.press('Escape');
+		await expect(page.locator('dialog#api-two')).toHaveJSProperty(
+			'open',
+			false
+		);
+		await expect
+			.poll(() => page.evaluate(() => window.matterSeen))
+			.toEqual([
+				['open', 'api-two', 'api-two'],
+				['close', 'api-two', 'api-two'],
+			]);
+	});
+});
