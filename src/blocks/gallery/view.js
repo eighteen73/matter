@@ -38,12 +38,7 @@ import {
 import { isBackdropClick } from '../../interactivity/backdrop';
 import { format } from '../../interactivity/format';
 import { cancelClose, closeDialog } from '../../interactivity/dialog';
-import { focused } from '../../interactivity/focus';
-import {
-	acquireScrollLock,
-	releaseScrollLock,
-	suspendForModal,
-} from '@matter/inert';
+import { release, showModal } from './hold';
 
 const SELECTOR = '.wp-block-matter-gallery';
 
@@ -52,52 +47,6 @@ registerType('gallery', SELECTOR);
 // Gallery element => instance; last announced image.
 const instances = new WeakMap();
 const announced = new WeakMap();
-
-// What a lightbox holds while it is open as a modal: it lets go of what a
-// panel holds inert (so it can be used), pauses the panel's focus trap, and
-// locks the page's scroll, all shared with modals and panels. Dialog => the
-// function that puts them back.
-const holds = new WeakMap();
-
-const release = (dialog) => {
-	const put = holds.get(dialog);
-
-	holds.delete(dialog);
-	put?.();
-};
-
-/**
- * Show the lightbox as a modal, with what that needs from the page.
- *
- * @param {HTMLDialogElement} dialog Lightbox.
- */
-const showModal = (dialog) => {
-	release(dialog);
-
-	const resume = suspendForModal(dialog, focused());
-
-	try {
-		acquireScrollLock('has-overlay-open');
-	} catch (error) {
-		resume();
-		throw error;
-	}
-
-	holds.set(dialog, () => {
-		try {
-			resume();
-		} finally {
-			releaseScrollLock('has-overlay-open');
-		}
-	});
-
-	try {
-		dialog.showModal();
-	} catch (error) {
-		release(dialog);
-		throw error;
-	}
-};
 
 const getDialog = (element) =>
 	element
@@ -514,23 +463,28 @@ const { actions } = store('matter/gallery', {
 			// goes quiet, so nothing is left to be read.
 			context.opened = false;
 			context.announcing = false;
-			release(ref);
 
-			emit(ref.closest(SELECTOR), 'gallery', 'close', { index });
+			// Whatever goes wrong letting go of the page, the close is still
+			// announced and focus still goes back.
+			try {
+				release(ref);
+			} finally {
+				emit(ref.closest(SELECTOR), 'gallery', 'close', { index });
 
-			// Return focus to the enlarge button for the image being viewed, or
-			// to "View all" when that image is hidden.
-			const gallery = ref.closest('.wp-block-matter-gallery');
-			const button = gallery?.querySelectorAll(
-				'.wp-block-matter-gallery__open'
-			)[index];
+				// Return focus to the enlarge button for the image being viewed, or
+				// to "View all" when that image is hidden.
+				const gallery = ref.closest('.wp-block-matter-gallery');
+				const button = gallery?.querySelectorAll(
+					'.wp-block-matter-gallery__open'
+				)[index];
 
-			if (button && !button.closest('[hidden]')) {
-				button.focus();
-			} else {
-				gallery
-					?.querySelector('.wp-block-matter-gallery__more')
-					?.focus();
+				if (button && !button.closest('[hidden]')) {
+					button.focus();
+				} else {
+					gallery
+						?.querySelector('.wp-block-matter-gallery__more')
+						?.focus();
+				}
 			}
 		},
 	},

@@ -338,6 +338,30 @@ test.describe('lightbox announcement', () => {
 	});
 });
 
+test.describe('lightbox removed while open', () => {
+	test('lets go of the page when its gallery is taken out without the router', async ({
+		page,
+	}) => {
+		await page.goto(details.link);
+		await expect(page.locator('#photos')).toHaveClass(/is-enhanced/);
+
+		await page
+			.locator('#photos')
+			.getByRole('button', { name: 'Enlarge image 1 of 3' })
+			.click();
+		await expect(page.locator('#photos dialog')).toHaveAttribute(
+			'open',
+			''
+		);
+		await expect(page.locator('html')).toHaveClass(/has-overlay-open/);
+
+		await page.evaluate(() => document.querySelector('#photos').remove());
+
+		await expect(page.locator('html')).not.toHaveClass(/has-overlay-open/);
+		await expect(page.locator('html')).not.toHaveClass(/has-scroll-gutter/);
+	});
+});
+
 test.describe('lightbox over the panel', () => {
 	test.use({ viewport: { width: 390, height: 500 } });
 
