@@ -36,6 +36,7 @@ import {
 	resolve,
 } from '../../interactivity/api';
 import { isBackdropClick } from '../../interactivity/backdrop';
+import { format } from '../../interactivity/format';
 import { cancelClose, closeDialog } from '../../interactivity/dialog';
 
 const SELECTOR = '.wp-block-matter-gallery';
@@ -275,9 +276,7 @@ const { actions } = store('matter/gallery', {
 		get counter() {
 			const { images, index, counter } = getContext();
 
-			return counter
-				.replace('%1$d', index + 1)
-				.replace('%2$d', images.length);
+			return format(counter, index + 1, images.length);
 		},
 		// What the lightbox's live region says: "Image 2 of 5: the alt text".
 		// Empty until the lightbox opens, so closed it says nothing.
@@ -291,10 +290,12 @@ const { actions } = store('matter/gallery', {
 
 			const alt = images[index]?.alt ?? '';
 
-			return (alt ? announceAlt : announce)
-				.replace('%1$d', index + 1)
-				.replace('%2$d', images.length)
-				.replace('%3$s', () => alt);
+			return format(
+				alt ? announceAlt : announce,
+				index + 1,
+				images.length,
+				alt
+			);
 		},
 	},
 	actions: {

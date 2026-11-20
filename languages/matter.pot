@@ -1,0 +1,2247 @@
+# Copyright (C) 2026 eighteen73
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Matter 1.0.0\n"
+"Report-Msgid-Bugs-To: https://eighteen73.co.uk\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-20T22:05:15+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.9.0\n"
+"X-Domain: matter\n"
+
+#. Plugin Name of the plugin
+#: includes/classes/Integrations/WooCommerce/WooCommerce.php:103
+#: matter.php:47
+#: matter.php:83
+msgid "Matter"
+msgstr ""
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+msgid "https://eighteen73.co.uk"
+msgstr ""
+
+#. Description of the plugin
+msgid "Blocks, sections, menus and site settings for eighteen73 WordPress builds."
+msgstr ""
+
+#. Author of the plugin
+msgid "eighteen73"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:111
+msgid "Sorry, you can’t customise this archive."
+msgstr ""
+
+#. translators: %s: archive name, e.g. "Shop".
+#: includes/classes/Archives/Admin.php:173
+msgid "Uses the archive for %s."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:174
+msgid "Uses the theme’s default."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:177
+msgid "Customised"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:179
+msgid "Scheduled"
+msgstr ""
+
+#. translators: 1: date, 2: what the archive uses until then (a sentence, e.g. "Uses the theme’s default.").
+#: includes/classes/Archives/Admin.php:182
+msgid "Goes live on %1$s. Until then: %2$s"
+msgstr ""
+
+#. translators: %s: what the archive uses meanwhile (a sentence, e.g. "Uses the theme’s default.").
+#: includes/classes/Archives/Admin.php:187
+msgid "Not published yet. Meanwhile: %s"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:189
+msgid "Shared"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:191
+msgid "Theme default"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:230
+#: includes/classes/Archives/Admin.php:283
+#: includes/classes/Archives/Archives.php:176
+msgid "Edit archive"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:294
+msgid "Customise archive"
+msgstr ""
+
+#. translators: %s: archive name, e.g. "Christmas".
+#: includes/classes/Archives/Admin.php:310
+msgid "Customise for %s only"
+msgstr ""
+
+#. translators: %s: archive the content is set for, e.g. "Shop".
+#: includes/classes/Archives/Admin.php:320
+msgid "Edit the shared archive: %s"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:363
+#: includes/classes/Archives/Admin.php:457
+#: includes/classes/Archives/Archives.php:171
+#: includes/classes/Archives/Archives.php:640
+#: src/editor/archives/shows-on.js:141
+msgid "Archive"
+msgstr ""
+
+#. translators: %s: archive name, e.g. "Shop".
+#: includes/classes/Archives/Admin.php:395
+msgid "%s archive"
+msgstr ""
+
+#. translators: %s: items listed, e.g. "products".
+#: includes/classes/Archives/Admin.php:401
+msgid "Customise it to add your own sections above and below its list of %s. The list itself stays as the theme sets it."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:407
+#: includes/classes/Archives/Admin.php:623
+#: includes/classes/Archives/Admin.php:751
+msgid "Customise"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:409
+#: includes/classes/Archives/Archives.php:178
+#: src/editor/archives/shows-on.js:153
+msgid "View archive"
+msgstr ""
+
+#. translators: %s: taxonomy singular name, e.g. "category".
+#: includes/classes/Archives/Admin.php:463
+msgid "Customise for this %s"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:466
+msgid "Edit the shared archive"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:470
+#: includes/classes/Archives/Admin.php:621
+msgid "View"
+msgstr ""
+
+#. translators: 1: taxonomy singular name, e.g. "category"; 2: items listed, e.g. "products".
+#: includes/classes/Archives/Admin.php:477
+msgid "Content above and below this %1$s’s list of %2$s."
+msgstr ""
+
+#. translators: %s: taxonomy name, e.g. "Product categories".
+#: includes/classes/Archives/Admin.php:482
+msgid "%s inside it use it too, unless they have their own."
+msgstr ""
+
+#. translators: %s: taxonomy name, e.g. "Product categories".
+#: includes/classes/Archives/Admin.php:508
+msgid "%s without their own archive share one layout."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:511
+msgid "Edit it"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:511
+msgid "Customise it"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:568
+#: includes/classes/Archives/Admin.php:569
+#: includes/classes/Archives/Admin.php:605
+#: includes/classes/Archives/Archives.php:174
+#: includes/classes/Archives/Archives.php:175
+msgid "Customise an archive"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:606
+msgid "Choose an archive to add your own sections above and below its list. The list itself stays as the theme sets it."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:634
+msgid "Or start from a blank archive and choose where it shows"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:667
+msgid "Search and errors"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:728
+msgid "customised"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:742
+msgid "A single category or tag"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:746
+msgid "Category or tag"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:748
+msgid "Choose a category or tag…"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:753
+msgid "One with its own archive opens it to edit. You can also start from a category’s edit screen, or from the toolbar while viewing it."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:771
+msgid "Overview"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:772
+msgid "Archives list things: the shop, the blog, categories and tags, search results, and the page shown when a page can’t be found. The theme controls each list; here you add sections above and below it."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:773
+msgid "Start from the toolbar while viewing one (Customise archive), from a category’s edit screen, or with Customise an archive here."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:780
+msgid "Which content shows"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:781
+msgid "A category shows its own archive if it has one. If not, it uses its parent category’s, then the one for all its categories, then the shop’s or blog’s, then the theme’s default."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:782
+msgid "The Shows on column says which page each one is for."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:789
+msgid "Scheduling"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:790
+msgid "Only published archives show, and the newest wins. To prepare a seasonal version, choose New version under one in the list, edit it, and schedule it. It replaces the current one on its date; unpublish it to bring the old one back."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:805
+#: src/editor/archives/shows-on.js:133
+msgid "Shows on"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:834
+msgid "Replaced by a newer entry"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:852
+msgid "New version"
+msgstr ""
+
+#. translators: 1: taxonomy singular name, e.g. "category", 2: term name.
+#: includes/classes/Archives/Admin.php:961
+msgid "The title and description come from the %1$s “%2$s”."
+msgstr ""
+
+#. translators: %s: taxonomy singular name, e.g. "category".
+#: includes/classes/Archives/Admin.php:964
+msgid "Edit the %s"
+msgstr ""
+
+#. translators: %s: taxonomy singular name, e.g. "category".
+#: includes/classes/Archives/Admin.php:971
+msgid "Each %s shows its own title and description."
+msgstr ""
+
+#. translators: %s: what is edited, e.g. "modal" or "categories".
+#: includes/classes/Archives/Admin.php:974
+#: src/editor/overlays/toolbar.js:92
+msgid "Edit %s"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:981
+msgid "Each author shows their own name as the title, and their biography as the description."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:982
+msgid "Each date shows its own title, such as “Year: 2026”."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:990
+msgid "The title and description are set by the theme."
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:1024
+msgid "Name, e.g. Christmas 2026"
+msgstr ""
+
+#: includes/classes/Archives/Admin.php:1040
+msgid "Name, only shown in the admin"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:170
+#: includes/classes/Archives/Archives.php:172
+#: includes/classes/Archives/Archives.php:173
+msgid "Archives"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:177
+msgid "New archive"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:180
+msgid "View archives"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:181
+msgid "Search archives"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:182
+msgid "No archives customised yet: they all show the theme’s default."
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:183
+msgid "No archives in the bin."
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:184
+msgid "Archive published."
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:185
+msgid "Archive scheduled."
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:186
+msgid "Archive updated."
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:188
+msgid "Content above and below the lists on shop, blog, category, search and 404 pages."
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:578
+msgid "No author has published posts yet, so there is nothing to list here."
+msgstr ""
+
+#. translators: %s: taxonomy singular name.
+#: includes/classes/Archives/Archives.php:670
+msgid "%s name"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:672
+#: includes/classes/Archives/Target.php:218
+msgid "Author archives"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:673
+#: includes/classes/Archives/Target.php:219
+msgid "Date archives"
+msgstr ""
+
+#. translators: %s: search terms.
+#: includes/classes/Archives/Archives.php:675
+msgid "Search results for “%s”"
+msgstr ""
+
+#. translators: %s: search terms.
+#: includes/classes/Archives/Archives.php:675
+#: includes/classes/Archives/Target.php:220
+msgid "Search results"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:676
+msgid "Page not found"
+msgstr ""
+
+#. translators: %s: taxonomy singular name.
+#: includes/classes/Archives/Archives.php:686
+msgid "%s description"
+msgstr ""
+
+#: includes/classes/Archives/Archives.php:746
+msgid "Blog"
+msgstr ""
+
+#: includes/classes/Archives/RestController.php:37
+msgid "Sorry, you are not allowed to view archive entries."
+msgstr ""
+
+#. translators: %s: taxonomy name, e.g. "Product categories".
+#: includes/classes/Archives/Target.php:209
+msgid "All %s"
+msgstr ""
+
+#. translators: 1: term name, 2: taxonomy name, e.g. "Christmas (Product categories)".
+#: includes/classes/Archives/Target.php:214
+msgid "%1$s (%2$s)"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:221
+msgid "Page not found (404)"
+msgstr ""
+
+#. translators: %s: items listed, e.g. "products".
+#: includes/classes/Archives/Target.php:238
+msgid "The page listing all %s"
+msgstr ""
+
+#. translators: %s: taxonomy name, e.g. "product categories".
+#: includes/classes/Archives/Target.php:240
+msgid "Each of the %s, unless it has its own"
+msgstr ""
+
+#. translators: %s: taxonomy singular name, e.g. "category".
+#: includes/classes/Archives/Target.php:242
+msgid "This %s’s page"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:243
+msgid "Each author’s page, unless it’s the blog’s to share"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:244
+msgid "The year, month and day archives, unless it’s the blog’s to share"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:245
+msgid "Shown when someone searches the site"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:246
+msgid "Shown when a page can’t be found"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:262
+msgid "Include subcategories"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:279
+msgid "Author"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:280
+msgid "Date"
+msgstr ""
+
+#. translators: %l: archive names, e.g. "Category and Tag".
+#: includes/classes/Archives/Target.php:284
+msgid "Include %l pages"
+msgstr ""
+
+#: includes/classes/Archives/Target.php:396
+msgid "No page lists the posts yet, so there’s nothing to link to or view. An administrator can choose one in Settings › Reading, as the “Posts page”."
+msgstr ""
+
+#. translators: 1: slide number, 2: number of slides
+#: includes/classes/Blocks/Carousel.php:67
+msgid "%1$d of %2$d"
+msgstr ""
+
+#. translators: %d: slide number
+#: includes/classes/Blocks/Carousel.php:69
+#: includes/classes/Blocks/Carousel.php:185
+#: src/carousel/editor/live-carousel.js:304
+msgid "Go to slide %d"
+msgstr ""
+
+#: includes/classes/Blocks/Carousel.php:87
+#: src/editor/extensions/query-display/carousel-edit.js:64
+msgid "carousel"
+msgstr ""
+
+#: includes/classes/Blocks/Carousel.php:151
+#: src/carousel/editor/live-carousel.js:275
+msgid "Previous slide"
+msgstr ""
+
+#: includes/classes/Blocks/Carousel.php:154
+#: src/carousel/editor/live-carousel.js:276
+msgid "Next slide"
+msgstr ""
+
+#: includes/classes/Blocks/Carousel.php:157
+msgid "Pause slideshow"
+msgstr ""
+
+#: includes/classes/Blocks/Carousel.php:173
+msgid "View larger"
+msgstr ""
+
+#: includes/classes/Blocks/QueryDisplay.php:521
+msgid "Not an accordion or tabs query."
+msgstr ""
+
+#: includes/classes/Blocks/QueryDisplay.php:527
+msgid "That post type can’t be shown."
+msgstr ""
+
+#: includes/classes/Breakpoints.php:136
+msgid "Mixing px with em or rem is not supported: with a text size other than 16px the ranges overlap or leave gaps. Use one unit for every breakpoint."
+msgstr ""
+
+#. translators: 1: breakpoint name, 2: its width.
+#: includes/classes/Breakpoints.php:164
+msgid "The breakpoint “%1$s” (%2$s) is ignored: widths must be in px, em or rem, so they can be ordered."
+msgstr ""
+
+#: includes/classes/Filters/Filters.php:221
+#: includes/classes/Filters/Filters.php:553
+#: src/blocks/filters-toggle/edit.js:22
+#: src/blocks/filters/edit.js:79
+msgid "Filters"
+msgstr ""
+
+#. translators: %s: an active filter, e.g. "News".
+#: includes/classes/Filters/Filters.php:367
+msgid "Remove %s"
+msgstr ""
+
+#: includes/classes/Filters/Filters.php:398
+#: includes/classes/Filters/Filters.php:416
+#: includes/classes/Filters/Filters.php:449
+msgid "No results"
+msgstr ""
+
+#. translators: %s: number of results.
+#: includes/classes/Filters/Filters.php:400
+#: includes/classes/Filters/Filters.php:431
+#: includes/classes/Filters/Filters.php:433
+msgid "Show %s result"
+msgid_plural "Show %s results"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of results.
+#: includes/classes/Filters/Filters.php:419
+#: includes/classes/Filters/Filters.php:421
+#: includes/classes/Filters/Filters.php:454
+msgid "%s result"
+msgid_plural "%s results"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: first result shown, 2: last result shown, 3: number of results.
+#: includes/classes/Filters/Filters.php:425
+#: includes/classes/Filters/Filters.php:427
+#: includes/classes/Filters/Filters.php:459
+msgid "Showing %1$s–%2$s of %3$s result"
+msgid_plural "Showing %1$s–%2$s of %3$s results"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/classes/Filters/Render.php:63
+msgid "Apply filters"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:69
+#: includes/classes/Filters/Render.php:643
+#: src/blocks/active-filters/edit.js:38
+msgid "Clear all"
+msgstr ""
+
+#. translators: %s: the filters' name, e.g. "Filters".
+#: includes/classes/Filters/Render.php:83
+msgid "Close %s"
+msgstr ""
+
+#. translators: %s: an option, e.g. "Rated 4 out of 5".
+#: includes/classes/Filters/Render.php:147
+msgid "%s and up"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:211
+#: includes/classes/Filters/Render.php:292
+msgid "chosen"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:354
+#: includes/classes/Filters/Render.php:468
+#: src/blocks/filter/edit.js:158
+#: src/blocks/filter/edit.js:447
+#: src/blocks/filter/edit.js:633
+msgid "Any"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:377
+#: src/blocks/filter/edit.js:229
+msgid "Show more"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:451
+#: src/blocks/filter/edit.js:128
+msgid "& up"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:557
+#: src/blocks/filter/edit.js:431
+msgid "Min"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:558
+#: src/blocks/filter/edit.js:436
+msgid "Max"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:580
+msgid "lowest"
+msgstr ""
+
+#: includes/classes/Filters/Render.php:581
+msgid "highest"
+msgstr ""
+
+#: includes/classes/Icons.php:96
+msgid "Theme"
+msgstr ""
+
+#: includes/classes/Icons.php:112
+msgid "Theme icons."
+msgstr ""
+
+#. translators: 1: a name that is used more than once on the page, 2: its number (2, 3…).
+#: includes/classes/Ids.php:157
+msgid "%1$s (%2$d)"
+msgstr ""
+
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:38
+msgid "Price"
+msgstr ""
+
+#. translators: %s: lowest price.
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:175
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:209
+msgid "From %s"
+msgstr ""
+
+#. translators: %s: highest price.
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:177
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:212
+msgid "Up to %s"
+msgstr ""
+
+#. translators: 1: lowest price, 2: highest price.
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:179
+#: includes/classes/Integrations/WooCommerce/Filters/PriceSource.php:206
+msgid "%1$s – %2$s"
+msgstr ""
+
+#: includes/classes/Integrations/WooCommerce/Filters/RatingSource.php:39
+msgid "Rating"
+msgstr ""
+
+#. translators: %d: a rating, 1 to 5.
+#: includes/classes/Integrations/WooCommerce/Filters/RatingSource.php:192
+#: src/blocks/filter/edit.js:81
+msgid "Rated %d out of 5"
+msgstr ""
+
+#: includes/classes/Integrations/WooCommerce/Filters/StockSource.php:38
+msgid "Availability"
+msgstr ""
+
+#. translators: 1: version needed, 2: version in use.
+#: includes/classes/Integrations/WooCommerce/WooCommerce.php:107
+msgid "Matter’s WooCommerce features need WooCommerce %1$s or later (this site has %2$s), so they are switched off."
+msgstr ""
+
+#: includes/classes/Live/Live.php:397
+msgid "Logged in: send the REST nonce."
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:153
+msgid "Megamenu"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:156
+msgid "Display submenu as a megamenu (top-level items only)"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:160
+msgid "Megamenu width"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:162
+msgid "Content"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:163
+msgid "Wide"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:164
+msgid "Full width"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:171
+msgid "Megamenu panel"
+msgstr ""
+
+#: includes/classes/Navigation/Megamenu.php:173
+msgid "None"
+msgstr ""
+
+#. translators: %s: menu item label.
+#: includes/classes/Navigation/Walker.php:345
+msgid "Show submenu for %s"
+msgstr ""
+
+#: includes/classes/Navigation/Walker.php:374
+msgid "Back"
+msgstr ""
+
+#: includes/classes/Navigation/Walker.php:382
+msgid "View all"
+msgstr ""
+
+#. translators: %s: parent menu item label.
+#: includes/classes/Navigation/Walker.php:391
+msgid "View all %s"
+msgstr ""
+
+#. translators: %s: parent menu item label.
+#: includes/classes/Navigation/Walker.php:399
+msgid "Back from %s"
+msgstr ""
+
+#: includes/classes/Navigation/Walker.php:421
+msgid "Untitled"
+msgstr ""
+
+#: includes/classes/Overlays/Overlay.php:200
+msgid "Dialog"
+msgstr ""
+
+#: includes/classes/Overlays/Overlay.php:437
+#: src/blocks/gallery/render.php:182
+#: src/overlay/editor/dialog-preview.js:104
+msgid "Close"
+msgstr ""
+
+#: includes/classes/Overlays/Overlay.php:456
+#: src/overlay/editor/group-nav.js:42
+msgid "More in this group"
+msgstr ""
+
+#: includes/classes/Overlays/Overlay.php:457
+#: src/overlay/editor/group-nav.js:50
+msgid "Previous"
+msgstr ""
+
+#: includes/classes/Overlays/Overlay.php:458
+#: src/overlay/editor/group-nav.js:62
+msgid "Next"
+msgstr ""
+
+#: includes/classes/Overlays/Panel.php:70
+#: includes/classes/Overlays/Trigger.php:43
+msgid "Menu"
+msgstr ""
+
+#: includes/classes/Overlays/Panel.php:71
+msgid "Close menu"
+msgstr ""
+
+#: includes/classes/Sections/Sections.php:102
+msgid "Sections"
+msgstr ""
+
+#. translators: %s: slot name
+#: includes/classes/Sections/Sections.php:279
+msgid "The slot name \"%s\" must use only letters, numbers, hyphens and underscores."
+msgstr ""
+
+#: includes/classes/Sections/Sections.php:371
+msgid "Heading"
+msgstr ""
+
+#: includes/classes/Sections/Sections.php:374
+msgid "A sentence or two about this."
+msgstr ""
+
+#: includes/classes/Sections/Sections.php:377
+msgid "Button"
+msgstr ""
+
+#. translators: %s: the regular expression error.
+#: includes/classes/Sections/Sections.php:499
+msgid "Finding slots with a regular expression failed (%s), so they were found by a plain scan. Check the content for a stray slot marker."
+msgstr ""
+
+#. translators: %s: field label.
+#: includes/classes/Settings/Settings.php:370
+msgid "“%s” needs a number that isn’t too large."
+msgstr ""
+
+#. translators: %s: field label.
+#: includes/classes/Settings/Settings.php:372
+msgid "“%s” needs a number."
+msgstr ""
+
+#: includes/classes/Settings/Settings.php:403
+msgid "Site details"
+msgstr ""
+
+#: includes/classes/Settings/Settings.php:496
+msgid "Site settings"
+msgstr ""
+
+#: includes/classes/Singleton.php:23
+msgid "Cloning is forbidden."
+msgstr ""
+
+#: includes/classes/Singleton.php:30
+msgid "Unserializing instances of this class is forbidden."
+msgstr ""
+
+#: includes/classes/Supports/Link.php:186
+msgid "(opens in a new tab)"
+msgstr ""
+
+#. translators: %s: the link's label
+#: includes/classes/Supports/Link.php:213
+msgid "%s (opens in a new tab)"
+msgstr ""
+
+#: includes/classes/Supports/Link.php:248
+msgid "Read more"
+msgstr ""
+
+#. translators: 1: PHP or WordPress, 2: version needed, 3: version in use.
+#: matter.php:51
+msgid "Matter needs %1$s %2$s or later (this site has %3$s), so it is switched off."
+msgstr ""
+
+#. translators: %s: composer install command
+#: matter.php:86
+msgid "Composer dependencies not found. Please run %s to install required dependencies."
+msgstr ""
+
+#. translators: 1: image number, 2: number of images
+#: src/blocks/gallery/render.php:139
+msgid "Enlarge image %1$d of %2$d"
+msgstr ""
+
+#: src/blocks/gallery/render.php:156
+msgid "Caption"
+msgstr ""
+
+#: src/blocks/gallery/render.php:181
+msgid "Image viewer"
+msgstr ""
+
+#: src/blocks/gallery/render.php:183
+msgid "Previous image"
+msgstr ""
+
+#: src/blocks/gallery/render.php:184
+msgid "Next image"
+msgstr ""
+
+#. translators: %d: number of images
+#: src/blocks/gallery/render.php:221
+#: src/blocks/gallery/edit.js:421
+msgid "View all %d image"
+msgid_plural "View all %d images"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: image number, 2: number of images, e.g. "2 / 5"
+#: src/blocks/gallery/render.php:257
+msgid "%1$d / %2$d"
+msgstr ""
+
+#. translators: 1: image number, 2: number of images
+#: src/blocks/gallery/render.php:260
+msgid "Image %1$d of %2$d"
+msgstr ""
+
+#. translators: 1: image number, 2: number of images, 3: the image's description
+#: src/blocks/gallery/render.php:262
+msgid "Image %1$d of %2$d: %3$s"
+msgstr ""
+
+#. translators: %d: tab number
+#: src/blocks/tabs/render.php:60
+#: src/blocks/tabs/edit.js:234
+#: src/blocks/tabs/edit.js:247
+msgid "Tab %d"
+msgstr ""
+
+#. translators: %s: tabs name, or "Choose a tab"
+#: src/blocks/tabs/render.php:116
+msgid "%s:"
+msgstr ""
+
+#. translators: %s: tabs name, or "Choose a tab"
+#: src/blocks/tabs/render.php:116
+msgid "Choose a tab"
+msgstr ""
+
+#: src/blocks/accordion-item/edit.js:23
+msgid "Item content…"
+msgstr ""
+
+#: src/blocks/accordion-item/edit.js:153
+msgid "Item title"
+msgstr ""
+
+#: src/blocks/accordion-item/edit.js:158
+#: src/blocks/accordion/edit.js:86
+#: src/blocks/carousel/edit.js:177
+#: src/blocks/filter/edit.js:517
+#: src/blocks/filters/edit.js:61
+#: src/blocks/gallery/edit.js:237
+#: src/blocks/gravity-form/components/inspector-controls.js:119
+#: src/blocks/tabs/edit.js:183
+#: src/blocks/template-part/edit.js:114
+#: src/overlay/editor/overlay-edit.js:163
+msgid "Settings"
+msgstr ""
+
+#: src/blocks/accordion-item/edit.js:161
+#: src/blocks/filter/edit.js:708
+#: src/blocks/filter/edit.js:715
+msgid "Open by default"
+msgstr ""
+
+#: src/blocks/accordion/edit.js:61
+#: src/editor/extensions/parent-toolbar.js:44
+msgid "Add item"
+msgstr ""
+
+#: src/blocks/accordion/index.js:24
+#: src/editor/extensions/query-display/panel.js:24
+msgid "Accordion"
+msgstr ""
+
+#: src/blocks/accordion/settings.js:29
+#: src/blocks/accordion/settings.js:37
+msgid "Item heading level"
+msgstr ""
+
+#: src/blocks/accordion/settings.js:47
+#: src/blocks/accordion/settings.js:54
+msgid "Only one item open at a time"
+msgstr ""
+
+#: src/blocks/accordion/settings.js:60
+#: src/blocks/accordion/settings.js:67
+msgid "Open the first item"
+msgstr ""
+
+#: src/blocks/accordion/settings.js:73
+#: src/blocks/accordion/settings.js:80
+msgid "FAQ schema"
+msgstr ""
+
+#: src/blocks/accordion/settings.js:81
+msgid "Describe these items to search engines as questions and answers."
+msgstr ""
+
+#: src/blocks/active-filters/edit.js:16
+msgid "A chosen option"
+msgstr ""
+
+#: src/blocks/active-filters/edit.js:16
+msgid "Another"
+msgstr ""
+
+#: src/blocks/archive-content/edit.js:18
+msgid "Editors add sections around this in Appearance › Archives"
+msgstr ""
+
+#: src/blocks/archive-loop/edit.js:41
+msgid "Archive list · a preview, set by the theme"
+msgstr ""
+
+#: src/blocks/archive-loop/edit.js:60
+msgid "Archive list"
+msgstr ""
+
+#: src/blocks/archive-loop/edit.js:64
+msgid "The archive’s posts or products show here, as the theme lists them. Add content above and below."
+msgstr ""
+
+#: src/blocks/carousel/edit.js:170
+#: src/editor/extensions/parent-toolbar.js:187
+msgid "Add slide"
+msgstr ""
+
+#: src/blocks/carousel/edit.js:186
+#: src/blocks/carousel/edit.js:194
+#: src/blocks/filters/edit.js:65
+#: src/blocks/filters/edit.js:73
+#: src/blocks/gallery/edit.js:368
+#: src/blocks/gravity-form/edit.js:50
+#: src/blocks/tabs/settings.js:31
+#: src/blocks/tabs/settings.js:39
+#: src/editor/extensions/query-display/panel.js:80
+#: src/editor/extensions/query-display/panel.js:88
+#: src/overlay/editor/overlay-edit.js:199
+msgid "Name"
+msgstr ""
+
+#: src/blocks/carousel/edit.js:195
+msgid "Describes the carousel to screen readers, e.g. \"Customer stories\"."
+msgstr ""
+
+#: src/blocks/carousel/edit.js:205
+#: src/components/aspect-ratio/index.js:71
+msgid "Aspect ratio"
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:117
+msgid "Images"
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:118
+msgid "Images from the media library."
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:124
+msgid "Posts"
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:125
+msgid "One slide per post."
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:131
+msgid "Terms"
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:132
+msgid "One slide per category, tag or other term."
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:201
+#: src/blocks/carousel/slide-picker.js:255
+#: src/blocks/gallery/edit.js:252
+#: src/editor/extensions/query-display/panel.js:23
+msgid "Carousel"
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:202
+#: src/blocks/gallery/edit.js:205
+msgid "Drag images, upload new ones or choose from your library."
+msgstr ""
+
+#: src/blocks/carousel/slide-picker.js:256
+msgid "What will the slides be?"
+msgstr ""
+
+#: src/blocks/drawer/edit.js:24
+msgid "Slides in from"
+msgstr ""
+
+#: src/blocks/drawer/edit.js:33
+#: src/blocks/drawer/edit.js:39
+msgid "Right"
+msgstr ""
+
+#: src/blocks/drawer/edit.js:33
+#: src/blocks/drawer/edit.js:39
+msgid "Left"
+msgstr ""
+
+#: src/blocks/filter/edit.js:43
+msgid "Checkboxes"
+msgstr ""
+
+#: src/blocks/filter/edit.js:44
+msgid "Chips"
+msgstr ""
+
+#: src/blocks/filter/edit.js:45
+msgid "Swatches"
+msgstr ""
+
+#: src/blocks/filter/edit.js:46
+msgid "Radio buttons"
+msgstr ""
+
+#: src/blocks/filter/edit.js:47
+msgid "Dropdown"
+msgstr ""
+
+#: src/blocks/filter/edit.js:49
+msgid "Stars"
+msgstr ""
+
+#. translators: %d: a sample option's number.
+#: src/blocks/filter/edit.js:90
+msgid "Option %d"
+msgstr ""
+
+#: src/blocks/filter/edit.js:319
+#: src/blocks/filter/edit.js:351
+msgid "Filter"
+msgstr ""
+
+#: src/blocks/filter/edit.js:324
+msgid "Filter name"
+msgstr ""
+
+#: src/blocks/filter/edit.js:339
+msgid "Choose…"
+msgstr ""
+
+#. translators: %s: a filter source's key, e.g. "taxonomy:pa_color".
+#: src/blocks/filter/edit.js:356
+msgid "“%s” isn’t available here. Choose what it filters by."
+msgstr ""
+
+#: src/blocks/filter/edit.js:362
+msgid "Choose what it filters by."
+msgstr ""
+
+#: src/blocks/filter/edit.js:368
+#: src/blocks/filter/edit.js:521
+#: src/blocks/filter/edit.js:528
+msgid "Filter by"
+msgstr ""
+
+#: src/blocks/filter/edit.js:413
+msgid "Lowest"
+msgstr ""
+
+#: src/blocks/filter/edit.js:420
+msgid "Highest"
+msgstr ""
+
+#: src/blocks/filter/edit.js:424
+msgid "Lowest – highest"
+msgstr ""
+
+#: src/blocks/filter/edit.js:536
+#: src/blocks/filter/edit.js:543
+msgid "Slider"
+msgstr ""
+
+#: src/blocks/filter/edit.js:552
+#: src/blocks/filter/edit.js:566
+msgid "Show as"
+msgstr ""
+
+#: src/blocks/filter/edit.js:569
+msgid "One choice at a time."
+msgstr ""
+
+#: src/blocks/filter/edit.js:584
+#: src/blocks/filter/edit.js:591
+msgid "\"& up\" options"
+msgstr ""
+
+#: src/blocks/filter/edit.js:592
+msgid "Each option includes those above it."
+msgstr ""
+
+#: src/blocks/filter/edit.js:605
+#: src/blocks/filter/edit.js:614
+msgid "Match"
+msgstr ""
+
+#: src/blocks/filter/edit.js:617
+msgid "Results with every option chosen."
+msgstr ""
+
+#: src/blocks/filter/edit.js:621
+msgid "Results with any option chosen."
+msgstr ""
+
+#: src/blocks/filter/edit.js:637
+#: src/blocks/gallery/edit.js:158
+#: src/components/icon-picker/icon-library-modal.js:72
+msgid "All"
+msgstr ""
+
+#: src/blocks/filter/edit.js:644
+#: src/blocks/filter/edit.js:653
+msgid "Show counts"
+msgstr ""
+
+#: src/blocks/filter/edit.js:663
+#: src/blocks/filter/edit.js:670
+msgid "Visible options"
+msgstr ""
+
+#: src/blocks/filter/edit.js:671
+msgid "\"Show more\" shows the rest. 0 shows all."
+msgstr ""
+
+#: src/blocks/filter/edit.js:686
+#: src/blocks/filter/edit.js:698
+#: src/editor/overlays/utils.js:20
+msgid "Collapsible"
+msgstr ""
+
+#: src/blocks/filters-toggle/edit.js:27
+msgid "Button text"
+msgstr ""
+
+#: src/blocks/filters/edit.js:74
+msgid "Names the drawer on small screens, and the Filters button."
+msgstr ""
+
+#: src/blocks/gallery/edit.js:204
+msgid "Gallery"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:242
+msgid "Layout"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:248
+msgid "Grid"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:260
+msgid "Columns"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:261
+msgid "Fewer columns show where there is less room."
+msgstr ""
+
+#: src/blocks/gallery/edit.js:296
+msgid "Images to show"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:299
+msgid "Shown in full rows; the rest open from a \"View all\" button."
+msgstr ""
+
+#: src/blocks/gallery/edit.js:303
+msgid "All images are shown."
+msgstr ""
+
+#: src/blocks/gallery/edit.js:325
+msgid "Show captions"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:326
+msgid "Show captions in the lightbox and on gallery images that have one."
+msgstr ""
+
+#: src/blocks/gallery/edit.js:342
+msgid "Caption style"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:350
+msgid "Toggle"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:354
+msgid "Overlay"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:360
+msgid "Open images in a lightbox"
+msgstr ""
+
+#: src/blocks/gallery/edit.js:369
+msgid "Describes the carousel to screen readers."
+msgstr ""
+
+#: src/blocks/gravity-form/components/block-controls.js:31
+#: src/blocks/gravity-form/edit.js:32
+msgid "Select a Form"
+msgstr ""
+
+#: src/blocks/gravity-form/components/form-select-help.js:13
+msgid "Select a form to display."
+msgstr ""
+
+#: src/blocks/gravity-form/components/form-select-help.js:32
+msgid "Edit form in the <a>Form editor</a>"
+msgstr ""
+
+#: src/blocks/gravity-form/components/form-select-help.js:39
+msgid "Edit form settings in the <a>Form settings</a>"
+msgstr ""
+
+#: src/blocks/gravity-form/components/form-select.js:17
+#: src/blocks/gravity-form/components/inspector-controls.js:103
+msgid "Form"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:73
+msgid "Value must be a JSON object."
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:86
+msgid "Invalid JSON."
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:95
+msgid "Form Content"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:133
+#: src/blocks/gravity-form/components/inspector-controls.js:141
+msgid "Display Title"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:150
+#: src/blocks/gravity-form/components/inspector-controls.js:158
+msgid "Display Description"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:167
+msgid "Ajax Submission"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:175
+msgid "AJAX Submission"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:176
+msgid "This will prevent the page from reloading when the form is submitted."
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:188
+#: src/blocks/gravity-form/components/inspector-controls.js:193
+msgid "Tabindex"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:194
+msgid "The tabindex of the form. 0 or -1 are recommended"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:216
+#: src/blocks/gravity-form/components/inspector-controls.js:221
+msgid "Field Values"
+msgstr ""
+
+#: src/blocks/gravity-form/components/inspector-controls.js:222
+msgid "JSON object of dynamic population parameter keys and values (for example, {\"some_field\": \"custom_value\"})."
+msgstr ""
+
+#: src/blocks/gravity-form/components/placeholder.js:23
+#: src/blocks/gravity-form/components/placeholder.js:36
+msgid "Gravity Form"
+msgstr ""
+
+#: src/blocks/gravity-form/components/placeholder.js:24
+msgid "You must have at least one form to use the block."
+msgstr ""
+
+#: src/blocks/gravity-form/components/placeholder.js:37
+msgid "Select and display one of your forms."
+msgstr ""
+
+#: src/blocks/gravity-form/components/placeholder.js:44
+msgid "The selected form has been deleted or trashed. Please select a new form."
+msgstr ""
+
+#: src/blocks/gravity-form/edit.js:51
+msgid "Email"
+msgstr ""
+
+#: src/blocks/gravity-form/edit.js:52
+msgid "Message"
+msgstr ""
+
+#: src/blocks/gravity-form/edit.js:82
+msgid "Send"
+msgstr ""
+
+#: src/blocks/gravity-form/edit.js:181
+msgid "Unable to preview this form in the editor."
+msgstr ""
+
+#: src/blocks/loop-item/edit.js:275
+#: src/blocks/loop-item/edit.js:296
+msgid "Loop item"
+msgstr ""
+
+#: src/blocks/loop-item/edit.js:276
+msgid "The preview couldn't be loaded."
+msgstr ""
+
+#: src/blocks/loop-item/edit.js:282
+msgid "Try again"
+msgstr ""
+
+#: src/blocks/loop-item/edit.js:297
+msgid "Shows the theme's design for each item in the loop."
+msgstr ""
+
+#: src/blocks/results-count/edit.js:14
+msgid "Showing 1–12 of 48 results"
+msgstr ""
+
+#: src/blocks/slot/edit.js:210
+#: src/overlay/editor/url-triggers-control.js:65
+#: src/settings/components/media-field.js:78
+msgid "Remove"
+msgstr ""
+
+#: src/blocks/slot/edit.js:214
+msgid "This content is no longer shown on the site, because this part of the section was removed. Move anything you want to keep into another part of the section, then remove this."
+msgstr ""
+
+#: src/blocks/tab/edit.js:21
+msgid "Tab content…"
+msgstr ""
+
+#: src/blocks/tabs/edit.js:176
+msgid "Delete tab"
+msgstr ""
+
+#: src/blocks/tabs/edit.js:257
+msgid "Add tab"
+msgstr ""
+
+#: src/blocks/tabs/index.js:24
+#: src/editor/extensions/query-display/panel.js:25
+msgid "Tabs"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:40
+msgid "Describes the tab list to screen readers."
+msgstr ""
+
+#: src/blocks/tabs/settings.js:49
+#: src/blocks/tabs/settings.js:58
+msgid "Orientation"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:64
+msgid "Horizontal"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:68
+msgid "Vertical"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:73
+#: src/blocks/tabs/settings.js:80
+msgid "Link to tabs"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:81
+msgid "Update the address bar when a tab is chosen, so it can be shared."
+msgstr ""
+
+#: src/blocks/tabs/settings.js:90
+msgid "Dropdown on smaller screens"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:97
+msgid "Show as a dropdown on smaller screens"
+msgstr ""
+
+#: src/blocks/tabs/settings.js:101
+msgid "Replace the tabs with a dropdown menu where there is less room."
+msgstr ""
+
+#: src/blocks/template-part/edit.js:118
+#: src/blocks/template-part/edit.js:126
+msgid "Template part"
+msgstr ""
+
+#: src/blocks/template-part/edit.js:130
+msgid "Choose a template part"
+msgstr ""
+
+#. translators: %s: part slug.
+#: src/blocks/template-part/edit.js:150
+msgid "Unknown part (%s)"
+msgstr ""
+
+#: src/blocks/template-part/edit.js:179
+msgid "Theme template part"
+msgstr ""
+
+#: src/blocks/template-part/edit.js:182
+msgid "This template part couldn't be shown."
+msgstr ""
+
+#: src/blocks/template-part/edit.js:186
+msgid "Choose a file from the theme's template-parts folder in the block settings."
+msgstr ""
+
+#: src/components/aspect-ratio/index.js:74
+msgid "Images keep their own shape."
+msgstr ""
+
+#: src/components/aspect-ratio/index.js:75
+msgid "Every image is cropped to match."
+msgstr ""
+
+#: src/components/aspect-ratio/index.js:79
+msgid "Original"
+msgstr ""
+
+#: src/components/gallery-media/index.js:79
+msgid "Only images can be added here."
+msgstr ""
+
+#: src/components/gallery-media/index.js:138
+msgid "Edit images"
+msgstr ""
+
+#: src/components/gallery-media/index.js:139
+msgid "Choose images"
+msgstr ""
+
+#: src/components/icon-picker/icon-grid.js:52
+msgid "No results found."
+msgstr ""
+
+#: src/components/icon-picker/icon-grid.js:57
+#: src/components/icon-picker/icon-library-modal.js:78
+msgid "Icon library"
+msgstr ""
+
+#: src/components/icon-picker/icon-library-modal.js:96
+msgid "Collections"
+msgstr ""
+
+#: src/components/icon-picker/icon-library-modal.js:153
+msgid "Loading…"
+msgstr ""
+
+#: src/components/icon-picker/icon-toolbar.js:50
+msgid "Icon not found"
+msgstr ""
+
+#: src/components/icon-picker/icon-toolbar.js:51
+msgid "Replace icon"
+msgstr ""
+
+#: src/components/icon-picker/icon-toolbar.js:62
+msgid "Open icon library"
+msgstr ""
+
+#: src/components/icon-picker/icon-toolbar.js:70
+msgid "Remove icon"
+msgstr ""
+
+#: src/components/icon-picker/icon-toolbar.js:77
+msgid "Add icon"
+msgstr ""
+
+#: src/components/stable-id/index.js:162
+msgid "ID"
+msgstr ""
+
+#: src/components/stable-id/index.js:178
+msgid "An ID is needed. The previous one was kept."
+msgstr ""
+
+#: src/components/stable-id/index.js:194
+msgid "Another block on this page uses this ID. Choose a different one."
+msgstr ""
+
+#: src/editor/archives/bindings.js:20
+msgid "Archive title"
+msgstr ""
+
+#: src/editor/archives/bindings.js:21
+msgid "Archive description"
+msgstr ""
+
+#: src/editor/archives/bound-source.js:44
+msgid "Where this text comes from"
+msgstr ""
+
+#: src/editor/archives/shows-on.js:149
+msgid "Type to find a category or tag."
+msgstr ""
+
+#: src/editor/archives/shows-on.js:176
+msgid "The newest published one shows. To swap it on a date, schedule a new version in Appearance › Archives."
+msgstr ""
+
+#: src/editor/components/scheme-control.js:84
+#: src/editor/extensions/query-display/panel.js:157
+msgid "Colour scheme"
+msgstr ""
+
+#: src/editor/components/scheme-control.js:86
+msgid "Choose the selected scheme again to use the colours around it instead."
+msgstr ""
+
+#: src/editor/components/scheme-control.js:90
+msgid "Uses the colours around it."
+msgstr ""
+
+#. translators: %s: colour scheme name
+#: src/editor/components/scheme-control.js:113
+msgid "%s (selected)"
+msgstr ""
+
+#: src/editor/extensions/block-link.js:35
+msgid "Edit link"
+msgstr ""
+
+#: src/editor/extensions/block-link.js:36
+msgid "Link the whole block"
+msgstr ""
+
+#: src/editor/extensions/button-link.js:43
+msgid "No link"
+msgstr ""
+
+#: src/editor/extensions/focal-point.js:33
+msgid "Choose which part of the image stays in view when it is cropped."
+msgstr ""
+
+#: src/editor/extensions/focal-point.js:58
+msgid "Focal point"
+msgstr ""
+
+#: src/editor/extensions/focal-point.js:211
+msgid "Featured image focal point"
+msgstr ""
+
+#. translators: %s: item, e.g. "card".
+#: src/editor/extensions/parent-toolbar.js:136
+msgid "Add %s"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:80
+msgid "Posts carousel"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:81
+msgid "Posts shown as slides, e.g. the latest news. New posts appear by themselves."
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:86
+msgid "slider"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:87
+msgid "latest"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:88
+msgid "news"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:89
+msgid "blog"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:93
+#: src/editor/extensions/query-display/preview-edit.js:292
+msgid "Posts accordion"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:94
+msgid "Posts shown as an accordion, e.g. every FAQ: each title opens its panel. New posts appear by themselves."
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:99
+msgid "faq"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:100
+msgid "questions"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:101
+msgid "toggle"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:105
+#: src/editor/extensions/query-display/preview-edit.js:291
+msgid "Posts tabs"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:106
+msgid "Posts shown as tabs: each post’s title is a tab. New posts appear by themselves."
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:215
+msgid "Terms carousel"
+msgstr ""
+
+#: src/editor/extensions/query-display/index.js:216
+msgid "Categories, tags or other terms shown as slides."
+msgstr ""
+
+#: src/editor/extensions/query-display/panel.js:89
+msgid "Describes the carousel to screen readers, e.g. \"Latest news\"."
+msgstr ""
+
+#: src/editor/extensions/query-display/panel.js:144
+msgid "Style"
+msgstr ""
+
+#: src/editor/extensions/query-display/post-type-picker.js:29
+msgid "What will it list?"
+msgstr ""
+
+#: src/editor/extensions/query-display/preview-edit.js:296
+msgid "The preview couldn't be shown."
+msgstr ""
+
+#: src/editor/extensions/query-display/preview-edit.js:297
+msgid "No posts match these settings. Change them in the block settings."
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:42
+msgid "Add modal"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:43
+msgid "Add drawer"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:56
+#: src/overlay/editor/overlay-edit.js:212
+msgid "Trigger on the page"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:57
+msgid "On page load"
+msgstr ""
+
+#. translators: %d: percentage of the page
+#: src/editor/overlays/sidebar.js:61
+msgid "After scrolling %d%%"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:64
+msgid "URL parameter"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:115
+msgid "Options"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:121
+#: src/overlay/editor/overlay-edit.js:182
+msgid "Copy link"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:130
+msgid "Delete"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:173
+msgid "Overlays"
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:185
+msgid "No modals or drawers here yet."
+msgstr ""
+
+#: src/editor/overlays/sidebar.js:189
+msgid "Any button or link to an overlay opens it: search for its name when adding the link."
+msgstr ""
+
+#: src/editor/overlays/utils.js:18
+msgid "Modal"
+msgstr ""
+
+#: src/editor/overlays/utils.js:19
+msgid "Drawer"
+msgstr ""
+
+#: src/integrations/woocommerce/editor.js:144
+msgid "Products"
+msgstr ""
+
+#: src/integrations/woocommerce/editor.js:145
+msgid "One slide per product."
+msgstr ""
+
+#: src/integrations/woocommerce/editor.js:194
+msgid "Products carousel"
+msgstr ""
+
+#: src/integrations/woocommerce/editor.js:195
+msgid "Products shown as slides."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:124
+msgid "Open"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:181
+msgid "Copied"
+msgstr ""
+
+#. translators: %s: overlay link, e.g. #modal-abc
+#: src/overlay/editor/overlay-edit.js:188
+msgid "Link any button or link to %s to open this."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:200
+msgid "Shown in the Overlays list, and announced by screen readers when it opens."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:213
+msgid "Content in place on the page (e.g. a button) that opens it. Its first link or button is the trigger."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:223
+msgid "Can be closed"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:226
+msgid "Close button, Escape and clicking outside close it."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:230
+msgid "No close button, and Escape or clicking outside do nothing (e.g. an age gate). Close it with a button inside it that links to this (Copy link above)."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:245
+msgid "Group"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:246
+msgid "Modals sharing a group get previous/next buttons. Modals in a Query Loop are grouped automatically."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:264
+msgid "Open automatically"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:269
+msgid "When the page loads"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:278
+msgid "Delay (seconds)"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:279
+msgid "Applies to page load and URL parameters."
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:292
+msgid "After scrolling"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:302
+msgid "Scrolled (% of page)"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:322
+msgid "Stay closed for (days)"
+msgstr ""
+
+#: src/overlay/editor/overlay-edit.js:323
+msgid "After someone closes an automatically opened overlay. 0 shows it again on every visit."
+msgstr ""
+
+#: src/overlay/editor/url-triggers-control.js:26
+msgid "When the URL contains"
+msgstr ""
+
+#: src/overlay/editor/url-triggers-control.js:27
+msgid "e.g. offer = spring opens on ?offer=spring. Leave the value empty to match any value."
+msgstr ""
+
+#: src/overlay/editor/url-triggers-control.js:49
+msgid "Parameter"
+msgstr ""
+
+#: src/overlay/editor/url-triggers-control.js:58
+msgid "Value"
+msgstr ""
+
+#: src/overlay/editor/url-triggers-control.js:81
+msgid "Add URL rule"
+msgstr ""
+
+#: src/settings/components/media-field.js:69
+msgid "Replace image"
+msgstr ""
+
+#: src/settings/components/media-field.js:70
+msgid "Select image"
+msgstr ""
+
+#: src/settings/components/repeater-field.js:81
+msgid "Move up"
+msgstr ""
+
+#: src/settings/components/repeater-field.js:88
+msgid "Move down"
+msgstr ""
+
+#. translators: %d: row number
+#: src/settings/components/repeater-field.js:98
+msgid "Remove row %d"
+msgstr ""
+
+#: src/settings/components/repeater-field.js:116
+msgid "Add row"
+msgstr ""
+
+#: src/settings/index.js:75
+msgid "Settings saved."
+msgstr ""
+
+#: src/settings/index.js:81
+msgid "Settings could not be saved."
+msgstr ""
+
+#: src/settings/index.js:143
+msgid "Save settings"
+msgstr ""
+
+#: src/blocks/accordion-item/block.json
+msgctxt "block title"
+msgid "Accordion item"
+msgstr ""
+
+#: src/blocks/accordion-item/block.json
+msgctxt "block description"
+msgid "A title and the content it reveals."
+msgstr ""
+
+#: src/blocks/accordion/block.json
+msgctxt "block title"
+msgid "Accordion"
+msgstr ""
+
+#: src/blocks/accordion/block.json
+msgctxt "block description"
+msgid "Expandable items you write here. To list FAQs or other posts automatically, use Posts accordion."
+msgstr ""
+
+#: src/blocks/accordion/block.json
+msgctxt "block keyword"
+msgid "faq"
+msgstr ""
+
+#: src/blocks/accordion/block.json
+#: src/blocks/collapsible/block.json
+msgctxt "block keyword"
+msgid "toggle"
+msgstr ""
+
+#: src/blocks/accordion/block.json
+msgctxt "block keyword"
+msgid "expand"
+msgstr ""
+
+#: src/blocks/accordion/block.json
+msgctxt "block keyword"
+msgid "collapse"
+msgstr ""
+
+#: src/blocks/active-filters/block.json
+msgctxt "block title"
+msgid "Active filters"
+msgstr ""
+
+#: src/blocks/active-filters/block.json
+msgctxt "block description"
+msgid "The filters applied to the list, each removable, and Clear all."
+msgstr ""
+
+#: src/blocks/archive-content/block.json
+msgctxt "block title"
+msgid "Archive content"
+msgstr ""
+
+#: src/blocks/archive-content/block.json
+msgctxt "block description"
+msgid "For archive templates: wrap the list of posts or products. Editors add content above and below it in Appearance › Archives."
+msgstr ""
+
+#: src/blocks/archive-loop/block.json
+msgctxt "block title"
+msgid "Archive list"
+msgstr ""
+
+#: src/blocks/archive-loop/block.json
+msgctxt "block description"
+msgid "The archive's posts or products, as the theme lists them. Add content above and below it."
+msgstr ""
+
+#: src/blocks/carousel/block.json
+msgctxt "block title"
+msgid "Carousel"
+msgstr ""
+
+#: src/blocks/carousel/block.json
+msgctxt "block description"
+msgid "Slides that scroll horizontally: each block inside is a slide. To show posts, products or terms automatically, use Posts, Products or Terms carousel."
+msgstr ""
+
+#: src/blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "slider"
+msgstr ""
+
+#: src/blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "slideshow"
+msgstr ""
+
+#: src/blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "gallery"
+msgstr ""
+
+#: src/blocks/collapsible/block.json
+msgctxt "block title"
+msgid "Collapsible"
+msgstr ""
+
+#: src/blocks/collapsible/block.json
+msgctxt "block description"
+msgid "Content that stays hidden until a button or link reveals it."
+msgstr ""
+
+#: src/blocks/collapsible/block.json
+msgctxt "block keyword"
+msgid "disclosure"
+msgstr ""
+
+#: src/blocks/collapsible/block.json
+msgctxt "block keyword"
+msgid "reveal"
+msgstr ""
+
+#: src/blocks/collapsible/block.json
+msgctxt "block keyword"
+msgid "show more"
+msgstr ""
+
+#: src/blocks/drawer/block.json
+msgctxt "block title"
+msgid "Drawer"
+msgstr ""
+
+#: src/blocks/drawer/block.json
+msgctxt "block description"
+msgid "Content that slides in from the edge of the screen, opened by a button or link."
+msgstr ""
+
+#: src/blocks/drawer/block.json
+msgctxt "block keyword"
+msgid "offcanvas"
+msgstr ""
+
+#: src/blocks/drawer/block.json
+#: src/blocks/filters/block.json
+msgctxt "block keyword"
+msgid "sidebar"
+msgstr ""
+
+#: src/blocks/drawer/block.json
+msgctxt "block keyword"
+msgid "panel"
+msgstr ""
+
+#: src/blocks/filter/block.json
+msgctxt "block title"
+msgid "Filter"
+msgstr ""
+
+#: src/blocks/filter/block.json
+msgctxt "block description"
+msgid "Filter the list by a category, tag, attribute or other choice, with how many results each option has."
+msgstr ""
+
+#: src/blocks/filters-toggle/block.json
+msgctxt "block title"
+msgid "Filters button"
+msgstr ""
+
+#: src/blocks/filters-toggle/block.json
+msgctxt "block description"
+msgid "Opens the list's filters on small screens, with how many are applied. Hidden while the filters show inline."
+msgstr ""
+
+#: src/blocks/filters/block.json
+msgctxt "block title"
+msgid "Filters"
+msgstr ""
+
+#: src/blocks/filters/block.json
+msgctxt "block description"
+msgid "Filters for the list they're in: a sidebar on larger screens, and below the theme's breakpoint a panel opened by the Filters button."
+msgstr ""
+
+#: src/blocks/filters/block.json
+msgctxt "block keyword"
+msgid "facet"
+msgstr ""
+
+#: src/blocks/filters/block.json
+msgctxt "block keyword"
+msgid "filter"
+msgstr ""
+
+#: src/blocks/filters/block.json
+msgctxt "block keyword"
+msgid "refine"
+msgstr ""
+
+#: src/blocks/gallery/block.json
+msgctxt "block title"
+msgid "Gallery"
+msgstr ""
+
+#: src/blocks/gallery/block.json
+msgctxt "block description"
+msgid "Images in a grid or carousel that open in a lightbox, cropped to one aspect ratio."
+msgstr ""
+
+#: src/blocks/gallery/block.json
+msgctxt "block keyword"
+msgid "images"
+msgstr ""
+
+#: src/blocks/gallery/block.json
+msgctxt "block keyword"
+msgid "photos"
+msgstr ""
+
+#: src/blocks/gallery/block.json
+#: src/blocks/modal/block.json
+msgctxt "block keyword"
+msgid "lightbox"
+msgstr ""
+
+#: src/blocks/gravity-form/block.json
+msgctxt "block title"
+msgid "Gravity Form"
+msgstr ""
+
+#: src/blocks/gravity-form/block.json
+msgctxt "block description"
+msgid "Displays a Gravity Form"
+msgstr ""
+
+#: src/blocks/gravity-form/block.json
+msgctxt "block keyword"
+msgid "form"
+msgstr ""
+
+#: src/blocks/gravity-form/block.json
+msgctxt "block keyword"
+msgid "forms"
+msgstr ""
+
+#: src/blocks/gravity-form/block.json
+msgctxt "block keyword"
+msgid "contact"
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block title"
+msgid "Loop item"
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block description"
+msgid "The theme's design for the current item in a loop (a post, or a term in a Terms Query). The design lives in the theme, so every loop and carousel shows the same thing."
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block keyword"
+msgid "loop"
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block keyword"
+msgid "item"
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block keyword"
+msgid "post"
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block keyword"
+msgid "product"
+msgstr ""
+
+#: src/blocks/loop-item/block.json
+msgctxt "block keyword"
+msgid "term"
+msgstr ""
+
+#: src/blocks/modal/block.json
+msgctxt "block title"
+msgid "Modal"
+msgstr ""
+
+#: src/blocks/modal/block.json
+msgctxt "block description"
+msgid "Content shown in a box over the page, opened by a button or link."
+msgstr ""
+
+#: src/blocks/modal/block.json
+msgctxt "block keyword"
+msgid "dialog"
+msgstr ""
+
+#: src/blocks/modal/block.json
+msgctxt "block keyword"
+msgid "popup"
+msgstr ""
+
+#: src/blocks/results-count/block.json
+msgctxt "block title"
+msgid "Results count"
+msgstr ""
+
+#: src/blocks/results-count/block.json
+msgctxt "block description"
+msgid "How many results the list has, e.g. \"Showing 1–12 of 48 results\"."
+msgstr ""
+
+#: src/blocks/slot/block.json
+msgctxt "block title"
+msgid "Slot"
+msgstr ""
+
+#: src/blocks/slot/block.json
+msgctxt "block description"
+msgid "A named content area inside a section. Added automatically by sections."
+msgstr ""
+
+#: src/blocks/tab/block.json
+msgctxt "block title"
+msgid "Tab"
+msgstr ""
+
+#: src/blocks/tab/block.json
+msgctxt "block description"
+msgid "A tab's label and content."
+msgstr ""
+
+#: src/blocks/tabs/block.json
+msgctxt "block title"
+msgid "Tabs"
+msgstr ""
+
+#: src/blocks/tabs/block.json
+msgctxt "block description"
+msgid "Content split into tabs you write here. To show posts as tabs automatically, use Posts tabs."
+msgstr ""
+
+#: src/blocks/template-part/block.json
+msgctxt "block title"
+msgid "Theme template part"
+msgstr ""
+
+#: src/blocks/template-part/block.json
+msgctxt "block description"
+msgid "Renders a version-controlled PHP file from the theme's template-parts folder, such as the site header or footer."
+msgstr ""

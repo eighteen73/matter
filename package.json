@@ -64,7 +64,7 @@
 		"lint:pkg-json": "wp-scripts lint-pkg-json",
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip",
-		"pot": "wp i18n make-pot . languages/matter.pot --domain=matter --exclude=node_modules,vendor,.git"
+		"make-pot": "wp i18n make-pot . languages/matter.pot --domain=matter --slug=matter --package-name=Matter --headers='{\"Report-Msgid-Bugs-To\":\"https://eighteen73.co.uk\"}' --exclude=node_modules,vendor,build,tests,artifacts,bin,.git --skip-plugins --skip-themes"
 	},
 	"dependencies": {
 		"@wordpress/icons": "^15.0.0",

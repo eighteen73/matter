@@ -178,12 +178,13 @@ class Admin {
 		} elseif ( $own && 'future' === $own->post_status ) {
 			$badge = __( 'Scheduled', 'matter' );
 			$tone  = 'warning';
-			/* translators: %s: date. */
-			$text = esc_html( sprintf( __( 'Goes live on %s.', 'matter' ), get_the_date( '', $own ) ) ) . ' ' . esc_html__( 'Until then:', 'matter' ) . ' ' . $uses;
+			/* translators: 1: date, 2: what the archive uses until then (a sentence, e.g. "Uses the theme’s default."). */
+			$text = sprintf( esc_html__( 'Goes live on %1$s. Until then: %2$s', 'matter' ), esc_html( get_the_date( '', $own ) ), $uses );
 		} elseif ( $own ) {
 			$badge = (string) get_post_status_object( $own->post_status )->label;
 			$tone  = 'warning';
-			$text  = esc_html__( 'Not published yet. Meanwhile:', 'matter' ) . ' ' . $uses;
+			/* translators: %s: what the archive uses meanwhile (a sentence, e.g. "Uses the theme’s default."). */
+			$text = sprintf( esc_html__( 'Not published yet. Meanwhile: %s', 'matter' ), $uses );
 		} elseif ( $source ) {
 			[ $badge, $tone, $text ] = [ __( 'Shared', 'matter' ), 'info', $uses ];
 		} else {
@@ -969,7 +970,7 @@ class Admin {
 				/* translators: %s: taxonomy singular name, e.g. "category". */
 				'text'     => sprintf( __( 'Each %s shows its own title and description.', 'matter' ), $singular ),
 				'link'     => current_user_can( $taxonomy->cap->manage_terms ) ? admin_url( 'edit-tags.php?taxonomy=' . $taxonomy->name ) : '',
-				/* translators: %s: taxonomy plural name, e.g. "categories". */
+				/* translators: %s: what is edited, e.g. "modal" or "categories". */
 				'linkText' => sprintf( __( 'Edit %s', 'matter' ), mb_strtolower( (string) $taxonomy->labels->name ) ),
 			];
 		}

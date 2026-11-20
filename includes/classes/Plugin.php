@@ -41,6 +41,7 @@ class Plugin {
 	 */
 	public function setup(): void {
 		add_action( 'init', [ $this, 'load_textdomain' ] );
+		add_filter( 'load_script_translation_file', [ $this, 'script_translation_file' ], 10, 3 );
 
 		// IDs are unique within a page: say when a page starts.
 		Ids::setup();
@@ -84,6 +85,26 @@ class Plugin {
 		// What Matter does with other plugins (WooCommerce, Gravity Forms),
 		// booted once they've loaded and only when they're active.
 		Integrations::instance()->setup();
+	}
+
+	/**
+	 * Find the JavaScript translations of the blocks' own scripts (WordPress
+	 * looks for a block's in wp-content/languages/plugins, which a
+	 * must-use plugin's translations aren't in) in Matter's languages folder.
+	 *
+	 * @param string|false $file   Translation file WordPress is about to load.
+	 * @param string       $handle Script handle.
+	 * @param string       $domain Text domain.
+	 * @return string|false
+	 */
+	public function script_translation_file( $file, string $handle, string $domain ) {
+		if ( 'matter' !== $domain || ! is_string( $file ) ) {
+			return $file;
+		}
+
+		$own = MATTER_PATH . 'languages/' . basename( $file );
+
+		return file_exists( $own ) ? $own : $file;
 	}
 
 	/**

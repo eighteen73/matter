@@ -365,6 +365,6 @@ final class WooCommerce implements Integration {
 			wp_enqueue_style( 'matter-woocommerce-editor', MATTER_URL . 'build/integrations/woocommerce/editor.css', [], $asset['version'] );
 		}
 
-		wp_set_script_translations( 'matter-woocommerce-editor', 'matter' );
+		wp_set_script_translations( 'matter-woocommerce-editor', 'matter', MATTER_PATH . 'languages' );
 	}
 }

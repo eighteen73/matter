@@ -88,7 +88,7 @@ function EditOverlayButton({ clientId }) {
 			<ToolbarGroup className="matter-parent-toolbar">
 				<ToolbarButton onClick={() => selectBlock(overlayId)}>
 					{sprintf(
-						/* translators: %s: overlay type, e.g. modal */
+						/* translators: %s: what is edited, e.g. "modal" or "categories". */
 						__('Edit %s', 'matter'),
 						TYPE_LABELS[name].toLowerCase()
 					)}

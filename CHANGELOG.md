@@ -124,6 +124,7 @@ A rework that moves design decisions out of the editor and into the theme. Not c
 - **Carousel settings:** `--carousel-per-view` and `--carousel-gap` set slide widths and gaps.
 - **Core blocks Matter replaces:** hidden with `supports.inserter` instead of rewriting the allowed-blocks list.
 - **Requirements:** WordPress 7.1 and PHP 8.3, checked before anything loads (an older one gets an admin notice, not a fatal error); WooCommerce 11 for its integration.
+- **Translation:** `languages/matter.pot` (`npm run make-pot`) and the languages folder passed to `wp_set_script_translations()`. Sentences are one translatable string each, translated nouns aren't lowercased, and labels with counts (carousel slides, the lightbox) read `%d`, `%s` and numbered placeholders.
 - **Dependencies:** pinned; unused packages removed.
 
 ### Removed

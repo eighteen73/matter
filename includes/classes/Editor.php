@@ -109,6 +109,6 @@ class Editor {
 			'before'
 		);
 
-		wp_set_script_translations( 'matter-editor', 'matter' );
+		wp_set_script_translations( 'matter-editor', 'matter', MATTER_PATH . 'languages' );
 	}
 }

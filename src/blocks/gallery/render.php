@@ -253,7 +253,8 @@ printf(
 			// The lightbox's status is filled a frame after it opens.
 			'announcing'  => false,
 			'limit'       => $matter_limit,
-			'counter'     => __( '%1$d / %2$d', 'matter' ), // phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
+			/* translators: 1: image number, 2: number of images, e.g. "2 / 5" */
+			'counter'     => __( '%1$d / %2$d', 'matter' ),
 			// What the lightbox's live region says on moving to an image.
 			/* translators: 1: image number, 2: number of images */
 			'announce'    => __( 'Image %1$d of %2$d', 'matter' ),

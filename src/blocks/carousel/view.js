@@ -45,6 +45,7 @@ import {
 	registerType,
 	resolve,
 } from '../../interactivity/api';
+import { format } from '../../interactivity/format';
 
 const SELECTOR = '.wp-block-matter-carousel';
 // Every loop template's list (a Query Loop's, a Terms Query's, an
@@ -81,18 +82,6 @@ const setCurrent = (element, isCurrent) => {
 		element.removeAttribute('aria-current');
 	}
 };
-
-/**
- * Minimal sprintf for translated labels: `%1$d`, `%2$d` and `%d`.
- *
- * @param {string}    template Label template.
- * @param {...number} values   Values.
- * @return {string} Label.
- */
-const format = (template, ...values) =>
-	template
-		.replace(/%(\d)\$d/g, (_, position) => values[position - 1])
-		.replace('%d', values[0]);
 
 const clamp = (value) => Math.min(1, Math.max(0, value));
 

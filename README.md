@@ -1029,6 +1029,12 @@ The contract's markup is checked by snapshot tests (`tests/php/__snapshots__`); 
 
 The skin changes only in a major version, except to fix a bug or an accessibility failure. Every change, in any release, is listed under **Visual changes** in the changelog.
 
+## Translation
+
+Matter's text domain is `matter`. The strings are in `languages/matter.pot`, which is committed (translators and reviewers work from it, and a changed string shows in a diff). Regenerate it with `npm run make-pot` whenever strings change, and before tagging a release.
+
+Translations (`matter-{locale}.mo` and `.po`) go in `languages/` (or, for a site, `wp-content/languages/plugins/`). PHP strings load from there. The editor's JavaScript strings load from JSON files named for the built script, so convert a `.po` once the plugin is built (`wp i18n make-json languages --no-purge`, after pointing the `.po`'s references at `build/`); `languages/` is passed to `wp_set_script_translations()`, and Matter also looks there for its blocks' scripts. Labels that need a count (a carousel's "1 of 3", the lightbox's "Image 2 of 5") are translated in PHP and filled in by the browser, and read `%d`, `%s` and numbered `%1$d`.
+
 ## Development
 
 Node 26 (the LTS, in `.nvmrc`) and npm 11.

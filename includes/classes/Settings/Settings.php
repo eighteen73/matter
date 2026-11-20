@@ -479,7 +479,7 @@ class Settings {
 			'before'
 		);
 
-		wp_set_script_translations( 'matter-settings', 'matter' );
+		wp_set_script_translations( 'matter-settings', 'matter', MATTER_PATH . 'languages' );
 	}
 
 	/**
