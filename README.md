@@ -922,7 +922,7 @@ Breakpoints are owned by the theme:
 add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'lg' => '1024px' ] );
 ```
 
-`config/breakpoints.json` is the fallback. Widths may be in `px`, `em` or `rem` (or `0`) and keep their unit in the media queries, so an `em` breakpoint follows the visitor's text size; they're ordered by their size in px (an em is 16px), and equal widths keep the order given. Any other unit is ignored with a `_doing_it_wrong` notice. A responsive value map (a menu's `type`) with no base entry starts at its first entry's value: `[ 'lg' => 'dropdown', 'xl' => 'accordion' ]` is a dropdown below `xl`, not nothing below `lg`.
+`config/breakpoints.json` is the fallback. Widths may be in `px`, `em` or `rem` (or `0`) and keep their unit in the media queries, so an `em` breakpoint follows the visitor's text size; they're ordered by their size in px (an em is 16px), and equal widths keep the order given. Any other unit is ignored with a `_doing_it_wrong` notice. Use one unit for the whole map: mixing `px` with `em` or `rem` is unsupported and reported once with a `_doing_it_wrong` notice, because an `em` query follows the visitor's text size while a `px` one doesn't, so with a text size other than 16px the ranges overlap or leave gaps (`0` is fine beside any unit). A responsive value map (a menu's `type`) with no base entry starts at its first entry's value: `[ 'lg' => 'dropdown', 'xl' => 'accordion' ]` is a dropdown below `xl`, not nothing below `lg`.
 
 ## Hooks
 

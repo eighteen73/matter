@@ -144,6 +144,49 @@ class BreakpointsTest extends TestCase {
 	}
 
 	/**
+	 * A map that mixes px with em or rem is reported: with a text size other
+	 * than 16px its ranges overlap or leave gaps. One unit, or a zero base
+	 * beside it, isn't.
+	 *
+	 * @return void
+	 */
+	public function test_a_map_mixing_px_and_em_is_reported(): void {
+		remove_all_filters( 'matter_breakpoints' );
+		add_filter(
+			'matter_breakpoints',
+			fn() => [
+				'xs' => '0',
+				'md' => '48em',
+				'lg' => '1024px',
+			]
+		);
+
+		$this->setExpectedIncorrectUsage( 'matter_breakpoints' );
+
+		$this->assertSame( [ 'xs', 'md', 'lg' ], array_keys( Breakpoints::all() ) );
+	}
+
+	/**
+	 * Maps in one unit, em and rem together, or with a zero base, are fine.
+	 *
+	 * @return void
+	 */
+	public function test_maps_in_one_unit_are_not_reported(): void {
+		foreach ( [
+			[ '0', '48em', '64rem' ],
+			[ '0', '768px', '1024' ],
+		] as $widths ) {
+			remove_all_filters( 'matter_breakpoints' );
+			add_filter(
+				'matter_breakpoints',
+				fn() => array_combine( [ 'xs', 'md', 'lg' ], $widths )
+			);
+
+			$this->assertCount( 3, Breakpoints::all() );
+		}
+	}
+
+	/**
 	 * A map in em makes media queries in em, so a breakpoint follows the
 	 * visitor's text size.
 	 *
@@ -177,7 +220,7 @@ class BreakpointsTest extends TestCase {
 			fn() => [
 				'xl'   => '1280px',
 				'xs'   => '0',
-				'lg'   => '80em',
+				'lg'   => '1280px',
 				'zero' => '0px',
 				'md'   => '768px',
 				'tie'  => '1280px',

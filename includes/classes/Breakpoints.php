@@ -33,7 +33,8 @@ class Breakpoints {
 	 * unit, so a breakpoint in em or rem still follows the visitor's text size
 	 * in the media queries built from it. They're ordered by their size in px
 	 * (an em is 16px, as in a media query); equal widths keep the order given.
-	 * Another unit is refused with a notice, and the breakpoint left out.
+	 * Another unit is refused with a notice, and the breakpoint left out. So is
+	 * a map that mixes px with em or rem (see warn_if_mixed()).
 	 *
 	 * @return array<string, string>
 	 */
@@ -68,6 +69,8 @@ class Breakpoints {
 
 		uasort( $breakpoints, fn( $a, $b ) => self::to_px( $a ) <=> self::to_px( $b ) );
 
+		self::warn_if_mixed( $breakpoints );
+
 		return $breakpoints;
 	}
 
@@ -97,6 +100,42 @@ class Breakpoints {
 	 */
 	private static function to_px( string $width ): float {
 		return (float) $width * ( str_ends_with( $width, 'em' ) ? 16 : 1 );
+	}
+
+	/**
+	 * Say once that a map mixes px with em or rem.
+	 *
+	 * Ordering treats an em as 16px, but a media query's em follows the
+	 * visitor's text size, so with another size the ranges of such a map
+	 * overlap or leave gaps. A zero width is the same in every unit.
+	 *
+	 * @param array<string, string> $breakpoints Normalised name => width.
+	 * @return void
+	 */
+	private static function warn_if_mixed( array $breakpoints ): void {
+		static $warned = [];
+
+		$units = [];
+
+		foreach ( $breakpoints as $width ) {
+			if ( 0.0 !== (float) $width ) {
+				$units[ str_ends_with( $width, 'px' ) ? 'px' : 'em' ] = true;
+			}
+		}
+
+		$key = wp_json_encode( $breakpoints );
+
+		if ( count( $units ) < 2 || isset( $warned[ $key ] ) ) {
+			return;
+		}
+
+		$warned[ $key ] = true;
+
+		_doing_it_wrong(
+			'matter_breakpoints',
+			esc_html__( 'Mixing px with em or rem is not supported: with a text size other than 16px the ranges overlap or leave gaps. Use one unit for every breakpoint.', 'matter' ),
+			'1.0.0'
+		);
 	}
 
 	/**
