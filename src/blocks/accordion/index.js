@@ -3,19 +3,28 @@
  */
 import { registerBlockType } from '@wordpress/blocks';
 import { accordion } from '@wordpress/icons';
+import { InnerBlocks } from '@wordpress/block-editor';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
 import Edit from './edit';
-import Save from './save';
 import metadata from './block.json';
-import variations from './variations';
+import './editor.scss';
 import './style.scss';
 
 registerBlockType(metadata.name, {
 	icon: accordion,
 	edit: Edit,
-	save: Save,
-	variations,
+	save: () => <InnerBlocks.Content />,
+	variations: [
+		{
+			name: 'items',
+			title: __('Accordion', 'matter'),
+			isDefault: true,
+			scope: ['inserter'],
+			innerBlocks: [['matter/accordion-item'], ['matter/accordion-item']],
+		},
+	],
 });

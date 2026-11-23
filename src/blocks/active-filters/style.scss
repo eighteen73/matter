@@ -1,0 +1,33 @@
+// Active filters: chips that remove a filter, and Clear all.
+
+:where(.wp-block-matter-active-filters) {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+:where(.wp-block-matter-active-filters[hidden]) {
+	display: none;
+}
+
+:where(.wp-block-matter-active-filters__list) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-active-filters__chip) {
+	align-items: center;
+	display: inline-flex;
+	gap: 0.5rem;
+}
+
+// A cross after each chip's name: it removes the filter.
+:where(.wp-block-matter-active-filters__chip)::after {
+	content: "×";
+	line-height: 1;
+}

@@ -1,7 +1,7 @@
 {
 	"name": "eighteen73/matter",
 	"description": "Matter",
-	"type": "wordpress-plugin",
+	"type": "wordpress-muplugin",
 	"license": "GPL-2.0-or-later",
 	"minimum-stability": "dev",
 	"authors": [
@@ -16,16 +16,20 @@
 		}
 	},
 	"require": {
-		"php": ">=7.4"
+		"php": ">=8.3"
 	},
 	"require-dev": {
-		"eighteen73/wordpress-coding-standards": "^2.0.0"
+		"eighteen73/wordpress-coding-standards": "^2.0.0",
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^4.0"
 	},
 	"scripts": {
 		"lint": "./vendor/bin/phpcs",
-		"format": "./vendor/bin/phpcbf"
+		"format": "./vendor/bin/phpcbf",
+		"test": "npx wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit --exclude-group without-plugins"
 	},
 	"config": {
+		"platform-check": false,
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		}

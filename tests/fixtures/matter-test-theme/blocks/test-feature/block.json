@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter-test/feature",
+	"title": "Test feature",
+	"category": "sections",
+	"supports": {
+		"html": false,
+		"matter": {
+			"link": true,
+			"slots": {
+				"content": {
+					"allowedBlocks": [ "core/paragraph", "matter/accordion", "matter/tabs", "matter/carousel" ]
+				}
+			}
+		}
+	}
+}

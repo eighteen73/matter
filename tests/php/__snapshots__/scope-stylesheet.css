@@ -1,0 +1,6 @@
+.is-types-abc123 .a{
+color:red}
+.is-types-abc123.is-open>.b{
+background:url("{matter-url}tests/img/a.png") no-repeat,url("data:image/svg+xml;utf8,<svg/>"),url(/abs.png)}
+.is-type-xy .c,.is-type-x-more .d{
+margin:0}

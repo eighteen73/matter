@@ -1,16 +1,19 @@
+/**
+ * WordPress dependencies
+ */
 import { registerBlockType } from '@wordpress/blocks';
+import { InnerBlocks } from '@wordpress/block-editor';
 
-import './style.scss';
-
+/**
+ * Internal dependencies
+ */
 import Edit from './edit';
-import Save from './save';
 import metadata from './block.json';
-import variations from './variations';
 import { Carousel } from '../../components/icons/carousel';
+import './style.scss';
 
 registerBlockType(metadata.name, {
 	icon: Carousel,
 	edit: Edit,
-	save: Save,
-	variations,
+	save: () => <InnerBlocks.Content />,
 });

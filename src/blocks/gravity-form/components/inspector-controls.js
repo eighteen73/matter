@@ -2,20 +2,19 @@
  * WordPress dependencies
  */
 import { useEffect, useState } from '@wordpress/element';
-import {
-	Notice,
-	TextareaControl,
-	ToggleControl,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanel as ToolsPanel,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalNumberControl as NumberControl,
-} from '@wordpress/components';
+import { Notice, TextareaControl, ToggleControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { InspectorControls } from '@wordpress/block-editor';
 import FormSelect from './form-select';
+
+/**
+ * Internal dependencies
+ */
+import {
+	ToolsPanel,
+	ToolsPanelItem,
+	NumberControl,
+} from '../../../components/compat';
 
 const isEmptyFieldValues = (config) =>
 	config === null ||
@@ -198,7 +197,11 @@ export default function GravityFormInspectorControls({
 							)}
 							value={tabindex}
 							onChange={(value) =>
-								setAttributes({ tabindex: value })
+								setAttributes({
+									// The control gives a string; the attribute
+									// is a number, and a string wouldn't load.
+									tabindex: Number.parseInt(value, 10) || 0,
+								})
 							}
 						/>
 					</ToolsPanelItem>

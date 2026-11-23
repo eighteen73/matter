@@ -1,5 +1,32 @@
-.wp-block-matter-collapsible {
-	&.is-type-popover {
-		position: relative;
-	}
+// Collapsible: the content is hidden in place until revealed by its trigger
+// area or any link to its #ID. Without JavaScript it shows; once the script
+// runs (or is about to: styles/enhanced) a closed one is out of the page.
+// The script also makes it `hidden="until-found"`, which lets find-in-page, a
+// text fragment or a link inside it open it (a browser that doesn't know
+// `until-found` just hides it).
+// No default skin; themes style .wp-block-matter-collapsible.
+
+@use "../../styles/enhanced" as *;
+
+// Hidden for good: a browser without `until-found` (it hides the attribute's
+// content as a plain `hidden`), and before the script's own `hidden`.
+.wp-block-matter-collapsible__content[hidden]:where(:not([hidden="until-found"])),
+.wp-block-matter-collapsible__content:not(.is-open)#{enhanced-front(overlay)}:where(:not([hidden="until-found"])) {
+	display: none;
+}
+
+// A closed `until-found` content keeps its box: the browser's
+// `content-visibility: hidden` skips only what is inside it, so a theme's
+// padding, border, background or minimum height would still show on it. None
+// of that belongs to a closed one. (A theme that sets these with more
+// specificity than this has to do the same for `[hidden="until-found"]`.)
+.wp-block-matter-collapsible__content[hidden="until-found"] {
+	border-width: 0;
+	margin: 0;
+	min-block-size: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-collapsible__trigger[role="button"]) {
+	cursor: pointer;
 }

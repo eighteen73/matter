@@ -1,0 +1,19 @@
+// Filters: the default skin is only what's needed to use them (see README,
+// "The default skin"). The panel's own styles come from Matter's panel.
+
+:where(.wp-block-matter-filters__form) {
+	display: grid;
+	gap: 1.5rem;
+}
+
+:where(.wp-block-matter-filters__footer) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	justify-content: space-between;
+	margin-block-start: 1.5rem;
+}
+
+:where(.wp-block-matter-filters__apply[hidden], .wp-block-matter-filters__clear[hidden]) {
+	display: none;
+}

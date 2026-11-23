@@ -1,0 +1,120 @@
+// Menu: rules shared by every menu type. Type layouts are in dropdown,
+// accordion and drill-down.scss.
+// Functional rules first, at one class (plus the element's own state, with any
+// context in :where()); then the default skin, all in :where(). Matter shows
+// and hides parts per type (e.g. a parent's link in a drill-down): themes
+// shouldn't set `display` on the toggle text, submenus or their headers.
+// Without JavaScript, or when the menu's script fails, every link can be
+// reached: parent links show and the toggles, which need the script, don't;
+// dropdowns open on hover and focus; accordions and drill-downs are nested
+// lists, open. The rules that close and hide submenus and swap parent links
+// for toggles only apply to a menu that is running, or about to be (see
+// styles/enhanced).
+
+@use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
+
+.matter-menu__items,
+.matter-menu__submenu-items,
+.matter-menu__column-items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.matter-menu__item {
+	position: relative;
+}
+
+// The toggle's text stands in for the parent link only in some types.
+.matter-menu__toggle-text {
+	display: none;
+}
+
+// Submenus stay in the DOM (for transitions) but are hidden until open.
+:where(.matter-menu#{enhanced(menu)}) .matter-menu__submenu {
+	visibility: hidden;
+}
+
+:where(.matter-menu#{enhanced(menu)} .matter-menu__item.is-open) > .matter-menu__submenu {
+	visibility: visible;
+}
+
+// The toggles need the script. High specificity, as any hidden state.
+.matter-menu:not(#{enhanced(menu)}) .matter-menu__toggle {
+	display: none;
+}
+
+// The submenu header (back button, label, "View all") is shown by the
+// drill-down type, and by click menus for "View all".
+.matter-menu__submenu-header {
+	display: none;
+}
+
+// Static column parents (megamenu columns, `#` parents) always show children.
+.matter-menu__item.is-column {
+	display: flex;
+	flex-direction: column;
+}
+
+// Default skin.
+:where(.matter-menu__link) {
+	align-items: center;
+	color: inherit;
+	display: inline-flex;
+	gap: 0.5em;
+	min-height: 24px;
+	text-decoration: none;
+}
+
+// Buttons: unstyled, at least 24px to tap or click (WCAG 2.5.8).
+:where(.matter-menu__toggle, .matter-menu__back) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.5em;
+	justify-content: center;
+	min-height: 24px;
+	min-width: 24px;
+	padding: 0;
+	text-align: inherit;
+}
+
+:where(.matter-menu__toggle)::after {
+	@include icon(caret-down, 0.75em);
+	transition: rotate 300ms;
+}
+
+:where(.matter-menu__back)::before {
+	@include icon(caret-left, 0.75em);
+}
+
+:where(.matter-menu__back:dir(rtl))::before {
+	scale: -1 1;
+}
+
+:where(.matter-menu__item.is-column) {
+	gap: 0.5em;
+}
+
+:where(.matter-menu__column-items) {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+
+:where(.matter-menu__description) {
+	display: block;
+}
+
+// Last, so it wins over every transition above (and the types').
+@media (prefers-reduced-motion: reduce) {
+	:where(.matter-menu__toggle)::after {
+		transition: none;
+	}
+}

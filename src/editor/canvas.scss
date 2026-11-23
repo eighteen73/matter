@@ -1,0 +1,171 @@
+// Editor canvas (iframe) styles for Matter's core block extensions.
+
+// Button icon preview: on the front end the icon is `.wp-block-button__icon`
+// inside the link; here (core's link can't hold it) it's the link's ::after,
+// at zero specificity for a theme's editor styles to size.
+:where(.wp-block-button.has-icon > .wp-block-button__link)::after {
+	background-color: currentcolor;
+	content: "";
+	display: inline-block;
+	height: 1em;
+	margin-inline-start: 0.5em;
+	mask: var(--button-icon) center / contain no-repeat;
+	vertical-align: -0.125em;
+	width: 1em;
+}
+
+// A hint on a block in the editor: an outline in the admin colour, with a
+// tag in its top corner (its `data-matter-hint`), both inside the block's
+// box so they don't change its spacing. Editor UI, so not left to the theme.
+// Used for a button with text but no link (extensions/button-link.js), and
+// for archive content and the archive list (where editors add content around
+// the list, and that the theme sets it).
+.matter-has-hint {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: -2px;
+	position: relative;
+
+	&::before {
+		background: var(--wp-admin-theme-color, #3858e9);
+		border-end-start-radius: 2px;
+		color: #fff;
+		content: attr(data-matter-hint);
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		font-size: 11px;
+		font-weight: 500;
+		inset-block-start: 0;
+		inset-inline-end: 0;
+		letter-spacing: 0;
+		line-height: 1;
+		padding: 3px 6px;
+		pointer-events: none;
+		position: absolute;
+		text-transform: none;
+		white-space: nowrap;
+		z-index: 1;
+	}
+}
+
+// "Add tab" and "Add item" (components/add-button.js): core's block appender
+// (its look comes from its class), laid out as a labelled button: inline
+// with the tab names, or a full-width row under an accordion's items.
+.block-editor-button-block-appender.matter-add-button {
+	align-self: center;
+	flex: none;
+	flex-direction: row;
+	width: auto;
+}
+
+.block-editor-button-block-appender.matter-add-button.is-row {
+	justify-content: center;
+	margin-block-start: 12px;
+	width: 100%;
+}
+
+// Vertical tabs: below the names, lined up with them.
+.wp-block-matter-tabs.is-vertical .block-editor-button-block-appender.matter-add-button {
+	align-self: flex-start;
+	margin-block-start: 8px;
+}
+
+// The carousel's slide picker: icons from a theme or plugin (a Dashicon, an
+// SVG painted in currentcolor) in core's grey, and its hover colour, as core
+// does for its own icons with fill.
+.wp-block-matter-carousel .block-editor-block-variation-picker__variations .components-button > :is(svg, .matter-picker-icon) {
+	color: #949494;
+}
+
+.wp-block-matter-carousel .block-editor-block-variation-picker__variations .components-button:hover > :is(svg, .matter-picker-icon) {
+	color: var(--wp-admin-theme-color);
+}
+
+.matter-picker-icon {
+	align-items: center;
+	display: inline-flex;
+	height: 48px;
+	justify-content: center;
+	width: 48px;
+}
+
+.matter-picker-icon > svg {
+	height: 100%;
+	width: 100%;
+}
+
+// Image and featured image focal point preview.
+.wp-block-image[style*="--image-focal-point"] img {
+	object-position: var(--image-focal-point);
+}
+
+// (The featured image's is set by a rule from its edit component, only for a
+// post that has a point, as the block isn't given it.)
+
+// Slot labels (e.g. an overlay's "Trigger" and "Content" areas).
+.wp-block-matter-slot__label {
+	color: #757575;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	line-height: 1.4;
+	margin-block-end: 0.5em;
+	text-transform: uppercase;
+}
+
+// A section's inner wrapper is also the editor's block list, which core
+// positions (`.block-editor-block-list__layout`, 0,1,0); on the front end it
+// isn't, so something a theme places against the section (an image behind
+// the content) would be placed against the wrapper. Reset at the same
+// specificity: this loads after core's styles and before the theme's, so a
+// theme's own rule for the wrapper still wins, as on the front end.
+:where(.is-section) > .block-editor-block-list__layout {
+	position: static;
+}
+
+// Keep an empty slot's appender below its label (core positions it absolutely
+// when it isn't the only child).
+.wp-block-matter-slot > .block-list-appender {
+	position: static;
+}
+
+// A query shown as a carousel, accordion or tabs: one outline around the
+// whole block (a carousel's controls included) rather than core's around the
+// query's own element.
+.block-editor-block-list__layout .block-editor-block-list__block.is-display-query::after {
+	display: none;
+}
+
+.matter-query-display.is-block-selected {
+	outline: var(--wp-admin-border-width-focus) solid var(--wp-admin-theme-color);
+	outline-offset: calc(var(--wp-admin-border-width-focus) * -1);
+}
+
+// An accordion or tabs of posts shows the server's rendering; the query's own
+// items (fixed, and shown by the preview) are hidden, leaving its element as
+// the block's anchor for selection and the toolbar.
+.matter-query-display:is(.is-accordion, .is-tabs) > .wp-block-query {
+	margin: 0;
+}
+
+.matter-query-display:is(.is-accordion, .is-tabs) > .wp-block-query > * {
+	display: none;
+}
+
+.matter-query-display:is(.is-accordion, .is-tabs) > .components-spinner {
+	display: block;
+	margin: 1rem auto;
+}
+
+// A carousel's play and expand buttons only show in the editor (autoplay
+// and the lightbox are off there), so they don't look clickable.
+.wp-block-matter-carousel__play.is-editor-preview,
+.wp-block-matter-carousel__expand.is-editor-preview {
+	cursor: default;
+}
+
+// A new posts display's "What will it list?" choices.
+.matter-post-type-picker {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}

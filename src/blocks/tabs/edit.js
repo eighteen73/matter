@@ -2,357 +2,268 @@
  * WordPress dependencies
  */
 import {
+	BlockControls,
+	BlockSettingsMenuControls,
+	InspectorControls,
+	RichText,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
-	BlockContextProvider,
-	store as blockEditorStore,
-	InspectorControls,
 } from '@wordpress/block-editor';
-import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
+import { createBlock } from '@wordpress/blocks';
+import { MenuItem } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect, useMemo } from '@wordpress/element';
-import {
-	ToggleControl,
-	Notice,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanel as ToolsPanel,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem,
-} from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
+import { placeCaretAtHorizontalEdge, safeHTML } from '@wordpress/dom';
 
 /**
  * Internal dependencies
  */
-import './editor.scss';
-import { useTabButtonsSync, addingTabLock } from './utils/sync-tab-buttons';
-import {
-	buildTabsListFromPosts,
-	buildManualTabEntry,
-	findQueryBlock,
-	getQueryPostsForEditor,
-} from './utils/query-tabs-list';
-import AddTabToolbarButton from '../../components/add-tab-toolbar-button';
-import BreakpointSelectorControl from '../../components/breakpoint-selector-control';
-import useBlockId from '../../utils/use-block-id';
-import { MANUAL_TABS_TEMPLATE, QUERY_LOOP_TABS_TEMPLATE } from './variations';
+import { ToolsPanel } from '../../components/compat';
+import { IconToolbar, useIcon } from '../../components/icon-picker';
+import { ActiveTabContext } from './context';
+import { TABS_SETTINGS, TabsSettings } from './settings';
+import { useStableId } from '../../components/stable-id';
+import { useEnterContent } from '../../components/enter-content';
+import AddButton from '../../components/add-button';
 
-/**
- * Whether tab-panels children match the expected query/manual mode.
- *
- * @param {boolean} isQueryMode Whether tabs are in query mode.
- * @param {Array}   tabPanels   Tab panels inner blocks.
- * @return {boolean} True when structure matches the mode.
- */
-function hasMatchingPanelsStructure(isQueryMode, tabPanels) {
-	const hasQueryBlock = tabPanels.some(
-		(block) => block.name === 'core/query'
-	);
+function TabIcon({ name }) {
+	const icon = useIcon(name);
 
-	return isQueryMode ? hasQueryBlock : !hasQueryBlock;
+	return icon?.content ? (
+		<span
+			className="wp-block-matter-tabs__icon"
+			aria-hidden="true"
+			dangerouslySetInnerHTML={{ __html: safeHTML(icon.content) }}
+		/>
+	) : null;
 }
 
-function Edit({ clientId, attributes, setAttributes }) {
-	const {
-		anchor,
-		generatedId,
-		activeTabIndex,
-		editorActiveTabIndex,
-		deepLinking,
-		deepLinkingUpdateHistory,
-		collapses,
-		collapsesOn,
-		isQueryMode,
-		layout,
-		stackOnMobile,
-		stackedBreakpoint,
-	} = attributes;
+// Tabs of posts are a Query Loop shown as tabs ("Posts tabs").
+const ALLOWED_BLOCKS = ['matter/tab'];
 
-	const { duplicateAnchor } = useBlockId({
-		blockName: 'matter/tabs',
-		prefix: 'matter-tabs',
-		attributes,
-		setAttributes,
-		clientId,
-	});
+export default function Edit({
+	attributes,
+	setAttributes,
+	clientId,
+	isSelected,
+}) {
+	const { orientation } = attributes;
 
-	const tabsId = anchor || generatedId || '';
-	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
+	// Tabs holding a Query Loop (from before) become the query.
+	// A stable ID for links to its tabs (`#{id}-2`).
+	useStableId(clientId, 'matterId', 'tabs');
+	const [activeId, setActiveId] = useState(null);
 
-	const { tabPanels, tabButtons, tabPanelsClientId, tabListClientId } =
-		useSelect(
-			(select) => {
-				const { getBlocks } = select(blockEditorStore);
-				const blocks = getBlocks(clientId);
+	// getBlocks() keeps its result while the inner blocks are unchanged, so
+	// select it as is and derive the tabs outside: filtering inside the
+	// selector would make a new array, and a re-render, on every change in
+	// the editor.
+	const { blocks, isEditing } = useSelect(
+		(select) => {
+			const { getBlocks, isBlockSelected, hasSelectedInnerBlock } =
+				select(blockEditorStore);
 
-				const tabPanelsBlock = blocks.find(
-					(block) => block.name === 'matter/tab-panels'
-				);
-				const tabListBlock = blocks.find(
-					(block) => block.name === 'matter/tab-list'
-				);
-
-				return {
-					tabPanels: tabPanelsBlock?.innerBlocks ?? [],
-					tabButtons: tabListBlock?.innerBlocks ?? [],
-					tabPanelsClientId: tabPanelsBlock?.clientId ?? null,
-					tabListClientId: tabListBlock?.clientId ?? null,
-				};
-			},
-			[clientId]
-		);
-
-	const innerBlocks = useSelect(
-		(select) =>
-			select(blockEditorStore).getBlock(clientId)?.innerBlocks ?? [],
+			return {
+				blocks: getBlocks(clientId),
+				// Editor-only controls show while the block is being edited.
+				isEditing:
+					isBlockSelected(clientId) ||
+					hasSelectedInnerBlock(clientId, true),
+			};
+		},
 		[clientId]
 	);
+	const tabs = useMemo(
+		() => blocks.filter((block) => block.name === 'matter/tab'),
+		[blocks]
+	);
+	const isQuery = blocks.some((block) => block.name === 'core/query');
+	const { insertBlock, removeBlock, updateBlockAttributes } =
+		useDispatch(blockEditorStore);
+	const listRef = useRef();
+	const [focusLabel, setFocusLabel] = useState(false);
 
-	useEffect(() => {
-		if (!innerBlocks.length) {
-			return;
-		}
+	const currentId = tabs.some((tab) => tab.clientId === activeId)
+		? activeId
+		: tabs[0]?.clientId;
 
-		if (hasMatchingPanelsStructure(isQueryMode, tabPanels)) {
-			return;
-		}
-
-		const template = isQueryMode
-			? QUERY_LOOP_TABS_TEMPLATE
-			: MANUAL_TABS_TEMPLATE;
-
-		replaceInnerBlocks(
-			clientId,
-			createBlocksFromInnerBlocksTemplate(template),
-			false
-		);
-		setAttributes({
-			activeTabIndex: 0,
-			editorActiveTabIndex: 0,
-		});
-	}, [
-		clientId,
-		innerBlocks.length,
-		isQueryMode,
-		replaceInnerBlocks,
-		setAttributes,
-		tabPanels,
-	]);
-
-	useTabButtonsSync({
-		tabListClientId,
-		tabPanelsClientId,
-		isAddingTabRef: addingTabLock,
-		enabled: !isQueryMode,
-	});
-
-	const queryBlock = useMemo(() => findQueryBlock(tabPanels), [tabPanels]);
-
-	const queryPosts = useSelect(
-		(select) => {
-			if (!isQueryMode || !queryBlock) {
-				return [];
-			}
-
-			return getQueryPostsForEditor(queryBlock.attributes, select);
-		},
-		[isQueryMode, queryBlock]
+	const contextValue = useMemo(
+		() => ({ activeId: isQuery ? null : currentId, setActiveId }),
+		[currentId, isQuery]
 	);
 
-	const contextValue = useMemo(() => {
-		const tabList = isQueryMode
-			? buildTabsListFromPosts(queryPosts, tabsId)
-			: tabButtons.map((button, index) =>
-					buildManualTabEntry({
-						button,
-						panel: tabPanels[index],
-						index,
-						tabsId,
-					})
-				);
-
-		return {
-			'matter/tabs-list': tabList,
-			'matter/tabs-id': tabsId,
-			'matter/tabs-activeTabIndex': activeTabIndex,
-			'matter/tabs-editorActiveTabIndex': editorActiveTabIndex,
-			'matter/tabs-collapses': collapses,
-			'matter/tabs-collapsesOn': collapsesOn,
-			'matter/tabs-isQueryMode': isQueryMode,
-		};
-	}, [
-		isQueryMode,
-		queryPosts,
-		tabButtons,
-		tabPanels,
-		tabsId,
-		activeTabIndex,
-		editorActiveTabIndex,
-		collapses,
-		collapsesOn,
-	]);
-
-	const blockProps = useBlockProps();
-
-	const innerBlockProps = useInnerBlocksProps(blockProps, {
-		__experimentalCaptureToolbars: true,
-		template: MANUAL_TABS_TEMPLATE,
-		templateLock: 'all',
-		renderAppender: false,
+	const blockProps = useBlockProps({
+		className: orientation === 'vertical' ? 'is-vertical' : undefined,
 	});
+	const innerBlocksProps = useInnerBlocksProps(
+		{ className: 'wp-block-matter-tabs__panels' },
+		{
+			allowedBlocks: ALLOWED_BLOCKS,
+			template: [['matter/tab'], ['matter/tab']],
+			renderAppender: false,
+		}
+	);
+
+	// After removing a tab, continue editing the end of its neighbour's label.
+	useEffect(() => {
+		const labelElement = focusLabel
+			? listRef.current?.querySelector(
+					'[aria-selected="true"] .wp-block-matter-tabs__label'
+				)
+			: null;
+
+		if (labelElement) {
+			labelElement.focus();
+			placeCaretAtHorizontalEdge(labelElement, true);
+			setFocusLabel(false);
+		}
+	}, [focusLabel, currentId]);
+
+	// Remove a tab (and its content), showing the one before it. The last
+	// tab stays: delete the block instead.
+	const removeTab = (index) => {
+		const neighbour = tabs[index - 1] ?? tabs[index + 1];
+
+		if (!neighbour) {
+			return;
+		}
+
+		setActiveId(neighbour.clientId);
+		setFocusLabel(true);
+		removeBlock(tabs[index].clientId, false);
+	};
+
+	const addTab = () => {
+		const block = createBlock('matter/tab');
+
+		insertBlock(block, tabs.length, clientId, false);
+		setActiveId(block.clientId);
+	};
+
+	const currentTab = tabs.find((tab) => tab.clientId === currentId);
+	const enterContent = useEnterContent(currentId);
 
 	return (
 		<>
-			{duplicateAnchor && (
-				<Notice status="warning" isDismissible={false}>
-					{__(
-						'Another tabs block is using this anchor. Choose a unique anchor so programmatic controls target the correct tabs.',
-						'matter'
-					)}
-				</Notice>
+			{/* The current tab's icon, alongside editing its label. */}
+			{!isQuery && currentTab && (
+				<BlockControls group="other">
+					<IconToolbar
+						value={currentTab.attributes.icon}
+						onChange={(icon) =>
+							updateBlockAttributes(currentTab.clientId, {
+								icon: icon ?? '',
+							})
+						}
+					/>
+				</BlockControls>
 			)}
-			<AddTabToolbarButton />
+			{isSelected && !isQuery && tabs.length > 1 && (
+				<BlockSettingsMenuControls>
+					{({ onClose }) => (
+						<MenuItem
+							onClick={() => {
+								removeTab(
+									tabs.findIndex(
+										(tab) => tab.clientId === currentId
+									)
+								);
+								onClose();
+							}}
+						>
+							{__('Delete tab', 'matter')}
+						</MenuItem>
+					)}
+				</BlockSettingsMenuControls>
+			)}
 			<InspectorControls>
-				<ToolsPanel label={__('Settings', 'matter')}>
-					<ToolsPanelItem
-						hasValue={() => !!collapses}
-						label={__('Collapse', 'matter')}
-						onDeselect={() => setAttributes({ collapses: false })}
-						isShownByDefault
-					>
-						<ToggleControl
-							label={__('Collapse', 'matter')}
-							help={__(
-								'Collapse tabs on smaller screens.',
-								'matter'
-							)}
-							checked={collapses}
-							onChange={(value) =>
-								setAttributes({ collapses: value })
-							}
-						/>
-					</ToolsPanelItem>
-
-					{collapses && (
-						<ToolsPanelItem
-							hasValue={() => !!collapsesOn}
-							label={__('Collapse up to', 'matter')}
-							onDeselect={() =>
-								setAttributes({ collapsesOn: 'lg' })
-							}
-							isShownByDefault
-						>
-							<BreakpointSelectorControl
-								value={collapsesOn}
-								onChange={(value) =>
-									setAttributes({ collapsesOn: value })
-								}
-								label={__('Collapse up to', 'matter')}
-							/>
-						</ToolsPanelItem>
-					)}
-
-					{layout?.orientation === 'horizontal' && (
-						<>
-							<ToolsPanelItem
-								hasValue={() => !!stackOnMobile}
-								label={__('Stack on mobile', 'matter')}
-								onDeselect={() =>
-									setAttributes({ stackOnMobile: false })
-								}
-								isShownByDefault
-							>
-								<ToggleControl
-									label={__('Stack on mobile', 'matter')}
-									help={__(
-										'Stack tabs on smaller screens.',
-										'matter'
-									)}
-									checked={stackOnMobile}
-									onChange={(value) => {
-										setAttributes({ stackOnMobile: value });
-									}}
-								/>
-							</ToolsPanelItem>
-
-							{stackOnMobile && (
-								<ToolsPanelItem
-									hasValue={() => !!stackedBreakpoint}
-									label={__('Stacked breakpoint', 'matter')}
-									onDeselect={() =>
-										setAttributes({
-											stackedBreakpoint: 'lg',
-										})
-									}
-									isShownByDefault
-								>
-									<BreakpointSelectorControl
-										value={stackedBreakpoint}
-										onChange={(value) =>
-											setAttributes({
-												stackedBreakpoint: value,
-											})
-										}
-										label={__(
-											'Stacked breakpoint',
-											'matter'
-										)}
-									/>
-								</ToolsPanelItem>
-							)}
-						</>
-					)}
-
-					<ToolsPanelItem
-						hasValue={() => !!deepLinking}
-						label={__('Deep Linking', 'matter')}
-						onDeselect={() => setAttributes({ deepLinking: false })}
-						isShownByDefault
-					>
-						<ToggleControl
-							label={__('Deep Linking', 'matter')}
-							help={__('Enable deep linking.', 'matter')}
-							checked={deepLinking}
-							onChange={(value) =>
-								setAttributes({ deepLinking: value })
-							}
-						/>
-					</ToolsPanelItem>
-
-					{deepLinking && (
-						<ToolsPanelItem
-							hasValue={() => !!deepLinkingUpdateHistory}
-							label={__('Update History', 'matter')}
-							onDeselect={() =>
-								setAttributes({
-									deepLinkingUpdateHistory: false,
-								})
-							}
-							isShownByDefault
-						>
-							<ToggleControl
-								label={__('Update History', 'matter')}
-								help={__(
-									'Update history on deep linking. If enabled, the URL will be updated when the tab is changed.',
-									'matter'
-								)}
-								checked={deepLinkingUpdateHistory}
-								onChange={(value) =>
-									setAttributes({
-										deepLinkingUpdateHistory: value,
-									})
-								}
-							/>
-						</ToolsPanelItem>
-					)}
+				<ToolsPanel
+					label={__('Settings', 'matter')}
+					resetAll={() =>
+						setAttributes(
+							Object.fromEntries(
+								TABS_SETTINGS.map((key) => [key, undefined])
+							)
+						)
+					}
+				>
+					<TabsSettings values={attributes} set={setAttributes} />
 				</ToolsPanel>
 			</InspectorControls>
+			<div {...blockProps}>
+				{!isQuery && (
+					<div
+						ref={listRef}
+						className="wp-block-matter-tabs__list"
+						role="tablist"
+						aria-orientation={orientation}
+					>
+						{tabs.map((tab, index) => {
+							const isActive = tab.clientId === currentId;
 
-			<BlockContextProvider value={contextValue}>
-				<div {...innerBlockProps}>{innerBlockProps.children}</div>
-			</BlockContextProvider>
+							return (
+								<div
+									key={tab.clientId}
+									className="wp-block-matter-tabs__tab"
+									role="tab"
+									aria-selected={isActive}
+									tabIndex={0}
+									onClick={() => setActiveId(tab.clientId)}
+									onKeyDown={(event) => {
+										if (event.key === 'Enter') {
+											setActiveId(tab.clientId);
+										}
+									}}
+								>
+									<TabIcon name={tab.attributes.icon} />
+									{isActive ? (
+										<RichText
+											tagName="span"
+											className="wp-block-matter-tabs__label"
+											value={tab.attributes.label}
+											onChange={(value) =>
+												updateBlockAttributes(
+													tab.clientId,
+													{ label: value }
+												)
+											}
+											placeholder={sprintf(
+												/* translators: %d: tab number */
+												__('Tab %d', 'matter'),
+												index + 1
+											)}
+											allowedFormats={[]}
+											// Backspace in an empty name removes the tab.
+											onRemove={() => removeTab(index)}
+											{...enterContent}
+										/>
+									) : (
+										<span className="wp-block-matter-tabs__label">
+											{tab.attributes.label ||
+												sprintf(
+													/* translators: %d: tab number */
+													__('Tab %d', 'matter'),
+													index + 1
+												)}
+										</span>
+									)}
+								</div>
+							);
+						})}
+						{isEditing && (
+							<AddButton
+								label={__('Add tab', 'matter')}
+								onClick={addTab}
+							/>
+						)}
+					</div>
+				)}
+				<ActiveTabContext.Provider value={contextValue}>
+					<div {...innerBlocksProps} />
+				</ActiveTabContext.Provider>
+			</div>
 		</>
 	);
 }
-
-export default Edit;

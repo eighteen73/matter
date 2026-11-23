@@ -1,169 +1,295 @@
-@use "../../constants/breakpoints" as bp;
+// Carousel. Slides are the track's children, or a Query Loop's / Product
+// Collection's / Terms Query's items. Controls are groups by position
+// (`.wp-block-matter-carousel__controls.is-before`, `.is-stage` over the slides,
+// `.is-after`) of parts the theme places.
+// Theme settings: `--carousel-per-view` (slides in view, default 1) and
+// `--carousel-gap` (between slides, default 0), on the carousel or a variant.
+// Functional rules first, at one class (plus the element's own state, with any
+// context in :where()); then the default skin, all in :where().
 
-@mixin carousel-controls-hidden {
-	.wp-block-matter-carousel-previous-button,
-	.wp-block-matter-carousel-next-button,
-	.wp-block-matter-carousel-dots,
-	.wp-block-matter-carousel-progress,
-	.wp-block-matter-carousel-thumbs {
-		display: none;
+@use "../../styles/icon" as *;
+
+// The slides and anything laid over them.
+.wp-block-matter-carousel__stage {
+	position: relative;
+}
+
+.wp-block-matter-carousel__viewport {
+	overflow: hidden;
+}
+
+// The track, and in query mode the query's list. The list's own layout rules
+// (core's `body .is-layout-grid`, WooCommerce's `.is-flex-container` ones) are
+// up to 0,2,1, so the query's list needs the carousel's classes to win.
+// stylelint-disable selector-max-specificity -- See above.
+.wp-block-matter-carousel__track,
+.wp-block-matter-carousel.is-query .matter-query-list {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: var(--carousel-gap, 0);
+	margin: 0;
+	padding: 0;
+	touch-action: pan-y pinch-zoom;
+}
+
+// Slides sit in a row, so the vertical spacing of a flow layout (core's
+// `:root :where(.is-layout-flow) > *`, on the post template) would push every
+// slide but the first down, and WooCommerce gives a Product Collection 30px
+// below (one class). Two classes win over both.
+.wp-block-matter-carousel .wp-block-matter-carousel__track > *,
+.wp-block-matter-carousel.is-query .matter-query-list > * {
+	margin-block: 0;
+}
+// stylelint-enable selector-max-specificity
+
+// Slide widths, from the theme's settings, at zero specificity so a theme's
+// own widths win whichever stylesheet loads last.
+:where(.wp-block-matter-carousel__track) > *,
+:where(.wp-block-matter-carousel.is-query .matter-query-list) > * {
+	flex: 0 0 calc((100% - (var(--carousel-per-view, 1) - 1) * var(--carousel-gap, 0px)) / var(--carousel-per-view, 1));
+	min-width: 0;
+}
+
+// In query mode the track holds the query block: it spans the viewport and its
+// items are the slides.
+:where(.wp-block-matter-carousel.is-query .wp-block-matter-carousel__track) > * {
+	flex: 0 0 100%;
+}
+
+// Image slides share the chosen crop (`--image-aspect-ratio`, with
+// `.has-image-aspect-ratio` when every slide is an image). Sized at one class
+// and the element, over a theme's `img` rules; the crop itself is at zero, so
+// a variant's is set with one class (e.g. `.is-style-cards img`).
+:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track) > .wp-block-image img {
+	height: auto;
+	object-fit: var(--image-object-fit, cover);
+	width: 100%;
+}
+
+:where(.wp-block-matter-carousel.has-image-aspect-ratio .wp-block-matter-carousel__track > .wp-block-image) img {
+	aspect-ratio: var(--image-aspect-ratio);
+}
+
+// Before Embla starts, or if its script never runs, the slides scroll
+// natively (swipe, trackpad, keyboard), so every slide stays reachable.
+:where(.wp-block-matter-carousel:not(.is-initialised)) .wp-block-matter-carousel__viewport {
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+}
+
+:where(.wp-block-matter-carousel:not(.is-initialised) .wp-block-matter-carousel__track) > *,
+:where(.wp-block-matter-carousel:not(.is-initialised).is-query .matter-query-list) > * {
+	scroll-snap-align: start;
+}
+
+// Over the slides: the group covers them, its parts stay clickable.
+.wp-block-matter-carousel__controls.is-stage {
+	inset: 0;
+	pointer-events: none;
+	position: absolute;
+	z-index: 1;
+}
+
+:where(.wp-block-matter-carousel__controls.is-stage) > * {
+	pointer-events: auto;
+}
+
+// Hidden, whatever display a theme gives them: controls when there's nothing
+// to scroll to, and parts the script hides (e.g. play, when nothing moves by
+// itself).
+// stylelint-disable-next-line selector-max-specificity -- A hidden state outranks a theme's display.
+.wp-block-matter-carousel.is-initialised:not(.is-scrollable) .wp-block-matter-carousel__controls,
+.wp-block-matter-carousel__controls [hidden] {
+	display: none;
+}
+
+// Progress (how far through) and timer (the current slide's autoplay
+// countdown): a track and a bar scaled from the inline start.
+.wp-block-matter-carousel__progress,
+.wp-block-matter-carousel__timer {
+	overflow: hidden;
+}
+
+.wp-block-matter-carousel__progress-bar,
+.wp-block-matter-carousel__timer-bar {
+	display: block;
+	height: 100%;
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+
+	&:dir(rtl) {
+		transform-origin: 100% 50%;
 	}
 }
 
-@mixin carousel-controls-visible {
-	.wp-block-matter-carousel-previous-button,
-	.wp-block-matter-carousel-next-button {
-		display: inline-flex;
-	}
+.wp-block-matter-carousel__progress-bar {
+	transform: scaleX(var(--carousel-progress, 0));
+}
 
-	.wp-block-matter-carousel-dots {
-		display: flex;
-	}
+:where(.wp-block-matter-carousel.is-timing.is-playing) .wp-block-matter-carousel__timer-bar {
+	animation: matter-carousel-timer var(--carousel-autoplay, 5000ms) linear forwards;
+}
 
-	.wp-block-matter-carousel-progress {
-		display: block;
-	}
-
-	.wp-block-matter-carousel-thumbs {
-		display: block;
+@keyframes matter-carousel-timer {
+	to {
+		transform: scaleX(1);
 	}
 }
 
-.wp-block-matter-carousel {
-	--_slides-to-show: var(--matter-carousel--slides-to-show, var(--wp--custom--matter-carousel--slides-to-show-base, 1));
-	--_slide--gap: var(--matter-carousel--slide--gap, var(--wp--custom--matter-carousel--slide--gap-base, 0));
-	--_slide--gap-left: var(--matter-carousel--slide--gap-left, var(--wp--custom--matter-carousel--slide--gap-left-base, 0));
-	--_slide--gap-top: var(--matter-carousel--slide--gap-top, var(--wp--custom--matter-carousel--slide--gap-top-base, 0));
-	--_slide--width: calc(100% / var(--_slides-to-show));
-	--_direction: var(--matter-carousel--direction, var(--wp--custom--matter-carousel--direction-base, row));
-	--_container-height: var(--matter-carousel--container-height, var(--wp--custom--matter-carousel--container-height-base, auto));
+.wp-block-matter-carousel__thumbnails {
+	overflow-x: auto;
+	scrollbar-width: none;
+}
 
-	&.carousel-disabled {
-		@include carousel-controls-hidden;
-	}
+// Default skin.
+:where(.wp-block-matter-carousel__controls) {
+	align-items: center;
+	display: flex;
+	gap: 0.75em;
+	justify-content: center;
+}
 
-	@each $name, $size in bp.$breakpoints {
-		@media (--#{$name}) {
-			&.carousel-disabled-on-#{$name} {
-				@include carousel-controls-hidden;
-			}
+:where(.wp-block-matter-carousel__controls.is-before) {
+	margin-block-end: 1em;
+}
 
-			&.carousel-enabled-on-#{$name} {
-				@include carousel-controls-visible;
-			}
-		}
-	}
+:where(.wp-block-matter-carousel__controls.is-after) {
+	margin-block-start: 1em;
+}
 
-	.embla {
-		overflow: hidden;
-		position: relative;
+// Over the slides: arrows at the sides, other parts at the bottom.
+:where(.wp-block-matter-carousel__controls.is-stage) {
+	justify-content: space-between;
+	padding: 1em;
+}
 
-		.embla__viewport {
-			overflow: hidden;
-		}
+:where(.wp-block-matter-carousel__controls.is-stage > :not(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next)) {
+	align-self: flex-end;
+}
 
-		.embla__container {
-			flex-direction: var(--_direction);
-			height: var(--_container-height);
-			margin-left: calc(var(--_slide--gap-left) * -1);
-			margin-top: calc(var(--_slide--gap-top) * -1);
-		}
+// Buttons: an icon in a 40px target.
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	height: 2.5rem;
+	justify-content: center;
+	padding: 0;
+	width: 2.5rem;
+}
 
-		.wp-block-woocommerce-product-collection {
-			margin-bottom: 0;
-		}
+:where(.wp-block-matter-carousel__prev, .wp-block-matter-carousel__next, .wp-block-matter-carousel__play, .wp-block-matter-carousel__expand):where(:disabled) {
+	cursor: default;
+	opacity: 0.4;
+}
 
-		.embla__container:has(> *:not(.wp-block-query, .wp-block-woocommerce-product-collection)),
-		.wp-block-post-template,
-		.wp-block-woocommerce-product-template {
-			display: flex;
-			touch-action: pan-y pinch-zoom;
+:where(.wp-block-matter-carousel__prev)::before {
+	@include icon(arrow-left, 1.25rem);
+}
 
-			> * {
-				box-sizing: border-box;
-				flex: 0 0 var(--_slide--width);
-				margin: 0;
-				min-width: 0;
-				padding-left: var(--_slide--gap-left);
-				padding-top: var(--_slide--gap-top);
-				transform: translate3d(0, 0, 0);
-			}
-		}
+:where(.wp-block-matter-carousel__next)::before {
+	@include icon(arrow-right, 1.25rem);
+}
 
-		// Product Collection's own column layout would wrap slides and set
-		// their widths. Keep a single non-wrapping row sized by slides-to-show.
-		.wp-block-woocommerce-product-template.wc-block-product-template {
-			flex-wrap: nowrap;
-			gap: 0;
+:where(.wp-block-matter-carousel__prev:dir(rtl), .wp-block-matter-carousel__next:dir(rtl))::before {
+	scale: -1 1;
+}
 
-			> li.wc-block-product {
-				flex: 0 0 var(--_slide--width);
-				max-width: none;
-				width: auto;
-			}
-		}
-	}
+:where(.wp-block-matter-carousel__expand)::before {
+	@include icon(corners-out, 1.25rem);
+}
 
-	.wp-block-matter-carousel-next-button,
-	.wp-block-matter-carousel-previous-button {
-		--_size: var(--matter-carousel--button--size, var(--wp--custom--matter-carousel--button--size, 32px));
-		--_icon-size: var(--matter-carousel--button--icon-size, var(--wp--custom--matter-carousel--button--icon-size, 50%));
-		--_gap: var(--matter-carousel--button--gap, var(--wp--preset--spacing--md, 12px));
-		--_background-color: var(--matter-carousel--button--background-color, var(--wp--custom--matter-carousel--button--background-color, transparent));
-		--_border-radius: var(--matter-carousel--button--border-radius, var(--wp--custom--matter-carousel--button--border-radius, 50%));
-		--_icon-color: var(--matter-carousel--button--icon-color, var(--wp--custom--matter-carousel--button--icon-color, currentcolor));
+// Pause icon (two bars); a play triangle while paused.
+:where(.wp-block-matter-carousel__play)::before {
+	background:
+		linear-gradient(currentcolor, currentcolor) left / 35% 100% no-repeat,
+		linear-gradient(currentcolor, currentcolor) right / 35% 100% no-repeat;
+	content: "";
+	forced-color-adjust: none;
+	height: 1rem;
+	width: 0.875rem;
+}
 
-		align-items: center;
-		appearance: none;
-		background-color: var(--_background-color);
-		border: 0;
-		border-radius: var(--_border-radius);
-		cursor: pointer;
-		display: inline-flex;
-		height: var(--_size);
-		justify-content: center;
-		margin: 0;
-		padding: 0;
-		position: relative;
-		text-decoration: none;
-		touch-action: manipulation;
-		width: var(--_size);
+:where(.wp-block-matter-carousel__play[aria-pressed="true"])::before {
+	background: currentcolor;
+	clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
 
-		&:where(.has-background) {
-			background-color: var(--_background-color);
-		}
+:where(.wp-block-matter-carousel__play[aria-pressed="true"]:dir(rtl))::before {
+	clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
 
-		&:disabled {
-			opacity: 0.3;
-		}
+// Dots are smaller than a 24px target (WCAG 2.5.8), so they're spaced with
+// their centres 24px apart instead. In rem, like the dots: buttons don't
+// inherit the font size, so em would differ between the two.
+:where(.wp-block-matter-carousel__dots) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(24px - 0.625rem);
+}
 
-		.embla__button-label {
-			text-indent: -9999px;
+:where(.wp-block-matter-carousel__dot) {
+	appearance: none;
+	background: currentcolor;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+	forced-color-adjust: none;
+	height: 0.625rem;
+	opacity: 0.3;
+	padding: 0;
+	width: 0.625rem;
+}
 
-			&::after {
-				background-color: var(--_icon-color);
-				border-radius: inherit;
-				content: "";
-				inset: 0;
-				mask-position: center;
-				mask-repeat: no-repeat;
-				mask-size: var(--_icon-size);
-				position: absolute;
-			}
-		}
+:where(.wp-block-matter-carousel__dot[aria-current]) {
+	opacity: 1;
+}
 
-		&:where(.embla__button--previous) {
-			.embla__button-label::after {
-				mask-image: url("../../../assets/svg/arrow-left.svg");
-			}
-		}
+:where(.wp-block-matter-carousel__progress, .wp-block-matter-carousel__timer) {
+	background: color-mix(in srgb, currentcolor 20%, transparent);
+	flex: 1;
+	forced-color-adjust: none;
+	height: 2px;
+	min-width: 4em;
+}
 
-		&:where(.embla__button--next) {
-			justify-self: flex-end;
+:where(.wp-block-matter-carousel__progress-bar, .wp-block-matter-carousel__timer-bar) {
+	background: currentcolor;
+}
 
-			.embla__button-label::after {
-				mask-image: url("../../../assets/svg/arrow-right.svg");
-			}
-		}
-	}
+:where(.wp-block-matter-carousel__counter) {
+	font-variant-numeric: tabular-nums;
+}
+
+:where(.wp-block-matter-carousel__thumbnails) {
+	display: flex;
+	gap: 0.5em;
+}
+
+:where(.wp-block-matter-carousel__thumbnail) {
+	appearance: none;
+	background: none;
+	border: 2px solid transparent;
+	cursor: pointer;
+	flex: none;
+	height: 4em;
+	padding: 0;
+	width: 6em;
+}
+
+:where(.wp-block-matter-carousel__thumbnail[aria-current]) {
+	border-color: currentcolor;
+}
+
+.wp-block-matter-carousel__thumbnail img {
+	display: block;
+	height: 100%;
+	object-fit: cover;
+	width: 100%;
 }

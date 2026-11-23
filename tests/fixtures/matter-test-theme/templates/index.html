@@ -1,0 +1,15 @@
+<!-- wp:matter/template-part {"slug":"header"} /-->
+
+<!-- wp:group {"tagName":"main"} -->
+<main class="wp-block-group">
+	<!-- wp:matter/archive-content -->
+		<!-- wp:query {"queryId":1,"query":{"perPage":10,"postType":"post","inherit":true}} -->
+		<div class="wp-block-query">
+			<!-- wp:post-template -->
+				<!-- wp:matter/loop-item /-->
+			<!-- /wp:post-template -->
+		</div>
+		<!-- /wp:query -->
+	<!-- /wp:matter/archive-content -->
+</main>
+<!-- /wp:group -->

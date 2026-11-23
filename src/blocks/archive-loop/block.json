@@ -1,0 +1,29 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/archive-loop",
+	"version": "1.0.0",
+	"title": "Archive list",
+	"category": "theme",
+	"description": "The archive's posts or products, as the theme lists them. Add content above and below it.",
+	"attributes": {
+		"lock": {
+			"type": "object",
+			"default": {
+				"remove": true
+			}
+		}
+	},
+	"supports": {
+		"html": false,
+		"inserter": true,
+		"multiple": false,
+		"reusable": false,
+		"lock": false,
+		"renaming": false
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"render": "file:./render.php"
+}

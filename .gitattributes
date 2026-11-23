@@ -1,11 +1,13 @@
 # Directories
 /.git export-ignore
 /.github export-ignore
+/bin export-ignore
 /.husky export-ignore
 /.vscode export-ignore
 /node_modules export-ignore
 /src export-ignore
 /tests export-ignore
+/playwright.config.js export-ignore
 
 # Files
 /.* export-ignore
@@ -18,6 +20,7 @@
 /package-lock.json export-ignore
 /package.json export-ignore
 /phpcs.xml.dist export-ignore
+/phpunit.xml.dist export-ignore
 /postcss.config.js export-ignore
 /README.md export-ignore
 /tsconfig.json export-ignore

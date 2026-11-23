@@ -1,17 +1,131 @@
-name: Lint
+name: Lint and test
 
 on:
+  push:
+    branches:
+      - next
   pull_request:
     branches:
       - main
+      - next
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# A pull request from this repository's next branch skips its jobs: the push to
+# next has already run them on the same commit. A skipped required check counts
+# as passed.
 jobs:
   lint:
+    if: github.event_name != 'pull_request' || github.head_ref != 'next' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Run Lint Suite
-        uses: eighteen73/github-actions/.github/actions/lint@main
+        uses: eighteen73/github-actions/.github/actions/lint@3387d9757c92b88919c82432cd65b9800ec99b82 # main on 20 Nov 2026; bump deliberately
+        with:
+          node-version-file: .nvmrc
+
+  tests:
+    name: Unit tests and PHPUnit (wp-env)
+    if: github.event_name != 'pull_request' || github.head_ref != 'next' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      # Installs Composer dependencies too (postinstall).
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run JavaScript unit tests
+        run: npm run test:unit
+
+      - name: Build
+        run: npm run build
+
+      - name: Start wp-env's test site
+        run: npm run env:start:tests
+
+      - name: Run PHPUnit
+        run: npm run test:php
+
+      - name: Install Playwright's browsers
+        run: npx playwright install --with-deps --only-shell chromium firefox webkit
+
+      # Keyboard, overlay, menu and editor behaviour, plus axe (WCAG 2.2 AA).
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - name: Keep browser test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-artifacts
+          path: artifacts/
+          retention-days: 7
+
+  # Matter on a site without WooCommerce or Gravity Forms: PHPUnit (the
+  # integrations' off states, with no skipped tests) and the browser smoke
+  # specs, on their own wp-env site (.wp-env.tests.nowc.json).
+  without-plugins:
+    name: PHPUnit and browser smoke tests without WooCommerce
+    if: github.event_name != 'pull_request' || github.head_ref != 'next' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Start wp-env's test site without WooCommerce
+        run: npm run env:start:tests:nowc
+
+      - name: Run PHPUnit
+        run: npm run test:php:nowc
+
+      - name: Install Playwright's browsers
+        run: npx playwright install --with-deps --only-shell chromium firefox webkit
+
+      - name: Run browser smoke tests
+        run: npm run test:e2e:nowc
+
+      - name: Keep browser test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-artifacts-without-plugins
+          path: artifacts/
+          retention-days: 7

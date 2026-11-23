@@ -2,81 +2,74 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/carousel",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"title": "Carousel",
-	"category": "design",
-	"icon": "images-alt",
-	"description": "Carousel",
-	"allowedBlocks": [
-		"matter/carousel-viewport",
-		"matter/carousel-thumbnails",
-		"matter/carousel-dots",
-		"matter/carousel-progress",
-		"matter/carousel-previous-button",
-		"matter/carousel-next-button",
-		"core/group"
-	],
+	"category": "widgets",
+	"description": "Slides that scroll horizontally: each block inside is a slide. To show posts, products or terms automatically, use Posts, Products or Terms carousel.",
+	"keywords": [ "slider", "slideshow", "gallery" ],
 	"attributes": {
-		"generatedId": {
+		"label": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"aspectRatio": {
 			"type": "string",
 			"default": ""
 		},
-		"emblaConfig": {
-			"type": "object",
-			"default": {
-				"options": {
-					"loop": false,
-					"axis": "x",
-					"slidesToScroll": 1,
-					"active": true,
-					"slidesToShow": 1,
-					"slideGap": ""
-				},
-				"plugins": {
-					"fade": {
-						"active": false
-					},
-					"autoplay": {
-						"active": false,
-						"type": "slide",
-						"speed": 1
-					},
-					"fade": {
-						"active": false
-					}
-				},
-				"breakpointLayers": {}
-			}
-		},
-		"advancedEmblaConfig": {
-			"type": "object",
-			"default": null
-		},
-		"advancedEmblaConfigMerge": {
+		"allowResize": {
 			"type": "boolean",
 			"default": false
 		}
 	},
-	"supports": {
-		"inserter": true,
-		"anchor": true,
-		"align": ["wide", "full"],
-		"interactivity": true,
-		"spacing": {
-			"margin": true,
-			"padding": true,
-			"__experimentalDefaultControls": {
-				"margin": false,
-				"padding": false
+	"providesContext": {
+		"allowResize": "allowResize"
+	},
+	"example": {
+		"viewportWidth": 1200,
+		"innerBlocks": [
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			},
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			},
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
+			},
+			{
+				"name": "core/image",
+				"attributes": {
+					"url": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23dcdcde'/><circle cx='440' cy='120' r='40' fill='%23c3c4c7'/><path d='M0 400 210 170l120 140 80-80 190 170z' fill='%23a7aaad'/></svg>",
+					"alt": ""
+				}
 			}
-		},
-		"contentRole": true,
-		"listView": true
+		]
+	},
+	"supports": {
+		"html": false,
+		"anchor": true,
+		"align": [ "wide", "full" ],
+		"interactivity": true,
+		"matter": {
+			"scheme": true
+		}
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
-	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
-	"render": "file:./render.php",
-	"viewScriptModule": "file:./view.js"
+	"viewScriptModule": "file:./view.js",
+	"render": "file:./render.php"
 }

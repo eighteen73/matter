@@ -1,160 +1,490 @@
+/**
+ * Gallery lightbox (store: matter/gallery).
+ *
+ * A native <dialog> per gallery: arrow keys and buttons move between images,
+ * Escape / backdrop / close button close it, and focus returns to the image's
+ * enlarge button.
+ *
+ * A grid limited to "Images to show" shows whole rows at the number of columns
+ * that fit (the server hides images beyond the limit until this runs).
+ *
+ * API: `matter.gallery( target )` → instance (see README); events
+ * `matter-gallery-ready`, `-open`, `-change` and `-close`. A gallery in the
+ * carousel layout also has a `matter.carousel()` instance.
+ */
+
+/**
+ * WordPress dependencies
+ */
 import {
-	store,
 	getContext,
 	getElement,
+	store,
+	withScope,
 	withSyncEvent,
 } from '@wordpress/interactivity';
-import EmblaCarousel from 'embla-carousel';
 
+/**
+ * Internal dependencies
+ */
 import {
-	prepareCarouselBlockState,
-	buildCarouselPlugins,
-} from '../../utils/carousel/config';
-import {
-	addPrevNextBtnsClickHandlers,
-	addThumbsClickHandlers,
-} from '../../utils/carousel/handlers';
+	emit,
+	enhance,
+	fromDirective,
+	registerInstance,
+	registerType,
+	resolve,
+} from '../../interactivity/api';
+import { isBackdropClick } from '../../interactivity/backdrop';
+import { format } from '../../interactivity/format';
+import { cancelClose, closeDialog } from '../../interactivity/dialog';
+import { release, showModal } from './hold';
 
-const STORE = 'matter/gallery';
+const SELECTOR = '.wp-block-matter-gallery';
 
-const captionKey = (galleryId, index) => `${galleryId}:${index}`;
+registerType('gallery', SELECTOR);
 
-const { state, actions } = store(STORE, {
-	state: {
-		openCaptionKey: null,
-		get isCaptionOpen() {
+// Gallery element => instance; last announced image.
+const instances = new WeakMap();
+const announced = new WeakMap();
+
+const getDialog = (element) =>
+	element
+		.closest(SELECTOR)
+		?.querySelector('.wp-block-matter-gallery__lightbox');
+
+/**
+ * Open the lightbox at an image.
+ *
+ * @param {Element} element Gallery, or an element in it.
+ * @param {Object}  context Gallery context.
+ * @param {number}  index   Image index.
+ */
+const show = (element, context, index) => {
+	const dialog = getDialog(element);
+
+	if (!dialog || !context.images.length) {
+		return;
+	}
+
+	context.index = Math.min(Math.max(0, index), context.images.length - 1);
+	context.opened = true;
+	announced.set(element.closest(SELECTOR), context.index);
+
+	// Reopened while closing.
+	cancelClose(dialog);
+
+	if (!dialog.open) {
+		showModal(dialog);
+		emit(element.closest(SELECTOR), 'gallery', 'open', {
+			index: context.index,
+		});
+
+		// The status is filled a frame after the dialog is shown, so it is a
+		// change to a region that is already in the page, which is announced
+		// (text that is there when a dialog opens is not).
+		window.requestAnimationFrame(() => {
+			if (dialog.open) {
+				context.announcing = true;
+			}
+		});
+	} else {
+		context.announcing = true;
+	}
+};
+
+const instanceFor = (target) => instances.get(resolve(target, SELECTOR));
+
+const CAPTION_TOGGLE = '.wp-block-matter-gallery__caption-toggle';
+
+/**
+ * Show or hide an image's caption (the "tooltip" caption style).
+ *
+ * @param {Element} button The image's caption button.
+ * @param {boolean} open   Whether to show it.
+ */
+const setCaption = (button, open) => {
+	button.setAttribute('aria-expanded', String(open));
+	button
+		.closest('.wp-block-image')
+		?.classList.toggle('is-caption-open', open);
+};
+
+/**
+ * Hide a gallery's open captions.
+ *
+ * @param {Element}      gallery Gallery.
+ * @param {Element|null} except  A caption button to leave alone.
+ */
+const closeCaptions = (gallery, except = null) =>
+	gallery
+		?.querySelectorAll(`${CAPTION_TOGGLE}[aria-expanded="true"]`)
+		.forEach((button) => button !== except && setCaption(button, false));
+
+const { actions } = store('matter/gallery', {
+	callbacks: {
+		init() {
 			const context = getContext();
-			if (!context || typeof context.index !== 'number') {
-				return false;
+			const { ref } = getElement();
+
+			enhance('gallery', ref);
+			const step = withScope((offset) => {
+				const count = context.images.length;
+
+				if (count) {
+					context.index = (context.index + offset + count) % count;
+				}
+			});
+
+			const instance = {
+				element: ref,
+				get id() {
+					return ref.id || null;
+				},
+				get isOpen() {
+					return !!getDialog(ref)?.open;
+				},
+				/** The image shown in the lightbox. */
+				get index() {
+					return context.index;
+				},
+				get count() {
+					return context.images.length;
+				},
+				open: withScope((index = 0) => show(ref, context, index)),
+				close: () => closeDialog(getDialog(ref)),
+				next: () => step(1),
+				prev: () => step(-1),
+			};
+
+			instances.set(ref, instance);
+			announced.set(ref, context.index);
+			registerInstance('gallery', ref, instance);
+
+			// Document listeners go with the block (e.g. client-side
+			// navigation), rather than piling up.
+			const controller = new AbortController();
+			const { signal } = controller;
+
+			// Open captions close on a click elsewhere, or Escape.
+			if (ref.querySelector(CAPTION_TOGGLE)) {
+				const { ownerDocument } = ref;
+
+				ownerDocument.addEventListener(
+					'click',
+					(event) => {
+						if (
+							!event.target.closest?.(
+								`${CAPTION_TOGGLE}, .wp-block-image figcaption`
+							)
+						) {
+							closeCaptions(ref);
+						}
+					},
+					{ signal }
+				);
+				ownerDocument.addEventListener(
+					'keydown',
+					(event) => {
+						const open = ref.querySelector(
+							`${CAPTION_TOGGLE}[aria-expanded="true"]`
+						);
+
+						if (event.key === 'Escape' && open) {
+							closeCaptions(ref);
+							open.focus();
+						}
+					},
+					{ signal }
+				);
 			}
-			return (
-				state.openCaptionKey ===
-				captionKey(context.galleryId, context.index)
-			);
+
+			return () => {
+				controller.abort();
+				instances.delete(ref);
+
+				// Taken out of the page while open: let go of the page.
+				const dialog = getDialog(ref);
+
+				if (dialog) {
+					release(dialog);
+				}
+			};
 		},
-		get captionTriggerLabel() {
-			const context = getContext();
-			if (!context) {
-				return '';
-			}
-			return state.isCaptionOpen
-				? context.captionHideLabel || 'Hide caption'
-				: context.captionShowLabel || 'Show caption';
-		},
-	},
-	actions: {
-		toggleCaption: withSyncEvent((event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			const context = getContext();
-			if (!context || typeof context.index !== 'number') {
-				return;
-			}
-			const key = captionKey(context.galleryId, context.index);
-			state.openCaptionKey = state.openCaptionKey === key ? null : key;
-		}),
-		closeCaption: () => {
-			state.openCaptionKey = null;
-		},
-		onCaptionOutsidePointerDown: withSyncEvent((event) => {
-			if (!state.openCaptionKey) {
-				return;
-			}
-			const target = event.target;
+		// Announce moving between images while the lightbox is open.
+		announce() {
+			const { index } = getContext();
+			const { ref } = getElement();
+
 			if (
-				target?.closest?.(
-					'.wp-block-matter-gallery__caption-trigger, .wp-block-matter-gallery__caption-popover'
-				)
+				!instances.has(ref) ||
+				announced.get(ref) === index ||
+				!getDialog(ref)?.open
 			) {
 				return;
 			}
-			actions.closeCaption();
-		}),
-		onCaptionKeydown: withSyncEvent((event) => {
-			if (!state.openCaptionKey || event.key !== 'Escape') {
-				return;
-			}
-			event.preventDefault();
-			event.stopPropagation();
-			actions.closeCaption();
-		}),
-	},
-	callbacks: {
-		loadCarousel: () => {
-			const context = getContext(STORE);
 
-			if (context?.type !== 'carousel') {
-				return;
-			}
-
+			announced.set(ref, index);
+			emit(ref, 'gallery', 'change', { index });
+		},
+		fitRows() {
+			const { limit } = getContext();
 			const { ref } = getElement();
-			const viewportNode = ref.querySelector(
-				'.wp-block-matter-gallery__viewport'
+			const grid = ref.querySelector(
+				':scope > .wp-block-matter-gallery__items'
 			);
-			const containerNode = ref.querySelector(
-				'.wp-block-matter-gallery__track'
+			const more = ref.querySelector(
+				':scope > .wp-block-matter-gallery__more'
 			);
 
-			if (!viewportNode || !containerNode) {
+			if (
+				!limit ||
+				!grid ||
+				!more ||
+				ref.classList.contains('is-carousel')
+			) {
 				return;
 			}
 
-			const { carouselOptions, pluginState } = prepareCarouselBlockState({
-				carouselConfig: context.carouselConfig,
-				advancedCarouselConfig: context.advancedCarouselConfig,
-				advancedCarouselConfigMerge:
-					context.advancedCarouselConfigMerge,
-			});
+			const figures = [...grid.children].filter((child) =>
+				child.matches('.wp-block-image')
+			);
+			const update = () => {
+				// Everything is showing ("View all" without a lightbox).
+				if (more.hidden) {
+					return;
+				}
 
-			const carouselApi = EmblaCarousel(
-				viewportNode,
-				{
-					...carouselOptions,
-					container: containerNode,
-					slides: '.wp-block-matter-gallery__slide',
-				},
-				buildCarouselPlugins(pluginState)
-			);
+				const columns =
+					window
+						.getComputedStyle(grid)
+						.gridTemplateColumns.split(' ')
+						.filter(Boolean).length || 1;
+				const visible = Math.floor(limit / columns) * columns || limit;
 
-			context.carouselApi = carouselApi;
+				figures.forEach((figure, index) => {
+					figure.hidden = index >= visible;
+				});
+			};
+			const observer = new window.ResizeObserver(update);
 
-			const prevButtonNode = ref.querySelector(
-				'.wp-block-matter-gallery__button--previous'
-			);
-			const nextButtonNode = ref.querySelector(
-				'.wp-block-matter-gallery__button--next'
-			);
-			const thumbsViewportNode = ref.querySelector(
-				'.wp-block-matter-gallery__thumbs-viewport'
-			);
-			const thumbsContainerNode = ref.querySelector(
-				'.wp-block-matter-gallery__thumbs-track'
-			);
+			observer.observe(grid);
 
-			if (prevButtonNode && nextButtonNode) {
-				const removePrevNextBtnsClickHandlers =
-					addPrevNextBtnsClickHandlers(
-						carouselApi,
-						prevButtonNode,
-						nextButtonNode
-					);
-				carouselApi.on('destroy', removePrevNextBtnsClickHandlers);
+			return () => observer.disconnect();
+		},
+	},
+	state: {
+		get image() {
+			const { images, index, opened } = getContext();
+
+			// Nothing to load until the lightbox first opens, so a closed
+			// lightbox doesn't download a full-size image with the page.
+			return opened ? (images[index] ?? {}) : {};
+		},
+		get counter() {
+			const { images, index, counter } = getContext();
+
+			return format(counter, index + 1, images.length);
+		},
+		// What the lightbox's live region says: "Image 2 of 5: the alt text".
+		// Empty until the lightbox opens, so closed it says nothing.
+		get announcement() {
+			const { images, index, announcing, announce, announceAlt } =
+				getContext();
+
+			if (!announcing) {
+				return '';
 			}
 
-			if (thumbsViewportNode && thumbsContainerNode) {
-				const thumbsCarouselApi = EmblaCarousel(thumbsViewportNode, {
-					containScroll: 'keepSnaps',
-					container: thumbsContainerNode,
-					dragFree: true,
-				});
-				const removeThumbsClickHandlers = addThumbsClickHandlers(
-					carouselApi,
-					thumbsCarouselApi,
-					thumbsContainerNode
-				);
+			const alt = images[index]?.alt ?? '';
 
-				carouselApi.on('destroy', removeThumbsClickHandlers);
-				carouselApi.on('destroy', () => thumbsCarouselApi.destroy());
+			return format(
+				alt ? announceAlt : announce,
+				index + 1,
+				images.length,
+				alt
+			);
+		},
+	},
+	actions: {
+		/**
+		 * From an image's enlarge button; or, from the API,
+		 * `open( target, index )`.
+		 *
+		 * @param {*}      target Directive event, or gallery ID/element.
+		 * @param {number} index  Image index (API).
+		 */
+		open(target, index = 0) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.open(index);
+
+				return;
+			}
+
+			const context = getContext();
+
+			show(getElement().ref, context, context.imageIndex);
+		},
+		// An image's info button: show or hide its caption.
+		toggleCaption() {
+			const { ref } = getElement();
+			const open = ref.getAttribute('aria-expanded') !== 'true';
+
+			closeCaptions(ref.closest(SELECTOR), ref);
+			setCaption(ref, open);
+		},
+		// The carousel layout's "expand" control: the current slide's image.
+		openCurrent() {
+			const { ref } = getElement();
+			const figures = [
+				...(ref
+					.closest(SELECTOR)
+					?.querySelectorAll(
+						'.wp-block-matter-carousel__track > .wp-block-image'
+					) ?? []),
+			];
+
+			show(
+				ref,
+				getContext(),
+				Math.max(
+					0,
+					figures.findIndex((figure) =>
+						figure.classList.contains('is-selected')
+					)
+				)
+			);
+		},
+		// "View all" (grid with a limit): open the lightbox at the first image,
+		// or reveal the hidden images when there's no lightbox.
+		viewAll() {
+			const context = getContext();
+			const { ref } = getElement();
+			const dialog = getDialog(ref);
+
+			if (dialog) {
+				show(ref, context, 0);
+				return;
+			}
+
+			const revealed = [
+				...ref
+					.closest('.wp-block-matter-gallery')
+					.querySelectorAll(
+						'.wp-block-matter-gallery__items > [hidden]'
+					),
+			];
+
+			revealed.forEach((figure) => figure.removeAttribute('hidden'));
+			ref.hidden = true;
+
+			// The button had focus and is gone: move it to the first image
+			// revealed (its link or button, else the image itself).
+			const first = revealed[0];
+			const target =
+				first?.querySelector('a[href], button:not([disabled])') ??
+				first;
+
+			if (target) {
+				if (target === first) {
+					first.tabIndex = -1;
+				}
+
+				target.focus();
+			}
+		},
+		close(target) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.close();
+
+				return;
+			}
+
+			closeDialog(getDialog(getElement().ref));
+		},
+		prev(target) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.prev();
+
+				return;
+			}
+
+			const context = getContext();
+
+			context.index =
+				(context.index - 1 + context.images.length) %
+				context.images.length;
+		},
+		next(target) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.next();
+
+				return;
+			}
+
+			const context = getContext();
+
+			context.index = (context.index + 1) % context.images.length;
+		},
+		onKeydown: withSyncEvent((event) => {
+			if (event.key === 'Escape') {
+				// Close with the closing transition, rather than the
+				// browser's instant close.
+				event.preventDefault();
+				closeDialog(getElement().ref);
+			} else if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				actions.prev();
+			} else if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				actions.next();
+			} else if (event.key === 'Home' || event.key === 'End') {
+				// The first and last image of the gallery.
+				const context = getContext();
+
+				event.preventDefault();
+				context.index =
+					event.key === 'Home' ? 0 : context.images.length - 1;
+			}
+		}),
+		onBackdropClick: withSyncEvent((event) => {
+			const { ref } = getElement();
+
+			if (isBackdropClick(event, ref)) {
+				closeDialog(ref);
+			}
+		}),
+		onClose() {
+			const { ref } = getElement();
+			const context = getContext();
+			const { index } = context;
+
+			// Closed: the image is dropped from the lightbox and the status
+			// goes quiet, so nothing is left to be read.
+			context.opened = false;
+			context.announcing = false;
+
+			// Whatever goes wrong letting go of the page, the close is still
+			// announced and focus still goes back.
+			try {
+				release(ref);
+			} finally {
+				emit(ref.closest(SELECTOR), 'gallery', 'close', { index });
+
+				// Return focus to the enlarge button for the image being viewed, or
+				// to "View all" when that image is hidden.
+				const gallery = ref.closest('.wp-block-matter-gallery');
+				const button = gallery?.querySelectorAll(
+					'.wp-block-matter-gallery__open'
+				)[index];
+
+				if (button && !button.closest('[hidden]')) {
+					button.focus();
+				} else {
+					gallery
+						?.querySelector('.wp-block-matter-gallery__more')
+						?.focus();
+				}
 			}
 		},
 	},

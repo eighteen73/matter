@@ -1,3 +1,74 @@
 {
-	"extends": "@eighteen73/stylelint-config-wordpress"
+	"extends": "@eighteen73/stylelint-config-wordpress",
+	"rules": {
+		"scss/at-rule-no-unknown": [
+			true,
+			{
+				"ignoreAtRules": [
+					"starting-style",
+					"custom-media"
+				]
+			}
+		],
+		"scss/selector-no-union-class-name": true,
+		"selector-nested-pattern": [
+			"^&(:|::|\\[|\\.)",
+			{
+				"splitList": true
+			}
+		],
+		"max-nesting-depth": [
+			1,
+			{
+				"ignoreAtRules": [
+					"media",
+					"supports",
+					"starting-style",
+					"container",
+					"include"
+				]
+			}
+		],
+		"selector-max-id": 0,
+		"selector-pseudo-class-no-unknown": [
+			true,
+			{
+				"ignorePseudoClasses": [
+					"popover-open"
+				]
+			}
+		],
+		"property-no-unknown": [
+			true,
+			{
+				"ignoreProperties": [
+					"position-area",
+					"position-try-fallbacks",
+					"anchor-name",
+					"position-anchor"
+				]
+			}
+		],
+		"selector-pseudo-element-no-unknown": [
+			true,
+			{
+				"ignorePseudoElements": [
+					"details-content"
+				]
+			}
+		]
+	},
+	"overrides": [
+		{
+			"files": [
+				"src/blocks/*/style.scss",
+				"src/menu/styles/*.scss",
+				"src/panel/styles/*.scss"
+			],
+			"rules": {
+				"selector-max-compound-selectors": 4,
+				"selector-max-specificity": "0,2,1"
+			}
+		}
+	]
 }

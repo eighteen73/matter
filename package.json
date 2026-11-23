@@ -1,6 +1,6 @@
 {
 	"name": "matter",
-	"version": "0.5.1",
+	"version": "1.0.0",
 	"description": "A collections of expertly crafted blocks for WordPress.",
 	"author": "eighteen73",
 	"license": "GPL-2.0-or-later",
@@ -17,20 +17,28 @@
 	"bugs": {
 		"url": "https://github.com/eighteen73/matter/issues"
 	},
+	"engines": {
+		"node": ">=26.0.0",
+		"npm": ">=11.0.0"
+	},
 	"devDependencies": {
-		"@10up/block-components": "^1.22.2",
-		"@eighteen73/eslint-config-wordpress": "latest",
-		"@eighteen73/stylelint-config-wordpress": "latest",
-		"@humanmade/block-editor-components": "^0.11.0",
+		"@axe-core/playwright": "^4.14.0",
+		"@eighteen73/eslint-config-wordpress": "^2.0.0",
+		"@eighteen73/stylelint-config-wordpress": "^1.2.3",
+		"@playwright/test": "^1.65.0",
 		"@wordpress/browserslist-config": "^6.49.0",
+		"@wordpress/e2e-test-utils-playwright": "^1.54.0",
+		"@wordpress/env": "^12.1.0",
 		"@wordpress/prettier-config": "^4.49.0",
-		"@wordpress/scripts": "latest",
-		"lefthook": "latest",
-		"postcss-preset-env": "latest"
+		"@wordpress/scripts": "^32.5.0",
+		"globals": "^16.5.0",
+		"postcss-preset-env": "^11.3.1"
 	},
 	"scripts": {
 		"postinstall": "composer install -o",
+		"prepare": "node bin/install-hooks.js",
 		"start": "wp-scripts start --webpack-copy-php --blocks-manifest --experimental-modules",
+		"prebuild": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
 		"build": "wp-scripts build --webpack-copy-php --blocks-manifest --experimental-modules",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
@@ -42,21 +50,27 @@
 		"lint:css": "wp-scripts lint-style",
 		"lint:js": "wp-scripts lint-js",
 		"lint:php": "composer run lint",
+		"env:start": "wp-env start",
+		"env:start:tests": "wp-env --config=.wp-env.tests.json start",
+		"env:start:tests:nowc": "wp-env --config=.wp-env.tests.nowc.json start",
+		"env:stop": "wp-env stop && wp-env --config=.wp-env.tests.json stop && wp-env --config=.wp-env.tests.nowc.json stop",
+		"test:php": "wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter vendor/bin/phpunit --exclude-group without-plugins",
+		"test:php:nowc": "wp-env --config=.wp-env.tests.nowc.json run cli --env-cwd=wp-content/mu-plugins/matter env MATTER_TESTS_WITHOUT_PLUGINS=1 vendor/bin/phpunit --exclude-group gravity-forms --fail-on-skipped",
+		"test:php:update": "wp-env --config=.wp-env.tests.json run cli --env-cwd=wp-content/mu-plugins/matter env UPDATE_SNAPSHOTS=1 vendor/bin/phpunit --exclude-group without-plugins",
+		"test:unit": "wp-scripts test-unit-js",
+		"test:e2e": "wp-scripts test-playwright",
+		"test:e2e:nowc": "WP_ENV_CONFIG=.wp-env.tests.nowc.json wp-scripts test-playwright tests/e2e/front-end.spec.js tests/e2e/scaffolding.spec.js tests/e2e/no-javascript.spec.js",
 		"lint:md:docs": "wp-scripts lint-md-docs",
 		"lint:pkg-json": "wp-scripts lint-pkg-json",
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip",
-		"pot": "wp i18n make-pot . languages/matter.pot --domain=matter --exclude=node_modules,vendor,.git"
+		"make-pot": "wp i18n make-pot . languages/matter.pot --domain=matter --slug=matter --package-name=Matter --headers='{\"Report-Msgid-Bugs-To\":\"https://eighteen73.co.uk\"}' --exclude=node_modules,vendor,build,tests,artifacts,bin,.git --skip-plugins --skip-themes"
 	},
 	"dependencies": {
 		"@wordpress/icons": "^15.0.0",
-		"clsx": "^2.1.1",
 		"embla-carousel": "^8.6.0",
 		"embla-carousel-auto-scroll": "^8.6.0",
 		"embla-carousel-autoplay": "^8.6.0",
-		"embla-carousel-class-names": "^8.6.0",
-		"embla-carousel-fade": "^8.6.0",
-		"embla-carousel-react": "^8.6.0",
 		"focus-trap": "^7.6.4"
 	}
 }

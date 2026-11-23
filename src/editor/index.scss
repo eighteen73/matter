@@ -1,0 +1,145 @@
+.matter-scheme-panel {
+	border-block-end: 1px solid #e0e0e0;
+	padding: 16px;
+}
+
+.matter-scheme-control {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+}
+
+// A swatch with its name under it.
+.matter-scheme-control .matter-scheme-control__swatch.components-button,
+.matter-scheme-control .matter-scheme-control__swatch.components-button.is-pressed {
+	align-items: stretch;
+	background: none;
+	color: inherit;
+	flex-direction: column;
+	gap: 4px;
+	height: auto;
+	padding: 0;
+}
+
+.matter-scheme-control .matter-scheme-control__name {
+	font-size: 12px;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+	text-align: center;
+}
+
+.matter-scheme-control .matter-scheme-control__chip {
+	align-items: center;
+	aspect-ratio: 1;
+	background: var(--_swatch-background);
+	border-radius: 4px;
+	box-shadow: inset 0 0 0 1px rgb(0 0 0 / 20%);
+	color: var(--_swatch-text);
+	display: flex;
+	font-size: 16px;
+	font-weight: 600;
+	justify-content: center;
+	overflow: hidden;
+	position: relative;
+
+	// Accent strip showing the scheme's button colour.
+	&::after {
+		background: var(--_swatch-accent);
+		block-size: 6px;
+		content: "";
+		inset: auto 0 0;
+		position: absolute;
+	}
+}
+
+.matter-scheme-control .matter-scheme-control__swatch[aria-pressed="true"] .matter-scheme-control__chip {
+	box-shadow:
+		0 0 0 2px #fff,
+		0 0 0 4px var(--wp-admin-theme-color, #3858e9);
+}
+
+.matter-scheme-control .matter-scheme-control__swatch[aria-pressed="true"] .matter-scheme-control__name {
+	font-weight: 600;
+}
+
+// A gallery's or carousel's button on a child block's toolbar: divided from
+// the child's own buttons in the same group, as its own group would be.
+.block-editor-block-toolbar .matter-parent-toolbar.components-toolbar-group:not(:first-child) {
+	border-inline-start: 1px solid #1e1e1e;
+	margin-inline-start: 6px;
+}
+
+// Overlays sidebar.
+.matter-overlays {
+	list-style: none;
+	margin: 0 0 16px;
+	padding: 0;
+}
+
+.matter-overlays__item {
+	align-items: flex-start;
+	border-radius: 2px;
+	display: flex;
+	gap: 4px;
+	margin: 0;
+
+	&:hover,
+	&.is-editing {
+		background: #f0f0f0;
+	}
+}
+
+.matter-overlays__open {
+	appearance: none;
+	background: none;
+	border: 0;
+	border-radius: 2px;
+	color: inherit;
+	cursor: pointer;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	padding: 8px;
+	text-align: start;
+
+	&:focus-visible {
+		box-shadow: 0 0 0 var(--wp-admin-border-width-focus, 2px) var(--wp-admin-theme-color, #3858e9);
+		outline: 2px solid transparent;
+	}
+}
+
+.matter-overlays__title {
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.matter-overlays__meta {
+	color: #757575;
+	font-size: 12px;
+}
+
+.matter-overlays__item .components-dropdown-menu {
+	padding-block-start: 4px;
+}
+
+.matter-overlays__add {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-block-start: 16px;
+}
+
+// A displayed query's style buttons (the block's own block styles).
+.matter-display-styles {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.matter-display-styles .components-button {
+	justify-content: center;
+}

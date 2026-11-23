@@ -2,71 +2,94 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/modal",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"title": "Modal",
-	"keywords": [ "dialog", "modal", "popup" ],
 	"category": "widgets",
-	"description": "An interactive modal dialog to display content without leaving the page.",
-	"allowedBlocks": [ "matter/trigger", "matter/trigger-hamburger", "matter/modal-content" ],
+	"description": "Content shown in a box over the page, opened by a button or link.",
+	"keywords": [
+		"dialog",
+		"popup",
+		"lightbox"
+	],
 	"attributes": {
-		"generatedId": {
+		"overlayId": {
 			"type": "string",
 			"default": ""
 		},
-		"editorIsOpen": {
-			"type": "boolean",
-			"default": false,
-			"role": "local"
+		"label": {
+			"type": "string",
+			"default": "",
+			"role": "content"
 		},
-		"dismissedDuration": {
-			"type": "string"
-		},
-		"triggerOnLoad": {
+		"openOnLoad": {
 			"type": "boolean",
 			"default": false
 		},
-		"triggerDelay": {
-			"type": "string"
+		"openDelay": {
+			"type": "number",
+			"default": 0
 		},
-		"triggerOnScroll": {
+		"openOnScroll": {
 			"type": "boolean",
 			"default": false
-		},
-		"scrollSelector": {
-			"type": "string"
 		},
 		"scrollThreshold": {
-			"type": "string",
-			"default": "10"
+			"type": "number",
+			"default": 50
 		},
 		"urlTriggers": {
 			"type": "array",
 			"default": []
 		},
-		"groupId": {
+		"dismissDays": {
+			"type": "number",
+			"default": 0
+		},
+		"dismissible": {
+			"type": "boolean",
+			"default": true
+		},
+		"group": {
 			"type": "string",
 			"default": ""
 		}
 	},
-	"providesContext": {
-		"matter/modal-is-open": "editorIsOpen"
-	},
-	"usesContext": [
-		"postId",
-		"postType",
-		"queryId"
-	],
 	"supports": {
-		"anchor": true,
 		"html": false,
+		"reusable": false,
 		"interactivity": true,
-		"contentRole": true,
-		"listView": true
+		"matter": {
+			"scheme": true,
+			"section": false,
+			"slots": {
+				"trigger": {},
+				"content": {
+					"template": [
+						[
+							"core/heading",
+							{
+								"level": 2,
+								"placeholder": "Heading"
+							}
+						],
+						[
+							"core/paragraph",
+							{
+								"placeholder": "Content…"
+							}
+						]
+					]
+				}
+			}
+		}
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
+	"viewScriptModule": "matter/overlay",
 	"render": "file:./render.php",
-	"viewScriptModule": "matter/overlay-store"
+	"usesContext": [
+		"postId"
+	]
 }

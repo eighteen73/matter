@@ -1,60 +1,67 @@
 <?php
 /**
- * The following variables are exposed to the file:
- *     $attributes (array): The block attributes.
- *     $content (string): The block default content.
- *     $block (WP_Block): The block instance.
+ * Carousel: each inner block is a slide, or the items of a Query Loop,
+ * Product Collection or Terms Query. Behaviour comes from the chosen variant
+ * (block style); slide widths and spacing come from theme CSS. When every
+ * slide is an image, the images share one aspect ratio (a theme preset; the
+ * variant's by default).
  *
- * @package Eighteen73\Matter\Carousel
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Rendered slides.
+ * @param WP_Block $block      Block instance.
+ *
+ * @package Eighteen73\Matter
  */
 
+use Eighteen73\Matter\AspectRatio;
 use Eighteen73\Matter\Blocks\Carousel;
+use Eighteen73\Matter\Blocks\Instances;
+use Eighteen73\Matter\Ids;
+use Eighteen73\Matter\Variants;
 
-defined( 'ABSPATH' ) || exit;
+$matter_options = Variants::get( 'matter/carousel', $attributes );
+$matter_style   = '';
 
-$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
-$carousel_id      = Carousel::resolve_id( $block_attributes, $block_context );
+$matter_is_images = count( $block->inner_blocks ) > 0;
+$matter_images    = [];
 
-$carousel_classes = implode( ' ', Carousel::generate_carousel_classes( $block_attributes ) );
-$carousel_context = Carousel::build_carousel_context( $carousel_id, $block_attributes );
-$generated_styles = Carousel::generate_styles( $carousel_id, $block_attributes );
-
-if ( ! empty( $generated_styles ) ) {
-	wp_enqueue_block_support_styles( $generated_styles, 10 );
+foreach ( $block->inner_blocks as $matter_inner ) {
+	$matter_is_images = $matter_is_images && 'core/image' === $matter_inner->name;
+	$matter_images[]  = (int) ( $matter_inner->attributes['id'] ?? 0 );
 }
 
-wp_interactivity_state(
-	'matter/carousel/private',
+if ( $matter_is_images ) {
+	$matter_style = AspectRatio::style( (string) ( ( $attributes['aspectRatio'] ?? '' ) ?: ( $matter_options['aspectRatio'] ?? '' ) ) );
+}
+
+// A query shown as a carousel (Blocks\QueryDisplay) has no inner blocks: its
+// items are the slides. Marked here too (view.js marks it as well), so the
+// layout is right before the script starts.
+$matter_is_query = ! $block->inner_blocks && str_contains( $content, Instances::LIST_CLASS );
+$matter_classes  = array_filter(
 	[
-		'items' => [
-			$carousel_id => [
-				'instance' => null,
-			],
-		],
+		$matter_style ? 'has-image-aspect-ratio' : '',
+		$matter_is_query ? 'is-query' : '',
 	]
 );
-?>
 
-<div
-	<?php
-	echo wp_kses_data(
+$matter_html = Carousel::render(
+	$content,
+	$matter_options,
+	// The HTML anchor is a saved ID, so a copy of the block keeps its IDs unique.
+	Ids::claim_wrapper(
 		get_block_wrapper_attributes(
-			[
-				'id'                  => $carousel_id,
-				'data-wp-interactive' => 'matter/carousel',
-				'data-wp-init'        => 'callbacks.loadCarousel',
-				'class'               => $carousel_classes,
-			]
+			array_filter(
+				[
+					'class' => implode( ' ', $matter_classes ),
+					'style' => $matter_style,
+				]
+			)
 		)
-		. ' '
-		. wp_interactivity_data_wp_context( $carousel_context )
-	);
-	?>
->
-	<div
-		class="embla"
-	>
-		<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-	</div>
-</div>
+	),
+	trim( (string) ( $attributes['label'] ?? '' ) ),
+	// Image slides can have thumbnails.
+	[ 'thumbnails' => $matter_is_images ? $matter_images : [] ]
+);
+
+echo $matter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Carousel::render().

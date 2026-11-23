@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "matter/results-count",
+	"version": "1.0.0",
+	"title": "Results count",
+	"category": "matter-filters",
+	"description": "How many results the list has, e.g. \"Showing 1–12 of 48 results\".",
+	"usesContext": [
+		"queryId",
+		"query"
+	],
+	"attributes": {},
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"reusable": false,
+		"renaming": false,
+		"interactivity": {
+			"clientNavigation": true
+		}
+	},
+	"textdomain": "matter",
+	"editorScript": "file:./index.js",
+	"viewScriptModule": "matter/filters",
+	"render": "file:./render.php"
+}

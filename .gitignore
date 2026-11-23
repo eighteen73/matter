@@ -40,6 +40,7 @@ tsconfig.tsbuildinfo
 
 # wp-env config
 .wp-env.override.json
+.wp-env.tests.override.json
 
 # Unit tests
 tmp/
@@ -48,3 +49,10 @@ tmp/
 vendor/
 bin/composer/**/vendor/
 lib/vendor/
+
+# PHPUnit
+.phpunit.result.cache
+tests/php/__snapshots__/*.actual
+
+# Playwright
+artifacts/

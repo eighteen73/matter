@@ -1,1633 +1,436 @@
-/* global MutationObserver */
-import clsx from 'clsx';
-import { createBlock } from '@wordpress/blocks';
+/**
+ * WordPress dependencies
+ */
 import {
+	BlockControls,
 	InspectorControls,
 	MediaPlaceholder,
-	MediaReplaceFlow,
-	BlockControls,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
-	store as blockEditorStore,
-	useSettings,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalSpacingSizesControl as SpacingSizesControl,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalGetGapCSSValue as getGapCSSValue,
-	RichText,
 } from '@wordpress/block-editor';
 import {
-	SelectControl,
-	ToggleControl,
+	PanelBody,
 	RangeControl,
-	FocalPointPicker,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToggleGroupControl as ToggleGroupControl,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanel as ToolsPanel,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem,
+	TextControl,
+	ToggleControl,
+	ToolbarButton,
+	ToolbarGroup,
 } from '@wordpress/components';
-import { useEffect, useMemo, useRef } from '@wordpress/element';
-import { __, _x, sprintf } from '@wordpress/i18n';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { createBlobURL } from '@wordpress/blob';
-import { store as noticesStore } from '@wordpress/notices';
-import useEmblaCarousel from 'embla-carousel-react';
-
-import {
-	normalizeCarouselConfig,
-	prepareCarouselBlockState,
-	buildCarouselPlugins,
-} from '../../utils/carousel/config';
-import {
-	addPrevNextBtnsClickHandlers,
-	addThumbsClickHandlers,
-} from '../../utils/carousel/handlers';
-import { Gallery as GalleryIcon } from '../../components/icons/gallery';
-import ColorControl from '../../components/color-control';
-import { storeColorValue } from '../../utils/colors';
-import { getBlockStyles } from '../../utils/block-styles';
-import useBlockId from '../../utils/use-block-id';
-
-const ALLOWED_MEDIA_TYPES = ['image'];
-const DEFAULT_BLOCK = { name: 'core/image' };
-const EMPTY_ARRAY = [];
-const DEFAULT_GRID_LAYOUT = { type: 'grid', columnCount: 3 };
-const DEFAULT_FLOW_LAYOUT = { type: 'default' };
-const LAYOUT_PANEL_TITLE = __('Layout');
-const EDITOR_SLIDES_SELECTOR =
-	':scope > .block-editor-block-list__block:not(.block-list-appender), :scope > .wp-block:not(.block-list-appender)';
-const PLACEHOLDER_TEXT = __(
-	'Drag and drop images, upload, or choose from your library.',
-	'matter'
-);
+import { useSelect } from '@wordpress/data';
+import { useEffect, useRef, useState } from '@wordpress/element';
+import { __, _n, sprintf } from '@wordpress/i18n';
+import { gallery as icon } from '@wordpress/icons';
 
 /**
- * Managed child `scale` for FocalPointPicker.
- * - 'cover' when gallery crops (non-auto aspect ratio, or grid imageCrop)
- * - undefined when grid crop is off and ratio is auto (clear)
- * - null when carousel has no aspect ratio (leave any manual scale alone)
- *
- * @param {string}  ratio Aspect ratio value.
- * @param {boolean} crop  Grid crop-to-fill setting.
- * @param {boolean} grid  Whether the gallery is in grid mode.
- * @return {'cover'|undefined|null} Scale to sync, or null to leave alone.
+ * Internal dependencies
  */
-function getManagedImageScale(ratio, crop, grid) {
-	if (ratio && ratio !== 'auto') {
-		return 'cover';
-	}
-	if (grid) {
-		return crop ? 'cover' : undefined;
-	}
-	return null;
+import {
+	ToggleGroupControl,
+	ToggleGroupControlOption,
+} from '../../components/compat';
+import {
+	CarouselFrame,
+	carouselClasses,
+	selectedSlideIndex,
+	useLiveCarousel,
+	variantOptions,
+} from '../../carousel/editor/live-carousel';
+import {
+	AspectRatioControl,
+	aspectRatioStyle,
+	useAspectRatios,
+} from '../../components/aspect-ratio';
+import {
+	GalleryMediaUpload,
+	useGalleryMedia,
+} from '../../components/gallery-media';
+
+const ALLOWED_BLOCKS = ['core/image'];
+
+/**
+ * How many images a limited grid shows: whole rows at the number of columns
+ * that fit (as the front end's view.js), or the limit if under one row.
+ *
+ * @param {Object} ref   Ref to the grid.
+ * @param {number} limit "Images to show" (0 = all).
+ * @param {string} key   Changes when the layout may have.
+ * @return {number} Images to show.
+ */
+function useVisibleCount(ref, limit, key) {
+	const [columns, setColumns] = useState(1);
+
+	useEffect(() => {
+		const grid = ref.current;
+
+		if (!limit || !grid) {
+			return;
+		}
+
+		const view = grid.ownerDocument.defaultView;
+		const update = () =>
+			setColumns(
+				view
+					.getComputedStyle(grid)
+					.gridTemplateColumns.split(' ')
+					.filter(Boolean).length || 1
+			);
+		const observer = new view.ResizeObserver(update);
+
+		update();
+		observer.observe(grid);
+
+		return () => observer.disconnect();
+	}, [ref, limit, key]);
+
+	return Math.floor(limit / columns) * columns || limit;
 }
 
 /**
- * Hide core's empty Layout inspector panel (PanelBody or ToolsPanel).
+ * Gallery editor, as on the front end: the grid hides images beyond "Images
+ * to show" (in full rows at the current number of columns); the carousel
+ * layout is a live carousel. Columns and the images' aspect ratio are chosen
+ * from the theme's options.
  *
- * @param {boolean} shouldHide Whether the Layout panel should be hidden.
+ * @param {Object}   props
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Attribute setter.
+ * @param {string}   props.clientId      Block client ID.
+ * @return {Element} Gallery editor.
  */
-function syncLayoutPanelVisibility(shouldHide) {
-	const inspector = document.querySelector('.block-editor-block-inspector');
-	if (!inspector) {
-		return;
-	}
-
-	inspector
-		.querySelectorAll(
-			'.components-panel__body, .components-tools-panel, .layout-block-support-panel'
-		)
-		.forEach((panel) => {
-			const isToolsLayout = panel.classList.contains(
-				'layout-block-support-panel'
-			);
-			const toggle = panel.querySelector(
-				':scope > .components-panel__body-title .components-panel__body-toggle'
-			);
-			const toolsHeading = panel.querySelector(
-				':scope > .components-tools-panel-header'
-			);
-			const titleText = (
-				toggle?.textContent ||
-				toolsHeading?.textContent ||
-				''
-			)
-				.replace(/\s+/g, ' ')
-				.trim();
-			const isLayoutPanel =
-				isToolsLayout ||
-				titleText === LAYOUT_PANEL_TITLE ||
-				titleText.startsWith(`${LAYOUT_PANEL_TITLE} `);
-
-			if (!isLayoutPanel) {
-				return;
-			}
-
-			if (shouldHide) {
-				panel.setAttribute('data-matter-hide-layout-panel', '');
-				panel.hidden = true;
-				return;
-			}
-
-			if (panel.hasAttribute('data-matter-hide-layout-panel')) {
-				panel.removeAttribute('data-matter-hide-layout-panel');
-				panel.hidden = false;
-			}
-		});
-}
-
-/**
- * @param {Object} props Block props.
- */
-export default function Edit(props) {
+export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
-		attributes,
-		setAttributes,
-		clientId,
-		className,
-		isSelected,
-		__unstableLayoutClassNames: layoutClassNames,
-	} = props;
-
-	useBlockId({
-		blockName: 'matter/gallery',
-		prefix: 'matter-gallery',
-		attributes,
-		setAttributes,
-		clientId,
-	});
-
-	const {
-		type,
-		aspectRatio,
-		sizeSlug,
-		thumbnailSizeSlug,
 		lightbox,
-		lightboxSizeSlug,
-		lightboxThumbnails,
-		lightboxThumbnailSizeSlug,
-		lightboxThumbnailAspectRatio,
-		lightboxThumbnailFocalPoint,
-		lightboxThumbnailGap,
-		lightboxBackdropColor,
-		lightboxBackdropOpacity,
-		lightboxBackdropBlur,
-		showCaptions,
-		captionStyle,
-		imageLimit,
-		includeThumbnails,
-		thumbnailAspectRatio,
-		thumbnailsVisible,
-		thumbnailGap,
-		imageCrop,
-		allowResize,
-		viewAllText,
-		carouselConfig,
+		captions,
+		label,
 		layout,
-		style,
+		limit,
+		columns,
+		aspectRatio,
+		className = '',
 	} = attributes;
-
-	const isCarousel = type === 'carousel';
-	const isGrid = !isCarousel;
-	const hasImageLimit = isGrid && imageLimit > 0;
-	const lightboxEnabled = lightbox || hasImageLimit;
-	const columnCount = layout?.columnCount || DEFAULT_GRID_LAYOUT.columnCount;
-
-	const setGalleryType = (nextType) => {
-		if (nextType === 'carousel') {
-			setAttributes({
-				type: 'carousel',
-				layout: DEFAULT_FLOW_LAYOUT,
-				allowResize: true,
-			});
-			return;
-		}
-
-		setAttributes({
-			type: 'grid',
-			layout: {
-				type: 'grid',
-				columnCount:
-					layout?.columnCount || DEFAULT_GRID_LAYOUT.columnCount,
-			},
-			allowResize: false,
-		});
-	};
-
-	// Carousel must not keep a grid layout — core layout styles break Embla.
-	useEffect(() => {
-		if (isCarousel && layout?.type === 'grid') {
-			setAttributes({ layout: DEFAULT_FLOW_LAYOUT });
-		}
-	}, [isCarousel, layout?.type, setAttributes]);
-
-	// Core mounts an empty Layout PanelBody for flow layout — hide it for carousel.
-	useEffect(() => {
-		const shouldHideLayoutPanel = isSelected && isCarousel;
-		syncLayoutPanelVisibility(shouldHideLayoutPanel);
-
-		if (!shouldHideLayoutPanel) {
-			return;
-		}
-
-		const inspector = document.querySelector(
-			'.block-editor-block-inspector'
-		);
-		if (!inspector) {
-			return;
-		}
-
-		const observer = new MutationObserver(() => {
-			syncLayoutPanelVisibility(true);
-		});
-		observer.observe(inspector, { childList: true, subtree: true });
-
-		return () => {
-			observer.disconnect();
-			syncLayoutPanelVisibility(false);
-		};
-	}, [isSelected, isCarousel]);
-
-	// Keep allowResize in sync with type (core image reads this via context).
-	useEffect(() => {
-		const nextAllowResize = isCarousel;
-		if (allowResize !== nextAllowResize) {
-			setAttributes({ allowResize: nextAllowResize });
-		}
-	}, [isCarousel, allowResize, setAttributes]);
-
-	// Keep image limit at least one full row when columns change.
-	useEffect(() => {
-		if (!isGrid || imageLimit <= 0) {
-			return;
-		}
-		if (imageLimit < columnCount) {
-			setAttributes({ imageLimit: columnCount });
-		}
-	}, [isGrid, imageLimit, columnCount, setAttributes]);
-
-	const [defaultRatios, themeRatios, showDefaultRatios] = useSettings(
-		'dimensions.aspectRatios.default',
-		'dimensions.aspectRatios.theme',
-		'dimensions.defaultAspectRatios'
+	const isCarousel = layout === 'carousel';
+	const options = variantOptions(
+		'matter/gallery',
+		className,
+		window.matterEditor?.variants?.['matter/carousel']?.default
 	);
+	const carousel = useLiveCarousel(options);
 
-	const { replaceInnerBlocks, updateBlockAttributes, selectBlock } =
-		useDispatch(blockEditorStore);
-	const { createErrorNotice, createSuccessNotice } =
-		useDispatch(noticesStore);
-
-	const { getBlock, getSettings, innerBlockImages } = useSelect(
-		(select) => {
-			const { getBlock: _getBlock, getSettings: _getSettings } =
-				select(blockEditorStore);
-
-			return {
-				getBlock: _getBlock,
-				getSettings: _getSettings,
-				innerBlockImages:
-					_getBlock(clientId)?.innerBlocks ?? EMPTY_ARRAY,
-			};
-		},
+	const { imageCount, selectedSlide } = useSelect(
+		(select) => ({
+			imageCount: select(blockEditorStore).getBlockCount(clientId),
+			selectedSlide: selectedSlideIndex(
+				select,
+				clientId,
+				blockEditorStore
+			),
+		}),
 		[clientId]
 	);
-
-	// Keep child scale in sync so FocalPointPicker unlocks whenever gallery crops.
-	useEffect(() => {
-		const managedScale = getManagedImageScale(
-			aspectRatio,
-			imageCrop,
-			isGrid
-		);
-		if (managedScale === null) {
-			return;
-		}
-
-		const changedAttributes = {};
-		const blocks = [];
-
-		innerBlockImages.forEach((block) => {
-			const currentScale = block.attributes.scale;
-			const isAlreadySynced =
-				currentScale === managedScale ||
-				(!currentScale && managedScale === undefined);
-			if (isAlreadySynced) {
-				return;
-			}
-			blocks.push(block.clientId);
-			changedAttributes[block.clientId] = { scale: managedScale };
-		});
-
-		if (blocks.length > 0) {
-			updateBlockAttributes(blocks, changedAttributes, true);
-		}
-	}, [
-		aspectRatio,
-		imageCrop,
-		isGrid,
-		innerBlockImages,
-		updateBlockAttributes,
-	]);
-
-	const images = useMemo(
-		() =>
-			innerBlockImages.map((block) => ({
-				clientId: block.clientId,
-				id: block.attributes.id,
-				url: block.attributes.url,
-				alt: block.attributes.alt,
-				attributes: block.attributes,
-			})),
-		[innerBlockImages]
-	);
-
-	const hasImages = images.length > 0;
-	const hasImageIds = hasImages && images.some((image) => !!image.id);
-
-	const imageSizeOptions = useMemo(() => {
-		const settings = getSettings();
-		const sizes = settings?.imageSizes ?? [];
-		return sizes.map((size) => ({
-			value: size.slug,
-			label: size.name,
-		}));
-	}, [getSettings]);
-
-	const aspectRatioOptions = useMemo(() => {
-		const themeOptions =
-			themeRatios?.map(({ name, ratio }) => ({
-				label: name,
-				value: ratio,
-			})) ?? [];
-		const defaultOptions =
-			defaultRatios?.map(({ name, ratio }) => ({
-				label: name,
-				value: ratio,
-			})) ?? [];
-
-		return [
-			{
-				label: _x(
-					'Original',
-					'Aspect ratio option for dimensions control',
-					'matter'
-				),
-				value: 'auto',
-			},
-			...(showDefaultRatios ? defaultOptions : []),
-			...themeOptions,
-		];
-	}, [defaultRatios, themeRatios, showDefaultRatios]);
-
-	const resolvedCarouselConfig = useMemo(
-		() => normalizeCarouselConfig(carouselConfig),
-		[carouselConfig]
-	);
-
-	const { carouselOptions, pluginState } = useMemo(
-		() =>
-			prepareCarouselBlockState({
-				carouselConfig: resolvedCarouselConfig,
-			}),
-		[resolvedCarouselConfig]
-	);
-
-	const emblaPlugins = useMemo(
-		() => buildCarouselPlugins(pluginState, { forceInactive: true }),
-		[pluginState]
-	);
-
-	// Matter-only keys — Embla ignores unknown options, but strip to be safe.
-	const emblaInitOptions = useMemo(() => {
-		const {
-			slidesToShow: _slidesToShow,
-			slideGap: _slideGap,
-			...options
-		} = carouselOptions || {};
-		return options;
-	}, [carouselOptions]);
-
-	const [emblaRef, emblaApi] = useEmblaCarousel(
-		{
-			...emblaInitOptions,
-			// Track is the first child of the viewport (Embla default container).
-			slides: EDITOR_SLIDES_SELECTOR,
-			watchFocus: false,
-			active: isCarousel,
-		},
-		emblaPlugins
-	);
-
-	const [thumbsRef, thumbsApi] = useEmblaCarousel({
-		containScroll: 'keepSnaps',
-		dragFree: true,
-		watchFocus: false,
-		active: isCarousel && includeThumbnails,
-	});
-
-	const prevButtonRef = useRef(null);
-	const nextButtonRef = useRef(null);
+	const media = useGalleryMedia(clientId);
+	const { scrollToSlide } = carousel;
 
 	useEffect(() => {
-		if (!emblaApi || !isCarousel) {
-			return;
+		if (isCarousel) {
+			scrollToSlide(selectedSlide);
 		}
-		emblaApi.reInit();
-	}, [
-		emblaApi,
-		isCarousel,
-		images.length,
-		carouselOptions,
-		includeThumbnails,
-	]);
+	}, [isCarousel, selectedSlide, imageCount, scrollToSlide]);
 
-	useEffect(() => {
-		if (
-			!emblaApi ||
-			!isCarousel ||
-			!prevButtonRef.current ||
-			!nextButtonRef.current
-		) {
-			return;
-		}
+	// The theme's column choices and default crop (variant options).
+	const columnChoices = (options.columns ?? []).map(Number);
+	const currentColumns = columns || Number(options.defaultColumns) || 0;
+	const hasColumns = !isCarousel && columnChoices.includes(currentColumns);
+	// "Images to show" counts in whole rows.
+	const rowSize = hasColumns ? currentColumns : 1;
 
-		return addPrevNextBtnsClickHandlers(
-			emblaApi,
-			prevButtonRef.current,
-			nextButtonRef.current
-		);
-	}, [emblaApi, isCarousel, images.length]);
+	// As on the front end, show full rows at the number of columns that fit.
+	const itemsRef = useRef();
 
-	useEffect(() => {
-		if (!emblaApi || !thumbsApi || !isCarousel || !includeThumbnails) {
-			return;
-		}
+	// "Images to show" is empty while all are shown: say so. RangeControl has
+	// no placeholder prop; its ref is the slider, beside the number field.
+	const limitRef = (slider) => {
+		const input = slider
+			?.closest('.components-range-control')
+			?.querySelector('input[type="number"]');
 
-		const thumbsNode = thumbsApi.containerNode();
-		if (!thumbsNode) {
-			return;
-		}
-
-		return addThumbsClickHandlers(emblaApi, thumbsApi, thumbsNode);
-	}, [emblaApi, thumbsApi, isCarousel, includeThumbnails, images.length]);
-
-	const setFadeActive = (active) => {
-		setAttributes({
-			carouselConfig: {
-				...resolvedCarouselConfig,
-				plugins: {
-					...resolvedCarouselConfig.plugins,
-					fade: {
-						...(resolvedCarouselConfig.plugins?.fade || {}),
-						active,
-					},
-				},
-			},
-		});
-	};
-
-	const isValidFileType = (file) => {
-		const mediaTypeSelector = file.type;
-		return (
-			ALLOWED_MEDIA_TYPES.some(
-				(mediaType) => mediaTypeSelector?.indexOf(mediaType) === 0
-			) || file.blob
-		);
-	};
-
-	const updateImages = (selectedImages) => {
-		const newFileUploads =
-			Object.prototype.toString.call(selectedImages) ===
-			'[object FileList]';
-
-		const imageArray = newFileUploads
-			? Array.from(selectedImages).map((file) => {
-					if (!file.url) {
-						return { blob: createBlobURL(file) };
-					}
-					return file;
-				})
-			: selectedImages;
-
-		if (!imageArray.every(isValidFileType)) {
-			createErrorNotice(
-				__(
-					'If uploading to a gallery all files need to be image formats',
-					'matter'
-				),
-				{ id: 'matter-gallery-upload-invalid-file', type: 'snackbar' }
-			);
-			return;
-		}
-
-		const processedImages = imageArray
-			.filter((file) => file.url || isValidFileType(file))
-			.map((file) => {
-				if (!file.url) {
-					return {
-						blob: file.blob || createBlobURL(file),
-					};
-				}
-				return file;
-			});
-
-		const newOrderMap = processedImages.reduce(
-			(result, image, index) => ((result[image.id] = index), result),
-			{}
-		);
-
-		const existingImageBlocks = !newFileUploads
-			? innerBlockImages.filter((block) =>
-					processedImages.find(
-						(img) => img.id === block.attributes.id
-					)
-				)
-			: innerBlockImages;
-
-		const newImageList = processedImages.filter(
-			(img) =>
-				!existingImageBlocks.find(
-					(existingImg) => img.id === existingImg.attributes.id
-				)
-		);
-
-		const hasAspectRatio = aspectRatio && aspectRatio !== 'auto';
-		const managedScale = getManagedImageScale(
-			aspectRatio,
-			imageCrop,
-			isGrid
-		);
-		const newBlocks = newImageList.map((image) =>
-			createBlock('core/image', {
-				id: image.id,
-				blob: image.blob,
-				url: image.url,
-				caption: image.caption,
-				alt: image.alt,
-				sizeSlug,
-				aspectRatio: hasAspectRatio ? aspectRatio : undefined,
-				// Core FocalPointPicker requires scale when gallery crops.
-				...(managedScale !== null ? { scale: managedScale } : {}),
-				lightbox: { enabled: false },
-				linkDestination: 'none',
-			})
-		);
-
-		replaceInnerBlocks(
-			clientId,
-			existingImageBlocks
-				.concat(newBlocks)
-				.sort(
-					(a, b) =>
-						newOrderMap[a.attributes.id] -
-						newOrderMap[b.attributes.id]
-				)
-		);
-
-		if (newBlocks?.length > 0) {
-			selectBlock(newBlocks[0].clientId);
+		if (input) {
+			input.placeholder = __('All', 'matter');
 		}
 	};
+	const visible = useVisibleCount(
+		itemsRef,
+		isCarousel ? 0 : limit,
+		`${currentColumns}-${imageCount}`
+	);
+	const isLimited = !isCarousel && limit > 0 && imageCount > visible;
 
-	const onUploadError = (message) => {
-		createErrorNotice(message, { type: 'snackbar' });
-	};
-
-	const setAspectRatio = (value, crop = imageCrop) => {
-		setAttributes({ aspectRatio: value });
-
-		const hasAspectRatio = value && value !== 'auto';
-		const managedScale = getManagedImageScale(value, crop, isGrid);
-		const changedAttributes = {};
-		const blocks = [];
-
-		getBlock(clientId).innerBlocks.forEach((block) => {
-			blocks.push(block.clientId);
-			changedAttributes[block.clientId] = {
-				aspectRatio: hasAspectRatio ? value : undefined,
-				...(managedScale !== null ? { scale: managedScale } : {}),
-			};
-		});
-
-		updateBlockAttributes(blocks, changedAttributes, true);
-
-		const aspectRatioText = aspectRatioOptions.find(
-			(option) => option.value === value
-		);
-
-		createSuccessNotice(
-			sprintf(
-				/* translators: %s: aspect ratio setting */
-				__('All gallery images updated to aspect ratio: %s', 'matter'),
-				aspectRatioText?.label || value
-			),
-			{
-				id: 'matter-gallery-attributes-aspectRatio',
-				type: 'snackbar',
-			}
-		);
-	};
-
-	const updateImagesSize = (newSizeSlug) => {
-		setAttributes({ sizeSlug: newSizeSlug });
-
-		const changedAttributes = {};
-		const blocks = [];
-
-		getBlock(clientId).innerBlocks.forEach((block) => {
-			blocks.push(block.clientId);
-			changedAttributes[block.clientId] = {
-				sizeSlug: newSizeSlug,
-			};
-		});
-
-		updateBlockAttributes(blocks, changedAttributes, true);
-
-		const imageSize = imageSizeOptions.find(
-			(size) => size.value === newSizeSlug
-		);
-
-		createSuccessNotice(
-			sprintf(
-				/* translators: %s: image size settings */
-				__('All gallery image sizes updated to: %s', 'matter'),
-				imageSize?.label ?? newSizeSlug
-			),
-			{
-				id: 'matter-gallery-attributes-sizeSlug',
-				type: 'snackbar',
-			}
-		);
-	};
-
-	const showViewAll = hasImageLimit && images.length > imageLimit;
-
-	const captionsEnabled = showCaptions !== false;
-	const resolvedCaptionStyle =
-		captionStyle === 'overlay' ? 'overlay' : 'toggle';
+	const aspectRatios = useAspectRatios();
+	const currentRatio = aspectRatio || options.aspectRatio || 'auto';
+	const currentCaptions = captions || options.captions || 'tooltip';
+	// "Show captions" on: the theme's style, or Toggle if it hides them.
+	const shownCaptions = 'hidden' === options.captions ? 'tooltip' : undefined;
 
 	const blockProps = useBlockProps({
-		className: clsx(className, {
-			'wp-block-matter-gallery--grid': isGrid,
-			'wp-block-matter-gallery--carousel': isCarousel,
-			'has-lightbox': lightboxEnabled,
-			'has-image-limit': showViewAll,
-			'is-cropped':
-				isGrid &&
-				(imageCrop || (aspectRatio && aspectRatio !== 'auto')),
-			'has-aspect-ratio': !!(aspectRatio && aspectRatio !== 'auto'),
-			'has-captions': captionsEnabled,
-			[`has-caption-style-${resolvedCaptionStyle}`]: captionsEnabled,
-		}),
+		className: [
+			isCarousel ? 'is-carousel' : 'is-grid',
+			hasColumns && `has-columns has-columns-${currentColumns}`,
+			`has-captions-${currentCaptions}`,
+		]
+			.filter(Boolean)
+			.join(' '),
+		style: aspectRatioStyle(currentRatio, aspectRatios),
 	});
-
-	// Keep a stable InnerBlocks host across grid/carousel so blocks stay mounted.
-	// Layout classnames must live here (not on the figure) so grid columns apply
-	// to the element that actually contains the images.
 	const innerBlocksProps = useInnerBlocksProps(
 		{
-			className: clsx({
-				'wp-block-matter-gallery__track': isCarousel,
-				[layoutClassNames]: isGrid && layoutClassNames,
-			}),
+			ref: itemsRef,
+			className: isCarousel
+				? 'wp-block-matter-carousel__track'
+				: 'wp-block-matter-gallery__items',
 		},
 		{
-			defaultBlock: DEFAULT_BLOCK,
-			directInsert: true,
-			orientation: 'horizontal',
+			allowedBlocks: ALLOWED_BLOCKS,
+			orientation: isCarousel ? 'horizontal' : undefined,
 			renderAppender: false,
-			allowedBlocks: ['core/image'],
 		}
 	);
 
-	const imagesUploading = images.some(
-		(img) => !img.id && img.url?.indexOf('blob:') === 0
-	);
-
-	const fadeActive = !!resolvedCarouselConfig.plugins?.fade?.active;
-	const showCropControl = isGrid && (!aspectRatio || aspectRatio === 'auto');
-	const showCarouselThumbControls = isCarousel && includeThumbnails;
-	const showLightboxThumbControls =
-		lightboxEnabled && lightboxThumbnails !== false;
-	const thumbStyle =
-		thumbnailAspectRatio && thumbnailAspectRatio !== 'auto'
-			? {
-					aspectRatio: thumbnailAspectRatio,
-					objectFit: 'cover',
-				}
-			: undefined;
-	const carouselThumbStyles = {
-		...getBlockStyles({ thumbnailGap }, 'gallery'),
-		...(thumbnailsVisible > 0
-			? { '--matter-gallery--thumbs-visible': thumbnailsVisible }
-			: {}),
-	};
-
-	const carouselGap = isCarousel
-		? getGapCSSValue(style?.spacing?.blockGap)
-		: null;
-	const carouselStyles = carouselGap
-		? { '--matter-gallery--carousel--gap': carouselGap }
-		: undefined;
-
-	if (!hasImages) {
+	if (!imageCount) {
 		return (
-			<figure {...blockProps}>
+			<div {...blockProps}>
 				<MediaPlaceholder
-					icon={GalleryIcon}
+					icon={icon}
 					labels={{
 						title: __('Gallery', 'matter'),
-						instructions: PLACEHOLDER_TEXT,
+						instructions: __(
+							'Drag images, upload new ones or choose from your library.',
+							'matter'
+						),
 					}}
-					onSelect={updateImages}
 					accept="image/*"
-					allowedTypes={ALLOWED_MEDIA_TYPES}
+					allowedTypes={['image']}
 					multiple
 					gallery
-					onError={onUploadError}
-					disableMediaButtons={imagesUploading}
+					handleUpload={false}
+					onSelect={media.update}
 				/>
-			</figure>
+			</div>
 		);
 	}
 
 	return (
 		<>
+			<BlockControls group="other">
+				<ToolbarGroup>
+					<GalleryMediaUpload
+						ids={media.ids}
+						onSelect={media.update}
+						render={({ open, label: openLabel }) => (
+							<ToolbarButton onClick={open}>
+								{openLabel}
+							</ToolbarButton>
+						)}
+					/>
+				</ToolbarGroup>
+			</BlockControls>
 			<InspectorControls>
-				<ToolsPanel
-					label={__('Settings', 'matter')}
-					resetAll={() => {
-						setGalleryType('grid');
-						setAttributes({
-							aspectRatio: 'auto',
-							sizeSlug: 'large',
-							thumbnailSizeSlug: 'thumbnail',
-							imageLimit: 0,
-							includeThumbnails: false,
-							thumbnailAspectRatio: '1',
-							thumbnailsVisible: 0,
-							thumbnailGap: '',
-							imageCrop: true,
-							carouselConfig: {
-								...resolvedCarouselConfig,
-								plugins: {
-									...resolvedCarouselConfig.plugins,
-									fade: {
-										...(resolvedCarouselConfig.plugins
-											?.fade || {}),
-										active: false,
-									},
-								},
-							},
-						});
-						// Pass crop true so scale stays cover after reset (default crop on).
-						setAspectRatio('auto', true);
-						if (sizeSlug !== 'large') {
-							updateImagesSize('large');
-						}
-					}}
-				>
-					<ToolsPanelItem
-						hasValue={() => type !== 'grid'}
-						label={__('Type', 'matter')}
-						onDeselect={() => setGalleryType('grid')}
-						isShownByDefault
+				<PanelBody title={__('Settings', 'matter')}>
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+						isBlock
+						label={__('Layout', 'matter')}
+						value={layout}
+						onChange={(value) => setAttributes({ layout: value })}
 					>
+						<ToggleGroupControlOption
+							value="grid"
+							label={__('Grid', 'matter')}
+						/>
+						<ToggleGroupControlOption
+							value="carousel"
+							label={__('Carousel', 'matter')}
+						/>
+					</ToggleGroupControl>
+					{!isCarousel && columnChoices.length > 1 && (
 						<ToggleGroupControl
-							label={__('Type', 'matter')}
-							value={type}
-							onChange={setGalleryType}
-							isBlock
 							__nextHasNoMarginBottom
 							__next40pxDefaultSize
-						>
-							<ToggleGroupControlOption
-								value="grid"
-								label={__('Grid', 'matter')}
-							/>
-							<ToggleGroupControlOption
-								value="carousel"
-								label={__('Carousel', 'matter')}
-							/>
-						</ToggleGroupControl>
-					</ToolsPanelItem>
-
-					{isCarousel && (
-						<>
-							<ToolsPanelItem
-								hasValue={() => fadeActive}
-								label={__('Transition', 'matter')}
-								onDeselect={() => setFadeActive(false)}
-								isShownByDefault
-							>
-								<ToggleGroupControl
-									label={__('Transition', 'matter')}
-									value={fadeActive ? 'fade' : 'slide'}
-									onChange={(value) =>
-										setFadeActive(value === 'fade')
-									}
-									isBlock
-									__nextHasNoMarginBottom
-									__next40pxDefaultSize
-								>
-									<ToggleGroupControlOption
-										value="slide"
-										label={__('Slide', 'matter')}
-									/>
-									<ToggleGroupControlOption
-										value="fade"
-										label={__('Fade', 'matter')}
-									/>
-								</ToggleGroupControl>
-							</ToolsPanelItem>
-						</>
-					)}
-
-					{imageSizeOptions.length > 0 && (
-						<ToolsPanelItem
-							hasValue={() => sizeSlug !== 'large'}
-							label={__('Image size', 'matter')}
-							onDeselect={() => updateImagesSize('large')}
-							isShownByDefault
-						>
-							<SelectControl
-								label={__('Image size', 'matter')}
-								value={sizeSlug}
-								options={imageSizeOptions}
-								onChange={updateImagesSize}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
-						</ToolsPanelItem>
-					)}
-
-					{aspectRatioOptions.length > 1 && (
-						<ToolsPanelItem
-							hasValue={() =>
-								!!aspectRatio && aspectRatio !== 'auto'
-							}
-							label={__('Aspect ratio', 'matter')}
-							onDeselect={() => setAspectRatio('auto')}
-							isShownByDefault
-						>
-							<SelectControl
-								label={__('Aspect ratio', 'matter')}
-								value={aspectRatio || 'auto'}
-								options={aspectRatioOptions}
-								onChange={setAspectRatio}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
-						</ToolsPanelItem>
-					)}
-
-					{showCropControl && (
-						<ToolsPanelItem
-							hasValue={() => !imageCrop}
-							label={__('Crop images to fill', 'matter')}
-							onDeselect={() =>
-								setAttributes({ imageCrop: true })
-							}
-							isShownByDefault
-						>
-							<ToggleControl
-								label={__('Crop images to fill', 'matter')}
-								checked={!!imageCrop}
-								onChange={(value) =>
-									setAttributes({ imageCrop: value })
-								}
-								__nextHasNoMarginBottom
-							/>
-						</ToolsPanelItem>
-					)}
-					<ToolsPanelItem
-						hasValue={() => showCaptions === false}
-						label={__('Show captions', 'matter')}
-						onDeselect={() => setAttributes({ showCaptions: true })}
-						isShownByDefault
-					>
-						<ToggleControl
-							label={__('Show captions', 'matter')}
-							checked={captionsEnabled}
-							onChange={(value) =>
-								setAttributes({ showCaptions: value })
-							}
+							isBlock
+							label={__('Columns', 'matter')}
 							help={__(
-								'Show captions in the lightbox and on gallery images that have one.',
+								'Fewer columns show where there is less room.',
 								'matter'
 							)}
-							__nextHasNoMarginBottom
-						/>
-					</ToolsPanelItem>
+							value={currentColumns}
+							onChange={(value) => {
+								const count = Number(value);
 
-					{captionsEnabled && (
-						<ToolsPanelItem
-							hasValue={() => captionStyle !== 'toggle'}
-							label={__('Caption style', 'matter')}
-							onDeselect={() =>
-								setAttributes({ captionStyle: 'toggle' })
-							}
-							isShownByDefault
-						>
-							<ToggleGroupControl
-								label={__('Caption style', 'matter')}
-								value={resolvedCaptionStyle}
-								onChange={(value) =>
-									setAttributes({ captionStyle: value })
-								}
-								isBlock
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							>
-								<ToggleGroupControlOption
-									value="toggle"
-									label={__('Toggle', 'matter')}
-								/>
-								<ToggleGroupControlOption
-									value="overlay"
-									label={__('Overlay', 'matter')}
-								/>
-							</ToggleGroupControl>
-						</ToolsPanelItem>
-					)}
-
-					{isGrid && (
-						<>
-							<ToolsPanelItem
-								hasValue={() => imageLimit > 0}
-								label={__('Limit visible images', 'matter')}
-								onDeselect={() =>
-									setAttributes({ imageLimit: 0 })
-								}
-								isShownByDefault
-							>
-								<ToggleControl
-									label={__('Limit visible images', 'matter')}
-									checked={imageLimit > 0}
-									onChange={(enabled) => {
-										if (enabled) {
-											setAttributes({
-												imageLimit: columnCount,
-												lightbox: true,
-											});
-											return;
-										}
-										setAttributes({ imageLimit: 0 });
-									}}
-									help={__(
-										'Show a full grid of images, then open the rest in the lightbox.',
-										'matter'
-									)}
-									__nextHasNoMarginBottom
-								/>
-							</ToolsPanelItem>
-
-							{imageLimit > 0 && (
-								<ToolsPanelItem
-									hasValue={() => imageLimit > columnCount}
-									label={__('Visible image count', 'matter')}
-									onDeselect={() =>
-										setAttributes({
-											imageLimit: columnCount,
-										})
-									}
-									isShownByDefault
-								>
-									<RangeControl
-										label={__(
-											'Visible image count',
-											'matter'
-										)}
-										help={sprintf(
-											/* translators: %d: column count */
-											__(
-												'Minimum is %d (one full row). Remaining images open in the lightbox.',
-												'matter'
-											),
-											columnCount
-										)}
-										value={Math.max(
-											imageLimit,
-											columnCount
-										)}
-										onChange={(value) => {
-											const nextLimit = Math.max(
-												value ?? columnCount,
-												columnCount
-											);
-											setAttributes({
-												imageLimit: nextLimit,
-												lightbox: true,
-											});
-										}}
-										min={columnCount}
-										max={Math.max(
-											images.length,
-											columnCount,
-											12
-										)}
-										__nextHasNoMarginBottom
-										__next40pxDefaultSize
-									/>
-								</ToolsPanelItem>
-							)}
-						</>
-					)}
-
-					{isCarousel && (
-						<ToolsPanelItem
-							hasValue={() => !!includeThumbnails}
-							label={__('Enable thumbnails', 'matter')}
-							onDeselect={() =>
-								setAttributes({ includeThumbnails: false })
-							}
-							isShownByDefault
-						>
-							<ToggleControl
-								label={__('Enable thumbnails', 'matter')}
-								checked={!!includeThumbnails}
-								onChange={(value) =>
-									setAttributes({
-										includeThumbnails: value,
-									})
-								}
-								__nextHasNoMarginBottom
-							/>
-						</ToolsPanelItem>
-					)}
-
-					{showCarouselThumbControls &&
-						imageSizeOptions.length > 0 && (
-							<ToolsPanelItem
-								hasValue={() =>
-									thumbnailSizeSlug !== 'thumbnail'
-								}
-								label={__('Thumbnail size', 'matter')}
-								onDeselect={() =>
-									setAttributes({
-										thumbnailSizeSlug: 'thumbnail',
-									})
-								}
-								isShownByDefault
-							>
-								<SelectControl
-									label={__('Thumbnail size', 'matter')}
-									value={thumbnailSizeSlug}
-									options={imageSizeOptions}
-									onChange={(value) =>
-										setAttributes({
-											thumbnailSizeSlug: value,
-										})
-									}
-									__nextHasNoMarginBottom
-									__next40pxDefaultSize
-								/>
-							</ToolsPanelItem>
-						)}
-
-					{showCarouselThumbControls &&
-						aspectRatioOptions.length > 1 && (
-							<ToolsPanelItem
-								hasValue={() =>
-									thumbnailAspectRatio &&
-									thumbnailAspectRatio !== '1'
-								}
-								label={__('Thumbnail aspect ratio', 'matter')}
-								onDeselect={() =>
-									setAttributes({
-										thumbnailAspectRatio: '1',
-									})
-								}
-								isShownByDefault
-							>
-								<SelectControl
-									label={__(
-										'Thumbnail aspect ratio',
-										'matter'
-									)}
-									value={thumbnailAspectRatio || '1'}
-									options={aspectRatioOptions.filter(
-										(option) => option.value !== 'auto'
-									)}
-									onChange={(value) =>
-										setAttributes({
-											thumbnailAspectRatio: value,
-										})
-									}
-									__nextHasNoMarginBottom
-									__next40pxDefaultSize
-								/>
-							</ToolsPanelItem>
-						)}
-
-					{showCarouselThumbControls && (
-						<ToolsPanelItem
-							hasValue={() => thumbnailsVisible > 0}
-							label={__('Thumbnails visible', 'matter')}
-							onDeselect={() =>
-								setAttributes({ thumbnailsVisible: 0 })
-							}
-							isShownByDefault
-						>
-							<RangeControl
-								label={__('Thumbnails visible', 'matter')}
-								help={__(
-									'0 uses a fixed thumbnail width. Set a number to show that many across the strip.',
-									'matter'
-								)}
-								value={thumbnailsVisible}
-								onChange={(value) =>
-									setAttributes({
-										thumbnailsVisible: value ?? 0,
-									})
-								}
-								min={0}
-								max={12}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
-						</ToolsPanelItem>
-					)}
-				</ToolsPanel>
-
-				<ToolsPanel
-					label={__('Lightbox', 'matter')}
-					resetAll={() => {
-						setAttributes({
-							lightbox: true,
-							lightboxSizeSlug: 'large',
-							lightboxThumbnails: true,
-							lightboxThumbnailSizeSlug: 'thumbnail',
-							lightboxThumbnailAspectRatio: '1',
-							lightboxThumbnailFocalPoint: { x: 0.5, y: 0.5 },
-							lightboxThumbnailGap: '',
-						});
-					}}
-				>
-					<ToolsPanelItem
-						hasValue={() => !!lightbox}
-						label={__('Enable lightbox', 'matter')}
-						onDeselect={() =>
-							!hasImageLimit && setAttributes({ lightbox: false })
-						}
-						isShownByDefault
-					>
-						<ToggleControl
-							label={__('Enable lightbox', 'matter')}
-							checked={lightboxEnabled}
-							disabled={hasImageLimit}
-							onChange={(value) =>
-								setAttributes({ lightbox: value })
-							}
-							help={
-								hasImageLimit
-									? __(
-											'Required when an image limit is set.',
-											'matter'
-										)
-									: __(
-											'Opens images in a lightbox with thumbnails.',
-											'matter'
-										)
-							}
-							__nextHasNoMarginBottom
-						/>
-					</ToolsPanelItem>
-
-					{lightboxEnabled && imageSizeOptions.length > 0 && (
-						<ToolsPanelItem
-							hasValue={() => lightboxSizeSlug !== 'large'}
-							label={__('Image size', 'matter')}
-							onDeselect={() =>
-								setAttributes({ lightboxSizeSlug: 'large' })
-							}
-							isShownByDefault
-						>
-							<SelectControl
-								label={__('Image size', 'matter')}
-								value={lightboxSizeSlug}
-								options={imageSizeOptions}
-								onChange={(value) =>
-									setAttributes({ lightboxSizeSlug: value })
-								}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
-						</ToolsPanelItem>
-					)}
-
-					{lightboxEnabled && (
-						<ToolsPanelItem
-							hasValue={() => lightboxThumbnails === false}
-							label={__('Show thumbnails', 'matter')}
-							onDeselect={() =>
-								setAttributes({ lightboxThumbnails: true })
-							}
-							isShownByDefault
-						>
-							<ToggleControl
-								label={__('Show thumbnails', 'matter')}
-								checked={lightboxThumbnails !== false}
-								onChange={(value) =>
-									setAttributes({
-										lightboxThumbnails: value,
-									})
-								}
-								__nextHasNoMarginBottom
-							/>
-						</ToolsPanelItem>
-					)}
-
-					{showLightboxThumbControls &&
-						imageSizeOptions.length > 0 && (
-							<ToolsPanelItem
-								hasValue={() =>
-									lightboxThumbnailSizeSlug !== 'thumbnail'
-								}
-								label={__('Thumbnail size', 'matter')}
-								onDeselect={() =>
-									setAttributes({
-										lightboxThumbnailSizeSlug: 'thumbnail',
-									})
-								}
-								isShownByDefault
-							>
-								<SelectControl
-									label={__('Thumbnail size', 'matter')}
-									value={lightboxThumbnailSizeSlug}
-									options={imageSizeOptions}
-									onChange={(value) =>
-										setAttributes({
-											lightboxThumbnailSizeSlug: value,
-										})
-									}
-									__nextHasNoMarginBottom
-									__next40pxDefaultSize
-								/>
-							</ToolsPanelItem>
-						)}
-
-					{showLightboxThumbControls &&
-						aspectRatioOptions.length > 1 && (
-							<ToolsPanelItem
-								hasValue={() =>
-									lightboxThumbnailAspectRatio &&
-									lightboxThumbnailAspectRatio !== '1'
-								}
-								label={__('Thumbnail aspect ratio', 'matter')}
-								onDeselect={() =>
-									setAttributes({
-										lightboxThumbnailAspectRatio: '1',
-									})
-								}
-								isShownByDefault
-							>
-								<SelectControl
-									label={__(
-										'Thumbnail aspect ratio',
-										'matter'
-									)}
-									value={lightboxThumbnailAspectRatio || '1'}
-									options={aspectRatioOptions.filter(
-										(option) => option.value !== 'auto'
-									)}
-									onChange={(value) =>
-										setAttributes({
-											lightboxThumbnailAspectRatio: value,
-										})
-									}
-									__nextHasNoMarginBottom
-									__next40pxDefaultSize
-								/>
-							</ToolsPanelItem>
-						)}
-
-					{showLightboxThumbControls && images[0]?.url && (
-						<ToolsPanelItem
-							hasValue={() => {
-								const point = lightboxThumbnailFocalPoint || {
-									x: 0.5,
-									y: 0.5,
-								};
-								return point.x !== 0.5 || point.y !== 0.5;
-							}}
-							label={__('Thumbnail focal point', 'matter')}
-							onDeselect={() =>
+								// Keep "Images to show" to whole rows.
 								setAttributes({
-									lightboxThumbnailFocalPoint: {
-										x: 0.5,
-										y: 0.5,
-									},
-								})
-							}
-							isShownByDefault
+									columns: count,
+									limit: limit
+										? Math.max(
+												count,
+												Math.round(limit / count) *
+													count
+											)
+										: 0,
+								});
+							}}
 						>
-							<FocalPointPicker
-								label={__('Thumbnail focal point', 'matter')}
-								url={images[0].url}
-								value={
-									lightboxThumbnailFocalPoint || {
-										x: 0.5,
-										y: 0.5,
-									}
-								}
-								onDrag={(value) =>
-									setAttributes({
-										lightboxThumbnailFocalPoint: value,
-									})
-								}
-								onChange={(value) =>
-									setAttributes({
-										lightboxThumbnailFocalPoint: value,
-									})
-								}
-							/>
-						</ToolsPanelItem>
+							{columnChoices.map((count) => (
+								<ToggleGroupControlOption
+									key={count}
+									value={count}
+									label={String(count)}
+								/>
+							))}
+						</ToggleGroupControl>
 					)}
-				</ToolsPanel>
-			</InspectorControls>
-
-			{lightboxEnabled && (
-				<InspectorControls group="color">
-					<ColorControl
-						label={__('Backdrop', 'matter')}
-						value={lightboxBackdropColor}
-						attributeName="lightboxBackdropColor"
-						onChange={(value, slug) =>
+					{!isCarousel && (
+						<RangeControl
+							ref={limitRef}
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							label={__('Images to show', 'matter')}
+							help={
+								limit > 0
+									? __(
+											'Shown in full rows; the rest open from a "View all" button.',
+											'matter'
+										)
+									: __('All images are shown.', 'matter')
+							}
+							value={limit || undefined}
+							min={rowSize}
+							step={rowSize}
+							max={Math.max(imageCount, rowSize)}
+							allowReset
+							resetFallbackValue={0}
+							onChange={(value) =>
+								setAttributes({ limit: value ?? 0 })
+							}
+						/>
+					)}
+					<AspectRatioControl
+						value={currentRatio}
+						presets={aspectRatios}
+						onChange={(value) =>
+							setAttributes({ aspectRatio: value })
+						}
+					/>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__('Show captions', 'matter')}
+						help={__(
+							'Show captions in the lightbox and on gallery images that have one.',
+							'matter'
+						)}
+						checked={'hidden' !== currentCaptions}
+						onChange={(show) =>
 							setAttributes({
-								lightboxBackdropColor: storeColorValue(
-									slug,
-									value
-								),
+								captions: show ? shownCaptions : 'hidden',
 							})
 						}
-						panelId={clientId}
 					/>
-
-					{lightboxBackdropColor && (
-						<>
-							<ToolsPanelItem
-								hasValue={() => lightboxBackdropOpacity !== 85}
-								label={__('Backdrop opacity', 'matter')}
-								onDeselect={() =>
-									setAttributes({
-										lightboxBackdropOpacity: 85,
-									})
-								}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<RangeControl
-									label={__('Backdrop opacity', 'matter')}
-									value={lightboxBackdropOpacity}
-									onChange={(value) =>
-										setAttributes({
-											lightboxBackdropOpacity: value,
-										})
-									}
-									min={0}
-									max={100}
-									step={10}
-									required
-									__next40pxDefaultSize
-								/>
-							</ToolsPanelItem>
-
-							<ToolsPanelItem
-								hasValue={() => !!lightboxBackdropBlur}
-								label={__('Backdrop blur', 'matter')}
-								onDeselect={() =>
-									setAttributes({
-										lightboxBackdropBlur: 0,
-									})
-								}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<RangeControl
-									label={__('Backdrop blur', 'matter')}
-									value={lightboxBackdropBlur}
-									onChange={(value) =>
-										setAttributes({
-											lightboxBackdropBlur: value,
-										})
-									}
-									min={0}
-									max={10}
-									step={1}
-									required
-									__next40pxDefaultSize
-								/>
-							</ToolsPanelItem>
-						</>
-					)}
-				</InspectorControls>
-			)}
-
-			{(showCarouselThumbControls || showLightboxThumbControls) && (
-				<InspectorControls group="dimensions">
-					{showCarouselThumbControls && (
-						<ToolsPanelItem
-							hasValue={() => !!thumbnailGap}
-							label={__('Thumbnail spacing', 'matter')}
-							onDeselect={() =>
-								setAttributes({ thumbnailGap: '' })
+					{'hidden' !== currentCaptions && (
+						<ToggleGroupControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							isBlock
+							label={__('Caption style', 'matter')}
+							value={currentCaptions}
+							onChange={(value) =>
+								setAttributes({ captions: value })
 							}
-							resetAllFilter={() => ({
-								thumbnailGap: '',
-							})}
-							panelId={clientId}
 						>
-							<SpacingSizesControl
-								label={__('Thumbnail spacing', 'matter')}
-								values={{
-									top: thumbnailGap || undefined,
-								}}
-								onChange={({ top }) =>
-									setAttributes({
-										thumbnailGap: top || '',
-									})
-								}
-								sides={['top']}
-								showSideInLabel={false}
+							<ToggleGroupControlOption
+								value="tooltip"
+								label={__('Toggle', 'matter')}
 							/>
-						</ToolsPanelItem>
+							<ToggleGroupControlOption
+								value="overlay"
+								label={__('Overlay', 'matter')}
+							/>
+						</ToggleGroupControl>
 					)}
-
-					{showLightboxThumbControls && (
-						<ToolsPanelItem
-							hasValue={() => !!lightboxThumbnailGap}
-							label={__('Lightbox thumbnail spacing', 'matter')}
-							onDeselect={() =>
-								setAttributes({ lightboxThumbnailGap: '' })
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__('Open images in a lightbox', 'matter')}
+						checked={lightbox}
+						onChange={(value) => setAttributes({ lightbox: value })}
+					/>
+					{isCarousel && (
+						<TextControl
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+							label={__('Name', 'matter')}
+							help={__(
+								'Describes the carousel to screen readers.',
+								'matter'
+							)}
+							value={label}
+							onChange={(value) =>
+								setAttributes({ label: value })
 							}
-							resetAllFilter={() => ({
-								lightboxThumbnailGap: '',
-							})}
-							panelId={clientId}
-						>
-							<SpacingSizesControl
-								label={__(
-									'Lightbox thumbnail spacing',
-									'matter'
-								)}
-								values={{
-									top: lightboxThumbnailGap || undefined,
-								}}
-								onChange={({ top }) =>
-									setAttributes({
-										lightboxThumbnailGap: top || '',
-									})
-								}
-								sides={['top']}
-								showSideInLabel={false}
-							/>
-						</ToolsPanelItem>
+						/>
 					)}
-				</InspectorControls>
-			)}
-
-			<BlockControls group="other">
-				<MediaReplaceFlow
-					allowedTypes={ALLOWED_MEDIA_TYPES}
-					handleUpload={false}
-					onSelect={updateImages}
-					name={__('Add', 'matter')}
-					multiple
-					mediaIds={images
-						.filter((image) => image.id)
-						.map((image) => image.id)}
-					addToGallery={hasImageIds}
-					onError={onUploadError}
-				/>
-			</BlockControls>
-
-			{hasImageLimit && (
-				<style>
-					{`
-						.block-editor-block-list__block[data-block="${clientId}"] .block-editor-block-list__layout > .wp-block:nth-child(n + ${imageLimit + 1}) {
-							display: none !important;
-						}
-					`}
-				</style>
-			)}
-
-			<figure {...blockProps}>
-				{lightboxEnabled && !showViewAll && (
-					<span
-						className="wp-block-matter-gallery__lightbox-indicator"
-						aria-hidden="true"
+				</PanelBody>
+			</InspectorControls>
+			<div {...blockProps}>
+				{isCarousel ? (
+					<div
+						className={`wp-block-matter-gallery__items wp-block-matter-carousel ${carouselClasses(
+							carousel
+						)}`}
 					>
-						<span className="wp-block-matter-gallery__icon" />
-					</span>
-				)}
-				<div
-					className={
-						isCarousel
-							? 'wp-block-matter-gallery__carousel'
-							: 'wp-block-matter-gallery__grid'
-					}
-					style={isCarousel ? carouselStyles : undefined}
-				>
-					<div className="wp-block-matter-gallery__stage">
-						<div
-							className="wp-block-matter-gallery__viewport"
-							ref={isCarousel ? emblaRef : undefined}
-						>
-							<div {...innerBlocksProps} />
-						</div>
-
-						{isCarousel && (
-							<div className="wp-block-matter-gallery__controls">
-								<div className="wp-block-matter-gallery__buttons">
-									<button
-										type="button"
-										className="wp-block-matter-gallery__button wp-block-matter-gallery__button--previous"
-										ref={prevButtonRef}
-										aria-label={__(
-											'Previous image',
-											'matter'
-										)}
-									>
-										<span
-											className="wp-block-matter-gallery__icon"
-											aria-hidden="true"
-										/>
-									</button>
-									<button
-										type="button"
-										className="wp-block-matter-gallery__button wp-block-matter-gallery__button--next"
-										ref={nextButtonRef}
-										aria-label={__('Next image', 'matter')}
-									>
-										<span
-											className="wp-block-matter-gallery__icon"
-											aria-hidden="true"
-										/>
-									</button>
-								</div>
-							</div>
-						)}
-					</div>
-
-					{isCarousel && includeThumbnails && (
-						<div
-							className={clsx('wp-block-matter-gallery__thumbs', {
-								'has-visible-count': thumbnailsVisible > 0,
-							})}
-							style={carouselThumbStyles}
+						<CarouselFrame
+							carousel={carousel}
+							options={options}
+							thumbnails={media.urls}
+							canExpand={lightbox}
 						>
 							<div
-								className="wp-block-matter-gallery__thumbs-viewport"
-								ref={thumbsRef}
+								className="wp-block-matter-carousel__viewport"
+								ref={carousel.ref}
 							>
-								<div className="wp-block-matter-gallery__thumbs-track">
-									{images.map((image, index) => (
-										<button
-											key={
-												image.clientId ||
-												image.id ||
-												index
-											}
-											type="button"
-											className="wp-block-matter-gallery__thumb"
-											aria-label={sprintf(
-												/* translators: %d: image number */
-												__('Go to image %d', 'matter'),
-												index + 1
-											)}
-										>
-											{image.url ? (
-												<img
-													src={image.url}
-													alt={image.alt || ''}
-													style={thumbStyle}
-												/>
-											) : null}
-										</button>
-									))}
-								</div>
+								<div {...innerBlocksProps} />
 							</div>
-						</div>
-					)}
-				</div>
-
-				{showViewAll && (
-					<RichText
-						tagName="div"
-						className="wp-block-matter-gallery__view-all"
-						value={viewAllText}
-						onChange={(value) =>
-							setAttributes({ viewAllText: value })
-						}
-						allowedFormats={[]}
-					/>
+						</CarouselFrame>
+					</div>
+				) : (
+					<>
+						{isLimited && (
+							<style>
+								{/* Counting blocks only: a selected image adds a measuring element. */}
+								{`#block-${clientId} .wp-block-matter-gallery__items > [data-block]:nth-child(n + ${
+									visible + 1
+								} of [data-block]):not(.is-selected, .has-child-selected) { display: none; }`}
+							</style>
+						)}
+						<div {...innerBlocksProps} />
+						{isLimited && (
+							<button
+								type="button"
+								className="wp-block-matter-gallery__more"
+								aria-disabled="true"
+							>
+								{sprintf(
+									/* translators: %d: number of images */
+									_n(
+										'View all %d image',
+										'View all %d images',
+										imageCount,
+										'matter'
+									),
+									imageCount
+								)}
+							</button>
+						)}
+					</>
 				)}
-			</figure>
+			</div>
 		</>
 	);
 }

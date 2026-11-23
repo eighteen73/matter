@@ -1,9 +1,12 @@
-import { useBlockProps } from '@wordpress/block-editor';
+import {
+	store as blockEditorStore,
+	useBlockProps,
+} from '@wordpress/block-editor';
+import { useSelect } from '@wordpress/data';
 import { Disabled, Notice, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { GravityForm as GravityFormIcon } from '../../components/icons/gravity-form';
 import { useServerSideRender } from '@wordpress/server-side-render';
-import useBlockId from '../../utils/use-block-id';
 import GravityFormBlockControls from './components/block-controls';
 import GravityFormInspectorControls from './components/inspector-controls';
 import GravityFormPlaceholder from './components/placeholder';
@@ -37,13 +40,61 @@ function getFormOptions(forms) {
 }
 
 /**
+ * A sample form for the inserter's preview, in Gravity Forms' markup so the
+ * theme's form styles apply.
+ *
+ * @return {Element} Sample form.
+ */
+function ExampleForm() {
+	const fields = [
+		[__('Name', 'matter'), 'input'],
+		[__('Email', 'matter'), 'input'],
+		[__('Message', 'matter'), 'textarea'],
+	];
+
+	return (
+		<Disabled>
+			<div className="gform_wrapper gravity-theme">
+				<form>
+					<div className="gform_body">
+						<div className="gform_fields">
+							{fields.map(([label, Field], index) => (
+								<div className="gfield" key={label}>
+									<label
+										className="gfield_label"
+										htmlFor={`matter-example-field-${index}`}
+									>
+										{label}
+									</label>
+									<div className="ginput_container">
+										<Field
+											id={`matter-example-field-${index}`}
+										/>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+					<div className="gform_footer">
+						<input
+							type="submit"
+							className="gform_button button"
+							value={__('Send', 'matter')}
+						/>
+					</div>
+				</form>
+			</div>
+		</Disabled>
+	);
+}
+
+/**
  * @param {Object}   props               Block props.
  * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Update attributes.
- * @param {string}   props.clientId      Block client ID.
  * @return {Element} Element to render.
  */
-export default function Edit({ attributes, setAttributes, clientId }) {
+export default function Edit({ attributes, setAttributes }) {
 	const {
 		formId = '',
 		displayTitle,
@@ -51,10 +102,13 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		ajaxSubmission,
 		tabindex,
 		fieldValues,
-		generatedId,
 		anchor,
 	} = attributes;
 	const blockProps = useBlockProps();
+	const isPreview = useSelect(
+		(select) => !!select(blockEditorStore).getSettings().isPreviewMode,
+		[]
+	);
 	const forms = getForms();
 	const formOptions = getFormOptions(forms);
 	const selectedForm = forms.find(
@@ -62,14 +116,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	);
 	const hasInvalidFormId = Boolean(formId) && !selectedForm;
 	const blockIcon = GravityFormIcon;
-
-	useBlockId({
-		blockName: 'matter/gravity-form',
-		prefix: 'matter-gravity-form',
-		attributes,
-		setAttributes,
-		clientId,
-	});
 
 	const { content: previewHtml = '', status: previewStatus } =
 		useServerSideRender({
@@ -81,11 +127,19 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				ajaxSubmission,
 				tabindex,
 				fieldValues,
-				generatedId,
 				anchor,
 			},
 			skipBlockSupportAttributes: true,
 		});
+
+	// The inserter's preview: a sample, not the form picker.
+	if (isPreview && !formId) {
+		return (
+			<div {...blockProps}>
+				<ExampleForm />
+			</div>
+		);
+	}
 
 	const inspectorControls = (
 		<GravityFormInspectorControls

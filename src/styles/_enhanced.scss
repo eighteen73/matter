@@ -1,0 +1,73 @@
+// When a block's script is running, or is about to: the CSS that hides content
+// (closed panels, submenus, an off-canvas panel) is only applied then, so a
+// visitor without JavaScript, or whose script failed, gets the content.
+
+// The head script adds `matter-js` to <html>, and `matter-late` four seconds
+// after the page is parsed. A block type's script adds `is-enhanced` to the
+// block when it starts, and `matter-ready-{type}` to <html> (it has run on this
+// page, so a block of that type inserted later, by client-side navigation or
+// Live results, is about to start too). "About to" is `matter-js` and either
+// not yet `matter-late`, or `matter-ready-{type}`: the script has been asked for
+// and has had its allowance, or has proved itself, so the content isn't shown
+// only to be hidden a moment later. A type whose script never started
+// (blocked, failed) never gets `matter-ready-{type}`, so after `matter-late`
+// its blocks are plain content again, whatever other types are doing. See
+// "Without JavaScript" in the README.
+// `enhanced($type)` goes after a selector, for the element that is marked
+// (`.panel#{enhanced(panel)}`). It is always the element's own mark, never an
+// ancestor's, so a nested block (an accordion in a tab, say) whose script
+// didn't start isn't hidden by an enhanced block around it: a block marks the
+// parts of itself that the CSS hides (an accordion its items, tabs their
+// panels), not those of a block nested in it. It holds in the block editor
+// (`.editor-styles-wrapper`), which shows the enhanced look without running
+// the scripts; `enhanced-front` leaves the editor out, for rules the editor's
+// own markup doesn't take part in.
+
+@function about-to-be($type) {
+	@return "html.matter-js:is(:not(.matter-late), .matter-ready-#{$type})";
+}
+
+// Themes copy this string (Pulsar's `matter-enhanced()`, in
+// `src/css/tools/mixins/_matter.scss`): a theme's build can't count on Matter's
+// source being there to `@use`. Change it only with the CHANGELOG line and the
+// Jest test in `src/styles/test/enhanced-gate.js`, and change the copies too.
+@function enhanced($type) {
+	@return ":is(.is-enhanced, #{about-to-be($type)} *, .editor-styles-wrapper *)";
+}
+
+@function enhanced-front($type) {
+	@return ":is(.is-enhanced, #{about-to-be($type)} *)";
+}
+
+// The page is without JavaScript, or a type's script has had its allowance
+// and never started (what `enhanced()` is not, for a block that isn't marked).
+@function without-script($type) {
+	@return ":where(html:not(.matter-js), html.matter-late:not(.matter-ready-#{$type}))";
+}
+
+// A dialog (modal or drawer) that nothing has opened: a link to its #ID, with
+// JavaScript off or a script that didn't start, shows it in the page where it
+// is, as content, instead of leaving the link with nothing to do. Only then:
+// while the script is about to start it opens the dialog itself, and the
+// dialog shown in the page first would flash (and scroll the page to it).
+@mixin shown-in-place($block) {
+	#{without-script(overlay)} .#{$block}:not(.is-enhanced):target {
+		display: block;
+		height: auto;
+		inset: auto;
+		margin: 1em 0;
+		max-height: none;
+		max-width: none;
+		opacity: 1;
+		position: static;
+		scale: none;
+		transition: none;
+		translate: none;
+		width: auto;
+	}
+
+	// Their buttons need the script.
+	#{without-script(overlay)} .#{$block}:not(.is-enhanced):target :is(.#{$block}__close, .#{$block}__group-nav) {
+		display: none;
+	}
+}

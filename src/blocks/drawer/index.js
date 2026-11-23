@@ -1,14 +1,19 @@
+/**
+ * WordPress dependencies
+ */
 import { registerBlockType } from '@wordpress/blocks';
-import { drawerLeft } from '@wordpress/icons';
+import { drawerRight } from '@wordpress/icons';
+import { InnerBlocks } from '@wordpress/block-editor';
 
+/**
+ * Internal dependencies
+ */
+import Edit from './edit';
+import metadata from './block.json';
 import './style.scss';
 
-import Edit from './edit';
-import Save from './save';
-import metadata from './block.json';
-
 registerBlockType(metadata.name, {
-	icon: drawerLeft,
+	icon: drawerRight,
 	edit: Edit,
-	save: Save,
+	save: () => <InnerBlocks.Content />,
 });

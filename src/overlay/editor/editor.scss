@@ -1,0 +1,51 @@
+// Overlay blocks in the editor show what the front end shows.
+// Modal and drawer: as on the front end, the block is the `-host` of the
+// trigger area (in the page) and the dialog. The dialog wraps the content
+// slot and is a popover (see dialog-preview.js): hidden while closed, and in
+// the top layer with the theme's ::backdrop while open.
+// Collapsible: the content shows in place while open.
+// Without a trigger, a closed overlay takes no space (it's reached from the
+// Overlays sidebar, List View or a button linking to it).
+
+$trigger: "> :is(.wp-block-matter-modal__trigger, .wp-block-matter-drawer__trigger, .wp-block-matter-collapsible__trigger)";
+
+// Kept while its dialog animates closed.
+.matter-overlay-editor:not(.has-trigger, .is-editor-open, :has(> .matter-overlay-editor__dialog.is-shown)) {
+	display: none;
+}
+
+// Empty trigger area (removed with "Trigger on the page").
+.matter-overlay-editor:not(.has-trigger) #{$trigger} {
+	display: none;
+}
+
+.matter-overlay-editor.is-overlay-collapsible:not(.is-editor-open) > .wp-block-matter-collapsible__content {
+	display: none;
+}
+
+// As a modal <dialog>: editor block and layout rules would otherwise win
+// (the front end has `dialog.wp-block-matter-*` rules for the same reason).
+.matter-overlay-editor__dialog {
+	position: fixed;
+
+	&.wp-block-matter-modal {
+		margin: auto;
+	}
+
+	&.wp-block-matter-drawer {
+		margin: 0;
+	}
+}
+
+// In the inserter's preview, in place rather than over the page.
+.matter-overlay-editor__dialog.is-preview {
+	block-size: auto;
+	inset: auto;
+	margin-block: 0;
+	margin-inline: auto;
+	opacity: 1;
+	position: static;
+	transform: none;
+	translate: none;
+	visibility: visible;
+}

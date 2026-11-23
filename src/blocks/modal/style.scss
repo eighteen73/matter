@@ -1,7 +1,214 @@
-.wp-block-matter-modal {
-	$block: &;
+// Modal: a centred native <dialog>.
+// Functional rules first, at one class (plus the element's own state); then
+// the default skin, all in :where() so any theme selector beats it. The skin
+// includes the motion: a theme restyling it sets the open and closed states
+// it changes (`[open]`, `[open].is-closing`), as the rules below do.
+
+@use "../../styles/icon" as *;
+@use "../../styles/enhanced" as *;
+
+// The page doesn't scroll behind an open modal or drawer (as behind a panel).
+html.has-overlay-open {
+	overflow: hidden;
 }
 
-.has-modal-open {
-	overflow: hidden;
+// Only a page that scrolls keeps its scrollbar's space, so the page doesn't
+// jump sideways as it goes (the script adds the class; a short page has none).
+html.has-overlay-open.has-scroll-gutter {
+	scrollbar-gutter: stable;
+}
+
+.wp-block-matter-modal[open] {
+	display: flex;
+	flex-direction: column;
+}
+
+.wp-block-matter-modal__content {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+// Core layout rules set margins on post content children, including
+// `:root :where(.is-layout-*) > :last-child` (0,2,0), which would zero the
+// bottom margin when this is the last block. This selector outranks them.
+// The same layouts cap children at the content width
+// (`.is-layout-constrained > :where(...)`, 0,1,0), which beats the skin's
+// `:where()` cap and leaves a 40rem modal wider than a phone, with its close
+// button off screen. So the fit to the viewport is a functional rule here,
+// which a theme's full-screen variant lifts with `--modal-max-inline-size`.
+:root dialog.wp-block-matter-modal {
+	margin: auto;
+	max-inline-size: var(--modal-max-inline-size, calc(100vw - 2rem));
+}
+
+// Without JavaScript, a link to the dialog's #ID shows it in the page.
+@include shown-in-place("wp-block-matter-modal");
+
+// Default skin. The modal fades in and scales up from 95%.
+:where(.wp-block-matter-modal) {
+	background: var(--scheme--background, Canvas);
+	border: 0;
+	color: var(--scheme--text, CanvasText);
+	max-height: calc(100dvh - 2rem);
+	max-width: calc(100vw - 2rem);
+	opacity: 0;
+	padding: 0;
+	scale: 0.95;
+	transition:
+		opacity 200ms,
+		scale 200ms;
+	width: 40rem;
+}
+
+:where(.wp-block-matter-modal[open]) {
+	opacity: 1;
+	scale: 1;
+
+	@starting-style {
+		opacity: 0;
+		scale: 0.95;
+	}
+}
+
+:where(.wp-block-matter-modal)::backdrop {
+	background: rgb(0 0 0 / 50%);
+	opacity: 0;
+	transition: opacity 200ms;
+}
+
+:where(.wp-block-matter-modal[open])::backdrop {
+	opacity: 1;
+
+	@starting-style {
+		opacity: 0;
+	}
+}
+
+// Closing: the dialog stays open while these transitions run, then closes
+// (interactivity/dialog.js), so the exit animates in every browser.
+:where(.wp-block-matter-modal[open].is-closing) {
+	opacity: 0;
+	scale: 0.95;
+}
+
+:where(.wp-block-matter-modal[open].is-closing)::backdrop {
+	opacity: 0;
+}
+
+// Moving between grouped modals: the backdrop stays, the current modal goes at
+// once and the next fades in from the side it comes from (`--modal-switch`: 1
+// for next, -1 for previous).
+:where(.wp-block-matter-modal.is-switching-out),
+:where(.wp-block-matter-modal.is-switching-out, .wp-block-matter-modal.is-switching-in)::backdrop {
+	transition: none;
+}
+
+:where(.wp-block-matter-modal.is-switching-in) {
+	transition:
+		opacity 200ms,
+		translate 200ms;
+}
+
+:where(.wp-block-matter-modal.is-switching-in[open]) {
+	@starting-style {
+		opacity: 0;
+		scale: 1;
+		translate: calc(var(--modal-switch, 1) * 2rem) 0;
+	}
+}
+
+:where(.wp-block-matter-modal.is-switching-in[open]:dir(rtl)) {
+	@starting-style {
+		translate: calc(var(--modal-switch, 1) * -2rem) 0;
+	}
+}
+
+:where(.wp-block-matter-modal__content) {
+	padding: 3rem 2rem 2rem;
+}
+
+:where(.wp-block-matter-modal__close) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	inset-block-start: 0.75rem;
+	inset-inline-end: 0.75rem;
+	justify-content: center;
+	min-height: 24px;
+	min-width: 24px;
+	padding: 0.25rem;
+	position: absolute;
+	z-index: 1;
+}
+
+:where(.wp-block-matter-modal__close)::before {
+	@include icon(x, 1.25rem);
+}
+
+// The trigger area: its first link or button opens the modal; without one the
+// whole area is the button.
+:where(.wp-block-matter-modal__trigger[role="button"]) {
+	cursor: pointer;
+}
+
+// Previous and next, for grouped modals.
+:where(.wp-block-matter-modal__group-nav) {
+	align-items: center;
+	display: flex;
+	gap: 0.5rem;
+	justify-content: center;
+	margin-block-start: 2rem;
+}
+
+:where(.wp-block-matter-modal__previous, .wp-block-matter-modal__next) {
+	align-items: center;
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	padding: 0.5rem;
+}
+
+:where(.wp-block-matter-modal__previous)::before {
+	@include icon(caret-left, 1.25rem);
+}
+
+:where(.wp-block-matter-modal__next)::before {
+	@include icon(caret-right, 1.25rem);
+}
+
+:where(.wp-block-matter-modal__previous:dir(rtl), .wp-block-matter-modal__next:dir(rtl))::before {
+	scale: -1 1;
+}
+
+:where(.wp-block-matter-modal__position) {
+	font-variant-numeric: tabular-nums;
+}
+
+// Forced colours drop the background and the backdrop's tint, so the dialog
+// would have no edge against the page: give it one. An outline as well as a
+// border: a theme that sets `border: 0` on the dialog (a normal reset) wins
+// over this at any specificity, but rarely resets the outline, and an outline
+// takes no space.
+@media (forced-colors: active) {
+	:where(.wp-block-matter-modal) {
+		border: 1px solid canvastext;
+		outline: 1px solid canvastext;
+		outline-offset: 0;
+	}
+}
+
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.wp-block-matter-modal),
+	:where(.wp-block-matter-modal)::backdrop {
+		transition: none;
+	}
 }

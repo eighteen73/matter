@@ -1,383 +1,321 @@
 /**
- * WordPress dependencies
+ * Accordion behaviour (store: matter/accordion).
+ *
+ * Items open and close with their heading button; with `autoclose` only one is
+ * open at a time. Up/Down/Home/End move between headings, and a URL hash
+ * matching an item (or something inside it) opens that item on load.
+ *
+ * API: `matter.accordion( target )` → instance (see README); events
+ * `matter-accordion-ready`, `matter-accordion-open` and `-close`.
  */
-import { store, getContext, withSyncEvent } from '@wordpress/interactivity';
-
-const PRIVATE_STORE = 'matter/accordion/private';
-const PUBLIC_STORE = 'matter/accordion';
-
-function createReadOnlyProxy(obj) {
-	const arrayMutationMethods = new Set([
-		'push',
-		'pop',
-		'shift',
-		'unshift',
-		'splice',
-		'sort',
-		'reverse',
-		'copyWithin',
-		'fill',
-	]);
-
-	return new Proxy(obj, {
-		get(target, prop) {
-			if (Array.isArray(target) && arrayMutationMethods.has(prop)) {
-				return () => {};
-			}
-
-			const value = target[prop];
-			if (typeof value === 'object' && value !== null) {
-				return createReadOnlyProxy(value);
-			}
-			return value;
-		},
-		set() {
-			return false;
-		},
-		deleteProperty() {
-			return false;
-		},
-	});
-}
-
-let hashHandled = false;
-
-const findItem = (accordionItems, id) =>
-	accordionItems?.find((item) => item.id === id);
-
-const setItemOpen = (context, id, isOpen) => {
-	const { autoclose, accordionItems } = context;
-	if (!accordionItems?.length) {
-		return;
-	}
-
-	if (autoclose) {
-		accordionItems.forEach((item) => {
-			item.isOpen = item.id === id ? isOpen : false;
-		});
-		return;
-	}
-
-	const item = findItem(accordionItems, id);
-	if (item) {
-		item.isOpen = isOpen;
-	}
-};
-
-const getContextId = () => getContext()?.accordionId;
-
-const resolveId = (passthroughId = false) =>
-	typeof passthroughId === 'string' ? passthroughId : privateState.id;
-
-const resolvePublicId = (passthroughId = false) =>
-	typeof passthroughId === 'string' ? passthroughId : getContextId();
-
-const getItem = (id) => privateState.items[id];
-
-const getInstanceForId = (id) => getItem(id)?.instance || null;
 
 /**
- * Register a bound accordion API on the private store item.
- *
- * @param {string} accordionId Accordion instance id.
- * @param {Object} context     Interactivity context for this accordion.
- * @return {void}
+ * WordPress dependencies
  */
-const registerAccordionInstance = (accordionId, context) => {
-	if (!accordionId || !context) {
-		return;
-	}
+import {
+	getContext,
+	getElement,
+	store,
+	withScope,
+	withSyncEvent,
+} from '@wordpress/interactivity';
 
-	const existing = getItem(accordionId);
+/**
+ * Internal dependencies
+ */
+import {
+	emit,
+	enhance,
+	fromDirective,
+	registerInstance,
+	registerType,
+	resolve,
+} from '../../interactivity/api';
+import { hashId, scrollWhenShown } from '../../interactivity/hash';
+import { suspendTransitions } from '../../interactivity/transitions';
 
-	if (existing) {
-		existing.context = context;
-		return;
-	}
+const SELECTOR = '.wp-block-matter-accordion';
+const TOGGLE = '.wp-block-matter-accordion-item__toggle';
+const ITEM = '.wp-block-matter-accordion-item';
+const PANEL = '.wp-block-matter-accordion-item__panel';
 
-	privateState.items[accordionId] = {
-		context,
-		instance: {
-			open: (itemId) => privateActions.openById(accordionId, itemId),
-			close: (itemId) => privateActions.closeById(accordionId, itemId),
-			toggle: (itemId) => privateActions.toggleById(accordionId, itemId),
-			closeAll: () => {
-				const { accordionItems } = getItem(accordionId)?.context || {};
-				accordionItems?.forEach((item) => {
-					item.isOpen = false;
-				});
-			},
-			isOpen: (itemId) => {
-				const { accordionItems } = getItem(accordionId)?.context || {};
-				return Boolean(findItem(accordionItems, itemId)?.isOpen);
-			},
-			get items() {
-				const accordionItems =
-					getItem(accordionId)?.context?.accordionItems;
-				return accordionItems
-					? createReadOnlyProxy(accordionItems)
-					: undefined;
-			},
-		},
-	};
-};
+registerType('accordion', SELECTOR);
 
-const { actions: privateActions, state: privateState } = store(
-	PRIVATE_STORE,
-	{
-		state: {
-			items: {},
-			get id() {
-				return getContextId();
-			},
-			get item() {
-				return getItem(privateState.id);
-			},
-			get instance() {
-				return getInstanceForId(privateState.id);
-			},
-			get isOpen() {
-				const { id, accordionItems, openByDefault } = getContext();
-				const accordionItem = findItem(accordionItems, id);
-				return accordionItem ? accordionItem.isOpen : !!openByDefault;
-			},
-		},
-		actions: {
-			getInstance: (passthroughId = false) =>
-				getInstanceForId(resolveId(passthroughId)),
-			toggle: () => {
-				const context = getContext();
-				const { id, accordionItems } = context;
-				const accordionItem = findItem(accordionItems, id);
-				if (!accordionItem) {
-					return;
-				}
-				setItemOpen(context, id, !accordionItem.isOpen);
-			},
-			open: () => {
-				const context = getContext();
-				setItemOpen(context, context.id, true);
-			},
-			close: () => {
-				const context = getContext();
-				setItemOpen(context, context.id, false);
-			},
-			handleKeyDown: withSyncEvent((event) => {
-				if (
-					event.key !== 'ArrowUp' &&
-					event.key !== 'ArrowDown' &&
-					event.key !== 'Home' &&
-					event.key !== 'End'
-				) {
-					return;
-				}
+// Accordion element => instance; last announced open items.
+const instances = new WeakMap();
+const announced = new WeakMap();
 
-				event.preventDefault();
-				const context = getContext();
-				const { id, accordionItems } = context;
-				if (!accordionItems?.length) {
-					return;
-				}
+/**
+ * An accordion's items (not a nested accordion's): index, ID and title.
+ *
+ * @param {Element} root Accordion element.
+ * @return {Array} Items.
+ */
+const itemsOf = (root) =>
+	[...root.querySelectorAll(ITEM)]
+		.filter((item) => item.closest(SELECTOR) === root)
+		.map((item, index) => ({
+			index,
+			id: item.id,
+			title:
+				item
+					.querySelector('.wp-block-matter-accordion-item__title')
+					?.textContent.trim() ?? '',
+		}));
 
-				const currentIndex = accordionItems.findIndex(
-					(item) => item.id === id
-				);
-				if (currentIndex < 0) {
-					return;
-				}
+const instanceFor = (target) => instances.get(resolve(target, SELECTOR));
 
-				let nextIndex;
-				switch (event.key) {
-					case 'ArrowUp':
-						nextIndex = Math.max(0, currentIndex - 1);
-						break;
-					case 'ArrowDown':
-						nextIndex = Math.min(
-							currentIndex + 1,
-							accordionItems.length - 1
-						);
-						break;
-					case 'Home':
-						nextIndex = 0;
-						break;
-					case 'End':
-						nextIndex = accordionItems.length - 1;
-						break;
-					default:
-						return;
-				}
-
-				const nextId = accordionItems[nextIndex]?.id;
-				const nextButton = nextId
-					? document.getElementById(nextId)
-					: null;
-				if (nextButton) {
-					nextButton.focus();
-				}
-			}),
-			openPanelByHash: () => {
-				if (hashHandled || !window.location?.hash?.length) {
-					return;
-				}
-
-				const context = getContext();
-				const { id, accordionItems, autoclose } = context;
-				const hash = decodeURIComponent(window.location.hash.slice(1));
-				const targetElement = window.document.getElementById(hash);
-
-				if (!targetElement) {
-					return;
-				}
-
-				const panelElement = window.document.querySelector(
-					`.wp-block-matter-accordion-panel[aria-labelledby="${id}"]`
-				);
-
-				if (!panelElement || !panelElement.contains(targetElement)) {
-					return;
-				}
-
-				hashHandled = true;
-
-				if (autoclose) {
-					accordionItems.forEach((item) => {
-						item.isOpen = item.id === id;
-					});
-				} else {
-					const targetItem = findItem(accordionItems, id);
-					if (targetItem) {
-						targetItem.isOpen = true;
-					}
-				}
-
-				window.setTimeout(() => {
-					targetElement.scrollIntoView();
-				}, 0);
-			},
-			openById(accordionId, itemId) {
-				const context = getItem(accordionId)?.context;
-				if (!context) {
-					return;
-				}
-				setItemOpen(context, itemId, true);
-			},
-			closeById(accordionId, itemId) {
-				const context = getItem(accordionId)?.context;
-				if (!context) {
-					return;
-				}
-				setItemOpen(context, itemId, false);
-			},
-			toggleById(accordionId, itemId) {
-				const context = getItem(accordionId)?.context;
-				if (!context) {
-					return;
-				}
-				const item = findItem(context.accordionItems, itemId);
-				if (!item) {
-					return;
-				}
-				setItemOpen(context, itemId, !item.isOpen);
-			},
-		},
-		callbacks: {
-			onAccordionInit: () => {
-				const context = getContext();
-				registerAccordionInstance(context?.accordionId, context);
-			},
-			initAccordionItems: () => {
-				const context = getContext();
-				const { id, openByDefault, accordionItems, accordionId } =
-					context;
-
-				if (accordionId && !getItem(accordionId)) {
-					registerAccordionInstance(accordionId, context);
-				}
-
-				if (!findItem(accordionItems, id)) {
-					accordionItems.push({
-						id,
-						isOpen: !!openByDefault,
-					});
-				}
-
-				privateActions.openPanelByHash();
-			},
-			hashChange: () => {
-				hashHandled = false;
-				privateActions.openPanelByHash();
-			},
-		},
-	},
-	{
-		lock: true,
-	}
-);
-
-// Public store for third-party extensibility.
-store(PUBLIC_STORE, {
+const { state } = store('matter/accordion', {
 	state: {
-		get isOpen() {
-			return privateState.isOpen;
+		get isItemOpen() {
+			const { itemId, openItems } = getContext();
+
+			return openItems.includes(itemId);
 		},
-		get items() {
-			return createReadOnlyProxy(privateState.items);
+		// The server renders every panel readable and says nothing of a
+		// closed item's state; once the script runs, a closed item's panel is
+		// `hidden="until-found"`, which find-in-page, a text fragment or a
+		// link inside it opens (`beforematch`). A browser that doesn't know
+		// `until-found` just hides it (the CSS then keeps it out of the tab
+		// order and the accessibility tree, as it does an open one's
+		// transition).
+		get isItemExpanded() {
+			return state.isItemOpen;
 		},
-		get instance() {
-			return privateState.instance;
+		get isPanelHidden() {
+			return state.isItemOpen ? false : 'until-found';
 		},
 	},
 	actions: {
 		/**
-		 * Get a bound accordion instance API.
+		 * From an item's heading button; or, from the API,
+		 * `toggle( target, item )` with an item index or ID.
 		 *
-		 * @param {string} [id] Accordion instance id (optional when in context).
-		 * @return {Object|null} Bound instance or null.
+		 * @param {*}             target Directive event, or accordion ID/element.
+		 * @param {number|string} item   Item index or ID (API).
 		 */
-		getInstance(id = false) {
-			return privateActions.getInstance(resolvePublicId(id));
-		},
-		/**
-		 * Open an accordion item.
-		 *
-		 * @param {string} [accordionId] Accordion instance id (optional when in context).
-		 * @param {string} [itemId]      Item id (optional when in item context).
-		 */
-		open(accordionId = false, itemId = false) {
-			if (typeof accordionId === 'string' && typeof itemId === 'string') {
-				privateActions.openById(accordionId, itemId);
+		toggle(target, item) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.toggle(item);
+
 				return;
 			}
 
-			privateActions.open();
+			const context = getContext();
+
+			if (state.isItemOpen) {
+				context.openItems = context.openItems.filter(
+					(id) => id !== context.itemId
+				);
+			} else {
+				context.openItems = context.autoclose
+					? [context.itemId]
+					: [...context.openItems, context.itemId];
+			}
 		},
-		/**
-		 * Close an accordion item.
-		 *
-		 * @param {string} [accordionId] Accordion instance id.
-		 * @param {string} [itemId]      Item id.
-		 */
-		close(accordionId = false, itemId = false) {
-			if (typeof accordionId === 'string' && typeof itemId === 'string') {
-				privateActions.closeById(accordionId, itemId);
+		// The browser is about to show a closed panel's text, found in the
+		// page: open the item, as the heading's button would. Not animated: the
+		// browser scrolls to the match as soon as the panel is shown, and the
+		// panel growing from nothing would leave it scrolled to a point that
+		// moves.
+		reveal() {
+			const context = getContext();
+
+			if (!state.isItemOpen) {
+				suspendTransitions([getElement().ref]);
+				context.openItems = context.autoclose
+					? [context.itemId]
+					: [...context.openItems, context.itemId];
+			}
+		},
+		open(target, item) {
+			instanceFor(target)?.open(item);
+		},
+		close(target, item) {
+			instanceFor(target)?.close(item);
+		},
+		openAll(target) {
+			instanceFor(target)?.openAll();
+		},
+		closeAll(target) {
+			instanceFor(target)?.closeAll();
+		},
+		onKeydown: withSyncEvent((event) => {
+			// Alt+Arrow is the browser's back and forward, Ctrl+Home and
+			// Ctrl+End scroll the page: not ours.
+			if (
+				event.altKey ||
+				event.ctrlKey ||
+				event.metaKey ||
+				!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)
+			) {
 				return;
 			}
 
-			privateActions.close();
-		},
-		/**
-		 * Toggle an accordion item.
-		 *
-		 * @param {string} [accordionId] Accordion instance id.
-		 * @param {string} [itemId]      Item id.
-		 */
-		toggle(accordionId = false, itemId = false) {
-			if (typeof accordionId === 'string' && typeof itemId === 'string') {
-				privateActions.toggleById(accordionId, itemId);
+			const { ref } = getElement();
+
+			// This accordion's toggles only, not those of nested accordions.
+			const toggles = [...ref.querySelectorAll(TOGGLE)].filter(
+				(toggle) => toggle.closest('.wp-block-matter-accordion') === ref
+			);
+			const index = toggles.indexOf(event.target);
+
+			if (index === -1) {
 				return;
 			}
 
-			privateActions.toggle();
+			const targets = {
+				ArrowDown: toggles[(index + 1) % toggles.length],
+				ArrowUp: toggles[(index - 1 + toggles.length) % toggles.length],
+				Home: toggles[0],
+				End: toggles[toggles.length - 1],
+			};
+
+			event.preventDefault();
+			targets[event.key].focus();
+		}),
+	},
+	callbacks: {
+		init() {
+			const context = getContext();
+			const { ref } = getElement();
+
+			// The block and its own items (the CSS hides an item's panel, and
+			// a nested accordion's items are for that accordion to mark).
+			enhance(
+				'accordion',
+				ref,
+				...[...ref.querySelectorAll(ITEM)].filter(
+					(item) => item.closest(SELECTOR) === ref
+				)
+			);
+			// The panels' own hidden state is bound just now (`until-found`),
+			// which would otherwise be animated as a change: a closed answer
+			// held visible and tabbable for the length of the transition.
+			suspendTransitions(
+				[...ref.querySelectorAll(PANEL)].filter(
+					(panel) => panel.closest(SELECTOR) === ref
+				)
+			);
+
+			// A link to an item, or to anything in one (including an item of
+			// an accordion nested in it), opens this accordion's item that
+			// holds it: on load, and when the address's #hash changes.
+			const openFromHash = withScope(() => {
+				const hash = hashId();
+				const target = hash ? document.getElementById(hash) : null;
+				const item =
+					target &&
+					[...ref.querySelectorAll(ITEM)].find(
+						(element) =>
+							element.closest(SELECTOR) === ref &&
+							element.contains(target)
+					);
+
+				if (!item || context.openItems.includes(item.id)) {
+					return;
+				}
+
+				context.openItems = context.autoclose
+					? [item.id]
+					: [...context.openItems, item.id];
+				scrollWhenShown(target);
+			});
+
+			// Removed with the block (e.g. by client-side navigation).
+			const controller = new AbortController();
+
+			openFromHash();
+			window.addEventListener('hashchange', openFromHash, {
+				signal: controller.signal,
+			});
+
+			const idOf = (key) =>
+				typeof key === 'number' ? itemsOf(ref)[key]?.id : key;
+			const setOpen = withScope((key, shouldOpen) => {
+				const id = idOf(key);
+
+				if (!id || !itemsOf(ref).some((entry) => entry.id === id)) {
+					return;
+				}
+
+				const others = context.openItems.filter((open) => open !== id);
+
+				if (!shouldOpen) {
+					context.openItems = others;
+				} else if (!context.openItems.includes(id)) {
+					context.openItems = context.autoclose
+						? [id]
+						: [...others, id];
+				}
+			});
+			const isOpen = (key) => context.openItems.includes(idOf(key));
+
+			const instance = {
+				element: ref,
+				get id() {
+					return ref.id || null;
+				},
+				/** Each item: { index, id, title, isOpen }. */
+				get items() {
+					return itemsOf(ref).map((entry) => ({
+						...entry,
+						isOpen: context.openItems.includes(entry.id),
+					}));
+				},
+				isOpen,
+				open: (key) => setOpen(key, true),
+				close: (key) => setOpen(key, false),
+				toggle: (key) => setOpen(key, !isOpen(key)),
+				// With "only one open at a time", opens the first item only.
+				openAll: withScope(() => {
+					const ids = itemsOf(ref).map((entry) => entry.id);
+
+					context.openItems = context.autoclose
+						? ids.slice(0, 1)
+						: ids;
+				}),
+				closeAll: withScope(() => {
+					context.openItems = [];
+				}),
+			};
+
+			instances.set(ref, instance);
+			announced.set(ref, [...context.openItems]);
+			registerInstance('accordion', ref, instance);
+
+			return () => controller.abort();
+		},
+		// Announce items opening and closing (from a click or the API).
+		announce() {
+			// Read first, so the watch re-runs when the open items change.
+			// eslint-disable-next-line @wordpress/no-unused-vars-before-return
+			const { openItems } = getContext();
+			const { ref } = getElement();
+			const previous = announced.get(ref);
+
+			if (!instances.has(ref) || !previous) {
+				return;
+			}
+
+			const items = itemsOf(ref);
+			const announce = (name, ids) =>
+				ids.forEach((itemId) =>
+					emit(ref, 'accordion', name, {
+						itemId,
+						index: items.findIndex(({ id }) => id === itemId),
+					})
+				);
+
+			announced.set(ref, [...openItems]);
+			announce(
+				'close',
+				previous.filter((id) => !openItems.includes(id))
+			);
+			announce(
+				'open',
+				openItems.filter((id) => !previous.includes(id))
+			);
 		},
 	},
 });

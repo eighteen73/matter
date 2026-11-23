@@ -2,42 +2,97 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "matter/drawer",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"title": "Drawer",
-	"keywords": [ "drawer", "sidebar" ],
 	"category": "widgets",
-	"description": "An interactive drawer to display content without leaving the page.",
-	"allowedBlocks": [ "matter/trigger", "matter/trigger-hamburger", "matter/drawer-content" ],
+	"description": "Content that slides in from the edge of the screen, opened by a button or link.",
+	"keywords": [
+		"offcanvas",
+		"sidebar",
+		"panel"
+	],
 	"attributes": {
-		"generatedId": {
+		"overlayId": {
 			"type": "string",
 			"default": ""
 		},
-		"editorIsOpen": {
+		"label": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"position": {
+			"type": "string",
+			"enum": [
+				"end",
+				"start"
+			],
+			"default": "end"
+		},
+		"openOnLoad": {
 			"type": "boolean",
-			"default": false,
-			"role": "local"
+			"default": false
+		},
+		"openDelay": {
+			"type": "number",
+			"default": 0
+		},
+		"openOnScroll": {
+			"type": "boolean",
+			"default": false
+		},
+		"scrollThreshold": {
+			"type": "number",
+			"default": 50
+		},
+		"urlTriggers": {
+			"type": "array",
+			"default": []
+		},
+		"dismissDays": {
+			"type": "number",
+			"default": 0
+		},
+		"dismissible": {
+			"type": "boolean",
+			"default": true
 		}
 	},
-	"providesContext": {
-		"matter/drawer-is-open": "editorIsOpen"
-	},
-	"usesContext": [
-		"postId",
-		"postType",
-		"queryId"
-	],
 	"supports": {
-		"anchor": true,
 		"html": false,
+		"reusable": false,
 		"interactivity": true,
-		"contentRole": true,
-		"listView": true
+		"matter": {
+			"scheme": true,
+			"section": false,
+			"slots": {
+				"trigger": {},
+				"content": {
+					"template": [
+						[
+							"core/heading",
+							{
+								"level": 2,
+								"placeholder": "Heading"
+							}
+						],
+						[
+							"core/paragraph",
+							{
+								"placeholder": "Content…"
+							}
+						]
+					]
+				}
+			}
+		}
 	},
 	"textdomain": "matter",
 	"editorScript": "file:./index.js",
-	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
+	"viewScriptModule": "matter/overlay",
 	"render": "file:./render.php",
-	"viewScriptModule": "matter/overlay-store"
+	"usesContext": [
+		"postId"
+	]
 }

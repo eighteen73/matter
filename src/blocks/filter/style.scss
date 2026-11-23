@@ -1,0 +1,287 @@
+// A filter: only what's needed to use it (see README, "The default skin").
+
+:where(.wp-block-matter-filter__fieldset) {
+	border: 0;
+	margin: 0;
+	min-inline-size: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-filter__label) {
+	display: block;
+	padding: 0;
+}
+
+:where(.wp-block-matter-filter__options, .wp-block-matter-filter__children) {
+	display: grid;
+	gap: 0.25rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+:where(.wp-block-matter-filter__children) {
+	margin-block-start: 0.25rem;
+	padding-inline-start: 1.5rem;
+}
+
+:where(.wp-block-matter-filter__choice) {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: 0.5rem;
+	// Each option a row at least 24px high, so a small checkbox still has a
+	// target's space around it (WCAG 2.2 target size).
+	min-block-size: 1.5rem;
+}
+
+:where(.wp-block-matter-filter__count)::before {
+	content: "(";
+}
+
+:where(.wp-block-matter-filter__count)::after {
+	content: ")";
+}
+
+// "Show more": options past the first few, until it's clicked.
+:where(.wp-block-matter-filter__options.is-collapsed) > .is-more,
+:where(.wp-block-matter-filter__option[hidden]) {
+	display: none;
+}
+
+// Chips: each option a button-like label, its checkbox out of sight but
+// still focusable and announced.
+:where(.is-display-chips .wp-block-matter-filter__options) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice) {
+	border: 1px solid currentcolor;
+	border-radius: 999px;
+	padding: 0.25rem 0.75rem;
+	position: relative;
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice) input {
+	inset: 0;
+	opacity: 0;
+	position: absolute;
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice):has(input:checked) {
+	background: var(--scheme--text);
+	color: var(--scheme--background);
+}
+
+:where(.is-display-chips .wp-block-matter-filter__choice):has(input:focus-visible) {
+	outline: 2px solid currentcolor;
+	outline-offset: 2px;
+}
+
+// Stars: a rating as five stars, filled to it (its name is for screen
+// readers). A mask, so the stars are the text's colour.
+:where(.wp-block-matter-filter__stars) {
+	--matter-star-fill: to right;
+	background: linear-gradient(var(--matter-star-fill), currentcolor calc(var(--rating, 0) / 5 * 100%), color-mix(in srgb, currentcolor 30%, transparent) 0);
+	block-size: 1em;
+	display: inline-block;
+	flex: none;
+	forced-color-adjust: none;
+	inline-size: 5em;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z'/%3E%3C/svg%3E") repeat-x left center / 1em 1em;
+}
+
+:where(.wp-block-matter-filter__stars):dir(rtl) {
+	--matter-star-fill: to left;
+	mask-position: right center;
+}
+
+// Swatches: a colour beside each option.
+:where(.wp-block-matter-filter__swatch) {
+	background: var(--swatch);
+	block-size: 1.25em;
+	border: 1px solid currentcolor;
+	border-radius: 50%;
+	flex: none;
+	inline-size: 1.25em;
+}
+
+:where(.wp-block-matter-filter__range) {
+	display: grid;
+	gap: 0.75rem;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:where(.wp-block-matter-filter__bound) label {
+	display: block;
+}
+
+:where(.wp-block-matter-filter__bound) input {
+	box-sizing: border-box;
+	inline-size: 100%;
+}
+
+:where(.wp-block-matter-filter__more[hidden]) {
+	display: none;
+}
+
+// Collapsible: its name opens and closes its options (a disclosure), which
+// slide as an accordion item's panel does (accordion/style.scss): grid rows
+// from 0fr to 1fr, in every browser. Opening starts from 0fr (the options
+// weren't rendered while closed); closing keeps them shown until the slide
+// ends (the details' content stays visible through the transition).
+.wp-block-matter-filter__group-body {
+	display: grid;
+	grid-template-rows: 0fr;
+}
+
+:where(.wp-block-matter-filter__group[open]) > .wp-block-matter-filter__group-body {
+	grid-template-rows: 1fr;
+
+	@starting-style {
+		grid-template-rows: 0fr;
+	}
+}
+
+.wp-block-matter-filter__group-content {
+	min-height: 0;
+	overflow: hidden;
+}
+
+:where(.wp-block-matter-filter__summary) {
+	cursor: pointer;
+}
+
+:where(.wp-block-matter-filter__group-body) {
+	transition: grid-template-rows 300ms;
+}
+
+:where(.wp-block-matter-filter__group)::details-content {
+	transition: content-visibility 300ms allow-discrete;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:where(.wp-block-matter-filter__group-body),
+	:where(.wp-block-matter-filter__group)::details-content {
+		transition: none;
+	}
+}
+
+:where(.wp-block-matter-filter__chosen)::before {
+	content: "(";
+}
+
+:where(.wp-block-matter-filter__chosen)::after {
+	content: ")";
+}
+
+:where(.wp-block-matter-filter__chosen[hidden]) {
+	display: none;
+}
+
+// A range's slider: two native range inputs on one track. Only the thumbs
+// take the pointer, so either can be dragged; the track between them fills
+// (--from and --to, set from the state).
+.wp-block-matter-filter__slider {
+	position: relative;
+}
+
+.wp-block-matter-filter__thumb {
+	appearance: none;
+	background: transparent;
+	block-size: 100%;
+	inline-size: 100%;
+	inset: 0;
+	margin: 0;
+	pointer-events: none;
+	position: absolute;
+}
+
+.wp-block-matter-filter__thumb::-webkit-slider-thumb {
+	pointer-events: auto;
+}
+
+.wp-block-matter-filter__thumb::-moz-range-thumb {
+	pointer-events: auto;
+}
+
+:where(.wp-block-matter-filter__slider) {
+	--matter-slider-direction: to right;
+	--matter-slider-track: color-mix(in srgb, currentcolor 25%, transparent);
+	--matter-slider-fill: currentcolor;
+	background: linear-gradient(var(--matter-slider-direction), var(--matter-slider-track) var(--from, 0%), var(--matter-slider-fill) var(--from, 0%) var(--to, 100%), var(--matter-slider-track) var(--to, 100%)) center / 100% 0.25rem no-repeat;
+	block-size: 1.5rem;
+	margin-block: 0.5rem;
+}
+
+:where(.wp-block-matter-filter__slider):dir(rtl) {
+	--matter-slider-direction: to left;
+}
+
+:where(.wp-block-matter-filter__thumb)::-webkit-slider-runnable-track {
+	background: transparent;
+	border: 0;
+}
+
+:where(.wp-block-matter-filter__thumb)::-moz-range-track {
+	background: transparent;
+	border: 0;
+}
+
+:where(.wp-block-matter-filter__thumb)::-webkit-slider-thumb {
+	appearance: none;
+	background: currentcolor;
+	block-size: 1rem;
+	border: 0;
+	border-radius: 50%;
+	inline-size: 1rem;
+}
+
+:where(.wp-block-matter-filter__thumb)::-moz-range-thumb {
+	background: currentcolor;
+	block-size: 1rem;
+	border: 0;
+	border-radius: 50%;
+	inline-size: 1rem;
+}
+
+:where(.wp-block-matter-filter__thumb):focus-visible {
+	outline: 2px solid currentcolor;
+	outline-offset: 2px;
+}
+
+:where(.wp-block-matter-filter__span) {
+	display: block;
+	margin-block-end: 0.5rem;
+}
+
+// In a bar of filters (the filters' `bar` layout): where the filters are a
+// drawer, or without popovers, the options show in place and the button that
+// would open them doesn't; filters/bar.scss makes them dropdowns above the
+// breakpoint.
+.wp-block-matter-filter__trigger {
+	display: none;
+}
+
+.wp-block-matter-filter__popover {
+	background: transparent;
+	border: 0;
+	color: inherit;
+	display: block;
+	inset: auto;
+	margin: 0;
+	overflow: visible;
+	padding: 0;
+	position: static;
+}
+
+:where(.wp-block-matter-filter__trigger) {
+	background: none;
+	border: 1px solid currentcolor;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	padding: 0.25rem 0.75rem;
+}

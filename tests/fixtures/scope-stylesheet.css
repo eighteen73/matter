@@ -1,0 +1,4 @@
+.is-type-x .a{color:red}
+.is-type-x.is-open>.b{background:url(../img/a.png) no-repeat,url("data:image/svg+xml;utf8,<svg/>"),url(/abs.png)}
+.is-type-xy .c,.is-type-x-more .d{margin:0}
+/*# sourceMappingURL=scope-stylesheet.css.map */

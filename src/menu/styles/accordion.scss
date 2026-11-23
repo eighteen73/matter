@@ -1,0 +1,106 @@
+// Menu type: accordion.
+// Authored against `.is-type-accordion`, in :where(); see dropdown.scss for
+// how responsive menus re-scope these rules.
+// Functional rules first, then the default skin, all in :where(). Without
+// JavaScript the submenus are nested lists, open (see base.scss).
+
+@use "../../styles/enhanced" as *;
+
+:where(.is-type-accordion) .matter-menu__items {
+	display: flex;
+	flex-direction: column;
+}
+
+:where(.is-type-accordion) .matter-menu__item {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+// Submenus expand in place by animating grid rows from 0fr to 1fr.
+:where(.is-type-accordion) .matter-menu__submenu {
+	display: grid;
+	flex-basis: 100%;
+}
+
+:where(.is-type-accordion#{enhanced(menu)}) .matter-menu__submenu {
+	grid-auto-rows: 0fr;
+	grid-template-rows: 0fr;
+}
+
+:where(.is-type-accordion .matter-menu__submenu) > * {
+	min-height: 0;
+	overflow: hidden;
+}
+
+:where(.is-type-accordion#{enhanced(menu)} .matter-menu__item.is-open) > .matter-menu__submenu {
+	grid-auto-rows: 1fr;
+	grid-template-rows: 1fr;
+}
+
+:where(.is-type-accordion) .matter-menu__submenu-items,
+:where(.is-type-accordion) .matter-menu__columns {
+	display: flex;
+	flex-direction: column;
+}
+
+// Click to open: the toggle replaces the parent link…
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)} .has-submenu:not(.is-column)) > .matter-menu__link {
+	display: none;
+}
+
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__toggle-text {
+	display: inline;
+}
+
+// …so the submenu leads with a "View all" link to the parent page (the
+// drill-down header, without its back button and label).
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__submenu-header {
+	display: block;
+}
+
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__back,
+:where(.is-type-accordion.opens-on-click#{enhanced(menu)}) .matter-menu__parent-label {
+	display: none;
+}
+
+// Default skin.
+:where(.is-type-accordion .matter-menu__item) {
+	align-items: center;
+	justify-content: space-between;
+}
+
+:where(.is-type-accordion .matter-menu__link) {
+	flex: 1 1 auto;
+}
+
+:where(.is-type-accordion .matter-menu__items, .is-type-accordion .matter-menu__submenu-items, .is-type-accordion .matter-menu__columns) {
+	gap: 0.75em;
+}
+
+:where(.is-type-accordion .matter-menu__submenu) {
+	padding-inline-start: 1em;
+	transition:
+		grid-template-rows 300ms,
+		grid-auto-rows 300ms,
+		visibility 300ms;
+}
+
+:where(.is-type-accordion .matter-menu__item.is-open > .matter-menu__submenu) {
+	padding-block-start: 0.75em;
+}
+
+:where(.is-type-accordion .matter-menu__toggle[aria-expanded="true"])::after {
+	rotate: 180deg;
+}
+
+:where(.is-type-accordion.opens-on-click .matter-menu__toggle) {
+	flex: 1 1 auto;
+	justify-content: space-between;
+}
+
+// Last, so it wins over every transition above.
+@media (prefers-reduced-motion: reduce) {
+	:where(.is-type-accordion .matter-menu__submenu) {
+		transition: none;
+	}
+}

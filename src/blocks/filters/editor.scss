@@ -1,0 +1,40 @@
+// The filters in the editor: inline as on a wide screen (the drawer is the
+// front end's), in a bar with the front end's bar styles (unscoped).
+
+@use "../../filters/styles/bar";
+
+.wp-block-matter-filters.is-layout-sidebar .wp-block-matter-filters__form {
+	display: grid;
+	gap: 1.5rem;
+}
+
+// Previews: the editor's clicks select the block, so its options don't take
+// them (or focus). Not the placeholder's "Filter by".
+.wp-block-matter-filter :is(.wp-block-matter-filter__fieldset, .wp-block-matter-filter__field) :is(input, select),
+.wp-block-matter-filter__more {
+	pointer-events: none;
+}
+
+// A filter's options open below its button (in a bar, while it's selected).
+.wp-block-matter-filter__trigger {
+	anchor-name: var(--matter-filter-anchor);
+}
+
+.wp-block-matter-filter__popover {
+	position-anchor: var(--matter-filter-anchor);
+}
+
+// Its row opens and closes a collapsible filter's preview.
+.wp-block-matter-filter__summary {
+	cursor: pointer;
+}
+
+.wp-block-matter-filter__summary [contenteditable] {
+	cursor: text;
+}
+
+// An empty name is the source's on the front end (the button's, the
+// filters'), so its placeholder shows as the text would.
+:is(.wp-block-matter-filter, .wp-block-matter-filters-toggle) [data-rich-text-placeholder]::after {
+	opacity: 1;
+}

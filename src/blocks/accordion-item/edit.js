@@ -1,151 +1,204 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
 import {
+	InspectorControls,
+	RichText,
+	store as blockEditorStore,
 	useBlockProps,
 	useInnerBlocksProps,
-	InspectorControls,
-	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import {
-	ToggleControl,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanel as ToolsPanel,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalToolsPanelItem as ToolsPanelItem,
-} from '@wordpress/components';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
-import clsx from 'clsx';
+import { PanelBody, ToggleControl } from '@wordpress/components';
+import { useEntityProp } from '@wordpress/core-data';
+import { useSelect } from '@wordpress/data';
+import { useEffect, useRef, useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 
-/*
- * The panel's inner blocks are deliberately omitted here. With
- * `templateLock: 'all'`, Gutenberg re-synchronises this template on every
- * editor load and trims nested inner blocks to the template's length, which
- * would strip all but the first block from the panel. The panel block supplies
- * its own default content (manual or query mode) when it is empty.
+/**
+ * Internal dependencies
  */
-const TEMPLATE = [['matter/accordion-heading'], ['matter/accordion-panel']];
+import { useEnterContent } from '../../components/enter-content';
 
-export default function Edit({
-	attributes,
-	setAttributes,
-	clientId,
-	isSelected: isSingleSelected,
-}) {
-	const { openByDefault, inQueryLoop } = attributes;
+const TEMPLATE = [
+	['core/paragraph', { placeholder: __('Item content…', 'matter') }],
+];
 
-	const queryLoopParents = useSelect(
-		(select) =>
-			select(blockEditorStore).getBlockParentsByBlockName(
-				clientId,
-				'core/query'
-			),
-		[clientId]
+// Matches the front end's grid-rows transition (style.scss).
+const TRANSITION_MS = 300;
+
+/**
+ * The accordion item that contains the current selection, if any.
+ *
+ * @param {Function} select Data registry select.
+ * @return {string|undefined} Item client ID.
+ */
+function selectedItem(select) {
+	const { getSelectedBlockClientId, getBlockParents, getBlockName } =
+		select(blockEditorStore);
+	const selected = getSelectedBlockClientId();
+
+	if (!selected) {
+		return undefined;
+	}
+
+	return [selected, ...getBlockParents(selected, true)].find(
+		(id) => getBlockName(id) === 'matter/accordion-item'
 	);
-	const { accordionClientId, isFirstItem } = useSelect(
+}
+
+/**
+ * An accordion item, as on the front end: closed until opened. Selecting the
+ * item (e.g. clicking its title to edit it) opens it; the caret toggles it.
+ * With "Only one item open at a time", selecting another item closes it.
+ * Selecting something outside the accordion returns items to their defaults.
+ *
+ * @param {Object}   props
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Attribute setter.
+ * @param {Object}   props.context       Block context.
+ * @param {string}   props.clientId      Block client ID.
+ * @return {Element} Item editor.
+ */
+export default function Edit({ attributes, setAttributes, context, clientId }) {
+	const { title, open } = attributes;
+	// Only an item in a loop is titled after its post: outside one, postId
+	// is the page being edited.
+	const { queryId, postType } = context;
+	const postId = queryId === undefined ? undefined : context.postId;
+	const level = Math.min(6, Math.max(2, context['matter/headingLevel'] ?? 3));
+	const HeadingTag = `h${level}`;
+	const [postTitle] = useEntityProp('postType', postType, 'title', postId);
+	const enterContent = useEnterContent(clientId);
+
+	const { activeItem, isFirst, isEditing } = useSelect(
 		(select) => {
-			const { getBlockRootClientId, getBlocks } =
-				select(blockEditorStore);
-			const parentClientId = getBlockRootClientId(clientId);
-			const siblings = parentClientId ? getBlocks(parentClientId) : [];
-			const firstAccordionItem = siblings.find(
-				(block) => block.name === 'matter/accordion-item'
+			const {
+				getBlockIndex,
+				getBlockParentsByBlockName,
+				isBlockSelected,
+				hasSelectedInnerBlock,
+			} = select(blockEditorStore);
+			const [accordion] = getBlockParentsByBlockName(
+				clientId,
+				'matter/accordion',
+				true
 			);
 
 			return {
-				accordionClientId: parentClientId,
-				isFirstItem: firstAccordionItem?.clientId === clientId,
+				activeItem: selectedItem(select),
+				isFirst: getBlockIndex(clientId) === 0,
+				// The accordion (or anything in it) is selected.
+				isEditing:
+					!!accordion &&
+					(isBlockSelected(accordion) ||
+						hasSelectedInnerBlock(accordion, true)),
 			};
 		},
 		[clientId]
 	);
-	const { updateBlockAttributes, __unstableMarkNextChangeAsNotPersistent } =
-		useDispatch(blockEditorStore);
+
+	const autoclose = !!context['matter/autoclose'];
+	const isOpenByDefault = open || (isFirst && !!context['matter/openFirst']);
+	const [isOpen, setIsOpen] = useState(isOpenByDefault);
+	const [isSettled, setIsSettled] = useState(isOpen);
+
+	// Follow the selection: open when it moves into this item; close when it
+	// moves to another item and only one may be open.
+	useEffect(() => {
+		if (activeItem === clientId) {
+			setIsOpen(true);
+		} else if (activeItem && autoclose) {
+			setIsOpen(false);
+		}
+	}, [activeItem, clientId, autoclose]);
+
+	// Back to how the page loads once editing moves outside the accordion.
+	const wasEditing = useRef(isEditing);
 
 	useEffect(() => {
-		const isWithinQueryLoop = queryLoopParents.length > 0;
-
-		if (isWithinQueryLoop !== inQueryLoop) {
-			__unstableMarkNextChangeAsNotPersistent();
-			setAttributes({ inQueryLoop: isWithinQueryLoop });
+		if (wasEditing.current && !isEditing) {
+			setIsOpen(isOpenByDefault);
 		}
-	}, [
-		inQueryLoop,
-		queryLoopParents,
-		setAttributes,
-		__unstableMarkNextChangeAsNotPersistent,
-	]);
 
-	const syncOpenByDefault = (value) => {
-		setAttributes({ openByDefault: value });
+		wasEditing.current = isEditing;
+	}, [isEditing, isOpenByDefault]);
 
-		if (isFirstItem && accordionClientId) {
-			updateBlockAttributes(accordionClientId, {
-				openFirstItem: value,
-			});
+	// Content may overflow (block toolbars, inserters) once fully open.
+	useEffect(() => {
+		if (!isOpen) {
+			setIsSettled(false);
+
+			return;
 		}
-	};
 
-	const { isSelected } = useSelect(
-		(select) => {
-			if (isSingleSelected || openByDefault || inQueryLoop) {
-				return { isSelected: true };
-			}
+		const timer = setTimeout(() => setIsSettled(true), TRANSITION_MS);
 
-			return {
-				isSelected: select(blockEditorStore).hasSelectedInnerBlock(
-					clientId,
-					true
-				),
-			};
-		},
-		[clientId, isSingleSelected, openByDefault, inQueryLoop]
-	);
+		return () => clearTimeout(timer);
+	}, [isOpen]);
 
 	const blockProps = useBlockProps({
-		className: clsx({
-			'is-open': openByDefault || isSelected,
-		}),
+		className: [isOpen && 'is-open', isSettled && 'is-settled']
+			.filter(Boolean)
+			.join(' '),
 	});
+	// An inner wrapper keeps the theme's `__content > :last-child` spacing
+	// stable while the editor adds and removes its block appender.
+	const innerBlocksProps = useInnerBlocksProps(
+		{ className: 'wp-block-matter-accordion-item__blocks' },
+		{ template: TEMPLATE }
+	);
 
-	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		template: TEMPLATE,
-		templateLock: 'all',
-		directInsert: true,
-		templateInsertUpdatesSelection: true,
-	});
+	// Inside a Query Loop an empty title shows the post title.
+	const placeholder =
+		postId && postTitle ? postTitle : __('Item title', 'matter');
 
 	return (
 		<>
-			{!inQueryLoop && (
-				<InspectorControls>
-					<ToolsPanel
-						label={__('Settings', 'matter')}
-						resetAll={() => syncOpenByDefault(false)}
+			<InspectorControls>
+				<PanelBody title={__('Settings', 'matter')}>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={__('Open by default', 'matter')}
+						checked={open}
+						onChange={(value) => setAttributes({ open: value })}
+					/>
+				</PanelBody>
+			</InspectorControls>
+			<div {...blockProps}>
+				<HeadingTag className="wp-block-matter-accordion-item__heading">
+					{/* Clicks on the title edit it; elsewhere (the caret) toggle. */}
+					{/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- Editor only; the title is the focusable element. */}
+					<div
+						className="wp-block-matter-accordion-item__toggle"
+						onClick={(event) => {
+							if (
+								!event.target.closest(
+									'.wp-block-matter-accordion-item__title'
+								)
+							) {
+								setIsOpen(!isOpen);
+							}
+						}}
 					>
-						<ToolsPanelItem
-							hasValue={() => !!openByDefault}
-							label={__('Open by default', 'matter')}
-							onDeselect={() => syncOpenByDefault(false)}
-							isShownByDefault
-						>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={__('Open by default', 'matter')}
-								help={__(
-									'Accordion content will be displayed by default.',
-									'matter'
-								)}
-								checked={openByDefault}
-								onChange={syncOpenByDefault}
-							/>
-						</ToolsPanelItem>
-					</ToolsPanel>
-				</InspectorControls>
-			)}
-			<div {...innerBlocksProps} />
+						<RichText
+							tagName="span"
+							className="wp-block-matter-accordion-item__title"
+							value={title}
+							onChange={(value) =>
+								setAttributes({ title: value })
+							}
+							placeholder={placeholder}
+							allowedFormats={['core/bold', 'core/italic']}
+							{...enterContent}
+						/>
+					</div>
+				</HeadingTag>
+				<div className="wp-block-matter-accordion-item__panel">
+					<div className="wp-block-matter-accordion-item__content">
+						<div {...innerBlocksProps} />
+					</div>
+				</div>
+			</div>
 		</>
 	);
 }

@@ -1,398 +1,377 @@
 /**
+ * Tabs behaviour (store: matter/tabs).
+ *
+ * Automatic activation: arrow keys (Up/Down for vertical tabs) move between
+ * tabs and select them; Home/End jump to the first/last. A URL hash matching
+ * a panel (or something inside one) selects that tab on load; with deep
+ * linking, selecting a tab updates the hash.
+ *
+ * Dropdown (below the theme's breakpoint): a button showing the current tab
+ * opens the tab list. In the open list, arrow keys move focus and Enter/Space
+ * choose; choosing, Escape or clicking elsewhere closes it.
+ *
+ * API: `matter.tabs( target )` → instance (see README); events
+ * `matter-tabs-ready` and `matter-tabs-change`.
+ */
+
+/**
  * WordPress dependencies
  */
 import {
-	store,
 	getContext,
 	getElement,
+	store,
+	withScope,
 	withSyncEvent,
 } from '@wordpress/interactivity';
 
-function createReadOnlyProxy(obj) {
-	const arrayMutationMethods = new Set([
-		'push',
-		'pop',
-		'shift',
-		'unshift',
-		'splice',
-		'sort',
-		'reverse',
-		'copyWithin',
-		'fill',
-	]);
-
-	return new Proxy(obj, {
-		get(target, prop) {
-			if (Array.isArray(target) && arrayMutationMethods.has(prop)) {
-				return () => {};
-			}
-
-			const value = target[prop];
-			if (typeof value === 'object' && value !== null) {
-				return createReadOnlyProxy(value);
-			}
-			return value;
-		},
-		set() {
-			return false;
-		},
-		deleteProperty() {
-			return false;
-		},
-	});
-}
-
 /**
- * Non-reactive map of tabsId → interactivity context.
- * Used for programmatic setActiveTab(id, index) outside element context.
- *
- * @type {Map<string, Object>}
+ * Internal dependencies
  */
-const tabsContexts = new Map();
+import {
+	emit,
+	enhance,
+	fromDirective,
+	registerInstance,
+	registerType,
+	resolve,
+} from '../../interactivity/api';
+import { hashId, scrollWhenShown } from '../../interactivity/hash';
 
-const getTabsListForId = (id) => {
-	if (!id) {
-		return undefined;
+const SELECTOR = '.wp-block-matter-tabs';
+const PANEL = '.wp-block-matter-tab';
+const NAV = '.wp-block-matter-tabs__nav';
+
+registerType('tabs', SELECTOR);
+
+// Tabs element => instance; last announced tab.
+const instances = new WeakMap();
+const announced = new WeakMap();
+
+const activate = (tabId, context = getContext()) => {
+	context.active = tabId;
+
+	if (context.deepLink) {
+		window.history.replaceState(null, '', `#${tabId}`);
 	}
-
-	return privateState.items[id]?.tabsList || privateState[id];
 };
 
-const dispatchTabsChange = (id, tabIndex, tab) => {
-	document.dispatchEvent(
-		new window.CustomEvent('matter/tabs/change', {
-			detail: {
-				id,
-				tabIndex,
-				tab: tab || null,
-			},
-		})
+/**
+ * A tabs block's tabs (not a nested block's): index, panel ID and label.
+ *
+ * @param {Element} root Tabs element.
+ * @return {Array} Tabs.
+ */
+const tabsOf = (root) =>
+	[...root.querySelectorAll('[role="tab"]')]
+		.filter((button) => button.closest(SELECTOR) === root)
+		.map((button, index) => ({
+			index,
+			id: button.getAttribute('aria-controls'),
+			label:
+				button
+					.querySelector('.wp-block-matter-tabs__label')
+					?.textContent.trim() ?? '',
+		}));
+
+const instanceFor = (target) => instances.get(resolve(target, SELECTOR));
+
+// After the open/closed state has rendered.
+const afterRender = (callback) => window.requestAnimationFrame(callback);
+
+const navOf = (element) => element.closest(NAV);
+
+const focusToggle = (element) =>
+	afterRender(() =>
+		navOf(element)?.querySelector('.wp-block-matter-tabs__toggle')?.focus()
 	);
-};
 
-/**
- * Apply an active tab change against a known tabs context.
- *
- * @param {string}  id          Tabs instance id.
- * @param {Object}  context     Interactivity context for the tabs instance.
- * @param {number}  tabIndex    Target tab index.
- * @param {boolean} scrollToTab Whether to scroll the tab into view.
- * @return {void}
- */
-const applyActiveTab = (id, context, tabIndex, scrollToTab = false) => {
-	const tabsList = getTabsListForId(id);
+const focusActiveTab = (element) =>
+	afterRender(() =>
+		navOf(element)
+			?.querySelector('[role="tab"][aria-selected="true"]')
+			?.focus()
+	);
 
-	if (!id || !context || !tabsList?.length) {
-		return;
-	}
-
-	let newIndex = tabIndex;
-	if (newIndex < 0) {
-		newIndex = 0;
-	} else if (newIndex >= tabsList.length) {
-		newIndex = tabsList.length - 1;
-	}
-
-	const previousIndex = context.activeTabIndex ?? 0;
-
-	context.activeTabIndex = newIndex;
-
-	if (context.deepLinking) {
-		privateActions.updateUrlHash(newIndex, id);
-	}
-
-	if (scrollToTab) {
-		privateActions.scrollTabIntoView(newIndex, id);
-	}
-
-	if (previousIndex !== newIndex) {
-		dispatchTabsChange(id, newIndex, tabsList[newIndex]);
-	}
-};
-
-// Private store for internal tabs functionality and security.
-const { actions: privateActions, state: privateState } = store(
-	'matter/tabs/private',
-	{
-		state: {
-			items: {},
-			get tabsList() {
-				const context = getContext();
-				const tabsId = context?.tabsId;
-				return getTabsListForId(tabsId);
-			},
-			get tabIndex() {
-				const context = getContext();
-
-				if (typeof context?.tabIndex === 'number') {
-					return context.tabIndex;
-				}
-
-				const { attributes } = getElement();
-
-				let tabId = attributes?.id?.replace('tab__', '') || null;
-
-				if (!tabId && context?.tab?.id) {
-					tabId = context.tab.id;
-				}
-
-				if (!tabId) {
-					return null;
-				}
-
-				const { tabsList } = privateState;
-
-				if (!tabsList) {
-					return null;
-				}
-
-				return tabsList.findIndex((t) => t.id === tabId);
-			},
-			get isActiveTab() {
-				const { activeTabIndex } = getContext();
-				const { tabIndex } = privateState;
-				return activeTabIndex === tabIndex;
-			},
-			get tabIndexAttribute() {
-				return privateState.isActiveTab ? 0 : -1;
-			},
-			get activeTabIndex() {
-				const context = getContext();
-				return context?.activeTabIndex ?? 0;
-			},
-			get selectValue() {
-				return String(privateState.activeTabIndex);
-			},
-		},
-		actions: {
-			handleTabKeyDown: withSyncEvent((event) => {
-				const context = getContext();
-				const { isVertical } = context;
-				const { tabIndex } = privateState;
-
-				if (tabIndex === null) {
-					return;
-				}
-
-				if (event.key === 'ArrowRight' && !isVertical) {
-					event.preventDefault();
-					privateActions.moveFocus(tabIndex + 1);
-				} else if (event.key === 'ArrowLeft' && !isVertical) {
-					event.preventDefault();
-					privateActions.moveFocus(tabIndex - 1);
-				} else if (event.key === 'ArrowDown' && isVertical) {
-					event.preventDefault();
-					privateActions.moveFocus(tabIndex + 1);
-				} else if (event.key === 'ArrowUp' && isVertical) {
-					event.preventDefault();
-					privateActions.moveFocus(tabIndex - 1);
-				}
-			}),
-			handleTabClick: withSyncEvent((event) => {
-				event.preventDefault();
-
-				const { tabIndex } = privateState;
-				if (tabIndex !== null) {
-					privateActions.setActiveTab(tabIndex);
-				}
-			}),
-			handleSelectChange: withSyncEvent((event) => {
-				const selectedIndex = parseInt(event.target.value, 10);
-
-				if (Number.isNaN(selectedIndex)) {
-					return;
-				}
-
-				privateActions.setActiveTab(selectedIndex, false);
-			}),
-			moveFocus: (tabIndex) => {
-				const { tabsList } = privateState;
-
-				if (!tabsList || tabsList.length === 0) {
-					return;
-				}
-
-				let newIndex = tabIndex;
-				if (newIndex < 0) {
-					newIndex = tabsList.length - 1;
-				} else if (newIndex >= tabsList.length) {
-					newIndex = 0;
-				}
-
-				const tabId = tabsList[newIndex].id;
-				const tabElement = document.getElementById('tab__' + tabId);
-				if (tabElement) {
-					tabElement.focus();
-				}
-			},
-			/**
-			 * Sets the active tab for the current contextual tabs instance.
-			 *
-			 * @param {number}  tabIndex    The index of the active tab.
-			 * @param {boolean} scrollToTab Whether to scroll the tab button into view.
-			 */
-			setActiveTab: (tabIndex, scrollToTab = false) => {
-				const context = getContext();
-				applyActiveTab(context?.tabsId, context, tabIndex, scrollToTab);
-			},
-			/**
-			 * Sets the active tab for a tabs instance by id.
-			 *
-			 * @param {string}  id          Tabs instance id.
-			 * @param {number}  tabIndex    The index of the active tab.
-			 * @param {boolean} scrollToTab Whether to scroll the tab button into view.
-			 */
-			setActiveTabById: (id, tabIndex, scrollToTab = false) => {
-				applyActiveTab(id, tabsContexts.get(id), tabIndex, scrollToTab);
-			},
-			activateTabByHash: (hash) => {
-				const { tabsList } = privateState;
-
-				if (!tabsList || tabsList.length === 0 || !hash) {
-					return;
-				}
-
-				const targetId = hash.replace('#', '');
-				const tabIndex = tabsList.findIndex(
-					(tab) => tab.deepLinkingId === targetId
-				);
-
-				if (tabIndex < 0) {
-					return;
-				}
-
-				privateActions.setActiveTab(tabIndex, true);
-			},
-			updateUrlHash: (tabIndex, passthroughId = false) => {
-				const context =
-					typeof passthroughId === 'string'
-						? tabsContexts.get(passthroughId)
-						: getContext();
-
-				if (!context?.deepLinking) {
-					return;
-				}
-
-				const id = context.tabsId;
-				const tabsList = getTabsListForId(id);
-				const deepLinkingId = tabsList?.[tabIndex]?.deepLinkingId;
-
-				if (!deepLinkingId) {
-					return;
-				}
-
-				const newHash = `#${deepLinkingId}`;
-
-				if (context.deepLinkingUpdateHistory) {
-					window.history.pushState(null, '', newHash);
-				} else {
-					window.history.replaceState(null, '', newHash);
-				}
-			},
-			scrollTabIntoView: (tabIndex, passthroughId = false) => {
-				const id =
-					typeof passthroughId === 'string'
-						? passthroughId
-						: getContext()?.tabsId;
-				const tabsList = getTabsListForId(id);
-				const tab = tabsList?.[tabIndex];
-
-				if (!tab?.id) {
-					return;
-				}
-
-				const tabElement = document.getElementById('tab__' + tab.id);
-
-				if (!tabElement) {
-					return;
-				}
-
-				setTimeout(() => {
-					tabElement.scrollIntoView({
-						behavior: 'smooth',
-						block: 'start',
-					});
-				}, 100);
-			},
-			onHashChange: () => {
-				const context = getContext();
-
-				if (!context.deepLinking) {
-					return;
-				}
-
-				const { hash } = window.location;
-
-				if (hash) {
-					privateActions.activateTabByHash(hash);
-				}
-			},
-		},
-		callbacks: {
-			onTabsInit: () => {
-				const context = getContext();
-				const tabsId = context?.tabsId;
-
-				if (tabsId) {
-					tabsContexts.set(tabsId, context);
-					privateState.items[tabsId] = {
-						tabsList: privateState[tabsId] || [],
-					};
-				}
-
-				if (!context?.deepLinking) {
-					return;
-				}
-
-				const { hash } = window.location;
-
-				if (hash) {
-					privateActions.activateTabByHash(hash);
-				}
-			},
-		},
-	},
-	{
-		lock: true,
-	}
-);
-
-// Public store for third-party extensibility.
-store('matter/tabs', {
+const { state, actions } = store('matter/tabs', {
 	state: {
-		get items() {
-			return createReadOnlyProxy(privateState.items);
-		},
-		get tabsList() {
-			const list = privateState.tabsList;
+		get isActive() {
+			const { active, tabId } = getContext();
 
-			return list ? createReadOnlyProxy(list) : undefined;
+			return active === tabId;
 		},
 		get tabIndex() {
-			return privateState.tabIndex;
+			return state.isActive ? 0 : -1;
 		},
-		get isActiveTab() {
-			return privateState.isActiveTab;
+		// The server shows every panel; once the script runs only the active
+		// one shows. An inactive one is `hidden="until-found"`, so find-in-page,
+		// a text fragment or a link inside it can reach it (`beforematch`,
+		// below). A browser that doesn't know `until-found` just hides it.
+		get isPanelHidden() {
+			return state.isActive ? false : 'until-found';
 		},
-		get activeTabIndex() {
-			return privateState.activeTabIndex;
+		// Once the script runs a panel is a tabpanel, named by its tab. (The
+		// server renders none of it: without a tab list there is nothing to
+		// be a panel of.)
+		get panelRole() {
+			return 'tabpanel';
+		},
+		get panelTabIndex() {
+			return 0;
+		},
+		get panelLabelledBy() {
+			return `${getContext().tabId}-tab`;
 		},
 	},
 	actions: {
 		/**
-		 * Sets the active tab index.
+		 * From a tab button; or, from the API, `select( target, tab )` with a
+		 * tab index or panel ID.
 		 *
-		 * @param {string|false} id          Tabs instance id, or false for current context.
-		 * @param {number}       tabIndex    The index of the active tab.
-		 * @param {boolean}      scrollToTab Whether to scroll to the tab element.
+		 * @param {*}             target Directive event, or tabs ID/element.
+		 * @param {number|string} tab    Tab index or panel ID (API).
 		 */
-		setActiveTab(id = false, tabIndex = 0, scrollToTab = false) {
-			if (typeof id === 'string') {
-				privateActions.setActiveTabById(id, tabIndex, scrollToTab);
+		select(target, tab) {
+			if (!fromDirective(target)) {
+				instanceFor(target)?.select(tab);
+
 				return;
 			}
 
-			privateActions.setActiveTab(tabIndex, scrollToTab);
+			const context = getContext();
+
+			activate(context.tabId);
+
+			if (context.isMenuOpen) {
+				actions.closeMenu();
+			}
+		},
+		// The browser is about to show an inactive panel's text, found in the
+		// page: select its tab, as its button would.
+		reveal() {
+			const context = getContext();
+
+			if (context.active !== context.tabId) {
+				activate(context.tabId, context);
+			}
+		},
+		next(target) {
+			instanceFor(target)?.next();
+		},
+		prev(target) {
+			instanceFor(target)?.prev();
+		},
+		toggleMenu() {
+			const context = getContext();
+
+			context.isMenuOpen = !context.isMenuOpen;
+
+			if (context.isMenuOpen) {
+				focusActiveTab(getElement().ref);
+			}
+		},
+		closeMenu() {
+			getContext().isMenuOpen = false;
+			focusToggle(getElement().ref);
+		},
+		onToggleKeydown: withSyncEvent((event) => {
+			if (event.altKey || event.ctrlKey || event.metaKey) {
+				return;
+			}
+
+			const context = getContext();
+
+			if (event.key === 'Escape' && context.isMenuOpen) {
+				event.preventDefault();
+				context.isMenuOpen = false;
+			} else if (event.key === 'ArrowDown' && !context.isMenuOpen) {
+				event.preventDefault();
+				actions.toggleMenu();
+			}
+		}),
+		onDocumentClick(event) {
+			const context = getContext();
+			const { ref } = getElement();
+
+			if (context.isMenuOpen && !ref.contains(event.target)) {
+				context.isMenuOpen = false;
+			}
+		},
+		onKeydown: withSyncEvent((event) => {
+			// Alt+Arrow is the browser's back and forward, Ctrl+Home and
+			// Ctrl+End scroll the page: not ours.
+			if (event.altKey || event.ctrlKey || event.metaKey) {
+				return;
+			}
+
+			const context = getContext();
+			const { ref } = getElement();
+			const tabs = [
+				...ref.parentElement.querySelectorAll(':scope > [role="tab"]'),
+			];
+			const index = tabs.indexOf(ref);
+			const next = tabs[(index + 1) % tabs.length];
+			const previous = tabs[(index - 1 + tabs.length) % tabs.length];
+
+			// Left and Right follow the screen: in a right-to-left tablist the
+			// next tab is on the left. Read from the tab, not the page, so a
+			// right-to-left section in a left-to-right page works.
+			const isRtl = window.getComputedStyle(ref).direction === 'rtl';
+			const forwards = isRtl ? 'ArrowLeft' : 'ArrowRight';
+			const backwards = isRtl ? 'ArrowRight' : 'ArrowLeft';
+
+			// The open dropdown is a vertical list: move focus; Enter/Space
+			// (the button's click) choose.
+			if (context.isMenuOpen) {
+				const targets = {
+					ArrowDown: next,
+					[forwards]: next,
+					ArrowUp: previous,
+					[backwards]: previous,
+					Home: tabs[0],
+					End: tabs[tabs.length - 1],
+				};
+
+				if (event.key === 'Escape') {
+					event.preventDefault();
+					actions.closeMenu();
+				} else if (event.key === 'Tab') {
+					context.isMenuOpen = false;
+				} else if (targets[event.key]) {
+					event.preventDefault();
+					targets[event.key].focus();
+				}
+
+				return;
+			}
+
+			const vertical =
+				ref.parentElement.getAttribute('aria-orientation') ===
+				'vertical';
+			const targets = {
+				[vertical ? 'ArrowDown' : forwards]: next,
+				[vertical ? 'ArrowUp' : backwards]: previous,
+				Home: tabs[0],
+				End: tabs[tabs.length - 1],
+			};
+			const target = targets[event.key];
+
+			if (!target) {
+				return;
+			}
+
+			event.preventDefault();
+			target.focus();
+			target.click();
+		}),
+	},
+	callbacks: {
+		init() {
+			const context = getContext();
+			const { ref } = getElement();
+
+			// The block and its own panels (the CSS hides an inactive panel, and
+			// a nested block's panels are for that block to mark).
+			enhance(
+				'tabs',
+				ref,
+				...[...ref.querySelectorAll(PANEL)].filter(
+					(panel) => panel.closest(SELECTOR) === ref
+				)
+			);
+			// A link to a tab, or to anything in one (including a tab of tabs
+			// nested in it), selects this block's tab that holds it: on load,
+			// and when the address's #hash changes.
+			const selectFromHash = withScope(() => {
+				const hash = hashId();
+				const target = hash ? document.getElementById(hash) : null;
+				const panel =
+					target &&
+					[...ref.querySelectorAll(PANEL)].find(
+						(element) =>
+							element.closest(SELECTOR) === ref &&
+							element.contains(target)
+					);
+
+				if (panel && context.active !== panel.id) {
+					context.active = panel.id;
+					// The browser couldn't scroll to it while its tab was hidden.
+					scrollWhenShown(target);
+				}
+			});
+
+			// Removed with the block (e.g. by client-side navigation).
+			const controller = new AbortController();
+
+			selectFromHash();
+			window.addEventListener('hashchange', selectFromHash, {
+				signal: controller.signal,
+			});
+
+			const choose = withScope((tab) => {
+				const tabs = tabsOf(ref);
+				const target =
+					typeof tab === 'number'
+						? tabs[tab]
+						: tabs.find(({ id }) => id === tab);
+
+				if (target) {
+					activate(target.id, context);
+				}
+			});
+			const step = (offset) => {
+				const tabs = tabsOf(ref);
+				const index = tabs.findIndex(({ id }) => id === context.active);
+
+				choose((index + offset + tabs.length) % tabs.length);
+			};
+
+			const instance = {
+				element: ref,
+				get id() {
+					return ref.id || null;
+				},
+				/** Each tab: { index, id (its panel's ID), label }. */
+				get tabs() {
+					return tabsOf(ref);
+				},
+				/** The current tab, as in `tabs`. */
+				get active() {
+					return (
+						tabsOf(ref).find(({ id }) => id === context.active) ??
+						null
+					);
+				},
+				select: choose,
+				next: () => step(1),
+				prev: () => step(-1),
+			};
+
+			instances.set(ref, instance);
+			announced.set(ref, context.active);
+			registerInstance('tabs', ref, instance);
+
+			return () => controller.abort();
+		},
+		// Announce tab changes (from a click, the keyboard or the API).
+		announce() {
+			const { active } = getContext();
+			const { ref } = getElement();
+			const previous = announced.get(ref);
+
+			if (!instances.has(ref) || previous === active) {
+				return;
+			}
+
+			announced.set(ref, active);
+
+			const tabs = tabsOf(ref);
+
+			emit(ref, 'tabs', 'change', {
+				index: tabs.findIndex(({ id }) => id === active),
+				tabId: active,
+				previous,
+			});
 		},
 	},
 });

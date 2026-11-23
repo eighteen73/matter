@@ -1,46 +1,16 @@
 <?php
 /**
- * The following variables are exposed to the file:
- *     $attributes (array): The block attributes.
- *     $content (string): The block default content.
- *     $block (WP_Block): The block instance.
+ * Collapsible: optional trigger area plus content revealed in place.
  *
- * @package Matter\\Collapsible
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Rendered slots.
+ * @param WP_Block $block      Block instance.
+ *
+ * @package Eighteen73\Matter
  */
 
-use Eighteen73\Matter\Blocks\Collapsible;
+use Eighteen73\Matter\Overlays\Overlay;
 
-defined( 'ABSPATH' ) || exit;
+$matter_html = Overlay::render( 'collapsible', $attributes, $content, $block );
 
-$block_attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : [];
-$block_context    = isset( $block->context ) && is_array( $block->context ) ? $block->context : [];
-$collapsible_id   = Collapsible::resolve_id( $block_attributes, $block_context );
-$type             = Collapsible::resolve_type( $block_attributes );
-
-Collapsible::register_state( $collapsible_id );
-?>
-
-<div
-	<?php
-	echo wp_kses_data(
-		get_block_wrapper_attributes(
-			[
-				'id'                     => $collapsible_id,
-				'class'                  => "is-type-{$type}",
-				'data-wp-interactive'    => 'matter/overlay',
-				'data-wp-init'           => 'callbacks.onInit',
-				'data-wp-class--is-open' => 'state.item.isOpen',
-			]
-		)
-		. ' '
-		. wp_interactivity_data_wp_context(
-			[
-				'id'   => $collapsible_id,
-				'type' => 'collapsible',
-			]
-		)
-	);
-	?>
->
-	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</div>
+echo $matter_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Overlay::render().
