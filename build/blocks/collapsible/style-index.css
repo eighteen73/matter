@@ -1,1 +1,1 @@
-.wp-block-matter-collapsible.is-type-popover{position:relative}
+.wp-block-matter-collapsible__content[hidden]:where(:not([hidden=until-found])),.wp-block-matter-collapsible__content:not(.is-open):is(.is-enhanced,html.matter-js:is(:not(.matter-late),.matter-ready-overlay) *):where(:not([hidden=until-found])){display:none}.wp-block-matter-collapsible__content[hidden=until-found]{border-width:0;margin:0;min-block-size:0;padding:0}:where(.wp-block-matter-collapsible__trigger[role=button]){cursor:pointer}

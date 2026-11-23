@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/filters",
+  "version": "1.0.0",
+  "title": "Filters",
+  "category": "matter-filters",
+  "description": "Filters for the list they're in: a sidebar on larger screens, and below the theme's breakpoint a panel opened by the Filters button.",
+  "keywords": [
+    "facet",
+    "filter",
+    "refine",
+    "sidebar"
+  ],
+  "usesContext": [
+    "queryId",
+    "query"
+  ],
+  "attributes": {
+    "label": {
+      "type": "string",
+      "default": "",
+      "role": "content"
+    }
+  },
+  "supports": {
+    "html": false,
+    "multiple": false,
+    "reusable": false,
+    "renaming": false,
+    "interactivity": {
+      "clientNavigation": true
+    }
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScriptModule": "matter/filters",
+  "render": "file:./render.php"
+}

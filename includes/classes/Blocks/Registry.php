@@ -8,7 +8,6 @@
 namespace Eighteen73\Matter\Blocks;
 
 use WP_Block_Metadata_Registry;
-use WP_Block_Type_Registry;
 use Eighteen73\Matter\Singleton;
 
 defined( 'ABSPATH' ) || exit;
@@ -22,8 +21,7 @@ class Registry {
 	/**
 	 * Core blocks Matter replaces (parents + children).
 	 *
-	 * Hidden from the inserter via allowed_block_types_all.
-	 * Existing content using these blocks continues to render.
+	 * Hidden from the inserter; existing content using them still renders.
 	 *
 	 * @var string[]
 	 */
@@ -40,15 +38,14 @@ class Registry {
 	];
 
 	/**
-	 * Third party blocks that Matter replaces (parents + children).
-	 *
-	 * Hidden from the inserter via allowed_block_types_all.
-	 * Existing content using these blocks continues to render.
+	 * Matter's blocks for another plugin's content (folder names), which
+	 * register only when that plugin's integration turns them on with
+	 * `matter_register_block` (see Integrations).
 	 *
 	 * @var string[]
 	 */
-	private const DISABLED_THIRD_PARTY_BLOCKS = [
-		'gravityforms/form',
+	private const INTEGRATION_BLOCKS = [
+		'gravity-form',
 	];
 
 	/**
@@ -57,86 +54,94 @@ class Registry {
 	 * @return void
 	 */
 	public function setup(): void {
-		add_action( 'init', [ $this, 'register_overlay_store_module' ], 9 );
-		add_action( 'init', [ $this, 'register_lightbox_store_module' ], 9 );
 		add_action( 'init', [ $this, 'register' ] );
-		add_filter( 'allowed_block_types_all', [ $this, 'disable_mirrored_core_blocks' ], 10, 2 );
+		add_filter( 'register_block_type_args', [ $this, 'hide_replaced_blocks' ], 10, 2 );
+		add_filter( 'block_type_metadata', [ $this, 'version_styles' ] );
 	}
 
 	/**
-	 * Remove core blocks that Matter replaces from the editor allow-list.
+	 * Cache-bust Matter's block stylesheets when they change.
 	 *
-	 * @param bool|string[]            $allowed_block_types Allowed block types, or true for all.
-	 * @param \WP_Block_Editor_Context $editor_context      Editor context.
-	 * @return bool|string[]
+	 * Core versions a block's scripts from their `.asset.php` hash, but its
+	 * styles from block.json's `version`, which only changes on release, so
+	 * browsers would keep an old stylesheet after an update. The version
+	 * becomes the newest modification time of the block's built stylesheets
+	 * (as Assets does for Matter's other files).
+	 *
+	 * @param array $metadata Block metadata.
+	 * @return array
 	 */
-	public function disable_mirrored_core_blocks( $allowed_block_types, $editor_context ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-		if ( true === $allowed_block_types ) {
-			$allowed_block_types = array_keys( WP_Block_Type_Registry::get_instance()->get_all_registered() );
+	public function version_styles( array $metadata ): array {
+		if ( ! str_starts_with( (string) ( $metadata['name'] ?? '' ), 'matter/' ) || empty( $metadata['file'] ) ) {
+			return $metadata;
 		}
 
-		if ( ! is_array( $allowed_block_types ) ) {
-			return $allowed_block_types;
+		$folder = dirname( $metadata['file'] );
+		$times  = [];
+
+		foreach ( [ 'style', 'editorStyle', 'viewStyle' ] as $field ) {
+			foreach ( (array) ( $metadata[ $field ] ?? [] ) as $style ) {
+				if ( ! is_string( $style ) || ! str_starts_with( $style, 'file:' ) ) {
+					continue;
+				}
+
+				$path = $folder . '/' . remove_block_asset_path_prefix( $style );
+
+				if ( file_exists( $path ) ) {
+					$times[] = filemtime( $path );
+				}
+			}
 		}
 
-		return array_values( array_diff( $allowed_block_types, self::DISABLED_CORE_BLOCKS, self::DISABLED_THIRD_PARTY_BLOCKS ) );
+		if ( $times ) {
+			$metadata['version'] = (string) max( $times );
+		}
+
+		return $metadata;
 	}
 
 	/**
-	 * Register the shared overlay store script module.
+	 * Blocks Matter replaces, hidden from the inserter: core's, plus other
+	 * plugins' that their integrations add (e.g. Gravity Forms' Form block,
+	 * replaced by Matter's).
 	 *
-	 * Overlay blocks reference this module ID in block.json. The module is built
-	 * via webpack.config.js and its dependencies/version come from the generated
-	 * asset file (DependencyExtractionWebpackPlugin).
-	 *
-	 * @return void
+	 * @return string[] Block names.
 	 */
-	public function register_overlay_store_module(): void {
-		$script_path = MATTER_PATH . 'build/interactivity/overlay-store.js';
-		$asset_path  = MATTER_PATH . 'build/interactivity/overlay-store.asset.php';
-
-		if ( ! file_exists( $script_path ) ) {
-			return;
-		}
-
-		$asset = file_exists( $asset_path ) ? require $asset_path : [];
-
-		wp_register_script_module(
-			'matter/overlay-store',
-			MATTER_URL . 'build/interactivity/overlay-store.js',
-			$asset['dependencies'] ?? [],
-			$asset['version'] ?? false,
-		);
+	public static function hidden_blocks(): array {
+		/**
+		 * Filters the blocks Matter hides from the inserter because it
+		 * replaces them. Existing content using them still renders.
+		 *
+		 * @param string[] $blocks Block names.
+		 */
+		return array_values( (array) apply_filters( 'matter_hidden_blocks', self::DISABLED_CORE_BLOCKS ) );
 	}
 
 	/**
-	 * Register the shared lightbox store script module.
+	 * Hide blocks Matter replaces from the inserter.
 	 *
-	 * @return void
+	 * Uses supports.inserter rather than the allowed-blocks list, so blocks
+	 * registered only in JavaScript aren't affected and the theme's own
+	 * allow-list keeps working.
+	 *
+	 * @param array  $args       Block type args.
+	 * @param string $block_name Block name.
+	 * @return array
 	 */
-	public function register_lightbox_store_module(): void {
-		$script_path = MATTER_PATH . 'build/interactivity/lightbox-store.js';
-		$asset_path  = MATTER_PATH . 'build/interactivity/lightbox-store.asset.php';
-
-		if ( ! file_exists( $script_path ) ) {
-			return;
+	public function hide_replaced_blocks( array $args, string $block_name ): array {
+		if ( in_array( $block_name, self::hidden_blocks(), true ) ) {
+			$args['supports']             = $args['supports'] ?? [];
+			$args['supports']['inserter'] = false;
 		}
 
-		$asset = file_exists( $asset_path ) ? require $asset_path : [];
-
-		wp_register_script_module(
-			'matter/lightbox-store',
-			MATTER_URL . 'build/interactivity/lightbox-store.js',
-			$asset['dependencies'] ?? [],
-			$asset['version'] ?? false,
-		);
+		return $args;
 	}
 
 	/**
 	 * Register blocks from the metadata collection, with per-block opt-out filters.
 	 *
 	 * Uses the same performant manifest flow as wp_register_block_types_from_metadata_collection(),
-	 * but allows individual blocks to be skipped via apply_filters().
+	 * but allows individual blocks to be skipped via the `matter_register_block` filter.
 	 *
 	 * @return void
 	 */
@@ -165,12 +170,14 @@ class Registry {
 			$block_folder = trailingslashit( $blocks_path ) . $block_slug;
 
 			/**
-			 * Allow blocks to be conditionally registered.
+			 * Filters whether a Matter block is registered. Blocks for another
+			 * plugin's content start off, and their integration turns them on.
 			 *
-			 * Usage:
-			 * add_filter( 'matter_register_{$block_slug}', function( $should_register, $block_folder ) { ... }, 10, 2 );
+			 * @param bool   $register Whether to register the block.
+			 * @param string $name     Block name, e.g. `matter/carousel`.
+			 * @param string $folder   The block's build folder.
 			 */
-			$should_register = apply_filters( "matter_register_{$block_slug}", true, $block_folder );
+			$should_register = apply_filters( 'matter_register_block', ! in_array( $block_slug, self::INTEGRATION_BLOCKS, true ), "matter/{$block_slug}", $block_folder );
 
 			if ( ! $should_register ) {
 				continue;

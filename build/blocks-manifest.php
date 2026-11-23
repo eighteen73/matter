@@ -5,1340 +5,755 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/accordion',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Accordion',
-		'description' => 'Displays a foldable layout that groups content in collapsible sections.',
+		'category' => 'widgets',
+		'description' => 'Expandable items you write here. To list FAQs or other posts automatically, use Posts accordion.',
 		'keywords' => array(
-			'accordion',
-			'toggle',
 			'faq',
+			'toggle',
+			'expand',
 			'collapse'
 		),
-		'category' => 'widgets',
-		'textdomain' => 'matter',
-		'allowedBlocks' => array(
-			'matter/accordion-item',
-			'core/query'
-		),
 		'attributes' => array(
-			'generatedId' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'iconPosition' => array(
-				'type' => 'string',
-				'default' => 'right'
-			),
-			'showIcon' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'autoclose' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'openFirstItem' => array(
-				'type' => 'boolean',
-				'default' => false
+			'matterId' => array(
+				'type' => 'string'
 			),
 			'headingLevel' => array(
 				'type' => 'number',
-				'default' => 3,
-				'role' => 'content'
+				'default' => 3
 			),
-			'isQueryMode' => array(
+			'autoclose' => array(
 				'type' => 'boolean',
 				'default' => false
 			),
-			'hasSchema' => array(
+			'openFirst' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'faqSchema' => array(
 				'type' => 'boolean',
 				'default' => false
 			)
 		),
 		'providesContext' => array(
-			'matter/accordion-icon-position' => 'iconPosition',
-			'matter/accordion-show-icon' => 'showIcon',
-			'matter/accordion-heading-level' => 'headingLevel',
-			'matter/accordion-isQueryMode' => 'isQueryMode'
+			'matter/headingLevel' => 'headingLevel',
+			'matter/autoclose' => 'autoclose',
+			'matter/openFirst' => 'openFirst'
 		),
-		'supports' => array(
-			'align' => true,
-			'anchor' => true,
-			'html' => false,
-			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'gradients' => true,
-				'text' => true,
-				'link' => false
+		'example' => array(
+			'attributes' => array(
+				'openFirst' => true
 			),
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex',
-					'flexWrap' => 'nowrap',
-					'justifyContent' => 'stretch',
-					'verticalAlignment' => 'stretch',
-					'orientation' => 'vertical'
+			'innerBlocks' => array(
+				array(
+					'name' => 'matter/accordion-item',
+					'attributes' => array(
+						'title' => 'What\'s included?'
+					),
+					'innerBlocks' => array(
+						array(
+							'name' => 'core/paragraph',
+							'attributes' => array(
+								'content' => 'Everything you need to get started, delivered together.'
+							)
+						)
+					)
 				),
-				'allowEditing' => false
-			),
-			'spacing' => array(
-				'padding' => true,
-				'margin' => true,
-				'blockGap' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
+				array(
+					'name' => 'matter/accordion-item',
+					'attributes' => array(
+						'title' => 'How long does it take?'
+					),
+					'innerBlocks' => array(
+						array(
+							'name' => 'core/paragraph',
+							'attributes' => array(
+								'content' => 'Most orders arrive within a week.'
+							)
+						)
+					)
+				),
+				array(
+					'name' => 'matter/accordion-item',
+					'attributes' => array(
+						'title' => 'Can I change my order?'
+					),
+					'innerBlocks' => array(
+						array(
+							'name' => 'core/paragraph',
+							'attributes' => array(
+								'content' => 'Yes, until it\'s dispatched.'
+							)
+						)
+					)
 				)
-			),
-			'typography' => array(
-				'fontSize' => true,
-				'__experimentalSkipSerialization' => array(
-					'fontSize'
-				)
-			),
-			'ariaLabel' => true,
-			'renaming' => true
-		),
-		'selectors' => array(
-			'root' => '.wp-block-matter-accordion',
-			'typography' => array(
-				'root' => '.wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title',
-				'fontSize' => '.wp-block-matter-accordion .wp-block-matter-accordion-heading__toggle-title'
 			)
 		),
+		'supports' => array(
+			'html' => false,
+			'anchor' => true,
+			'align' => array(
+				'wide',
+				'full'
+			),
+			'interactivity' => true,
+			'matter' => array(
+				'scheme' => true
+			)
+		),
+		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css',
 		'viewScriptModule' => 'file:./view.js',
 		'render' => 'file:./render.php'
 	),
-	'accordion-heading' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/accordion-heading',
-		'version' => '0.1.0',
-		'title' => 'Accordion Heading',
-		'description' => 'Displays a heading that toggles the accordion panel.',
-		'category' => 'widgets',
-		'textdomain' => 'matter',
-		'parent' => array(
-			'matter/accordion-item'
-		),
-		'attributes' => array(
-			'title' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'usesContext' => array(
-			'matter/accordion-id',
-			'matter/accordion-item-id',
-			'matter/accordion-icon-position',
-			'matter/accordion-show-icon',
-			'matter/accordion-heading-level',
-			'matter/accordion-isQueryMode',
-			'matter/accordion-open-by-default',
-			'postId',
-			'postType',
-			'queryId'
-		),
-		'supports' => array(
-			'html' => false,
-			'reusable' => false,
-			'anchor' => true,
-			'interactivity' => true,
-			'lock' => false,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'gradients' => true,
-				'text' => true
-			),
-			'spacing' => array(
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'padding' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
-			'typography' => array(
-				'fontSize' => true
-			),
-			'renaming' => false
-		),
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
 	'accordion-item' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/accordion-item',
-		'version' => '0.1.0',
-		'title' => 'Accordion Item',
-		'description' => 'Wraps the heading and panel in one unit.',
+		'version' => '1.0.0',
+		'title' => 'Accordion item',
 		'category' => 'widgets',
-		'textdomain' => 'matter',
+		'description' => 'A title and the content it reveals.',
 		'parent' => array(
 			'matter/accordion',
 			'core/post-template'
 		),
-		'ancestor' => array(
-			'matter/accordion'
-		),
-		'allowedBlocks' => array(
-			'matter/accordion-heading',
-			'matter/accordion-panel'
-		),
 		'attributes' => array(
-			'openByDefault' => array(
-				'type' => 'boolean',
-				'default' => false
+			'title' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
 			),
-			'inQueryLoop' => array(
+			'open' => array(
 				'type' => 'boolean',
 				'default' => false
 			)
 		),
-		'providesContext' => array(
-			'matter/accordion-open-by-default' => 'openByDefault'
-		),
 		'usesContext' => array(
-			'matter/accordion-id',
-			'matter/accordion-isQueryMode',
-			'matter/accordion-heading-level',
-			'matter/accordion-icon-position',
-			'matter/accordion-show-icon',
+			'matter/headingLevel',
+			'matter/autoclose',
+			'matter/openFirst',
 			'postId',
 			'postType',
 			'queryId'
 		),
 		'supports' => array(
 			'html' => false,
-			'reusable' => false,
-			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'gradients' => true,
-				'text' => true
-			),
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex',
-					'flexWrap' => 'nowrap',
-					'justifyContent' => 'stretch',
-					'verticalAlignment' => 'stretch',
-					'orientation' => 'vertical'
-				),
-				'allowEditing' => false
-			),
-			'spacing' => array(
-				'margin' => false,
-				'padding' => true,
-				'blockGap' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
-			'renaming' => true
+			'reusable' => false
 		),
+		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
-	'accordion-panel' => array(
+	'active-filters' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'matter/accordion-panel',
-		'version' => '0.1.0',
-		'title' => 'Accordion Panel',
-		'description' => 'Contains the hidden or revealed content beneath the heading.',
-		'category' => 'widgets',
-		'textdomain' => 'matter',
-		'parent' => array(
-			'matter/accordion-item'
+		'name' => 'matter/active-filters',
+		'version' => '1.0.0',
+		'title' => 'Active filters',
+		'category' => 'matter-filters',
+		'description' => 'The filters applied to the list, each removable, and Clear all.',
+		'usesContext' => array(
+			'queryId',
+			'query'
 		),
 		'attributes' => array(
-			'templateLock' => array(
-				'type' => array(
-					'string',
-					'boolean'
-				),
-				'enum' => array(
-					'all',
-					'insert',
-					'contentOnly',
-					false
-				),
-				'default' => false
-			)
-		),
-		'usesContext' => array(
-			'matter/accordion-id',
-			'matter/accordion-item-id',
-			'matter/accordion-open-by-default',
-			'matter/accordion-isQueryMode'
+			
 		),
 		'supports' => array(
-			'lock' => false,
 			'html' => false,
+			'multiple' => false,
 			'reusable' => false,
-			'interactivity' => true,
-			'allowedBlocks' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'gradients' => true,
-				'text' => true
-			),
-			'spacing' => array(
-				'padding' => true,
-				'blockGap' => true,
-				'__experimentalDefaultControls' => array(
-					'padding' => true,
-					'blockGap' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
-			'typography' => array(
-				'fontSize' => true
-			),
-			'layout' => array(
-				'allowEditing' => false
-			),
-			'renaming' => false
+			'renaming' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
 		),
+		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/filters',
+		'render' => 'file:./render.php'
+	),
+	'archive-content' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/archive-content',
+		'version' => '1.0.0',
+		'title' => 'Archive content',
+		'category' => 'theme',
+		'description' => 'For archive templates: wrap the list of posts or products. Editors add content above and below it in Appearance › Archives.',
+		'supports' => array(
+			'html' => false,
+			'inserter' => false,
+			'reusable' => false,
+			'customClassName' => false,
+			'renaming' => false,
+			'layout' => array(
+				'default' => array(
+					'type' => 'constrained'
+				),
+				'allowSwitching' => false,
+				'allowInheriting' => false,
+				'allowEditing' => false
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
+	),
+	'archive-loop' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/archive-loop',
+		'version' => '1.0.0',
+		'title' => 'Archive list',
+		'category' => 'theme',
+		'description' => 'The archive\'s posts or products, as the theme lists them. Add content above and below it.',
+		'attributes' => array(
+			'lock' => array(
+				'type' => 'object',
+				'default' => array(
+					'remove' => true
+				)
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'inserter' => true,
+			'multiple' => false,
+			'reusable' => false,
+			'lock' => false,
+			'renaming' => false
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css',
 		'render' => 'file:./render.php'
 	),
 	'carousel' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/carousel',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Carousel',
-		'category' => 'design',
-		'icon' => 'images-alt',
-		'description' => 'Carousel',
-		'allowedBlocks' => array(
-			'matter/carousel-viewport',
-			'matter/carousel-thumbnails',
-			'matter/carousel-dots',
-			'matter/carousel-progress',
-			'matter/carousel-previous-button',
-			'matter/carousel-next-button',
-			'core/group'
+		'category' => 'widgets',
+		'description' => 'Slides that scroll horizontally: each block inside is a slide. To show posts, products or terms automatically, use Posts, Products or Terms carousel.',
+		'keywords' => array(
+			'slider',
+			'slideshow',
+			'gallery'
 		),
 		'attributes' => array(
-			'generatedId' => array(
+			'label' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
+			),
+			'aspectRatio' => array(
 				'type' => 'string',
 				'default' => ''
 			),
-			'emblaConfig' => array(
-				'type' => 'object',
-				'default' => array(
-					'options' => array(
-						'loop' => false,
-						'axis' => 'x',
-						'slidesToScroll' => 1,
-						'active' => true,
-						'slidesToShow' => 1,
-						'slideGap' => ''
-					),
-					'plugins' => array(
-						'fade' => array(
-							'active' => false
-						),
-						'autoplay' => array(
-							'active' => false,
-							'type' => 'slide',
-							'speed' => 1
-						)
-					),
-					'breakpointLayers' => array(
-						
-					)
-				)
-			),
-			'advancedEmblaConfig' => array(
-				'type' => 'object',
-				'default' => null
-			),
-			'advancedEmblaConfigMerge' => array(
+			'allowResize' => array(
 				'type' => 'boolean',
 				'default' => false
 			)
 		),
+		'providesContext' => array(
+			'allowResize' => 'allowResize'
+		),
+		'example' => array(
+			'viewportWidth' => 1200,
+			'innerBlocks' => array(
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				)
+			)
+		),
 		'supports' => array(
-			'inserter' => true,
+			'html' => false,
 			'anchor' => true,
 			'align' => array(
 				'wide',
 				'full'
 			),
 			'interactivity' => true,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => false,
-					'padding' => false
-				)
-			),
-			'contentRole' => true,
-			'listView' => true
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php',
-		'viewScriptModule' => 'file:./view.js'
-	),
-	'carousel-dots' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-dots',
-		'version' => '0.1.0',
-		'title' => 'Dots',
-		'category' => 'design',
-		'icon' => 'ellipsis',
-		'description' => 'Displays pagination dots to navigate between slides.',
-		'ancestor' => array(
-			'matter/carousel'
-		),
-		'attributes' => array(
-			'dotColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'dotActiveColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'contentRole' => true,
-			'color' => array(
-				'text' => false,
-				'background' => true,
-				'gradients' => false,
-				'link' => false
-			),
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => true,
-					'padding' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'radius' => true
+			'matter' => array(
+				'scheme' => true
 			)
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'carousel-next-button' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-next-button',
-		'version' => '0.1.0',
-		'title' => 'Next Button',
-		'category' => 'design',
-		'icon' => 'arrow-right-alt',
-		'description' => 'Moves the carousel to the next slide.',
-		'ancestor' => array(
-			'matter/carousel'
-		),
-		'attributes' => array(
-			'iconColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'contentRole' => true,
-			'color' => array(
-				'text' => false,
-				'background' => true,
-				'gradients' => false,
-				'link' => false
-			),
-			'dimensions' => array(
-				'aspectRatio' => true,
-				'width' => true,
-				'height' => true,
-				'__experimentalDefaultControls' => array(
-					'aspectRatio' => false,
-					'width' => false,
-					'height' => false
-				)
-			),
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => true,
-					'padding' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'render' => 'file:./render.php'
-	),
-	'carousel-previous-button' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-previous-button',
-		'version' => '0.1.0',
-		'title' => 'Previous Button',
-		'category' => 'design',
-		'icon' => 'arrow-left-alt',
-		'description' => 'Moves the carousel to the previous slide.',
-		'ancestor' => array(
-			'matter/carousel'
-		),
-		'attributes' => array(
-			'iconColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'contentRole' => true,
-			'color' => array(
-				'text' => false,
-				'background' => true,
-				'gradients' => false,
-				'link' => false
-			),
-			'dimensions' => array(
-				'aspectRatio' => true,
-				'width' => true,
-				'height' => true,
-				'__experimentalDefaultControls' => array(
-					'aspectRatio' => false,
-					'width' => false,
-					'height' => false
-				)
-			),
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => true,
-					'padding' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'render' => 'file:./render.php'
-	),
-	'carousel-progress' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-progress',
-		'version' => '0.1.0',
-		'title' => 'Progress',
-		'category' => 'design',
-		'icon' => 'minus',
-		'description' => 'Shows the progress of the carousel.',
-		'ancestor' => array(
-			'matter/carousel'
-		),
-		'attributes' => array(
-			'indicateCurrentPosition' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'barColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'color' => array(
-				'text' => false,
-				'background' => true,
-				'gradients' => false,
-				'link' => false
-			),
-			'dimensions' => array(
-				'height' => true
-			),
-			'__experimentalBorder' => array(
-				'radius' => true
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'carousel-slide' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-slide',
-		'version' => '0.1.0',
-		'title' => 'Slide',
-		'category' => 'design',
-		'description' => 'Carousel Slide',
-		'ancestor' => array(
-			'matter/carousel-viewport'
-		),
-		'supports' => array(
-			'html' => false,
-			'lock' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'layout' => array(
-				'allowEditing' => false
-			),
-			'renaming' => false
-		),
-		'attributes' => array(
-			'allowedBlocks' => array(
-				'type' => 'array'
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
-		'render' => 'file:./render.php'
-	),
-	'carousel-thumbnails' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-thumbnails',
-		'version' => '0.1.0',
-		'title' => 'Thumbnails',
-		'category' => 'design',
-		'description' => 'Displays thumbnail blocks to navigate between carousel slides.',
-		'ancestor' => array(
-			'matter/carousel'
-		),
-		'attributes' => array(
-			'syncWithCarousel' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'activeThumbnailColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'contentRole' => true,
-			'lock' => false,
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex'
-				),
-				'allowSwitching' => false,
-				'allowInheriting' => false,
-				'allowVerticalAlignment' => true,
-				'allowSizingOnChildren' => true
-			),
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'blockGap' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => false,
-					'padding' => false,
-					'blockGap' => false
-				)
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'carousel-viewport' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/carousel-viewport',
-		'version' => '0.1.0',
-		'title' => 'Viewport',
-		'category' => 'design',
-		'icon' => 'images-alt',
-		'description' => 'Carousel Viewport',
-		'ancestor' => array(
-			'matter/carousel'
-		),
-		'supports' => array(
-			'lock' => true,
-			'listView' => true,
-			'reusable' => false,
-			'contentRole' => true,
-			'__experimentalExposeControlsToChildren' => true
-		),
-		'attributes' => array(
-			'allowedBlocks' => array(
-				'type' => 'array'
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
-		'render' => 'file:./render.php'
-	),
-	'close' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/close',
-		'version' => '0.1.0',
-		'title' => 'Close',
-		'keywords' => array(
-			'close',
-			'dismiss',
-			'button'
-		),
-		'category' => 'widgets',
-		'description' => 'A close button for modal and drawer content.',
-		'ancestor' => array(
-			'matter/drawer-content',
-			'matter/modal-content'
-		),
-		'attributes' => array(
-			'label' => array(
-				'type' => 'string',
-				'default' => 'Close',
-				'role' => 'content'
-			),
-			'showLabel' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'position' => array(
-				'type' => 'string',
-				'enum' => array(
-					'inline',
-					'top-left',
-					'top-right'
-				),
-				'default' => 'inline'
-			),
-			'positionOffset' => array(
-				'type' => 'string',
-				'default' => '0'
-			)
-		),
-		'supports' => array(
-			'border' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true
-			),
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true
-			),
-			'html' => false,
-			'reusable' => false,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => false,
-					'padding' => true
-				)
-			),
-			'dimensions' => array(
-				'width' => false,
-				'height' => false,
-				'aspectRatio' => false,
-				'minHeight' => false
-			),
-			'typography' => array(
-				'fontSize' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
-		'usesContext' => array(
-			'matter/drawer-id',
-			'matter/modal-id'
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'file:./view.js',
 		'render' => 'file:./render.php'
 	),
 	'collapsible' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/collapsible',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Collapsible',
-		'keywords' => array(
-			'accordion',
-			'collapsible',
-			'toggle'
-		),
 		'category' => 'widgets',
-		'description' => 'An interactive section which reveals content when triggered.',
-		'allowedBlocks' => array(
-			'matter/trigger',
-			'matter/trigger-hamburger',
-			'matter/collapsible-content'
+		'description' => 'Content that stays hidden until a button or link reveals it.',
+		'keywords' => array(
+			'toggle',
+			'disclosure',
+			'reveal',
+			'show more'
 		),
 		'attributes' => array(
-			'generatedId' => array(
+			'overlayId' => array(
 				'type' => 'string',
 				'default' => ''
-			),
-			'type' => array(
-				'type' => 'string',
-				'enum' => array(
-					'popover',
-					'inline'
-				),
-				'default' => 'popover'
-			),
-			'editorIsOpen' => array(
-				'type' => 'boolean',
-				'default' => false,
-				'role' => 'local'
 			)
 		),
-		'providesContext' => array(
-			'matter/collapsible-is-open' => 'editorIsOpen'
-		),
-		'usesContext' => array(
-			'postId',
-			'postType',
-			'queryId'
-		),
 		'supports' => array(
-			'anchor' => true,
 			'html' => false,
-			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php',
-		'viewScriptModule' => 'matter/overlay-store'
-	),
-	'collapsible-content' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/collapsible-content',
-		'version' => '0.1.0',
-		'title' => 'Collapsible Content',
-		'category' => 'widgets',
-		'description' => 'The content panel revealed by a collapsible trigger.',
-		'parent' => array(
-			'matter/collapsible'
-		),
-		'supports' => array(
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'contentRole' => true,
-			'html' => false,
-			'lock' => false,
 			'reusable' => false,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
+			'interactivity' => true,
+			'matter' => array(
+				'scheme' => true,
+				'section' => false,
+				'slots' => array(
+					'trigger' => array(
+						
+					),
+					'content' => array(
+						'template' => array(
+							array(
+								'core/heading',
+								array(
+									'level' => 2,
+									'placeholder' => 'Heading'
+								)
+							),
+							array(
+								'core/paragraph',
+								array(
+									'placeholder' => 'Content…'
+								)
+							)
+						)
+					)
 				)
 			)
 		),
-		'usesContext' => array(
-			'matter/collapsible-id',
-			'matter/collapsible-is-open'
-		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
+		'viewScriptModule' => 'matter/overlay',
+		'render' => 'file:./render.php',
+		'usesContext' => array(
+			'postId'
+		)
 	),
 	'drawer' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/drawer',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Drawer',
+		'category' => 'widgets',
+		'description' => 'Content that slides in from the edge of the screen, opened by a button or link.',
 		'keywords' => array(
-			'drawer',
-			'sidebar'
-		),
-		'category' => 'widgets',
-		'description' => 'An interactive drawer to display content without leaving the page.',
-		'allowedBlocks' => array(
-			'matter/trigger',
-			'matter/trigger-hamburger',
-			'matter/drawer-content'
+			'offcanvas',
+			'sidebar',
+			'panel'
 		),
 		'attributes' => array(
-			'generatedId' => array(
+			'overlayId' => array(
 				'type' => 'string',
 				'default' => ''
 			),
-			'editorIsOpen' => array(
-				'type' => 'boolean',
-				'default' => false,
-				'role' => 'local'
-			)
-		),
-		'providesContext' => array(
-			'matter/drawer-is-open' => 'editorIsOpen'
-		),
-		'usesContext' => array(
-			'postId',
-			'postType',
-			'queryId'
-		),
-		'supports' => array(
-			'anchor' => true,
-			'html' => false,
-			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php',
-		'viewScriptModule' => 'matter/overlay-store'
-	),
-	'drawer-content' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/drawer-content',
-		'version' => '0.1.0',
-		'title' => 'Drawer Content',
-		'category' => 'widgets',
-		'description' => 'The content displayed inside a drawer.',
-		'parent' => array(
-			'matter/drawer'
-		),
-		'attributes' => array(
-			'backdropColor' => array(
+			'label' => array(
 				'type' => 'string',
-				'default' => ''
-			),
-			'backdropOpacity' => array(
-				'type' => 'number',
-				'default' => 50
-			),
-			'backdropBlur' => array(
-				'type' => 'number',
-				'default' => 0
+				'default' => '',
+				'role' => 'content'
 			),
 			'position' => array(
 				'type' => 'string',
 				'enum' => array(
-					'left',
-					'right',
-					'top',
-					'bottom'
+					'end',
+					'start'
 				),
-				'default' => 'left'
+				'default' => 'end'
 			),
-			'width' => array(
-				'type' => 'string',
-				'default' => ''
+			'openOnLoad' => array(
+				'type' => 'boolean',
+				'default' => false
 			),
-			'height' => array(
-				'type' => 'string',
-				'default' => ''
+			'openDelay' => array(
+				'type' => 'number',
+				'default' => 0
 			),
-			'layout' => array(
-				'type' => 'object',
+			'openOnScroll' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'scrollThreshold' => array(
+				'type' => 'number',
+				'default' => 50
+			),
+			'urlTriggers' => array(
+				'type' => 'array',
 				'default' => array(
-					'type' => 'flex',
-					'orientation' => 'vertical',
-					'flexWrap' => false
+					
 				)
+			),
+			'dismissDays' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'dismissible' => array(
+				'type' => 'boolean',
+				'default' => true
 			)
 		),
 		'supports' => array(
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'contentRole' => true,
 			'html' => false,
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex',
-					'orientation' => 'vertical'
-				),
-				'allowSizingOnChildren' => true,
-				'allowWrap' => false,
-				'allowVerticalAlignment' => true,
-				'allowJustification' => true,
-				'allowOrientation' => false
-			),
-			'lock' => false,
 			'reusable' => false,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'blockGap' => true,
-				'__experimentalDefaultControls' => array(
-					'blockGap' => false,
-					'margin' => false,
-					'padding' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
+			'interactivity' => true,
+			'matter' => array(
+				'scheme' => true,
+				'section' => false,
+				'slots' => array(
+					'trigger' => array(
+						
+					),
+					'content' => array(
+						'template' => array(
+							array(
+								'core/heading',
+								array(
+									'level' => 2,
+									'placeholder' => 'Heading'
+								)
+							),
+							array(
+								'core/paragraph',
+								array(
+									'placeholder' => 'Content…'
+								)
+							)
+						)
+					)
 				)
 			)
 		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/overlay',
+		'render' => 'file:./render.php',
 		'usesContext' => array(
-			'matter/drawer-id',
-			'matter/drawer-is-open',
-			'postId',
-			'queryId'
+			'postId'
+		)
+	),
+	'filter' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/filter',
+		'version' => '1.0.0',
+		'title' => 'Filter',
+		'category' => 'matter-filters',
+		'description' => 'Filter the list by a category, tag, attribute or other choice, with how many results each option has.',
+		'parent' => array(
+			'matter/filters'
+		),
+		'usesContext' => array(
+			'queryId',
+			'query'
+		),
+		'attributes' => array(
+			'source' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'display' => array(
+				'type' => 'string',
+				'enum' => array(
+					'checkboxes',
+					'radio',
+					'chips',
+					'dropdown',
+					'swatches',
+					'stars',
+					'range'
+				),
+				'default' => 'checkboxes'
+			),
+			'label' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
+			),
+			'showCounts' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'operator' => array(
+				'type' => 'string',
+				'enum' => array(
+					'or',
+					'and'
+				),
+				'default' => 'or'
+			),
+			'limit' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'atLeast' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'collapsible' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'open' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'slider' => array(
+				'type' => 'boolean',
+				'default' => false
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'renaming' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/filters',
+		'render' => 'file:./render.php'
+	),
+	'filters' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/filters',
+		'version' => '1.0.0',
+		'title' => 'Filters',
+		'category' => 'matter-filters',
+		'description' => 'Filters for the list they\'re in: a sidebar on larger screens, and below the theme\'s breakpoint a panel opened by the Filters button.',
+		'keywords' => array(
+			'facet',
+			'filter',
+			'refine',
+			'sidebar'
+		),
+		'usesContext' => array(
+			'queryId',
+			'query'
+		),
+		'attributes' => array(
+			'label' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'multiple' => false,
+			'reusable' => false,
+			'renaming' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/filters',
+		'render' => 'file:./render.php'
+	),
+	'filters-toggle' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/filters-toggle',
+		'version' => '1.0.0',
+		'title' => 'Filters button',
+		'category' => 'matter-filters',
+		'description' => 'Opens the list\'s filters on small screens, with how many are applied. Hidden while the filters show inline.',
+		'usesContext' => array(
+			'queryId',
+			'query'
+		),
+		'attributes' => array(
+			'label' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'multiple' => false,
+			'reusable' => false,
+			'renaming' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/filters',
 		'render' => 'file:./render.php'
 	),
 	'gallery' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/gallery',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Gallery',
 		'category' => 'media',
-		'icon' => 'format-gallery',
-		'description' => 'A gallery of images with grid or carousel display and an optional lightbox.',
+		'description' => 'Images in a grid or carousel that open in a lightbox, cropped to one aspect ratio.',
 		'keywords' => array(
-			'gallery',
 			'images',
-			'carousel',
+			'photos',
 			'lightbox'
 		),
-		'allowedBlocks' => array(
-			'core/image'
-		),
 		'attributes' => array(
-			'generatedId' => array(
+			'layout' => array(
 				'type' => 'string',
-				'default' => ''
-			),
-			'type' => array(
-				'type' => 'string',
-				'default' => 'grid',
 				'enum' => array(
 					'grid',
 					'carousel'
-				)
+				),
+				'default' => 'grid'
 			),
-			'aspectRatio' => array(
-				'type' => 'string',
-				'default' => 'auto'
-			),
-			'sizeSlug' => array(
-				'type' => 'string',
-				'default' => 'large'
-			),
-			'thumbnailSizeSlug' => array(
-				'type' => 'string',
-				'default' => 'thumbnail'
+			'limit' => array(
+				'type' => 'number',
+				'default' => 0
 			),
 			'lightbox' => array(
 				'type' => 'boolean',
 				'default' => true
 			),
-			'lightboxSizeSlug' => array(
+			'captions' => array(
 				'type' => 'string',
-				'default' => 'large'
-			),
-			'lightboxThumbnails' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'lightboxThumbnailSizeSlug' => array(
-				'type' => 'string',
-				'default' => 'thumbnail'
-			),
-			'lightboxThumbnailAspectRatio' => array(
-				'type' => 'string',
-				'default' => '1'
-			),
-			'lightboxThumbnailFocalPoint' => array(
-				'type' => 'object',
-				'default' => array(
-					'x' => 0.5,
-					'y' => 0.5
-				)
-			),
-			'lightboxThumbnailGap' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'lightboxBackdropColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'lightboxBackdropOpacity' => array(
-				'type' => 'number',
-				'default' => 85
-			),
-			'lightboxBackdropBlur' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'showCaptions' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'captionStyle' => array(
-				'type' => 'string',
-				'default' => 'toggle',
 				'enum' => array(
-					'toggle',
-					'overlay'
-				)
-			),
-			'imageLimit' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'includeThumbnails' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'thumbnailAspectRatio' => array(
-				'type' => 'string',
-				'default' => '1'
-			),
-			'thumbnailsVisible' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'thumbnailGap' => array(
-				'type' => 'string',
+					'',
+					'tooltip',
+					'overlay',
+					'hidden'
+				),
 				'default' => ''
 			),
-			'imageCrop' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'allowResize' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'viewAllText' => array(
+			'label' => array(
 				'type' => 'string',
-				'default' => 'View Gallery',
+				'default' => '',
 				'role' => 'content'
 			),
-			'carouselConfig' => array(
-				'type' => 'object',
-				'default' => array(
-					'options' => array(
-						'loop' => false,
-						'axis' => 'x',
-						'slidesToScroll' => 1,
-						'slidesToShow' => 1,
-						'slideGap' => '',
-						'active' => true
-					),
-					'plugins' => array(
-						'fade' => array(
-							'active' => false
-						),
-						'autoplay' => array(
-							'active' => false,
-							'type' => 'slide',
-							'delay' => 4000
-						)
-					),
-					'breakpointLayers' => array(
-						
-					)
-				)
+			'columns' => array(
+				'type' => 'number',
+				'default' => 0
 			),
-			'advancedCarouselConfig' => array(
-				'type' => 'object',
-				'default' => null
+			'aspectRatio' => array(
+				'type' => 'string',
+				'default' => ''
 			),
-			'advancedCarouselConfigMerge' => array(
+			'allowResize' => array(
 				'type' => 'boolean',
 				'default' => false
 			)
 		),
 		'providesContext' => array(
-			'allowResize' => 'allowResize',
-			'imageCrop' => 'imageCrop'
+			'allowResize' => 'allowResize'
+		),
+		'example' => array(
+			'viewportWidth' => 1200,
+			'innerBlocks' => array(
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				),
+				array(
+					'name' => 'core/image',
+					'attributes' => array(
+						'url' => 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 400\'><rect width=\'600\' height=\'400\' fill=\'%23dcdcde\'/><circle cx=\'440\' cy=\'120\' r=\'40\' fill=\'%23c3c4c7\'/><path d=\'M0 400 210 170l120 140 80-80 190 170z\' fill=\'%23a7aaad\'/></svg>',
+						'alt' => ''
+					)
+				)
+			)
 		),
 		'supports' => array(
+			'html' => false,
 			'anchor' => true,
 			'align' => array(
 				'wide',
 				'full'
 			),
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'contentRole' => true,
-			'html' => false,
-			'interactivity' => true,
-			'listView' => true,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'blockGap' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => true,
-					'padding' => true,
-					'blockGap' => true
-				)
-			),
-			'layout' => array(
-				'allowSwitching' => false,
-				'allowInheriting' => false,
-				'allowEditing' => true,
-				'allowSizingOnChildren' => true,
-				'default' => array(
-					'type' => 'grid',
-					'columnCount' => 3
-				)
-			),
-			'dimensions' => array(
-				'width' => false,
-				'height' => false,
-				'aspectRatio' => false,
-				'minHeight' => false
-			)
-		),
-		'selectors' => array(
-			'root' => '.wp-block-matter-gallery',
-			'spacing' => array(
-				'blockGap' => '.wp-block-matter-gallery.wp-block-matter-gallery--grid.is-layout-grid, .wp-block-matter-gallery.wp-block-matter-gallery--grid .block-editor-block-list__layout.is-layout-grid, .wp-block-matter-gallery.wp-block-matter-gallery--carousel .wp-block-matter-gallery__carousel'
-			)
+			'interactivity' => true
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
@@ -1351,7 +766,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/gravity-form',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Gravity Form',
 		'category' => 'widgets',
 		'description' => 'Displays a Gravity Form',
@@ -1361,10 +776,6 @@ return array(
 			'contact'
 		),
 		'attributes' => array(
-			'generatedId' => array(
-				'type' => 'string',
-				'default' => ''
-			),
 			'formId' => array(
 				'type' => 'string',
 				'default' => '',
@@ -1391,37 +802,12 @@ return array(
 				'default' => null
 			)
 		),
+		'example' => array(
+			
+		),
 		'supports' => array(
-			'align' => true,
-			'anchor' => true,
 			'html' => false,
-			'contentRole' => true,
-			'color' => array(
-				'background' => true,
-				'gradients' => true,
-				'text' => false
-			),
-			'spacing' => array(
-				'padding' => true,
-				'blockGap' => false,
-				'margin' => true,
-				'__experimentalDefaultControls' => array(
-					'padding' => true,
-					'margin' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
+			'anchor' => true,
 			'renaming' => false,
 			'customCSS' => false
 		),
@@ -1430,54 +816,87 @@ return array(
 		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
+	'loop-item' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/loop-item',
+		'version' => '1.0.0',
+		'title' => 'Loop item',
+		'category' => 'theme',
+		'description' => 'The theme\'s design for the current item in a loop (a post, or a term in a Terms Query). The design lives in the theme, so every loop and carousel shows the same thing.',
+		'keywords' => array(
+			'loop',
+			'item',
+			'post',
+			'product',
+			'term'
+		),
+		'usesContext' => array(
+			'postId',
+			'postType',
+			'termId',
+			'taxonomy',
+			'matter/display'
+		),
+		'attributes' => array(
+			'itemLabel' => array(
+				'type' => 'string',
+				'role' => 'local'
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'inserter' => false,
+			'reusable' => false,
+			'lock' => false,
+			'renaming' => false,
+			'customCSS' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
+	),
 	'modal' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/modal',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Modal',
+		'category' => 'widgets',
+		'description' => 'Content shown in a box over the page, opened by a button or link.',
 		'keywords' => array(
 			'dialog',
-			'modal',
-			'popup'
-		),
-		'category' => 'widgets',
-		'description' => 'An interactive modal dialog to display content without leaving the page.',
-		'allowedBlocks' => array(
-			'matter/trigger',
-			'matter/trigger-hamburger',
-			'matter/modal-content'
+			'popup',
+			'lightbox'
 		),
 		'attributes' => array(
-			'generatedId' => array(
+			'overlayId' => array(
 				'type' => 'string',
 				'default' => ''
 			),
-			'editorIsOpen' => array(
-				'type' => 'boolean',
-				'default' => false,
-				'role' => 'local'
+			'label' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
 			),
-			'dismissedDuration' => array(
-				'type' => 'string'
-			),
-			'triggerOnLoad' => array(
+			'openOnLoad' => array(
 				'type' => 'boolean',
 				'default' => false
 			),
-			'triggerDelay' => array(
-				'type' => 'string'
+			'openDelay' => array(
+				'type' => 'number',
+				'default' => 0
 			),
-			'triggerOnScroll' => array(
+			'openOnScroll' => array(
 				'type' => 'boolean',
 				'default' => false
-			),
-			'scrollSelector' => array(
-				'type' => 'string'
 			),
 			'scrollThreshold' => array(
-				'type' => 'string',
-				'default' => '10'
+				'type' => 'number',
+				'default' => 50
 			),
 			'urlTriggers' => array(
 				'type' => 'array',
@@ -1485,439 +904,126 @@ return array(
 					
 				)
 			),
-			'groupId' => array(
+			'dismissDays' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'dismissible' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'group' => array(
 				'type' => 'string',
 				'default' => ''
 			)
 		),
-		'providesContext' => array(
-			'matter/modal-is-open' => 'editorIsOpen'
-		),
-		'usesContext' => array(
-			'postId',
-			'postType',
-			'queryId'
-		),
 		'supports' => array(
-			'anchor' => true,
 			'html' => false,
+			'reusable' => false,
 			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true
+			'matter' => array(
+				'scheme' => true,
+				'section' => false,
+				'slots' => array(
+					'trigger' => array(
+						
+					),
+					'content' => array(
+						'template' => array(
+							array(
+								'core/heading',
+								array(
+									'level' => 2,
+									'placeholder' => 'Heading'
+								)
+							),
+							array(
+								'core/paragraph',
+								array(
+									'placeholder' => 'Content…'
+								)
+							)
+						)
+					)
+				)
+			)
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/overlay',
 		'render' => 'file:./render.php',
-		'viewScriptModule' => 'matter/overlay-store'
-	),
-	'modal-content' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/modal-content',
-		'version' => '0.1.0',
-		'title' => 'Modal Content',
-		'category' => 'widgets',
-		'description' => 'The content displayed inside a modal.',
-		'parent' => array(
-			'matter/modal'
-		),
-		'attributes' => array(
-			'backdropColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'backdropOpacity' => array(
-				'type' => 'number',
-				'default' => 50
-			),
-			'backdropBlur' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'width' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'height' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'contentRole' => true,
-			'html' => false,
-			'lock' => false,
-			'reusable' => false,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'blockGap' => true,
-				'__experimentalDefaultControls' => array(
-					'blockGap' => false,
-					'margin' => false,
-					'padding' => true
-				)
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
 		'usesContext' => array(
-			'matter/modal-id',
-			'matter/modal-is-open',
-			'postId',
-			'queryId'
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
+			'postId'
+		)
 	),
-	'modal-navigation' => array(
+	'results-count' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'matter/modal-navigation',
-		'version' => '0.1.0',
-		'title' => 'Modal Navigation',
-		'keywords' => array(
-			'modal',
-			'previous',
-			'next',
-			'navigation'
-		),
-		'category' => 'widgets',
-		'description' => 'A previous or next button for grouped modals.',
-		'ancestor' => array(
-			'matter/modal-content'
-		),
-		'attributes' => array(
-			'direction' => array(
-				'type' => 'string',
-				'enum' => array(
-					'previous',
-					'next'
-				),
-				'default' => 'next'
-			),
-			'label' => array(
-				'type' => 'string',
-				'default' => 'Next',
-				'role' => 'content'
-			),
-			'showLabel' => array(
-				'type' => 'boolean',
-				'default' => false
-			)
-		),
-		'supports' => array(
-			'border' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true
-			),
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true
-			),
-			'html' => false,
-			'reusable' => false,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => false,
-					'padding' => true
-				)
-			),
-			'dimensions' => array(
-				'width' => false,
-				'height' => false,
-				'aspectRatio' => false,
-				'minHeight' => false
-			),
-			'typography' => array(
-				'fontSize' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
+		'name' => 'matter/results-count',
+		'version' => '1.0.0',
+		'title' => 'Results count',
+		'category' => 'matter-filters',
+		'description' => 'How many results the list has, e.g. "Showing 1–12 of 48 results".',
 		'usesContext' => array(
-			'matter/modal-id'
+			'queryId',
+			'query'
 		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'navigation' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/navigation',
-		'version' => '0.1.0',
-		'title' => 'Navigation',
-		'category' => 'theme',
-		'description' => 'Select and render an existing Navigation menu as a simplified, read-only block.',
 		'attributes' => array(
-			'ref' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'type' => array(
-				'type' => 'string',
-				'default' => 'simple',
-				'enum' => array(
-					'simple',
-					'accordion',
-					'drill-down'
-				)
-			),
-			'submenuOpensOnClick' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'showSubmenuLabel' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'showSubmenuViewAll' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'layout' => array(
-				'type' => 'object',
-				'default' => array(
-					'type' => 'flex',
-					'orientation' => 'vertical'
-				)
-			),
-			'iconColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'accentColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'submenuTextColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'submenuBackgroundColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'submenuIconColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'backTextColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'backBackgroundColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'backIconColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'submenuDividerColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'interactivity' => true,
-			'html' => false,
-			'anchor' => true,
-			'align' => array(
-				'wide',
-				'full'
-			),
-			'contentRole' => true,
-			'listView' => true,
-			'lock' => false,
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex',
-					'flexWrap' => 'wrap',
-					'justifyContent' => 'left',
-					'verticalAlignment' => 'center',
-					'orientation' => 'vertical'
-				),
-				'allowSwitching' => false,
-				'allowInheriting' => false,
-				'allowVerticalAlignment' => true,
-				'allowSizingOnChildren' => true,
-				'allowOrientation' => true,
-				'allowWrap' => true,
-				'allowJustification' => true
-			),
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => false,
-				'link' => false
-			),
-			'typography' => array(
-				'textAlign' => true,
-				'fontSize' => true,
-				'__experimentalDefaultControls' => array(
-					'fontSize' => false
-				)
-			),
-			'spacing' => array(
-				'blockGap' => true,
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'blockGap' => false,
-					'margin' => false,
-					'padding' => false
-				)
-			)
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'viewScriptModule' => 'file:./view.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'navigation-megamenu' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/navigation-megamenu',
-		'version' => '0.1.0',
-		'title' => 'Megamenu',
-		'category' => 'theme',
-		'description' => 'Add a megamenu to your navigation, powered by a template part.',
-		'keywords' => array(
-			'megamenu',
-			'mega menu',
-			'navigation',
-			'submenu',
-			'dropdown'
-		),
-		'parent' => array(
-			'core/navigation'
-		),
-		'example' => array(
 			
 		),
-		'attributes' => array(
-			'label' => array(
-				'type' => 'string',
-				'role' => 'content'
-			),
-			'type' => array(
-				'type' => 'string'
-			),
-			'description' => array(
-				'type' => 'string'
-			),
-			'rel' => array(
-				'type' => 'string'
-			),
-			'id' => array(
-				'type' => 'number'
-			),
-			'opensInNewTab' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'url' => array(
-				'type' => 'string',
-				'role' => 'content'
-			),
-			'title' => array(
-				'type' => 'string'
-			),
-			'kind' => array(
-				'type' => 'string'
-			),
-			'menuSlug' => array(
-				'type' => 'string'
-			),
-			'width' => array(
-				'type' => 'string',
-				'enum' => array(
-					'content',
-					'wide',
-					'full'
-				),
-				'default' => 'content'
-			)
-		),
-		'usesContext' => array(
-			'showSubmenuIcon',
-			'openSubmenusOnClick'
-		),
 		'supports' => array(
-			'anchor' => true,
-			'reusable' => false,
 			'html' => false,
-			'lock' => false,
-			'typography' => array(
-				'fontSize' => true,
-				'lineHeight' => true,
-				'__experimentalFontFamily' => true,
-				'__experimentalFontWeight' => true,
-				'__experimentalFontStyle' => true,
-				'__experimentalTextTransform' => true,
-				'__experimentalTextDecoration' => true,
-				'__experimentalLetterSpacing' => true,
-				'__experimentalDefaultControls' => array(
-					'fontSize' => true
-				)
-			),
-			'__experimentalSlashInserter' => true
+			'multiple' => false,
+			'reusable' => false,
+			'renaming' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css'
+		'viewScriptModule' => 'matter/filters',
+		'render' => 'file:./render.php'
 	),
-	'tab-button' => array(
+	'slot' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'matter/tab-button',
-		'version' => '0.1.0',
-		'title' => 'Tab Button',
-		'description' => 'A tab label button in a tabbed interface.',
-		'category' => 'widgets',
+		'name' => 'matter/slot',
+		'version' => '1.0.0',
+		'title' => 'Slot',
+		'category' => 'design',
+		'description' => 'A named content area inside a section. Added automatically by sections.',
+		'attributes' => array(
+			'name' => array(
+				'type' => 'string'
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'inserter' => false,
+			'reusable' => false,
+			'className' => false,
+			'customClassName' => false,
+			'lock' => false,
+			'renaming' => false
+		),
 		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
+	),
+	'tab' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/tab',
+		'version' => '1.0.0',
+		'title' => 'Tab',
+		'category' => 'widgets',
+		'description' => 'A tab\'s label and content.',
 		'parent' => array(
-			'matter/tab-list'
+			'matter/tabs',
+			'core/post-template'
 		),
 		'attributes' => array(
 			'label' => array(
@@ -1925,557 +1031,160 @@ return array(
 				'default' => '',
 				'role' => 'content'
 			),
-			'tabPanelClientId' => array(
-				'type' => 'string'
-			),
-			'mediaId' => array(
-				'type' => 'number',
-				'role' => 'content'
-			),
-			'mediaType' => array(
-				'type' => 'string',
-				'role' => 'content'
-			),
-			'posterId' => array(
-				'type' => 'number',
-				'role' => 'content'
-			),
-			'focalPoint' => array(
-				'type' => 'object',
-				'role' => 'content'
-			)
-		),
-		'usesContext' => array(
-			'matter/tabs-activeTabIndex',
-			'matter/tabs-editorActiveTabIndex'
-		),
-		'supports' => array(
-			'html' => false,
-			'reusable' => false,
-			'lock' => false,
-			'inserter' => false,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'text' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'spacing' => array(
-				'padding' => true,
-				'margin' => false
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
-		'editorScript' => 'file:./index.js'
-	),
-	'tab-list' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/tab-list',
-		'version' => '0.1.0',
-		'title' => 'Tab List',
-		'description' => 'Display the tab buttons for a tabbed interface.',
-		'category' => 'widgets',
-		'textdomain' => 'matter',
-		'parent' => array(
-			'matter/tabs'
-		),
-		'allowedBlocks' => array(
-			'matter/tab-button'
-		),
-		'usesContext' => array(
-			'matter/tabs-id',
-			'matter/tabs-list',
-			'matter/tabs-collapses',
-			'matter/tabs-collapsesOn',
-			'matter/tabs-isQueryMode',
-			'matter/tabs-editorActiveTabIndex',
-			'matter/tabs-activeTabIndex'
-		),
-		'attributes' => array(
-			'tabBackgroundColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'tabActiveColor' => array(
+			'icon' => array(
 				'type' => 'string',
 				'default' => ''
 			)
 		),
-		'supports' => array(
-			'align' => true,
-			'html' => false,
-			'reusable' => false,
-			'visibility' => false,
-			'lock' => false,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'text' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex',
-					'flexWrap' => 'nowrap',
-					'justifyContent' => 'left',
-					'verticalAlignment' => 'center',
-					'orientation' => 'horizontal'
-				),
-				'allowSwitching' => false,
-				'allowVerticalAlignment' => false,
-				'allowJustification' => true,
-				'allowOrientation' => true,
-				'allowWrap' => false
-			),
-			'spacing' => array(
-				'padding' => true,
-				'margin' => true,
-				'blockGap' => true
-			)
-		),
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'tab-panel' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/tab-panel',
-		'version' => '0.1.0',
-		'title' => 'Tab Panel',
-		'description' => 'Content for a tab in a tabbed interface.',
-		'category' => 'widgets',
-		'textdomain' => 'matter',
-		'attributes' => array(
-			'inQueryLoop' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'label' => array(
-				'type' => 'string',
-				'role' => 'content'
-			)
-		),
-		'parent' => array(
-			'matter/tab-panels',
-			'core/post-template'
-		),
-		'ancestor' => array(
-			'matter/tabs'
-		),
 		'usesContext' => array(
-			'matter/tabs-activeTabIndex',
-			'matter/tabs-editorActiveTabIndex',
-			'matter/tabs-id',
-			'matter/tabs-list',
-			'matter/tabs-isQueryMode',
 			'postId',
 			'postType',
 			'queryId'
 		),
 		'supports' => array(
-			'anchor' => true,
 			'html' => false,
-			'reusable' => false,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'text' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'spacing' => array(
-				'blockGap' => true,
-				'padding' => true,
-				'margin' => false
-			),
-			'layout' => array(
-				'default' => array(
-					'type' => 'default'
-				),
-				'allowSwitching' => false
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
-			'renaming' => true,
-			'visibility' => false
+			'reusable' => false
 		),
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'tab-panels' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/tab-panels',
-		'version' => '0.1.0',
-		'title' => 'Tab Panels',
-		'description' => 'Container for tab panel content in a tabbed interface.',
-		'category' => 'widgets',
 		'textdomain' => 'matter',
-		'parent' => array(
-			'matter/tabs'
-		),
-		'allowedBlocks' => array(
-			'matter/tab-panel',
-			'core/query'
-		),
-		'usesContext' => array(
-			'matter/tabs-isQueryMode'
-		),
-		'attributes' => array(
-			'tabPanelActiveColor' => array(
-				'type' => 'string',
-				'default' => ''
-			)
-		),
-		'supports' => array(
-			'anchor' => false,
-			'html' => false,
-			'reusable' => false,
-			'visibility' => false,
-			'lock' => false,
-			'contentRole' => true,
-			'listView' => true,
-			'color' => array(
-				'background' => true,
-				'text' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'spacing' => array(
-				'blockGap' => false,
-				'padding' => true,
-				'margin' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			)
-		),
 		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	),
 	'tabs' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'matter/tabs',
-		'version' => '0.1.0',
+		'version' => '1.0.0',
 		'title' => 'Tabs',
-		'description' => 'Display content in a tabbed interface to help users navigate detailed content with ease.',
 		'category' => 'widgets',
-		'textdomain' => 'matter',
-		'allowedBlocks' => array(
-			'matter/tab-list',
-			'matter/tab-panels'
-		),
+		'description' => 'Content split into tabs you write here. To show posts as tabs automatically, use Posts tabs.',
 		'attributes' => array(
-			'generatedId' => array(
+			'matterId' => array(
+				'type' => 'string'
+			),
+			'label' => array(
 				'type' => 'string',
-				'default' => ''
+				'default' => '',
+				'role' => 'content'
 			),
-			'activeTabIndex' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'editorActiveTabIndex' => array(
-				'type' => 'number',
-				'role' => 'local'
-			),
-			'deepLinking' => array(
+			'deepLink' => array(
 				'type' => 'boolean',
 				'default' => false
 			),
-			'deepLinkingUpdateHistory' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'collapses' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'collapsesOn' => array(
+			'orientation' => array(
 				'type' => 'string',
-				'default' => 'lg'
+				'enum' => array(
+					'horizontal',
+					'vertical'
+				),
+				'default' => 'horizontal'
 			),
-			'isQueryMode' => array(
+			'dropdown' => array(
 				'type' => 'boolean',
 				'default' => false
-			),
-			'stackOnMobile' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'stackedBreakpoint' => array(
-				'type' => 'string',
-				'default' => 'lg'
+			)
+		),
+		'example' => array(
+			'innerBlocks' => array(
+				array(
+					'name' => 'matter/tab',
+					'attributes' => array(
+						'label' => 'Overview'
+					),
+					'innerBlocks' => array(
+						array(
+							'name' => 'core/paragraph',
+							'attributes' => array(
+								'content' => 'A short introduction, shown first.'
+							)
+						)
+					)
+				),
+				array(
+					'name' => 'matter/tab',
+					'attributes' => array(
+						'label' => 'Details'
+					),
+					'innerBlocks' => array(
+						array(
+							'name' => 'core/paragraph',
+							'attributes' => array(
+								'content' => 'More about it.'
+							)
+						)
+					)
+				),
+				array(
+					'name' => 'matter/tab',
+					'attributes' => array(
+						'label' => 'Delivery'
+					),
+					'innerBlocks' => array(
+						array(
+							'name' => 'core/paragraph',
+							'attributes' => array(
+								'content' => 'How and when it arrives.'
+							)
+						)
+					)
+				)
 			)
 		),
 		'supports' => array(
-			'align' => true,
-			'anchor' => true,
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true,
-				'link' => false
-			),
-			'layout' => array(
-				'default' => array(
-					'type' => 'flex',
-					'flexWrap' => 'nowrap',
-					'justifyContent' => 'stretch',
-					'verticalAlignment' => 'stretch',
-					'orientation' => 'vertical'
-				),
-				'allowSwitching' => false,
-				'allowVerticalAlignment' => true,
-				'allowJustification' => false,
-				'allowOrientation' => true,
-				'allowWrap' => false,
-				'allowSizingOnChildren' => true
-			),
 			'html' => false,
+			'anchor' => true,
+			'align' => array(
+				'wide',
+				'full'
+			),
 			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'spacing' => array(
-				'blockGap' => true,
-				'margin' => true,
-				'padding' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
-			),
-			'renaming' => true
+			'matter' => array(
+				'scheme' => true
+			)
 		),
-		'providesContext' => array(
-			'matter/tabs-activeTabIndex' => 'activeTabIndex',
-			'matter/tabs-editorActiveTabIndex' => 'editorActiveTabIndex',
-			'matter/tabs-collapses' => 'collapses',
-			'matter/tabs-collapsesOn' => 'collapsesOn',
-			'matter/tabs-isQueryMode' => 'isQueryMode'
-		),
-		'usesContext' => array(
-			'matter/tabs-list',
-			'matter/tabs-id',
-			'postId',
-			'postType',
-			'queryId'
-		),
+		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css',
 		'viewScriptModule' => 'file:./view.js',
 		'render' => 'file:./render.php'
 	),
-	'trigger' => array(
+	'template-part' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'matter/trigger',
-		'version' => '0.1.0',
-		'title' => 'Trigger',
-		'keywords' => array(
-			'trigger',
-			'button'
-		),
-		'category' => 'widgets',
-		'description' => 'An interactive trigger to open a modal, drawer or collapsible block.',
-		'allowedBlocks' => array(
-			'core/buttons',
-			'core/group'
-		),
+		'name' => 'matter/template-part',
+		'version' => '1.0.0',
+		'title' => 'Theme template part',
+		'category' => 'theme',
+		'description' => 'Renders a version-controlled PHP file from the theme\'s template-parts folder, such as the site header or footer.',
 		'attributes' => array(
-			'targetId' => array(
-				'type' => 'string',
-				'default' => ''
+			'slug' => array(
+				'type' => 'string'
 			),
-			'triggerType' => array(
-				'type' => 'string',
-				'enum' => array(
-					'button',
-					'content'
-				),
-				'default' => 'button'
-			),
-			'accessibleLabel' => array(
-				'type' => 'string',
-				'default' => '',
-				'role' => 'content'
-			),
-			'overlayContext' => array(
+			'lock' => array(
 				'type' => 'object',
 				'default' => array(
-					
+					'move' => true,
+					'remove' => true
 				)
 			)
 		),
-		'supports' => array(
-			'html' => false,
-			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'lock' => false,
-			'reusable' => false
-		),
 		'usesContext' => array(
-			'matter/modal-id',
-			'matter/drawer-id',
-			'matter/collapsible-id'
-		),
-		'textdomain' => 'matter',
-		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
-	),
-	'trigger-hamburger' => array(
-		'$schema' => 'https://schemas.wp.org/trunk/block.json',
-		'apiVersion' => 3,
-		'name' => 'matter/trigger-hamburger',
-		'version' => '0.1.0',
-		'title' => 'Hamburger Trigger',
-		'keywords' => array(
-			'menu',
-			'navigation',
-			'hamburger',
-			'trigger'
-		),
-		'category' => 'widgets',
-		'description' => 'A hamburger icon trigger to open a modal, drawer or collapsible block.',
-		'attributes' => array(
-			'targetId' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'label' => array(
-				'type' => 'string',
-				'default' => 'Open menu',
-				'role' => 'content'
-			),
-			'showLabel' => array(
-				'type' => 'boolean',
-				'default' => false
-			)
-		),
-		'styles' => array(
-			array(
-				'name' => 'squeeze',
-				'label' => 'Squeeze',
-				'isDefault' => false
-			),
-			array(
-				'name' => 'spin',
-				'label' => 'Spin',
-				'isDefault' => false
-			)
+			'postId',
+			'postType',
+			'queryId'
 		),
 		'supports' => array(
-			'border' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true
-			),
-			'color' => array(
-				'text' => true,
-				'background' => true,
-				'gradients' => true
-			),
 			'html' => false,
-			'interactivity' => true,
-			'contentRole' => true,
-			'listView' => true,
-			'lock' => false,
+			'inserter' => false,
 			'reusable' => false,
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true,
-				'__experimentalDefaultControls' => array(
-					'margin' => false,
-					'padding' => true
-				)
-			),
-			'typography' => array(
-				'fontSize' => true
-			),
-			'__experimentalBorder' => array(
-				'color' => true,
-				'radius' => true,
-				'style' => true,
-				'width' => true,
-				'__experimentalDefaultControls' => array(
-					'color' => false,
-					'radius' => false,
-					'style' => false,
-					'width' => false
-				)
+			'renaming' => false,
+			'customCSS' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
 			)
-		),
-		'usesContext' => array(
-			'matter/modal-id',
-			'matter/drawer-id',
-			'matter/collapsible-id'
 		),
 		'textdomain' => 'matter',
 		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php'
 	)
 );

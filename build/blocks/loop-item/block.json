@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/loop-item",
+  "version": "1.0.0",
+  "title": "Loop item",
+  "category": "theme",
+  "description": "The theme's design for the current item in a loop (a post, or a term in a Terms Query). The design lives in the theme, so every loop and carousel shows the same thing.",
+  "keywords": [
+    "loop",
+    "item",
+    "post",
+    "product",
+    "term"
+  ],
+  "usesContext": [
+    "postId",
+    "postType",
+    "termId",
+    "taxonomy",
+    "matter/display"
+  ],
+  "attributes": {
+    "itemLabel": {
+      "type": "string",
+      "role": "local"
+    }
+  },
+  "supports": {
+    "html": false,
+    "inserter": false,
+    "reusable": false,
+    "lock": false,
+    "renaming": false,
+    "customCSS": false,
+    "interactivity": {
+      "clientNavigation": true
+    }
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

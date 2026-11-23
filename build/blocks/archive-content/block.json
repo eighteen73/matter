@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "matter/archive-content",
+  "version": "1.0.0",
+  "title": "Archive content",
+  "category": "theme",
+  "description": "For archive templates: wrap the list of posts or products. Editors add content above and below it in Appearance › Archives.",
+  "supports": {
+    "html": false,
+    "inserter": false,
+    "reusable": false,
+    "customClassName": false,
+    "renaming": false,
+    "layout": {
+      "default": {
+        "type": "constrained"
+      },
+      "allowSwitching": false,
+      "allowInheriting": false,
+      "allowEditing": false
+    }
+  },
+  "textdomain": "matter",
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

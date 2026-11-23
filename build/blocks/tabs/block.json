@@ -2,118 +2,95 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "matter/tabs",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "title": "Tabs",
-  "description": "Display content in a tabbed interface to help users navigate detailed content with ease.",
   "category": "widgets",
-  "textdomain": "matter",
-  "allowedBlocks": [
-    "matter/tab-list",
-    "matter/tab-panels"
-  ],
+  "description": "Content split into tabs you write here. To show posts as tabs automatically, use Posts tabs.",
   "attributes": {
-    "generatedId": {
+    "matterId": {
+      "type": "string"
+    },
+    "label": {
       "type": "string",
-      "default": ""
+      "default": "",
+      "role": "content"
     },
-    "activeTabIndex": {
-      "type": "number",
-      "default": 0
-    },
-    "editorActiveTabIndex": {
-      "type": "number",
-      "role": "local"
-    },
-    "deepLinking": {
+    "deepLink": {
       "type": "boolean",
       "default": false
     },
-    "deepLinkingUpdateHistory": {
-      "type": "boolean",
-      "default": false
-    },
-    "collapses": {
-      "type": "boolean",
-      "default": false
-    },
-    "collapsesOn": {
+    "orientation": {
       "type": "string",
-      "default": "lg"
+      "enum": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "horizontal"
     },
-    "isQueryMode": {
+    "dropdown": {
       "type": "boolean",
       "default": false
-    },
-    "stackOnMobile": {
-      "type": "boolean",
-      "default": false
-    },
-    "stackedBreakpoint": {
-      "type": "string",
-      "default": "lg"
     }
   },
-  "supports": {
-    "align": true,
-    "anchor": true,
-    "color": {
-      "text": true,
-      "background": true,
-      "gradients": true,
-      "link": false
-    },
-    "layout": {
-      "default": {
-        "type": "flex",
-        "flexWrap": "nowrap",
-        "justifyContent": "stretch",
-        "verticalAlignment": "stretch",
-        "orientation": "vertical"
+  "example": {
+    "innerBlocks": [
+      {
+        "name": "matter/tab",
+        "attributes": {
+          "label": "Overview"
+        },
+        "innerBlocks": [
+          {
+            "name": "core/paragraph",
+            "attributes": {
+              "content": "A short introduction, shown first."
+            }
+          }
+        ]
       },
-      "allowSwitching": false,
-      "allowVerticalAlignment": true,
-      "allowJustification": false,
-      "allowOrientation": true,
-      "allowWrap": false,
-      "allowSizingOnChildren": true
-    },
-    "html": false,
-    "interactivity": true,
-    "contentRole": true,
-    "listView": true,
-    "spacing": {
-      "blockGap": true,
-      "margin": true,
-      "padding": true
-    },
-    "__experimentalBorder": {
-      "color": true,
-      "radius": true,
-      "style": true,
-      "width": true,
-      "__experimentalDefaultControls": {
-        "color": false,
-        "radius": false,
-        "style": false,
-        "width": false
+      {
+        "name": "matter/tab",
+        "attributes": {
+          "label": "Details"
+        },
+        "innerBlocks": [
+          {
+            "name": "core/paragraph",
+            "attributes": {
+              "content": "More about it."
+            }
+          }
+        ]
+      },
+      {
+        "name": "matter/tab",
+        "attributes": {
+          "label": "Delivery"
+        },
+        "innerBlocks": [
+          {
+            "name": "core/paragraph",
+            "attributes": {
+              "content": "How and when it arrives."
+            }
+          }
+        ]
       }
-    },
-    "renaming": true
+    ]
   },
-  "providesContext": {
-    "matter/tabs-activeTabIndex": "activeTabIndex",
-    "matter/tabs-editorActiveTabIndex": "editorActiveTabIndex",
-    "matter/tabs-collapses": "collapses",
-    "matter/tabs-collapsesOn": "collapsesOn",
-    "matter/tabs-isQueryMode": "isQueryMode"
+  "supports": {
+    "html": false,
+    "anchor": true,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "interactivity": true,
+    "matter": {
+      "scheme": true
+    }
   },
-  "usesContext": [
-    "matter/tabs-list",
-    "matter/tabs-id",
-    "postId",
-    "postType",
-    "queryId"
-  ],
+  "textdomain": "matter",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
   "style": "file:./style-index.css",

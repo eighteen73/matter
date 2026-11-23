@@ -1,0 +1,1 @@
+.matter-panel-toggle.is-expanded{display:none}:where(.matter-panel.is-expanded) .is-panel-only{display:none}

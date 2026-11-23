@@ -1,0 +1,1 @@
+.block-editor-block-inspector:has(.matter-carousel-query-panel) .wc-block-editor-product-collection__settings_panel .components-tools-panel-item:has([data-value=carousel],[data-value=fixed]){display:none}

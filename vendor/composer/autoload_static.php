@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24
+class ComposerStaticInitb08fec4d1e37be68974a74c387e1ec50
 {
     public static $prefixLengthsPsr4 = array (
         'E' =>
@@ -22,34 +22,75 @@ class ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'Eighteen73\\Matter\\Blocks\\Accordion' => __DIR__ . '/../..' . '/includes/classes/Blocks/Accordion.php',
-        'Eighteen73\\Matter\\Blocks\\BlockId' => __DIR__ . '/../..' . '/includes/classes/Blocks/BlockId.php',
+        'Eighteen73\\Matter\\AllowedBlocks' => __DIR__ . '/../..' . '/includes/classes/AllowedBlocks.php',
+        'Eighteen73\\Matter\\Archives\\Admin' => __DIR__ . '/../..' . '/includes/classes/Archives/Admin.php',
+        'Eighteen73\\Matter\\Archives\\Archives' => __DIR__ . '/../..' . '/includes/classes/Archives/Archives.php',
+        'Eighteen73\\Matter\\Archives\\RestController' => __DIR__ . '/../..' . '/includes/classes/Archives/RestController.php',
+        'Eighteen73\\Matter\\Archives\\Target' => __DIR__ . '/../..' . '/includes/classes/Archives/Target.php',
+        'Eighteen73\\Matter\\AspectRatio' => __DIR__ . '/../..' . '/includes/classes/AspectRatio.php',
+        'Eighteen73\\Matter\\Assets' => __DIR__ . '/../..' . '/includes/classes/Assets.php',
         'Eighteen73\\Matter\\Blocks\\Carousel' => __DIR__ . '/../..' . '/includes/classes/Blocks/Carousel.php',
-        'Eighteen73\\Matter\\Blocks\\CarouselThumbnails' => __DIR__ . '/../..' . '/includes/classes/Blocks/CarouselThumbnails.php',
-        'Eighteen73\\Matter\\Blocks\\Collapsible' => __DIR__ . '/../..' . '/includes/classes/Blocks/Collapsible.php',
-        'Eighteen73\\Matter\\Blocks\\Context' => __DIR__ . '/../..' . '/includes/classes/Blocks/Context.php',
-        'Eighteen73\\Matter\\Blocks\\Drawer' => __DIR__ . '/../..' . '/includes/classes/Blocks/Drawer.php',
-        'Eighteen73\\Matter\\Blocks\\Gallery' => __DIR__ . '/../..' . '/includes/classes/Blocks/Gallery.php',
-        'Eighteen73\\Matter\\Blocks\\GravityForm' => __DIR__ . '/../..' . '/includes/classes/Blocks/GravityForm.php',
-        'Eighteen73\\Matter\\Blocks\\Megamenu' => __DIR__ . '/../..' . '/includes/classes/Blocks/Megamenu.php',
-        'Eighteen73\\Matter\\Blocks\\Modal' => __DIR__ . '/../..' . '/includes/classes/Blocks/Modal.php',
-        'Eighteen73\\Matter\\Blocks\\Navigation' => __DIR__ . '/../..' . '/includes/classes/Blocks/Navigation.php',
-        'Eighteen73\\Matter\\Blocks\\Overlay' => __DIR__ . '/../..' . '/includes/classes/Blocks/Overlay.php',
+        'Eighteen73\\Matter\\Blocks\\Instances' => __DIR__ . '/../..' . '/includes/classes/Blocks/Instances.php',
+        'Eighteen73\\Matter\\Blocks\\LoopItem' => __DIR__ . '/../..' . '/includes/classes/Blocks/LoopItem.php',
+        'Eighteen73\\Matter\\Blocks\\Preview' => __DIR__ . '/../..' . '/includes/classes/Blocks/Preview.php',
+        'Eighteen73\\Matter\\Blocks\\QueryDisplay' => __DIR__ . '/../..' . '/includes/classes/Blocks/QueryDisplay.php',
         'Eighteen73\\Matter\\Blocks\\Registry' => __DIR__ . '/../..' . '/includes/classes/Blocks/Registry.php',
         'Eighteen73\\Matter\\Blocks\\Tabs' => __DIR__ . '/../..' . '/includes/classes/Blocks/Tabs.php',
-        'Eighteen73\\Matter\\Blocks\\Trigger' => __DIR__ . '/../..' . '/includes/classes/Blocks/Trigger.php',
+        'Eighteen73\\Matter\\Blocks\\TemplatePart' => __DIR__ . '/../..' . '/includes/classes/Blocks/TemplatePart.php',
+        'Eighteen73\\Matter\\Breakpoints' => __DIR__ . '/../..' . '/includes/classes/Breakpoints.php',
         'Eighteen73\\Matter\\Config' => __DIR__ . '/../..' . '/includes/classes/Config.php',
+        'Eighteen73\\Matter\\Editor' => __DIR__ . '/../..' . '/includes/classes/Editor.php',
+        'Eighteen73\\Matter\\Extensions\\ButtonIcon' => __DIR__ . '/../..' . '/includes/classes/Extensions/ButtonIcon.php',
+        'Eighteen73\\Matter\\Extensions\\FocalPoint' => __DIR__ . '/../..' . '/includes/classes/Extensions/FocalPoint.php',
+        'Eighteen73\\Matter\\Extensions\\ImageSizes' => __DIR__ . '/../..' . '/includes/classes/Extensions/ImageSizes.php',
+        'Eighteen73\\Matter\\Filters\\Counts' => __DIR__ . '/../..' . '/includes/classes/Filters/Counts.php',
+        'Eighteen73\\Matter\\Filters\\Filters' => __DIR__ . '/../..' . '/includes/classes/Filters/Filters.php',
+        'Eighteen73\\Matter\\Filters\\Listing' => __DIR__ . '/../..' . '/includes/classes/Filters/Listing.php',
+        'Eighteen73\\Matter\\Filters\\Query' => __DIR__ . '/../..' . '/includes/classes/Filters/Query.php',
+        'Eighteen73\\Matter\\Filters\\QueryParams' => __DIR__ . '/../..' . '/includes/classes/Filters/QueryParams.php',
+        'Eighteen73\\Matter\\Filters\\Render' => __DIR__ . '/../..' . '/includes/classes/Filters/Render.php',
+        'Eighteen73\\Matter\\Filters\\Request' => __DIR__ . '/../..' . '/includes/classes/Filters/Request.php',
+        'Eighteen73\\Matter\\Filters\\Source' => __DIR__ . '/../..' . '/includes/classes/Filters/Source.php',
+        'Eighteen73\\Matter\\Filters\\Sources' => __DIR__ . '/../..' . '/includes/classes/Filters/Sources.php',
+        'Eighteen73\\Matter\\Filters\\State' => __DIR__ . '/../..' . '/includes/classes/Filters/State.php',
+        'Eighteen73\\Matter\\Filters\\TaxonomySource' => __DIR__ . '/../..' . '/includes/classes/Filters/TaxonomySource.php',
+        'Eighteen73\\Matter\\Icons' => __DIR__ . '/../..' . '/includes/classes/Icons.php',
+        'Eighteen73\\Matter\\Ids' => __DIR__ . '/../..' . '/includes/classes/Ids.php',
+        'Eighteen73\\Matter\\Integrations\\GravityForms\\GravityForms' => __DIR__ . '/../..' . '/includes/classes/Integrations/GravityForms/GravityForms.php',
+        'Eighteen73\\Matter\\Integrations\\Integration' => __DIR__ . '/../..' . '/includes/classes/Integrations/Integration.php',
+        'Eighteen73\\Matter\\Integrations\\Integrations' => __DIR__ . '/../..' . '/includes/classes/Integrations/Integrations.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\Counts' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/Counts.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\PriceSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/PriceSource.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\ProductTaxonomySource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/ProductTaxonomySource.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\RatingSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/RatingSource.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\StockSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/StockSource.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\LoopItems' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/LoopItems.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\OwnPrices' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/OwnPrices.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\WooCommerce' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/WooCommerce.php',
+        'Eighteen73\\Matter\\Live\\Live' => __DIR__ . '/../..' . '/includes/classes/Live/Live.php',
+        'Eighteen73\\Matter\\LoopItems\\Prerendered' => __DIR__ . '/../..' . '/includes/classes/LoopItems/Prerendered.php',
+        'Eighteen73\\Matter\\Navigation\\Megamenu' => __DIR__ . '/../..' . '/includes/classes/Navigation/Megamenu.php',
+        'Eighteen73\\Matter\\Navigation\\Menu' => __DIR__ . '/../..' . '/includes/classes/Navigation/Menu.php',
+        'Eighteen73\\Matter\\Navigation\\MenuType' => __DIR__ . '/../..' . '/includes/classes/Navigation/MenuType.php',
+        'Eighteen73\\Matter\\Navigation\\Walker' => __DIR__ . '/../..' . '/includes/classes/Navigation/Walker.php',
+        'Eighteen73\\Matter\\Overlays\\Overlay' => __DIR__ . '/../..' . '/includes/classes/Overlays/Overlay.php',
+        'Eighteen73\\Matter\\Overlays\\Panel' => __DIR__ . '/../..' . '/includes/classes/Overlays/Panel.php',
+        'Eighteen73\\Matter\\Overlays\\Trigger' => __DIR__ . '/../..' . '/includes/classes/Overlays/Trigger.php',
         'Eighteen73\\Matter\\Plugin' => __DIR__ . '/../..' . '/includes/classes/Plugin.php',
+        'Eighteen73\\Matter\\Sections\\Sections' => __DIR__ . '/../..' . '/includes/classes/Sections/Sections.php',
+        'Eighteen73\\Matter\\Settings\\Settings' => __DIR__ . '/../..' . '/includes/classes/Settings/Settings.php',
         'Eighteen73\\Matter\\Singleton' => __DIR__ . '/../..' . '/includes/classes/Singleton.php',
-        'Eighteen73\\Matter\\Styling\\BlockStyles' => __DIR__ . '/../..' . '/includes/classes/Styling/BlockStyles.php',
+        'Eighteen73\\Matter\\Supports\\Link' => __DIR__ . '/../..' . '/includes/classes/Supports/Link.php',
+        'Eighteen73\\Matter\\Supports\\Scheme' => __DIR__ . '/../..' . '/includes/classes/Supports/Scheme.php',
+        'Eighteen73\\Matter\\Variants' => __DIR__ . '/../..' . '/includes/classes/Variants.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitd296fdf662bd6384a96e1c3e16bf2f24::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitb08fec4d1e37be68974a74c387e1ec50::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitb08fec4d1e37be68974a74c387e1ec50::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInitb08fec4d1e37be68974a74c387e1ec50::$classMap;
 
         }, null, ClassLoader::class);
     }
