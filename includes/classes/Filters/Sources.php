@@ -3,11 +3,11 @@
  * The filter sources a `matter/filter` block can use.
  *
  * Core registers a TaxonomySource for every public taxonomy (`taxonomy:{name}`).
- * Integrations add theirs on the `matter_filter_sources` action, and can
+ * Integrations add theirs on the `matter_filters_sources` action, and can
  * replace one by registering the same key (the WooCommerce integration's
  * product categories and attributes use WooCommerce's own parameters):
  *
- *     add_action( 'matter_filter_sources', function ( Sources $sources ) {
+ *     add_action( 'matter_filters_sources', function ( Sources $sources ) {
  *         $sources->register( new MySource() );
  *     } );
  *
@@ -84,7 +84,7 @@ final class Sources {
 		 *
 		 * @param Sources $registry The registry.
 		 */
-		do_action( 'matter_filter_sources', $registry );
+		do_action( 'matter_filters_sources', $registry );
 
 		// Taxonomies are registered on `init`: before then, don't keep the list.
 		if ( did_action( 'init' ) ) {
@@ -157,7 +157,7 @@ final class Sources {
 		 * @param string $name     Name.
 		 * @param string $taxonomy Taxonomy.
 		 */
-		return sanitize_key( (string) apply_filters( 'matter_filter_param_name', $name, $taxonomy ) );
+		return sanitize_key( (string) apply_filters( 'matter_filters_param_name', $name, $taxonomy ) );
 	}
 
 	/**

@@ -89,7 +89,7 @@ class TaxonomySource implements Source {
 				'name'   => $term->name,
 				'count'  => (int) $term->count,
 				'parent' => $term->parent,
-				'swatch' => (string) apply_filters( 'matter_filter_swatch', '', $term ),
+				'swatch' => (string) apply_filters( 'matter_filters_swatch', '', $term ),
 			],
 			array_values( $terms )
 		);
@@ -165,7 +165,7 @@ class TaxonomySource implements Source {
 			'taxonomy'         => $this->taxonomy,
 			'field'            => 'slug',
 			'terms'            => $selected['values'],
-			'operator'         => 'and' === $selected['operator'] ? 'AND' : 'IN',
+			'operator'         => 'and' === ( $selected['operator'] ?? 'or' ) ? 'AND' : 'IN',
 			'include_children' => true,
 		];
 
@@ -212,7 +212,7 @@ class TaxonomySource implements Source {
 				 * @param string  $swatch Swatch.
 				 * @param WP_Term $term   Term.
 				 */
-				'swatch' => (string) apply_filters( 'matter_filter_swatch', '', $term ),
+				'swatch' => (string) apply_filters( 'matter_filters_swatch', '', $term ),
 			],
 			$terms
 		);

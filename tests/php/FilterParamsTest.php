@@ -90,7 +90,7 @@ class FilterParamsTest extends TestCase {
 
 		$_GET = [];
 		Query::reset();
-		add_action( 'matter_filter_sources', fn( Sources $sources ) => $sources->register( self::page_source() ) );
+		add_action( 'matter_filters_sources', fn( Sources $sources ) => $sources->register( self::page_source() ) );
 		Sources::flush();
 	}
 
@@ -101,7 +101,7 @@ class FilterParamsTest extends TestCase {
 	 */
 	public function tear_down(): void {
 		$_GET = [];
-		remove_all_actions( 'matter_filter_sources' );
+		remove_all_actions( 'matter_filters_sources' );
 		Sources::flush();
 		Query::reset();
 
@@ -203,8 +203,8 @@ class FilterParamsTest extends TestCase {
 		$this->assertSame( 'color', Sources::param_name( 'pa_color' ) );
 		$this->assertSame( 'genre', Sources::param_name( 'genre' ) );
 
-		add_filter( 'matter_filter_param_name', fn( $name ) => 'post_tag' === $name || 'tag' === $name ? 'label' : $name );
+		add_filter( 'matter_filters_param_name', fn( $name ) => 'post_tag' === $name || 'tag' === $name ? 'label' : $name );
 		$this->assertSame( 'label', Sources::param_name( 'post_tag' ) );
-		remove_all_filters( 'matter_filter_param_name' );
+		remove_all_filters( 'matter_filters_param_name' );
 	}
 }

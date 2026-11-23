@@ -102,8 +102,8 @@ final class LoopItems {
 		add_action( 'matter_prerender_loop_item_start', [ $this, 'hide_cart' ] );
 		add_action( 'matter_prerender_loop_item_start', [ $this, 'load_product' ], 20 );
 		add_action( 'matter_prerender_loop_item_end', [ $this, 'restore_cart' ] );
-		add_filter( 'matter_prerendered_loop_item', [ $this, 'item' ], 10, 2 );
-		add_filter( 'matter_prerendered_loop_item_version', [ $this, 'version' ] );
+		add_filter( 'matter_prerender_loop_item', [ $this, 'item' ], 10, 2 );
+		add_filter( 'matter_prerender_loop_item_version', [ $this, 'version' ] );
 	}
 
 	/**

@@ -12,6 +12,17 @@ Matter 1.0 is the shared foundation for Pulsar 6 sites. Clients edit **content**
 
 Matter ships behaviour and functional CSS. Presentational defaults are wrapped in `:where()`, so the theme styles everything with plain class selectors.
 
+**Contents**
+
+- Getting started: [Requirements](#requirements), [Installing](#installing)
+- Theme set-up: [Breakpoints](#breakpoints), [Colour schemes](#colour-schemes), [Variants](#variants), [Allowed blocks](#allowed-blocks), [Theme icons](#theme-icons), [Site settings](#site-settings)
+- Content: [Sections](#sections), [Blocks](#blocks), [Posts as carousels, accordions or tabs](#posts-as-carousels-accordions-or-tabs), [Loop items](#loop-items), [Core block extensions](#core-block-extensions)
+- Navigation and archives: [Menus](#menus), [Panels](#panels), [Archives](#archives)
+- Filtering: [Filters](#filters), [Live blocks](#live-blocks), [Prerendered loop items](#prerendered-loop-items)
+- Styling and scripting: [CSS conventions](#css-conventions), [Without JavaScript](#without-javascript), [JavaScript API](#javascript-api)
+- Reference: [CSS classes](#css-classes), [CSS variables](#css-variables), [Hooks](#hooks), [Integrations](#integrations), [Theme contract](#theme-contract), [Translation](#translation)
+- [Development](#development)
+
 ## Requirements
 
 - WordPress 7.1+ (from 7.1 beta 1: an alpha build of 7.1 may not have the icon registry Matter uses, so it is refused like an older version; betas, release candidates and later versions' alphas are fine)
@@ -47,206 +58,15 @@ Updating Matter within 1.x (`^1.0`) doesn't break a theme or saved content: what
 
 It may not rename or remove anything the contract lists (a block, attribute, hook, function, class, variable or stored key a theme or content uses), change a hook's arguments or a stored format, or change saved content so that it needs migrating. Those wait for 2.0, with a changelog entry, and a migration command if saved content is affected.
 
-## Blocks
+## Breakpoints
 
-| Block | Purpose | Editor options |
-| --- | --- | --- |
-| `matter/accordion` › `matter/accordion-item` | Expandable items written in the editor. An accordion of posts is a Query Loop shown as one ("Posts accordion", see [Posts as carousels, accordions or tabs](#posts-as-carousels-accordions-or-tabs)). | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
-| `matter/tabs` › `matter/tab` | Tabbed content written in the editor. Tabs of posts are a Query Loop shown as tabs ("Posts tabs"). | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown on smaller screens (a button showing the current tab's icon and name opens the tab list; the theme sets where, see Variants). Tab: icon, chosen from the icon library on the block toolbar. Backspace in an empty tab name, or "Delete tab" in the block's options menu, removes a tab. |
-| `matter/carousel` | Each inner block is a slide. A carousel of posts, products or terms is a Query Loop, Product Collection or Terms Query shown as one ("Posts carousel", "Products carousel", "Terms carousel"). A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see below), posts, products or terms. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on the toolbar of each slide and anything in it. Posts, products and terms: see [Posts as carousels, accordions or tabs](#posts-as-carousels-accordions-or-tabs). | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
-| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. Every image is cropped to one aspect ratio and uses the variant's image size (`imageSize`), so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`, and its toolbar keeps the "Edit images" button. | Layout (grid/carousel), columns (the theme's choices; fewer show where there's less room), images to show (in whole rows of the columns; at any width the grid shows full rows, and the rest open from "View all N images"), aspect ratio (theme.json presets, or the images' own), show captions, and their style (Toggle: behind an info button; Overlay: over the image; each image's own caption, else its media library caption, also shown in the lightbox), lightbox on/off, name. In the lightbox, the arrow keys step between images, Home and End go to the first and last, and Escape closes it. |
-| `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
-| `matter/drawer` | An optional trigger area plus content that slides in from the start or end of the line (the left or right in left-to-right languages; `.is-position-start`, `.is-position-end`). | ID, name, can be closed, open automatically, side. |
-| `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
-| `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
-| `matter/slot` | A named content area inside a section (added automatically). | None. |
-| `matter/loop-item` | The theme's design for the current item in a loop (Query Loop, Product Collection, Terms Query, or a carousel's posts or terms). Not in the inserter: templates and carousels add it. See [Loop items](#loop-items). | None. |
-| `matter/template-part` | A PHP file from the theme's `template-parts/` folder, e.g. `<!-- wp:matter/template-part {"slug":"header"} /-->` in a block template. The slug is the file's path there without `.php`; only files with a `Title:` header render (a slug that isn't listed, and anything in `megamenu/`, renders nothing, and the editor says the part couldn't be shown). The part gets its `slug` and the block's context (`postId`, `postType`, `queryId`) as `$args`; other attributes aren't passed, as anyone who can edit content could set them. Not in the inserter: developers place it in templates. The Site Editor previews the part with the stylesheets its render enqueues (e.g. a menu's or panel's), so it looks as on the front end. WooCommerce's mini-cart renders nothing in the editor. | Template part (files with a `Title:` header; filter with `matter_template_parts`). |
-
-**Opening overlays.**
-- The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
-- Any link to `#id` on the same page (same address and query; a link to another page ending in `#id` just goes there), or element with `aria-controls="id"`, anywhere on the page also opens it. One click listener serves the page, so triggers added later (live filter results, a lazy-loaded section) work; a click with a modifier key or a button other than the primary one is left to the browser. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup` to the triggers present when the overlay starts, and to later ones the next time the overlay opens or closes. So does the address changing to `#id` after the page loads.
-- **Where it sits:** a modal or drawer inside an inactive tab, a closed accordion item, a closed collapsible or another closed dialog opens those first, then itself. If it still can't be seen (e.g. the theme hides its container), it isn't opened, and a console warning says why.
-- **Query Loops:** an overlay inside a post template gets one instance per post, with the ID `{id}-{postId}`. Modals in a Query Loop are grouped automatically.
-- **Groups:** modals with the same group get previous/next buttons and an "n / N" position, cycling in page order.
-- **URL parameters** open an overlay even after it was dismissed (they're asked for, e.g. a campaign link); dismissals stop the automatic opens on load and on scroll.
-- **Moving between grouped modals** keeps the backdrop: the current modal goes at once and the next fades in from the side it comes from.
-- **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate): the dialog has `closedby="none"`, and reopens if the browser closes it anyway. A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
-- **Backdrop clicks** close a modal or drawer only when pressed on the backdrop, not when a drag (e.g. selecting text) ends there.
-- **Focus return:** closing a modal or drawer gives focus back to the control that opened it (a click, Enter or a script: the trigger is remembered, as a click doesn't focus a button or link in Safari, so the browser has nothing to return to). If the trigger has gone, the first visible control that opens it takes focus.
-- **Scroll lock:** while a modal or drawer is open, `<html>` has `has-overlay-open` and the page doesn't scroll.
-- **Closing animates in every browser:** a closing modal, drawer or gallery lightbox stays open with `is-closing` while its transitions run, then closes (up to a second). Style a theme's exit on `[open].is-closing` (e.g. `.wp-block-matter-modal[open].is-closing { opacity: 0; }`); the entry uses `@starting-style`. Without a transition (reduced motion) it closes at once, and reopening while closing cancels it.
-
-**In the editor**, the canvas shows what the front end shows.
-- **Closed:** only the trigger area shows (when "Trigger on the page" is on). An overlay without a trigger takes no space.
-- **Open:** an overlay opens while it, or anything in its content, is selected, and closes when the selection moves on (or its close button or backdrop is clicked). A modal or drawer opens as it does on the front end, with the same markup: the block is the `-host`, so its trigger area stays in the page, and the content sits in a dialog element (with the dialog's class and `open` attribute) shown as a popover in the top layer, so the theme's dialog styles, `::backdrop` and transitions all apply. Grouped modals show their previous/next buttons, which open the group's other modals. A collapsible opens in place, including while its trigger is selected.
-- **Overlays sidebar** (top bar): lists the modals and drawers being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end of the content, where it sits doesn't matter). Collapsibles sit in the page, so aren't listed.
-- **IDs:** a new overlay gets an ID; a copy (duplicated or pasted) gets a new one. The ID field applies when it loses focus, and refuses an empty ID or one another block has, so editing one overlay's ID never changes another's.
-- **Linking:** link search suggests the page's overlays by name. A button block (or other block with a link setting) linking to one gets **Edit modal** / **Edit drawer** / **Edit collapsible** on its toolbar, as does a block in a modal's or drawer's trigger area. Links within text don't.
-
-Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
-
-**Links to tabs and accordion items.** A tabs or accordion block (and a posts display) gets an ID of its own when it's added (e.g. `tabs-x7k2p`, in `matterId`, so the HTML anchor field stays the client's and the list view doesn't show it), so its items keep their IDs: `#{id}-2` is the second. An HTML anchor set under Advanced replaces it. In posts tabs and accordions, an item is named after its post, `#{id}-post-{postId}`, so links survive new posts. A link to an item, or to anything inside one, opens it (and any tab or item it's nested in), on load and when the address's `#hash` changes. An untitled item shows its post's title only in a Query Loop. An accordion item or tab whose content renders nothing to show (no text, media or form controls, e.g. a product's specifications when it has none) isn't output; a skipped tab is left out of the tab list too.
-
-**IDs are unique on a page.** The same block can render twice (a synced pattern used twice, a template part in two places). The first keeps its ID; later ones get `-2`, `-3` (tabs, accordions, overlays, menus and panels, a carousel's or gallery's HTML anchor, and their items' IDs), so `aria-controls` and links never point at the wrong copy. Only a saved ID (`matterId`, `overlayId`, an HTML anchor) is stable: a repeat's suffix depends on render order, and a modal without a saved ID has a generated one, so it can't be linked to and its "remember dismissal" is off. A saved overlay ID is cleaned as the editor cleans it (lowercase, letters, numbers, hyphens and underscores), so links to it must be lowercase too: `#promo`, not `#Promo`; a URL parameter trigger's name is matched in any case. A menu's items are `{menu ID}-item-{menu item ID}`. A tabs or accordion block with nothing to show outputs nothing. Each page starts with no IDs claimed (block themes: just before the template renders; each item of a REST collection counts as a page of its own). A classic theme whose plugin renders block content in `wp_head` can see its body IDs suffixed. IDs the Filters blocks output are not claimed this way.
-
-Opt out of a block with the `matter_register_block` filter (see [Hooks](#hooks)): `add_filter( 'matter_register_block', fn( $register, $name ) => 'matter/tabs' === $name ? false : $register, 10, 2 );`.
-
-## Loop items
-
-Every loop shows the same design for a post type: the shop, a category, related products and a carousel of products all use one loop item, and changing it changes them all, including carousels already placed in content.
-
-- The theme registers a pattern per post type, `{namespace}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{namespace}/loop-item` for any other post type. Give the patterns `Inserter: false` so they stay out of the Patterns panel.
-- `{namespace}` is the theme's folder name (a child theme's, then its parent's), unless the theme names it, so renaming the folder doesn't break anything: `add_filter( 'matter_theme_namespaces', fn() => 'pulsar' );`. It's also the theme's icon collection.
-- **In a carousel, accordion or tabs of posts** ([below](#posts-as-carousels-accordions-or-tabs)) the block can have its own patterns, named after it. The first that exists is used, most specific first, like WordPress's template hierarchy (child theme first at each step):
-
-  | In | Patterns, in order |
-  | --- | --- |
-  | A loop (no block) | `loop-item-{post_type}`, `loop-item` |
-  | Carousel | `loop-item-{post_type}-carousel`, `loop-item-{post_type}`, `loop-item-carousel`, `loop-item` |
-  | Accordion | `loop-item-{post_type}-accordion`, `loop-item-accordion`, else the item's excerpt |
-  | Tabs | `loop-item-{post_type}-tabs`, `loop-item-tabs`, else the item's excerpt |
-
-  A carousel's slides keep the post type's design before a general carousel one (a product carousel shows prices). An accordion's or tabs' don't fall back to the post type's design: the post's title is already the heading or tab, so their patterns are just what's under it (e.g. an FAQ post type's `loop-item-faq-accordion.php` shows the whole answer).
-
-  **In a variant** other than the block's default, a pattern for the variant comes before each of the block's: `loop-item-{post_type}-carousel-{variant}` before `loop-item-{post_type}-carousel`, and `loop-item-carousel-{variant}` before `loop-item-carousel`. So a "Case studies" carousel variant can have its own slide (`loop-item-carousel-case-studies`) while other carousels keep theirs. The post type's design still comes first: with a `loop-item-post-carousel`, posts in that variant need `loop-item-post-carousel-case-studies`.
-- The block and variant come from the query the loop item is in, not from the content, so a new pattern applies to blocks already placed. Override the choice with the `matter_loop_item_pattern` filter (`$slug`, `$post_type`, `$block`, `$variant`). `$block` is the block's type (`carousel`, `accordion`, `tabs`, or empty in a plain loop), and `$variant` its variant (empty for the default).
-- A loop's post template contains just `<!-- wp:matter/loop-item /-->`. Matter renders the pattern with the item's block context and sets the global post, so post, product and term blocks inside it show that item.
-- In the editor the loop item is a server-rendered preview of the real thing, and it can't be selected: clicks go to the loop or carousel around it. Items that load together (a carousel's or an archive's) share one request to `matter/v1/loop-items`, which renders only items the user can read. List View and the breadcrumb name it after the post type ("Product", "Post").
-- Without a pattern, the block falls back to a link to the item.
-- **Terms** (in a Terms Query's term template, e.g. "Shop by category" on a product page) have their own patterns: `{namespace}/loop-item-term-{taxonomy}` (e.g. `pulsar/loop-item-term-product_cat`), then `{namespace}/loop-item-term`. They never use the post patterns; without one, the item is a link to the term (its name). A Terms Query can only be shown as a carousel:
-
-  | In | Patterns, in order |
-  | --- | --- |
-  | A Terms Query (no block) | `loop-item-term-{taxonomy}`, `loop-item-term` |
-  | Carousel | `loop-item-term-{taxonomy}-carousel`, `loop-item-term-{taxonomy}`, `loop-item-term-carousel`, `loop-item-term` (in a variant, the `-carousel-{variant}` ones first, as for posts) |
-
-  The pattern renders with the term's block context, `termId` and `taxonomy`, as core's term blocks (Term Name, Term Description, Term Count) read it. Inside a term template `termId` wins over `postId` (the page's there); a Query Loop inside a term's pattern lists posts as usual (the innermost loop decides). Only terms of public (viewable) taxonomies render. Override the choice with `matter_loop_item_term_pattern` (`$slug`, `$taxonomy`, `$block`, `$variant`). The editor previews terms through `matter/v1/loop-items/terms`, and List View names the item after the taxonomy ("Category").
-- Differences between loops (e.g. no add-to-basket button in related products) belong in CSS on the loop, not in a second pattern.
-
-The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; clear the cache after adding a new loop item pattern (`wp eval 'wp_get_theme()->delete_pattern_cache();'`).
-
-## Posts as carousels, accordions or tabs
-
-In the inserter, the posts displays are also found by the names of the site's post types ("faq" finds Posts accordion). A new one (or a carousel whose slides are posts) first asks what it lists: posts, pages or another viewable post type (not media, archives or products). A site with only one gets it without asking. Posts accordions and tabs start at 100 items per page (core's most), since nothing pages through them; carousels at 9.
-
-A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, also a Product Collection or a Terms Query): one block, one row in List View, with WordPress's own query controls. A `matterDisplay` attribute makes the query that block: `type` (`carousel`, `accordion` or `tabs`), `style` (the block's variant), `scheme`, and the block's own settings (a carousel's `label`; an accordion's `headingLevel`, `autoclose`, `openFirst`, `faqSchema`; tabs' `label`, `orientation`, `deepLink`, `dropdown`).
-
-- **Front end:** the query's output is rendered inside the block (`Blocks\QueryDisplay`), so its markup, script, styles (Matter's and the theme's) and colour scheme apply as for the block itself. The query's alignment moves to the block. Accordion and tabs items are the post template's `matter/accordion-item` or `matter/tab` (titled with the post's title) holding the theme's [loop item](#loop-items) for that block; the query counts as their accordion or tabs (`Blocks\Instances`), so open first, FAQ schema, the heading level and the tab list work as usual. The post template's list is marked `role="presentation"`.
-- **Items:** fixed per type. A carousel's slides are the theme's [loop items](#loop-items). They can't be selected, edited or added to.
-- **Editor:** the sidebar has the block's panel (**Carousel**, **Accordion** or **Tabs**: style, colour scheme and the block's own settings, the same controls as the block) above WordPress's or WooCommerce's controls, trimmed to suit:
-  - Posts: "Posts carousel", "Posts accordion" and "Posts tabs" Query Loop variations (`namespace`: `matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`), allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
-  - Products (carousels only, from the [WooCommerce integration](#integrations)): a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
-  - Terms (carousels only): a "Terms carousel" Terms Query variation (`matter/carousel-terms`, matched by its `matterDisplay`, as a Terms Query has no `namespace`), with core's own controls: taxonomy, order, empty terms, nested terms, chosen terms and "inherit" (a term archive's child terms). Its term template holds the loop item, so each slide is the theme's [term loop item](#loop-items). E.g. "Shop by category": a Terms carousel of Product categories, with the chosen categories.
-  - A carousel is a live carousel around the query. An accordion or tabs is the server's rendering, as on the front end (`POST matter/v1/query-display`, with the styles it enqueued), refreshed as its settings change; items open and tabs switch when clicked, and links don't navigate.
-- **Inserting:** a carousel's picker offers posts, products and terms, which replace the carousel block with the query. In the post editor the three posts variations, "Products carousel" and "Terms carousel" replace the plain Query Loop, Product Collection (and WooCommerce's other collections) and Terms Query in the inserter; the Site Editor keeps those for templates.
-- Wherever the theme allows `matter/carousel`, `matter/accordion` or `matter/tabs` (in its allowed blocks, or a section slot's `allowedBlocks`), Matter also allows the query blocks they use (for a carousel, `core/query`, `woocommerce/product-collection` and `core/terms-query`), so they can be inserted, duplicated, pasted and moved. The theme's lists don't name them.
-- If Matter's handling ever stops, the live site shows the query as a normal list. Saving the page in the editor then drops `matterDisplay`, and it stays a list.
-
-**Writing one by hand** (a pattern, a template or test content): this is a products carousel as the editor saves it. WooCommerce replaces a Product Collection's whole `query` with what's saved, so keep every key; change `perPage`, the order, `taxQuery` or `woocommerceHandPickedProducts` to choose the products, and `matterDisplay` for the variant (`style`), `scheme` and `label`.
-
-```html
-<!-- wp:woocommerce/product-collection {"query":{"perPage":9,"pages":0,"offset":0,"postType":"product","order":"desc","orderBy":"date","search":"","exclude":[],"inherit":false,"taxQuery":{},"isProductCollectionBlock":true,"featured":false,"woocommerceOnSale":false,"woocommerceAttributes":[],"woocommerceHandPickedProducts":[],"filterable":false,"relatedBy":{"categories":true,"tags":true}},"tagName":"div","collection":"matter/product-collection/carousel","hideControls":["inherit","filterable","offset","max-pages-to-show","default-order","related-by"],"displayLayout":{"type":"list"},"dimensions":{"widthType":"fill"},"queryContextIncludes":["collection"],"forcePageReload":false,"matterDisplay":{"type":"carousel","style":"cards","label":"Our favourites"}} -->
-<div class="wp-block-woocommerce-product-collection"><!-- wp:woocommerce/product-template --><!-- wp:matter/loop-item /--><!-- /wp:woocommerce/product-template --></div>
-<!-- /wp:woocommerce/product-collection -->
-```
-
-A posts carousel, accordion or tabs is a `core/query` with the variation's `namespace`, its `matterDisplay`, and a `core/post-template` holding what [`ITEMS`](src/query-display/templates.js) lists for that type (a carousel: `matter/loop-item`; an accordion: `matter/accordion-item` around one; tabs: `matter/tab` around one).
-
-## Sections
-
-A section is a dynamic block whose `block.json` declares slots. Matter registers it in the editor, so it needs no `edit.js`:
-
-```json
-{
-	"name": "pulsar/hero",
-	"title": "Hero",
-	"category": "sections",
-	"supports": {
-		"matter": {
-			"scheme": true,
-			"align": "full",
-			"tagName": "section",
-			"slots": {
-				"content": {
-					"allowedBlocks": [ "core/heading", "core/paragraph", "core/buttons" ],
-					"template": [ [ "core/heading", { "level": 1 } ], [ "core/paragraph" ] ]
-				},
-				"media": {
-					"allowedBlocks": [ "core/image" ],
-					"template": [ [ "core/image" ] ],
-					"templateLock": "all"
-				}
-			}
-		}
-	}
-}
-```
-
-**In the inserter** a section is previewed from its slots' templates, unless its `block.json` has its own `example`: placeholders become the text ("Page heading"), images a grey picture, and a section in a template (a card in Cards) is filled from its own slots. Write placeholders that read as a preview. Modals, drawers and collapsibles are previewed the same way, shown open; Matter's other blocks have sample content, and posts, products and terms displays preview a few items.
-
-**In List View** a section is named after its first heading ("Showcase: The perfect backdrop…"), unless the client has renamed it, and its slots after their names (`media-end` is "Media end").
-
-**Adding items.** A slot that allows one block type, not a core one (Cards' items), gets "Add {item}" ("Add card") on the toolbar of its section, the slot, and each item and anything in it, so it's to hand wherever the client is editing. Tabs ("Add tab"), accordions ("Add item"), carousels ("Add slide") and galleries ("Edit images") work the same way. The nearest list wins, and a slot that's locked, or allows several block types, gets none.
-
-**Markup.** The editor and the default renderer produce the same markup, so one stylesheet serves both:
-
-```html
-<section class="wp-block-pulsar-hero is-section alignfull has-scheme has-scheme-…">
-	<div class="wp-block-pulsar-hero__inner">
-		<div class="wp-block-matter-slot wp-block-pulsar-hero__content">…</div>
-		<div class="wp-block-matter-slot wp-block-pulsar-hero__media">…</div>
-	</div>
-</section>
-```
-
-A slot that renders nothing is still output, with `is-empty`, so a layout can rely on it; in the editor, a slot with no blocks has it.
-
-**In the editor** the classes are the same, but the editor adds its own wrappers and styles to them. Write section CSS that works in both:
-- **Positioning.** The inner wrapper is also the editor's block list, which core positions; Matter resets that, so something placed against the section (an image behind the content) lines up as on the site. Every slot, and every block in it, is an editor block with `position: relative` (0,2,0): to place something against the section, position the slot itself (a section's slot rule, with two classes, wins), not a block inside it.
-- **Outlines.** The editor draws a block's selected, highlighted and multi-selected outline on the block's own `::after` (`inset: 0`, 0,3,1), so decoration on a section's or card's `::after` jumps to cover the block while it's highlighted. Decorate `::before`, or the inner wrapper's or a slot's pseudo-elements.
-- **Things behind the content.** A slot behind the content (`z-index: -1`) is under the content's slot in the editor too, so clicks never reach it, and an empty one's placeholder or appender can't be used. Give the slots in front `pointer-events: none` and their blocks `auto`, and keep an empty slot (`.is-empty`, or `:not(:has(img))` for an image slot whose image isn't chosen yet) in the flow, where the client can fill it.
-
-**Custom `render.php`.** Use one only when the markup needs to differ (e.g. conditional slots), and keep the same classes:
+Breakpoints are owned by the theme:
 
 ```php
-$slots = Eighteen73\Matter\slots( $content, $block );
-?>
-<section <?php echo get_block_wrapper_attributes(); ?>>
-	<div class="wp-block-pulsar-hero__inner">
-		<div class="wp-block-matter-slot wp-block-pulsar-hero__content"><?php echo $slots['content']; ?></div>
-	</div>
-</section>
+add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'lg' => '1024px' ] );
 ```
 
-**Supports options:**
-- `scheme`: adds the colour scheme control.
-- `align: "full"`: full-width band (`alignfull`).
-- `tagName`: element for the default renderer (`section` by default). It is the section's choice, and a custom `render.php` may use another, so theme CSS should select the block's class (`.wp-block-pulsar-hero`), not `section.…`.
-- `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card), saved in the block's `matterLink` attribute (`{ url, opensInNewTab }`). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable (they get `position: relative; z-index: 2` at zero specificity: a theme positioning its own, such as a wishlist button in a corner, keeps a `z-index` above 1). Without a heading, a visually hidden link is added, named after the block's first paragraph (shortened) or first image description, else "Read more" (`matter_link_label` filter). A link that opens in a new tab says so: the hidden link has it in its name, and a heading link is described by a `<span class="matter-link__cue" hidden>` right after the heading (`aria-describedby`), so the heading's own text stays clean. The cue stays hidden whatever a theme's rules for `span` or `> *` say (`:where(.matter-link__cue[hidden]){display:none!important}`), but it is an element of the block, so a theme's `:last-child` or `:nth-child` rules on the block's children count it (it follows the heading, and is the block's last child when the heading is). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
-- `slots`: per slot (named with letters, numbers, hyphens and underscores only: another name is reported as incorrect usage when the block registers, and never matches its content), `allowedBlocks`, `template`, `templateLock`, `previously` (old names, for a renamed slot) and `alignments`.
-  - `allowedBlocks` limits what the editor offers in the slot, and nothing else: content already saved, a pattern or template inserted into it, or a post written through the REST API isn't filtered on the server.
-  - `alignments` lists the alignments blocks in the slot offer on their toolbar, for blocks that support them, e.g. `[ "wide", "full" ]` (a carousel, gallery, tabs, accordion, image or video wider than the text around it). Without it they offer left, centre and right. The theme styles them in the slot (`.wp-block-{section}__{slot} > .alignwide`); a slot isn't a WordPress layout, so core's alignment styles don't apply.
-
-**Variants.** A section's variants are block styles, `styles` in its `block.json` (or `register_block_style()` in PHP), styled as `.is-style-{name}`. Don't register a variant only in JavaScript (`registerBlockStyle`). The server doesn't know about it, so the front end treats it as a variant that no longer exists and adds the default's class as well:
-
-```json
-"styles": [
-	{ "name": "default", "label": "Image first", "isDefault": true },
-	{ "name": "image-last", "label": "Image last" }
-]
-```
-
-The default (`isDefault`) gets its class too, `is-style-default`, on the front end and in the editor, though core saves no class for it (it also gets it when the saved variant is no longer registered), so the default's own styles don't have to exclude every other variant. A variant changes CSS only: every variant has the same slots, with the same templates and locks. A layout that needs different slots (two images where the others have one) is a separate section.
-
-**Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
-- **Add or reorder** slots anywhere in `block.json`. Existing instances get a new slot (filled from its `template`) the next time they're edited.
-- **Rename** a slot by listing its old name: `"image": { "previously": [ "media" ] }`. Content saved under the old name shows in the slot at once, and moves to the new name when the page is next edited and saved.
-- **Remove** a slot and its content stops showing on the site. The editor keeps the content, marked as no longer shown, so the client can move it into another slot or remove it.
-
-An unlocked slot is filled from its `template` when it's created; if the client empties it, it stays empty. A slot with `templateLock` keeps its template's blocks. What a locked slot does when its template changes after content was saved: a block the template **adds** is added to existing content the next time it is edited; but a template that would replace a saved block with one of another type (or a saved block's inner blocks with fewer) is not applied, so saved blocks are never overwritten. The slot keeps what was saved, and the new template applies to new sections.
-
-**Locking a slot.** Use `"all"` to fix a slot's blocks (exactly one image, say) or `"insert"` to fix their number but allow reordering. Both leave the blocks' own settings in place. Avoid `"contentOnly"`: core then hides the blocks' settings (an image's focal point, its menu) behind an "Edit pattern" button that clients don't find, and the slot's `allowedBlocks` already limits what goes in.
+`config/breakpoints.json` is the fallback. Widths may be in `px`, `em` or `rem` (or `0`) and keep their unit in the media queries, so an `em` breakpoint follows the visitor's text size; they're ordered by their size in px (an em is 16px), and equal widths keep the order given. Any other unit is ignored with a `_doing_it_wrong` notice. Use one unit for the whole map: mixing `px` with `em` or `rem` is unsupported and reported once with a `_doing_it_wrong` notice, because an `em` query follows the visitor's text size while a `px` one doesn't, so with a text size other than 16px the ranges overlap or leave gaps (`0` is fine beside any unit). A responsive value map (a menu's `type`) with no base entry starts at its first entry's value: `[ 'lg' => 'dropdown', 'xl' => 'accordion' ]` is a dropdown below `xl`, not nothing below `lg`.
 
 ## Colour schemes
 
@@ -375,67 +195,268 @@ Gallery options: `imageSize` (a registered image size), `columns` (column counts
 
 Tabs options: `dropdownBelow`, the breakpoint below which tabs set to "Show as a dropdown on smaller screens" switch to the dropdown (default `md`). Set it to `false` to do the switch in theme CSS instead: below your breakpoint, `.wp-block-matter-tabs.has-dropdown` shows its `__toggle` button and turns `__nav > __list` into a menu, open when the block has `.is-menu-open`. `Eighteen73\Matter\Blocks\Tabs::dropdown_css( $scope, $media )` returns the rules Matter uses, to output for your own scope and media query. The dropdown's menu is the same `__list` and `__tab` elements, so a variant's tab list styles (gaps, borders, tab shapes) apply to the menu too; limit them to the widths where the dropdown isn't shown (from `dropdownBelow`'s breakpoint) if the menu should keep Matter's look.
 
-## JavaScript API
+## Allowed blocks
 
-Every interactive block can be driven from theme scripts. `matter.{block}( target )` returns a block's instance, where `target` is an element ID (usually the block's HTML anchor, set under Advanced; `'#faq'` works too) or an element. It resolves to that block when it is one, else the first one of its type inside it (in page order), else the one around it. Instances exist once a block has started, so wait with `matter.ready( target )`, which resolves with the target block itself when it is one (not a block nested inside it), else the first block inside it, else the one around it. Once the page has loaded, `ready()` resolves with `null` if the target isn't, or isn't in or around, a block (a typo, or a block that isn't on this page), so a script that waits never hangs; a block that is there but hasn't started is still waited for, until it is removed from the page (then `null`). A block that is not on the page yet, because client-side navigation inserts it later, gets `null` as well: listen for `matter-{block}-ready` for those.
+The theme lists the blocks content editors can add, and Matter enforces the list in the post editor. Templates are developer-owned and the Site Editor keeps every block. Entries ending in `/*` allow a whole namespace; an empty list leaves the editor unrestricted. A list set earlier by other code still applies (the two are intersected).
 
-`window.matter` exists from the page's `<head>` (a small inline stub), so theme scripts can call `matter.ready()` before Matter's modules load, and `matter.carousel()` and the others return `null` rather than throwing on pages without the block.
-
-```js
-matter.ready( 'faq' ).then( ( faq ) => faq?.open( 0 ) );
-
-const hero = matter.carousel( 'hero' );
-hero?.goTo( 2 );
-
-document.addEventListener( 'matter-tabs-change', ( event ) => {
-	console.log( event.detail.id, event.detail.index );
-} );
+```php
+add_filter( 'matter_allowed_blocks', fn( $blocks ) => [ ...$blocks, 'core/heading', 'core/paragraph', 'pulsar/*', 'matter/*' ] );
 ```
 
-| Block | `matter.…( target )` | Methods | Read-only state | Events (`matter-…`) |
-|---|---|---|---|---|
-| Carousel | `carousel` | `goTo( index, instant )`, `goToSlide( slide, instant )`, `next( instant )`, `prev( instant )`, `play()`, `pause()` (holds until `play()`) | `index`, `count` (scroll positions), `slides`, `selectedSlides`, `progress`, `isPlaying`, `canPrev`, `canNext` | `carousel-select` (`index`, `count`, `slides`), `carousel-settle`, `carousel-play`, `carousel-pause` |
-| Tabs | `tabs` | `select( tab )` (index or panel ID), `next()`, `prev()` | `tabs` and `active` (`{ index, id, label }`) | `tabs-change` (`index`, `tabId`, `previous`) |
-| Accordion | `accordion` | `open( item )`, `close( item )`, `toggle( item )` (index or item ID), `openAll()`, `closeAll()`, `isOpen( item )` | `items` (`{ index, id, title, isOpen }`) | `accordion-open`, `accordion-close` (`itemId`, `index`) |
-| Gallery | `gallery` | `open( index )`, `close()`, `next()`, `prev()` (the lightbox) | `isOpen`, `index`, `count` | `gallery-open`, `gallery-change`, `gallery-close` (`index`) |
-| Modal, drawer, collapsible | `overlay` | `open()`, `close()`, `toggle()`, `next()`, `prev()` (grouped modals), `closeAll()` (every overlay on the page) | `id`, `isOpen` | `overlay-open`, `overlay-close` |
-| Panel | `panel` | `open()`, `close()`, `toggle()` (`open()` and `toggle()` do nothing while the panel is inline, above its breakpoint: it is always showing, and would be left half open when the screen narrows) | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
-| Filters | `filters` | `set( filterId, values )`, `clear()` | `id` (the listing's `queryId`), `selection` (each filter's `values`, `min`, `max`, `operator`) | `filters-change` (`url`) |
+A block a section's slot allows (`allowedBlocks`) doesn't need to be on the list. If it isn't, it's allowed only in the sections that name it: the editor sets those sections as its `ancestor`, so the inserter offers it inside them (in the slots that allow it) and not at the top level of a page. E.g. core's Icon block for card icons, without offering icons anywhere else.
 
-Every instance also has `element` and `id`, and every block dispatches `matter-{block}-ready` when it starts. Events bubble from the block's element, and every one has `detail.id` (the element's ID, or `null`) and `detail.instance` (the block's instance; `null` only before it has started), plus the details in the table. A dialog's `overlay-open` fires once it is shown (including an open from the URL hash on load), and `overlay-close` once it is closed; a collapsible's when it opens and closes. Panels and overlays dispatch like every other block.
+## Theme icons
 
-**Not part of the API:**
-- The carousel's Embla instance (`embla`) and `reInit( options )` are available for now but may change with the carousel library.
-- Anything else on `window.matter` that isn't in the tables above. Matter's own state (the stub's queue, the shared registry of instances) is kept under `window.matter[ Symbol.for( 'matter' ) ]`, so nothing on `window.matter` itself starts with an underscore, and a theme that enumerates it sees only the API.
-- The other globals, which are for Matter's editor and admin screens: `window.matterEditor` (only `queryDisplay` is for integrations, see [Integrations](#integrations)), `window.matterSettings`, `window.matterGravityForm` and `window.matterActiveTabContext`.
-- The script modules Matter registers for its own blocks to share (`matter/focus-trap`, `matter/inert`, and the others loaded by their blocks): one copy each per page, so a modal can tell an open panel to let go of the page. A theme script shouldn't import them. (`matter/filters`' `registerProvider()` and `matter/live` are documented with their features.)
+The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's namespace (`matter_theme_namespaces`, see [Loop items](#loop-items)); icon names are saved in content (`pulsar/arrow-right`), so a theme whose folder may change should name its namespace. The label, and the collection itself, can be set too:
 
-Scripts built with the Interactivity API can use the stores instead: `store( 'matter/carousel' ).actions.goTo( 'hero', 2 )` (and `reInit( target, options )`), and likewise `matter/tabs` (`select`, `next`, `prev`), `matter/accordion` (`open`, `close`, `toggle`, `openAll`, `closeAll`), `matter/gallery` (`open`, `close`, `next`, `prev`) and `matter/overlay` (`open`, `close`, `toggle`, `next`, `prev`, `closeAll`), each taking the target (an ID or element) first. (The carousel store's `reInit( target, options )` is as unstable as the method.)
-
-Blocks clean up when removed (e.g. by the Interactivity API's client-side navigation): carousels destroy their Embla instance, and listeners outside the block are removed.
-
-### Without JavaScript
-
-Content is reachable without JavaScript, and when a block's script fails or is blocked. Nothing is hidden or made `inert` by the server: hiding waits for the script. A small script in the page's head adds `matter-js` to `<html>` (JavaScript is running) and, four seconds after the page is parsed (or at once, if it runs after that), `matter-late`. A block's script adds `is-enhanced` to the block when it starts (to an accordion, its items; to tabs, their panels; to a modal, drawer or collapsible, the block itself; to a panel, its toggles too; never to a block nested in it), and `matter-ready-{type}` (`accordion`, `tabs`, `menu`, `panel`, `overlay`, `carousel`, `gallery`, `filters`) to `<html>`. The CSS that hides content applies to a block that is `is-enhanced`, or is about to be: `matter-js` and either not yet `matter-late` or `matter-ready-{type}` (that type's script has run on this page, so a block of it inserted later, by client-side navigation or Live results, is about to start too). The mark is the element's own: an enhanced block around it never counts, so a nested accordion or tabs whose script didn't start isn't hidden by the running block it sits in, and a theme's own `.is-enhanced` wrapper changes nothing. So an enhanced page doesn't flash its content before a script starts, and a block type whose script never starts shows its content after four seconds, whatever the other types do. `matter.ready()` and the other scripting are covered above; the classes are for CSS:
-
-```css
-/* Something that should look different until the script has started. */
-.my-block:not(.is-enhanced) { … }
-html:not(.matter-js) .my-block { … } /* Only where there is no JavaScript. */
+```php
+add_filter( 'matter_icon_theme_collection', fn( $icons ) => [ ...$icons, 'label' => 'Theme icons' ] );
 ```
 
-Per block, with no JavaScript:
+`directories` changes the folders.
 
-- **Accordion:** every answer shows. An item the accordion opens by default says so (`is-open`, `aria-expanded="true"`); the others say nothing about their state, since their answer isn't collapsed. The headings have no caret, since they do nothing.
-- **Collapsible:** the content shows.
-- **Modal and drawer:** a closed `<dialog>` is closed by the browser, so nothing shows until it is linked to. The trigger area's first link is rendered as a real link to the dialog (`href="#{id}"`): a link with no URL, or the `#` placeholder (a button block with no URL renders an `<a>` with neither a role nor an `href`), gets `#{id}`. Following the link shows the dialog in the page, where it is, as ordinary content (`.wp-block-matter-modal:not(.is-enhanced):target`, and the drawer's), without its close and group buttons, only where there is no JavaScript or the script didn't start within the four seconds (`html:not(.matter-js)`, or `matter-late` without `matter-ready-overlay`); while the script is about to start, a link to the dialog (`/page#offer`) leaves it closed and the script opens it as a modal. A trigger area with no link or button is only a button once the script runs. Dialogs that open on load, on scroll or from a URL parameter aren't shown.
-- **Tabs:** every panel shows, each under its tab's name (`.wp-block-matter-tab__label`, a heading at level 3, or the level the `matter_tab_label_level` filter returns (2 to 6); the script hides it); the tab list, and the dropdown button, aren't shown, since they can't switch anything. The panels aren't `role="tabpanel"`, and have no `tabindex` or `aria-labelledby`, until the script adds them: with no tab list there is nothing for them to be panels of. The server marks the active panel `is-active`, as the script does.
-- **Menus:** every link is reachable and on screen. Parent links show and the toggles, "View all" headers and back buttons (which need the script) don't, except that a dropdown parent that is only a label (no link) shows its toggle in the label's place, as a button that takes focus, so its submenu can be reached from the keyboard. A dropdown opens as its item is hovered or has focus inside it (`:hover`, `:focus-within`), so a keyboard user tabs into a submenu and never loses sight of what has focus; accordion and drill-down menus are nested lists, all open. Nothing is `inert` (once the script starts, a closed submenu is).
-- **Panels:** inline at every width, as above the panel's breakpoint: no off-canvas styles, no backdrop or close button, no toggle, and `is-panel-only` content doesn't show. Filters in a panel are the form with its Apply button, inline.
-- **Carousel:** the slides scroll natively.
-- **Filters:** a form with an Apply button, which the server filters.
+The icons are registered on `init`, on every request, so core's Icon block and `wp_get_icon()` find them too. WordPress cleans each SVG as it registers it: only `svg`, `path` and `polygon` elements survive, with a handful of attributes (`class`, `viewBox`, `width`, `height`, `fill`, `fill-rule`, `d`, `points`, `transform`), so draw icons as filled paths (outline strokes, circles, rectangles, groups, gradients and `style` are dropped). An icon has no size or colour of its own: Matter renders the SVG with its own `width` and `height`, and the theme sets size and colour in CSS (`.wp-block-button__icon`, `.wp-block-matter-tabs__icon`, with `fill: currentColor`).
 
-**Closed panels** (an accordion item, a collapsible's content, an inactive tab's panel) are `hidden="until-found"` once the script has started: the browser's find-in-page, a text fragment (`#:~:text=`) or a link to something inside opens the item or selects the tab (`beforematch`; with `deepLink`, the tab updates the address as a click would), in the browsers that support it (Chrome, Firefox and Safari today; the tests run on Chromium 158, Firefox 159 and WebKit 27.2, which all do). Elsewhere the panel is plainly hidden and opens with its button. A panel is closed with `grid-template-rows: 0fr` and, unless it is `until-found`, `visibility: hidden`, which keeps what is in it out of the tab order and the accessibility tree; a theme that restyles the open and closed states does the same for both. A closed collapsible's content and an inactive tab's panel have their margin, padding, border width and minimum height zeroed (`content-visibility: hidden` skips only what is inside it, so a theme's padding or border would show on it); a theme that sets these with more specificity does the same for `[hidden="until-found"]`. The server renders no `inert` or `hidden`.
+## Site settings
+
+The theme declares fields, and Matter adds a **Site details** page under Appearance. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
+
+```php
+add_filter( 'matter_settings_fields', fn() => [
+	'contact' => [
+		'title'  => 'Contact details',
+		'fields' => [
+			'phone' => [ 'type' => 'tel', 'label' => 'Phone' ],
+		],
+	],
+] );
+```
+
+**Field types:**
+- `text`, `textarea`, `email`, `url`, `tel`. A `url` field takes an address as people copy it (`instagram.com/name`) and adds `https://`; a relative address (starting `/`, `#` or `?`, or a word or path with no dot in its first segment, such as `contact-us`, or one starting `./` or `../`) is kept as it is. A stored value is cleaned again when it is bound, so a relative path can't become another site's address (`/<tab>/evil.com`). A `number` field must be a finite number (saving anything else shows an error on the page). Saving leaves out nothing it isn't sent: a field missing from a REST save keeps its stored value, and `Matter\setting()` treats a media field with no image as empty.
+- `number`, `toggle`
+- `select` (with `options`)
+- `media` (attachment ID)
+- `repeater` (with `fields`)
+
+**Reading values:**
+- In PHP: `Eighteen73\Matter\setting( 'contact.phone' )`. The value is as stored, **not escaped** (a `textarea` keeps its line breaks and any characters typed): escape it where you print it (`esc_html()`, `esc_url()`, `esc_attr()`). An unknown path, or an empty value, gives the default you pass.
+- In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Bound values are escaped for you (a `textarea` keeps its line breaks), and an unknown key, or a repeater, gives nothing, so the block keeps its own content. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links, and a `url` field is made safe (relative addresses stay relative).
+
+Hooks:
+- `matter_settings_page_title`: the page and menu title (default "Site details").
+- `matter_settings_parent`: the admin menu it sits under (default `themes.php`, Appearance; empty for a top-level item).
+- `matter_settings_saved`: fires after saving.
+
+## Sections
+
+A section is a dynamic block whose `block.json` declares slots. Matter registers it in the editor, so it needs no `edit.js`:
+
+```json
+{
+	"name": "pulsar/hero",
+	"title": "Hero",
+	"category": "sections",
+	"supports": {
+		"matter": {
+			"scheme": true,
+			"align": "full",
+			"tagName": "section",
+			"slots": {
+				"content": {
+					"allowedBlocks": [ "core/heading", "core/paragraph", "core/buttons" ],
+					"template": [ [ "core/heading", { "level": 1 } ], [ "core/paragraph" ] ]
+				},
+				"media": {
+					"allowedBlocks": [ "core/image" ],
+					"template": [ [ "core/image" ] ],
+					"templateLock": "all"
+				}
+			}
+		}
+	}
+}
+```
+
+**In the inserter** a section is previewed from its slots' templates, unless its `block.json` has its own `example`: placeholders become the text ("Page heading"), images a grey picture, and a section in a template (a card in Cards) is filled from its own slots. Write placeholders that read as a preview. Modals, drawers and collapsibles are previewed the same way, shown open; Matter's other blocks have sample content, and posts, products and terms displays preview a few items.
+
+**In List View** a section is named after its first heading ("Showcase: The perfect backdrop…"), unless the client has renamed it, and its slots after their names (`media-end` is "Media end").
+
+**Adding items.** A slot that allows one block type, not a core one (Cards' items), gets "Add {item}" ("Add card") on the toolbar of its section, the slot, and each item and anything in it, so it's to hand wherever the client is editing. Tabs ("Add tab"), accordions ("Add item"), carousels ("Add slide") and galleries ("Edit images") work the same way. The nearest list wins, and a slot that's locked, or allows several block types, gets none.
+
+**Markup.** The editor and the default renderer produce the same markup, so one stylesheet serves both:
+
+```html
+<section class="wp-block-pulsar-hero is-section alignfull has-scheme has-scheme-…">
+	<div class="wp-block-pulsar-hero__inner">
+		<div class="wp-block-matter-slot wp-block-pulsar-hero__content">…</div>
+		<div class="wp-block-matter-slot wp-block-pulsar-hero__media">…</div>
+	</div>
+</section>
+```
+
+A slot that renders nothing is still output, with `is-empty`, so a layout can rely on it; in the editor, a slot with no blocks has it.
+
+**In the editor** the classes are the same, but the editor adds its own wrappers and styles to them. Write section CSS that works in both:
+- **Positioning.** The inner wrapper is also the editor's block list, which core positions; Matter resets that, so something placed against the section (an image behind the content) lines up as on the site. Every slot, and every block in it, is an editor block with `position: relative` (0,2,0): to place something against the section, position the slot itself (a section's slot rule, with two classes, wins), not a block inside it.
+- **Outlines.** The editor draws a block's selected, highlighted and multi-selected outline on the block's own `::after` (`inset: 0`, 0,3,1), so decoration on a section's or card's `::after` jumps to cover the block while it's highlighted. Decorate `::before`, or the inner wrapper's or a slot's pseudo-elements.
+- **Things behind the content.** A slot behind the content (`z-index: -1`) is under the content's slot in the editor too, so clicks never reach it, and an empty one's placeholder or appender can't be used. Give the slots in front `pointer-events: none` and their blocks `auto`, and keep an empty slot (`.is-empty`, or `:not(:has(img))` for an image slot whose image isn't chosen yet) in the flow, where the client can fill it.
+
+**Custom `render.php`.** Use one only when the markup needs to differ (e.g. conditional slots), and keep the same classes:
+
+```php
+$slots = Eighteen73\Matter\slots( $content, $block );
+?>
+<section <?php echo get_block_wrapper_attributes(); ?>>
+	<div class="wp-block-pulsar-hero__inner">
+		<div class="wp-block-matter-slot wp-block-pulsar-hero__content"><?php echo $slots['content']; ?></div>
+	</div>
+</section>
+```
+
+**Supports options:**
+- `scheme`: adds the colour scheme control.
+- `align: "full"`: full-width band (`alignfull`).
+- `tagName`: element for the default renderer (`section` by default). It is the section's choice, and a custom `render.php` may use another, so theme CSS should select the block's class (`.wp-block-pulsar-hero`), not `section.…`.
+- `link`: the whole block can link somewhere, set from a link button on its toolbar (e.g. a card), saved in the block's `matterLink` attribute (`{ url, opensInNewTab }`). On the front end its first heading becomes the link, stretched over the block, so the link is named by the heading; links and buttons inside stay clickable (they get `position: relative; z-index: 2` at zero specificity: a theme positioning its own, such as a wishlist button in a corner, keeps a `z-index` above 1). Without a heading, a visually hidden link is added, named after the block's first paragraph (shortened) or first image description, else "Read more" (`matter_link_label` filter). A link that opens in a new tab says so: the hidden link has it in its name, and a heading link is described by a `<span class="matter-link__cue" hidden>` right after the heading (`aria-describedby`), so the heading's own text stays clean. The cue stays hidden whatever a theme's rules for `span` or `> *` say (`:where(.matter-link__cue[hidden]){display:none!important}`), but it is an element of the block, so a theme's `:last-child` or `:nth-child` rules on the block's children count it (it follows the heading, and is the block's last child when the heading is). The block gets `has-link` and the link `matter-link`, for hover and focus styles. Works with a custom `render.php` too.
+- `slots`: per slot (named with letters, numbers, hyphens and underscores only: another name is reported as incorrect usage when the block registers, and never matches its content), `allowedBlocks`, `template`, `templateLock`, `previously` (old names, for a renamed slot) and `alignments`.
+  - `allowedBlocks` limits what the editor offers in the slot, and nothing else: content already saved, a pattern or template inserted into it, or a post written through the REST API isn't filtered on the server.
+  - `alignments` lists the alignments blocks in the slot offer on their toolbar, for blocks that support them, e.g. `[ "wide", "full" ]` (a carousel, gallery, tabs, accordion, image or video wider than the text around it). Without it they offer left, centre and right. The theme styles them in the slot (`.wp-block-{section}__{slot} > .alignwide`); a slot isn't a WordPress layout, so core's alignment styles don't apply.
+
+**Variants.** A section's variants are block styles, `styles` in its `block.json` (or `register_block_style()` in PHP), styled as `.is-style-{name}`. Don't register a variant only in JavaScript (`registerBlockStyle`). The server doesn't know about it, so the front end treats it as a variant that no longer exists and adds the default's class as well:
+
+```json
+"styles": [
+	{ "name": "default", "label": "Image first", "isDefault": true },
+	{ "name": "image-last", "label": "Image last" }
+]
+```
+
+The default (`isDefault`) gets its class too, `is-style-default`, on the front end and in the editor, though core saves no class for it (it also gets it when the saved variant is no longer registered), so the default's own styles don't have to exclude every other variant. A variant changes CSS only: every variant has the same slots, with the same templates and locks. A layout that needs different slots (two images where the others have one) is a separate section.
+
+**Updating sections.** Markup and CSS changes reach every instance immediately. Slots are matched by **name**, in the editor and on the front end, so make `render.php` cope with an empty slot, and:
+- **Add or reorder** slots anywhere in `block.json`. Existing instances get a new slot (filled from its `template`) the next time they're edited.
+- **Rename** a slot by listing its old name: `"image": { "previously": [ "media" ] }`. Content saved under the old name shows in the slot at once, and moves to the new name when the page is next edited and saved.
+- **Remove** a slot and its content stops showing on the site. The editor keeps the content, marked as no longer shown, so the client can move it into another slot or remove it.
+
+An unlocked slot is filled from its `template` when it's created; if the client empties it, it stays empty. A slot with `templateLock` keeps its template's blocks. What a locked slot does when its template changes after content was saved: a block the template **adds** is added to existing content the next time it is edited; but a template that would replace a saved block with one of another type (or a saved block's inner blocks with fewer) is not applied, so saved blocks are never overwritten. The slot keeps what was saved, and the new template applies to new sections.
+
+**Locking a slot.** Use `"all"` to fix a slot's blocks (exactly one image, say) or `"insert"` to fix their number but allow reordering. Both leave the blocks' own settings in place. Avoid `"contentOnly"`: core then hides the blocks' settings (an image's focal point, its menu) behind an "Edit pattern" button that clients don't find, and the slot's `allowedBlocks` already limits what goes in.
+
+## Blocks
+
+| Block | Purpose | Editor options |
+| --- | --- | --- |
+| `matter/accordion` › `matter/accordion-item` | Expandable items written in the editor. An accordion of posts is a Query Loop shown as one ("Posts accordion", see [Posts as carousels, accordions or tabs](#posts-as-carousels-accordions-or-tabs)). | Heading level, one open at a time, open first, FAQ schema (JSON-LD). Item: open by default. |
+| `matter/tabs` › `matter/tab` | Tabbed content written in the editor. Tabs of posts are a Query Loop shown as tabs ("Posts tabs"). | Name, link to tabs (updates the URL hash), horizontal/vertical, show as a dropdown on smaller screens (a button showing the current tab's icon and name opens the tab list; the theme sets where, see Variants). Tab: icon, chosen from the icon library on the block toolbar. Backspace in an empty tab name, or "Delete tab" in the block's options menu, removes a tab. |
+| `matter/carousel` | Each inner block is a slide. A carousel of posts, products or terms is a Query Loop, Product Collection or Terms Query shown as one ("Posts carousel", "Products carousel", "Terms carousel"). A new carousel asks what the slides will be: images (chosen in the media library), the theme's slide types (see [Variants](#variants)), posts, products or terms. Live in the editor (arrows, dots and real slide widths; no dragging); "Add slide" adds an empty slide like the last. When every slide is an image, "Edit images" manages them in the media library's gallery mode instead. Both toolbar buttons also show on the toolbar of each slide and anything in it. Posts, products and terms: see [Posts as carousels, accordions or tabs](#posts-as-carousels-accordions-or-tabs). | Name; aspect ratio when every slide is an image. Behaviour comes from the chosen variant. |
+| `matter/gallery` | `core/image` blocks in a grid or carousel, with a lightbox. Every image is cropped to one aspect ratio and uses the variant's image size (`imageSize`), so images always match. "Edit images" opens the media library's gallery mode (add, remove, reorder), like core's Gallery; each image stays an editable `core/image`, and its toolbar keeps the "Edit images" button. | Layout (grid/carousel), columns (the theme's choices; fewer show where there's less room), images to show (in whole rows of the columns; at any width the grid shows full rows, and the rest open from "View all N images"), aspect ratio (theme.json presets, or the images' own), show captions, and their style (Toggle: behind an info button; Overlay: over the image; each image's own caption, else its media library caption, also shown in the lightbox), lightbox on/off, name. In the lightbox, the arrow keys step between images, Home and End go to the first and last, and Escape closes it. |
+| `matter/modal` | An optional trigger area plus content shown in a dialog. | ID, name, can be closed, group, open automatically (load, scroll, URL parameter), stay closed for N days. |
+| `matter/drawer` | An optional trigger area plus content that slides in from the start or end of the line (the left or right in left-to-right languages; `.is-position-start`, `.is-position-end`). | ID, name, can be closed, open automatically, side. |
+| `matter/collapsible` | An optional trigger area plus content hidden in place until revealed. | ID. |
+| `matter/gravity-form` | A Gravity Forms form. | Form, title, description, AJAX, tabindex, field values. |
+| `matter/slot` | A named content area inside a section (added automatically). | None. |
+| `matter/loop-item` | The theme's design for the current item in a loop (Query Loop, Product Collection, Terms Query, or a carousel's posts or terms). Not in the inserter: templates and carousels add it. See [Loop items](#loop-items). | None. |
+| `matter/template-part` | A PHP file from the theme's `template-parts/` folder, e.g. `<!-- wp:matter/template-part {"slug":"header"} /-->` in a block template. The slug is the file's path there without `.php`; only files with a `Title:` header render (a slug that isn't listed, and anything in `megamenu/`, renders nothing, and the editor says the part couldn't be shown). The part gets its `slug` and the block's context (`postId`, `postType`, `queryId`) as `$args`; other attributes aren't passed, as anyone who can edit content could set them. Not in the inserter: developers place it in templates. The Site Editor previews the part with the stylesheets its render enqueues (e.g. a menu's or panel's), so it looks as on the front end. WooCommerce's mini-cart renders nothing in the editor. | Template part (files with a `Title:` header; filter with `matter_template_parts`). |
+
+**Opening overlays.**
+- The block's **trigger area** opens it: the first link or button inside (a button block without a link works), or the whole area when it has neither.
+- Any link to `#id` on the same page (same address and query; a link to another page ending in `#id` just goes there), or element with `aria-controls="id"`, anywhere on the page also opens it. One click listener serves the page, so triggers added later (live filter results, a lazy-loaded section) work; a click with a modifier key or a button other than the primary one is left to the browser. Matter adds `aria-controls`, `aria-expanded` and `aria-haspopup` to the triggers present when the overlay starts, and to later ones the next time the overlay opens or closes. So does the address changing to `#id` after the page loads.
+- **Where it sits:** a modal or drawer inside an inactive tab, a closed accordion item, a closed collapsible or another closed dialog opens those first, then itself. If it still can't be seen (e.g. the theme hides its container), it isn't opened, and a console warning says why.
+- **Query Loops:** an overlay inside a post template gets one instance per post, with the ID `{id}-{postId}`. Modals in a Query Loop are grouped automatically.
+- **Groups:** modals with the same group get previous/next buttons and an "n / N" position, cycling in page order.
+- **URL parameters** open an overlay even after it was dismissed (they're asked for, e.g. a campaign link); dismissals stop the automatic opens on load and on scroll.
+- **Moving between grouped modals** keeps the backdrop: the current modal goes at once and the next fades in from the side it comes from.
+- **Can be closed** (modal, drawer): when off, there's no close button and Escape and backdrop clicks do nothing (e.g. an age gate): the dialog has `closedby="none"`, and reopens if the browser closes it anyway. A link to its `#id` inside it closes it, and an automatic open stays dismissed for the configured number of days.
+- **Backdrop clicks** close a modal or drawer only when pressed on the backdrop, not when a drag (e.g. selecting text) ends there.
+- **Focus return:** closing a modal or drawer gives focus back to the control that opened it (a click, Enter or a script: the trigger is remembered, as a click doesn't focus a button or link in Safari, so the browser has nothing to return to). If the trigger has gone, the first visible control that opens it takes focus.
+- **Scroll lock:** while a modal or drawer is open, `<html>` has `has-overlay-open` and the page doesn't scroll.
+- **Closing animates in every browser:** a closing modal, drawer or gallery lightbox stays open with `is-closing` while its transitions run, then closes (up to a second). Style a theme's exit on `[open].is-closing` (e.g. `.wp-block-matter-modal[open].is-closing { opacity: 0; }`); the entry uses `@starting-style`. Without a transition (reduced motion) it closes at once, and reopening while closing cancels it.
+
+**In the editor**, the canvas shows what the front end shows.
+- **Closed:** only the trigger area shows (when "Trigger on the page" is on). An overlay without a trigger takes no space.
+- **Open:** an overlay opens while it, or anything in its content, is selected, and closes when the selection moves on (or its close button or backdrop is clicked). A modal or drawer opens as it does on the front end, with the same markup: the block is the `-host`, so its trigger area stays in the page, and the content sits in a dialog element (with the dialog's class and `open` attribute) shown as a popover in the top layer, so the theme's dialog styles, `::backdrop` and transitions all apply. Grouped modals show their previous/next buttons, which open the group's other modals. A collapsible opens in place, including while its trigger is selected.
+- **Overlays sidebar** (top bar): lists the modals and drawers being edited, with their name (or first heading, or trigger text), `#id` and how they open automatically. Click one to open it, or add a modal or drawer (added at the end of the content, where it sits doesn't matter). Collapsibles sit in the page, so aren't listed.
+- **IDs:** a new overlay gets an ID; a copy (duplicated or pasted) gets a new one. The ID field applies when it loses focus, and refuses an empty ID or one another block has, so editing one overlay's ID never changes another's.
+- **Linking:** link search suggests the page's overlays by name. A button block (or other block with a link setting) linking to one gets **Edit modal** / **Edit drawer** / **Edit collapsible** on its toolbar, as does a block in a modal's or drawer's trigger area. Links within text don't.
+
+Scripting: `matter.overlay( id )` and the `matter/overlay` store; see [JavaScript API](#javascript-api).
+
+**Links to tabs and accordion items.** A tabs or accordion block (and a posts display) gets an ID of its own when it's added (e.g. `tabs-x7k2p`, in `matterId`, so the HTML anchor field stays the client's and the list view doesn't show it), so its items keep their IDs: `#{id}-2` is the second. An HTML anchor set under Advanced replaces it. In posts tabs and accordions, an item is named after its post, `#{id}-post-{postId}`, so links survive new posts. A link to an item, or to anything inside one, opens it (and any tab or item it's nested in), on load and when the address's `#hash` changes. An untitled item shows its post's title only in a Query Loop. An accordion item or tab whose content renders nothing to show (no text, media or form controls, e.g. a product's specifications when it has none) isn't output; a skipped tab is left out of the tab list too.
+
+**IDs are unique on a page.** The same block can render twice (a synced pattern used twice, a template part in two places). The first keeps its ID; later ones get `-2`, `-3` (tabs, accordions, overlays, menus and panels, a carousel's or gallery's HTML anchor, and their items' IDs), so `aria-controls` and links never point at the wrong copy. Only a saved ID (`matterId`, `overlayId`, an HTML anchor) is stable: a repeat's suffix depends on render order, and a modal without a saved ID has a generated one, so it can't be linked to and its "remember dismissal" is off. A saved overlay ID is cleaned as the editor cleans it (lowercase, letters, numbers, hyphens and underscores), so links to it must be lowercase too: `#promo`, not `#Promo`; a URL parameter trigger's name is matched in any case. A menu's items are `{menu ID}-item-{menu item ID}`. A tabs or accordion block with nothing to show outputs nothing. Each page starts with no IDs claimed (block themes: just before the template renders; each item of a REST collection counts as a page of its own). A classic theme whose plugin renders block content in `wp_head` can see its body IDs suffixed. IDs the Filters blocks output are not claimed this way.
+
+Opt out of a block with the `matter_register_block` filter (see [Hooks](#hooks)): `add_filter( 'matter_register_block', fn( $register, $name ) => 'matter/tabs' === $name ? false : $register, 10, 2 );`.
+
+## Posts as carousels, accordions or tabs
+
+In the inserter, the posts displays are also found by the names of the site's post types ("faq" finds Posts accordion). A new one (or a carousel whose slides are posts) first asks what it lists: posts, pages or another viewable post type (not media, archives or products). A site with only one gets it without asking. Posts accordions and tabs start at 100 items per page (core's most), since nothing pages through them; carousels at 9.
+
+A carousel, accordion or tabs of posts is the Query Loop itself (for carousels, also a Product Collection or a Terms Query): one block, one row in List View, with WordPress's own query controls. A `matterDisplay` attribute makes the query that block: `type` (`carousel`, `accordion` or `tabs`), `style` (the block's variant), `scheme`, and the block's own settings (a carousel's `label`; an accordion's `headingLevel`, `autoclose`, `openFirst`, `faqSchema`; tabs' `label`, `orientation`, `deepLink`, `dropdown`).
+
+- **Front end:** the query's output is rendered inside the block (`Blocks\QueryDisplay`), so its markup, script, styles (Matter's and the theme's) and colour scheme apply as for the block itself. The query's alignment moves to the block. Accordion and tabs items are the post template's `matter/accordion-item` or `matter/tab` (titled with the post's title) holding the theme's [loop item](#loop-items) for that block; the query counts as their accordion or tabs (`Blocks\Instances`), so open first, FAQ schema, the heading level and the tab list work as usual. The post template's list is marked `role="presentation"`.
+- **Items:** fixed per type. A carousel's slides are the theme's [loop items](#loop-items). They can't be selected, edited or added to.
+- **Editor:** the sidebar has the block's panel (**Carousel**, **Accordion** or **Tabs**: style, colour scheme and the block's own settings, the same controls as the block) above WordPress's or WooCommerce's controls, trimmed to suit:
+  - Posts: "Posts carousel", "Posts accordion" and "Posts tabs" Query Loop variations (`namespace`: `matter/carousel-posts`, `matter/accordion-posts`, `matter/tabs-posts`), allowing post type, number of items, order, sticky posts, taxonomies, author, keyword and "exclude current".
+  - Products (carousels only, from the [WooCommerce integration](#integrations)): a "Products carousel" Product Collection collection (`collection: matter/product-collection/carousel`, registered with WooCommerce's `__experimentalRegisterProductCollection`) hiding pagination, offset, "inherit from template" and filterable, with no "Choose collection". WooCommerce's Layout and Width settings can't be hidden that way, so the editor stylesheet hides them.
+  - Terms (carousels only): a "Terms carousel" Terms Query variation (`matter/carousel-terms`, matched by its `matterDisplay`, as a Terms Query has no `namespace`), with core's own controls: taxonomy, order, empty terms, nested terms, chosen terms and "inherit" (a term archive's child terms). Its term template holds the loop item, so each slide is the theme's [term loop item](#loop-items). E.g. "Shop by category": a Terms carousel of Product categories, with the chosen categories.
+  - A carousel is a live carousel around the query. An accordion or tabs is the server's rendering, as on the front end (`POST matter/v1/query-display`, with the styles it enqueued), refreshed as its settings change; items open and tabs switch when clicked, and links don't navigate.
+- **Inserting:** a carousel's picker offers posts, products and terms, which replace the carousel block with the query. In the post editor the three posts variations, "Products carousel" and "Terms carousel" replace the plain Query Loop, Product Collection (and WooCommerce's other collections) and Terms Query in the inserter; the Site Editor keeps those for templates.
+- Wherever the theme allows `matter/carousel`, `matter/accordion` or `matter/tabs` (in its allowed blocks, or a section slot's `allowedBlocks`), Matter also allows the query blocks they use (for a carousel, `core/query`, `woocommerce/product-collection` and `core/terms-query`), so they can be inserted, duplicated, pasted and moved. The theme's lists don't name them.
+- If Matter's handling ever stops, the live site shows the query as a normal list. Saving the page in the editor then drops `matterDisplay`, and it stays a list.
+
+**Writing one by hand** (a pattern, a template or test content): this is a products carousel as the editor saves it. WooCommerce replaces a Product Collection's whole `query` with what's saved, so keep every key; change `perPage`, the order, `taxQuery` or `woocommerceHandPickedProducts` to choose the products, and `matterDisplay` for the variant (`style`), `scheme` and `label`.
+
+```html
+<!-- wp:woocommerce/product-collection {"query":{"perPage":9,"pages":0,"offset":0,"postType":"product","order":"desc","orderBy":"date","search":"","exclude":[],"inherit":false,"taxQuery":{},"isProductCollectionBlock":true,"featured":false,"woocommerceOnSale":false,"woocommerceAttributes":[],"woocommerceHandPickedProducts":[],"filterable":false,"relatedBy":{"categories":true,"tags":true}},"tagName":"div","collection":"matter/product-collection/carousel","hideControls":["inherit","filterable","offset","max-pages-to-show","default-order","related-by"],"displayLayout":{"type":"list"},"dimensions":{"widthType":"fill"},"queryContextIncludes":["collection"],"forcePageReload":false,"matterDisplay":{"type":"carousel","style":"cards","label":"Our favourites"}} -->
+<div class="wp-block-woocommerce-product-collection"><!-- wp:woocommerce/product-template --><!-- wp:matter/loop-item /--><!-- /wp:woocommerce/product-template --></div>
+<!-- /wp:woocommerce/product-collection -->
+```
+
+A posts carousel, accordion or tabs is a `core/query` with the variation's `namespace`, its `matterDisplay`, and a `core/post-template` holding what [`ITEMS`](src/query-display/templates.js) lists for that type (a carousel: `matter/loop-item`; an accordion: `matter/accordion-item` around one; tabs: `matter/tab` around one).
+
+## Loop items
+
+Every loop shows the same design for a post type: the shop, a category, related products and a carousel of products all use one loop item, and changing it changes them all, including carousels already placed in content.
+
+- The theme registers a pattern per post type, `{namespace}/loop-item-{post_type}` (e.g. `pulsar/loop-item-product`), and `{namespace}/loop-item` for any other post type. Give the patterns `Inserter: false` so they stay out of the Patterns panel.
+- `{namespace}` is the theme's folder name (a child theme's, then its parent's), unless the theme names it, so renaming the folder doesn't break anything: `add_filter( 'matter_theme_namespaces', fn() => 'pulsar' );`. It's also the theme's icon collection.
+- **In a carousel, accordion or tabs of posts** ([above](#posts-as-carousels-accordions-or-tabs)) the block can have its own patterns, named after it. The first that exists is used, most specific first, like WordPress's template hierarchy (child theme first at each step):
+
+  | In | Patterns, in order |
+  | --- | --- |
+  | A loop (no block) | `loop-item-{post_type}`, `loop-item` |
+  | Carousel | `loop-item-{post_type}-carousel`, `loop-item-{post_type}`, `loop-item-carousel`, `loop-item` |
+  | Accordion | `loop-item-{post_type}-accordion`, `loop-item-accordion`, else the item's excerpt |
+  | Tabs | `loop-item-{post_type}-tabs`, `loop-item-tabs`, else the item's excerpt |
+
+  A carousel's slides keep the post type's design before a general carousel one (a product carousel shows prices). An accordion's or tabs' don't fall back to the post type's design: the post's title is already the heading or tab, so their patterns are just what's under it (e.g. an FAQ post type's `loop-item-faq-accordion.php` shows the whole answer).
+
+  **In a variant** other than the block's default, a pattern for the variant comes before each of the block's: `loop-item-{post_type}-carousel-{variant}` before `loop-item-{post_type}-carousel`, and `loop-item-carousel-{variant}` before `loop-item-carousel`. So a "Case studies" carousel variant can have its own slide (`loop-item-carousel-case-studies`) while other carousels keep theirs. The post type's design still comes first: with a `loop-item-post-carousel`, posts in that variant need `loop-item-post-carousel-case-studies`.
+- The block and variant come from the query the loop item is in, not from the content, so a new pattern applies to blocks already placed. Override the choice with the `matter_loop_item_pattern` filter (`$slug`, `$post_type`, `$block`, `$variant`). `$block` is the block's type (`carousel`, `accordion`, `tabs`, or empty in a plain loop), and `$variant` its variant (empty for the default).
+- A loop's post template contains just `<!-- wp:matter/loop-item /-->`. Matter renders the pattern with the item's block context and sets the global post, so post, product and term blocks inside it show that item.
+- In the editor the loop item is a server-rendered preview of the real thing, and it can't be selected: clicks go to the loop or carousel around it. Items that load together (a carousel's or an archive's) share one request to `matter/v1/loop-items`, which renders only items the user can read. List View and the breadcrumb name it after the post type ("Product", "Post").
+- Without a pattern, the block falls back to a link to the item.
+- **Terms** (in a Terms Query's term template, e.g. "Shop by category" on a product page) have their own patterns: `{namespace}/loop-item-term-{taxonomy}` (e.g. `pulsar/loop-item-term-product_cat`), then `{namespace}/loop-item-term`. They never use the post patterns; without one, the item is a link to the term (its name). A Terms Query can only be shown as a carousel:
+
+  | In | Patterns, in order |
+  | --- | --- |
+  | A Terms Query (no block) | `loop-item-term-{taxonomy}`, `loop-item-term` |
+  | Carousel | `loop-item-term-{taxonomy}-carousel`, `loop-item-term-{taxonomy}`, `loop-item-term-carousel`, `loop-item-term` (in a variant, the `-carousel-{variant}` ones first, as for posts) |
+
+  The pattern renders with the term's block context, `termId` and `taxonomy`, as core's term blocks (Term Name, Term Description, Term Count) read it. Inside a term template `termId` wins over `postId` (the page's there); a Query Loop inside a term's pattern lists posts as usual (the innermost loop decides). Only terms of public (viewable) taxonomies render. Override the choice with `matter_loop_item_term_pattern` (`$slug`, `$taxonomy`, `$block`, `$variant`). The editor previews terms through `matter/v1/loop-items/terms`, and List View names the item after the taxonomy ("Category").
+- Differences between loops (e.g. no add-to-basket button in related products) belong in CSS on the loop, not in a second pattern.
+
+The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; clear the cache after adding a new loop item pattern (`wp eval 'wp_get_theme()->delete_pattern_cache();'`).
+
+## Core block extensions
+
+- **Button icon.** An icon from the icon registry on `core/button` (attribute `matterIcon`), rendered as `.wp-block-button__icon` inside a `.has-icon` link. Chosen from a library modal like core's Icon block. Limit the collections offered (for button and tab icons) with `matter_icon_collections`.
+- **Buttons without a link.** In the editor, a `core/button` with text but no link (or only `#`) is outlined and tagged "No link" (`.matter-has-hint`: an outline in the admin colour, its `data-matter-hint` in the block's corner; archive content and the archive list are marked the same way). Form buttons (`tagName: button`) and links from a binding aren't marked. Editor only: the site is unchanged.
+- **Focal point.** On `core/image`, using core's own `focalPoint` attribute, and on featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images. Core offers its focal point only for images with a scale set; Matter offers it on every image (sections crop images in CSS) and hides its own control where core's shows.
+- **Image sizes.** Wide and full-width images (`core/image`, `core/post-featured-image`) get `sizes` from their alignment: `100vw` for full, the theme's `wideSize` for wide. Core writes it from the size chosen ("Large" is 1024px), so a full-width image was downloaded at 1024px and stretched. Lazy-loaded images still get core's `auto, ` first.
+
+Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs), and what its integrations replace (`gravityforms/form`). Add to the list with `matter_hidden_blocks`.
 
 ## Menus
 
@@ -532,37 +553,6 @@ Eighteen73\Matter\panel( 'site-nav', function () {
 - **Inside a panel:** `.is-panel-only` and `.is-inline-only` show content in one mode only.
 - **Events:** `matter-panel-open` and `matter-panel-close`, with `detail.id` and `detail.instance`.
 
-## Site settings
-
-The theme declares fields, and Matter adds a **Site details** page under Appearance. The page needs `edit_theme_options` (filter: `matter_settings_capability`).
-
-```php
-add_filter( 'matter_settings_fields', fn() => [
-	'contact' => [
-		'title'  => 'Contact details',
-		'fields' => [
-			'phone' => [ 'type' => 'tel', 'label' => 'Phone' ],
-		],
-	],
-] );
-```
-
-**Field types:**
-- `text`, `textarea`, `email`, `url`, `tel`. A `url` field takes an address as people copy it (`instagram.com/name`) and adds `https://`; a relative address (starting `/`, `#` or `?`, or a word or path with no dot in its first segment, such as `contact-us`, or one starting `./` or `../`) is kept as it is. A stored value is cleaned again when it is bound, so a relative path can't become another site's address (`/<tab>/evil.com`). A `number` field must be a finite number (saving anything else shows an error on the page). Saving leaves out nothing it isn't sent: a field missing from a REST save keeps its stored value, and `Matter\setting()` treats a media field with no image as empty.
-- `number`, `toggle`
-- `select` (with `options`)
-- `media` (attachment ID)
-- `repeater` (with `fields`)
-
-**Reading values:**
-- In PHP: `Eighteen73\Matter\setting( 'contact.phone' )`. The value is as stored, **not escaped** (a `textarea` keeps its line breaks and any characters typed): escape it where you print it (`esc_html()`, `esc_url()`, `esc_attr()`). An unknown path, or an empty value, gives the default you pass.
-- In blocks: bind with the `matter/setting` source, `"args": { "key": "contact.phone" }`. Bound values are escaped for you (a `textarea` keeps its line breaks), and an unknown key, or a repeater, gives nothing, so the block keeps its own content. Email and telephone values bound to a `url` attribute become `mailto:`/`tel:` links, and a `url` field is made safe (relative addresses stay relative).
-
-Hooks:
-- `matter_settings_page_title`: the page and menu title (default "Site details").
-- `matter_settings_parent`: the admin menu it sits under (default `themes.php`, Appearance; empty for a top-level item).
-- `matter_settings_saved`: fires after saving.
-
 ## Archives
 
 Marketing teams and clients can add content above and below an archive's list, and give an archive its own design, without the Site Editor. The database holds only content; the templates, and the list in them, stay in the theme.
@@ -577,9 +567,9 @@ Marketing teams and clients can add content above and below an archive's list, a
 
 In the Site Editor it's outlined and tagged, as a button without a link is, with where editors add content around it; so is the archive list in an entry, with that the theme sets it.
 
-It renders the archive's **Archive** entry (post type `matter_archive`). Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Feature first". If it's removed anyway (by grouping it first), it can be added again from the inserter, which offers it only in entries and only once. In the editor it previews the real list for the archive. Without the block, the list goes at the end.
+It renders the archive's **Archive** entry (post type `matter_archive`). Entries are edited like pages, with sections. Each one contains an "Archive list" block (`matter/archive-loop`) marking where the template's list goes. Editors can move this block but not remove it, and choose its variant, for example "Four across". If it's removed anyway (by grouping it first), it can be added again from the inserter, which offers it only in entries and only once. In the editor it previews the real list for the archive. Without the block, the list goes at the end.
 
-**Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), every author archive (`author`), every date archive (`date`: year, month and day), `search` or `404`. Matter looks in this order:
+**Which entry shows.** An entry is for one archive (`_matter_archive_target`): a post type archive (`post_type:product`), all terms of a taxonomy (`taxonomy:product_cat`), one term (`term:product_cat:42`), every author archive (`author`), every date archive (`date`: year, month and day), `search` or `404`. Orbit returns a 404 for author archives unless a site turns them on (`add_filter( 'orbit_enable_author_pages', '__return_true' )`), so an `author` entry shows only there. Matter looks in this order:
 1. the term's entry;
 2. its parent terms' entries, if set to show on the categories inside them;
 3. the taxonomy's entry;
@@ -609,38 +599,7 @@ A bound paragraph that comes out empty (a term without a description) isn't outp
 
 Preview shows the entry, including unsaved changes, on its archive. An entry that isn't published has `preview_id=<its ID>` on its link (what the editor reads), so "Preview in new tab" (the link plus `preview=true`) shows exactly that entry, even when there are other drafts for the archive: to a signed-in user who can edit it, with or without a `preview_nonce` (an autosave's preview link has one, and shows the autosave when it is newer), as core does for a draft. It is never cached; nobody else sees it. The entry editor's "Shows on" panel changes which archive it's for.
 
-**Entries aren't pages.** The post type is viewable (the editor offers Preview only for those), but it can't be listed: a front-end request for it that isn't an entry's own address (`/?post_type=matter_archive`, its feed, `?p=<ID>` of an entry that isn't published) is a 404, an entry's own address goes to its archive, and entries are left out of the core sitemap. The REST API (`/wp/v2/matter_archive`) serves them only to users who can edit them.
-
-## Allowed blocks
-
-The theme lists the blocks content editors can add, and Matter enforces the list in the post editor. Templates are developer-owned and the Site Editor keeps every block. Entries ending in `/*` allow a whole namespace; an empty list leaves the editor unrestricted. A list set earlier by other code still applies (the two are intersected).
-
-```php
-add_filter( 'matter_allowed_blocks', fn( $blocks ) => [ ...$blocks, 'core/heading', 'core/paragraph', 'pulsar/*', 'matter/*' ] );
-```
-
-A block a section's slot allows (`allowedBlocks`) doesn't need to be on the list. If it isn't, it's allowed only in the sections that name it: the editor sets those sections as its `ancestor`, so the inserter offers it inside them (in the slots that allow it) and not at the top level of a page. E.g. core's Icon block for card icons, without offering icons anywhere else.
-
-## Theme icons
-
-The theme's SVGs in `assets/svg/icons/` (a child theme's override the parent's) are registered as an icon collection, so editors can choose them for button and tab icons. The collection is named after the theme's namespace (`matter_theme_namespaces`, see [Loop items](#loop-items)); icon names are saved in content (`pulsar/arrow-right`), so a theme whose folder may change should name its namespace. The label, and the collection itself, can be set too:
-
-```php
-add_filter( 'matter_icon_theme_collection', fn( $icons ) => [ ...$icons, 'label' => 'Theme icons' ] );
-```
-
-`directories` changes the folders.
-
-The icons are registered on `init`, on every request, so core's Icon block and `wp_get_icon()` find them too. WordPress cleans each SVG as it registers it: only `svg`, `path` and `polygon` elements survive, with a handful of attributes (`class`, `viewBox`, `width`, `height`, `fill`, `fill-rule`, `d`, `points`, `transform`), so draw icons as filled paths (outline strokes, circles, rectangles, groups, gradients and `style` are dropped). An icon has no size or colour of its own: Matter renders the SVG with its own `width` and `height`, and the theme sets size and colour in CSS (`.wp-block-button__icon`, `.wp-block-matter-tabs__icon`, with `fill: currentColor`).
-
-## Core block extensions
-
-- **Button icon.** An icon from the icon registry on `core/button` (attribute `matterIcon`), rendered as `.wp-block-button__icon` inside a `.has-icon` link. Chosen from a library modal like core's Icon block. Limit the collections offered (for button and tab icons) with `matter_icon_collections`.
-- **Buttons without a link.** In the editor, a `core/button` with text but no link (or only `#`) is outlined and tagged "No link" (`.matter-has-hint`: an outline in the admin colour, its `data-matter-hint` in the block's corner; archive content and the archive list are marked the same way). Form buttons (`tagName: button`) and links from a binding aren't marked. Editor only: the site is unchanged.
-- **Focal point.** On `core/image`, using core's own `focalPoint` attribute, and on featured images (post meta `_thumbnail_focal_point`). Outputs `object-position` for cropped images. Core offers its focal point only for images with a scale set; Matter offers it on every image (sections crop images in CSS) and hides its own control where core's shows.
-- **Image sizes.** Wide and full-width images (`core/image`, `core/post-featured-image`) get `sizes` from their alignment: `100vw` for full, the theme's `wideSize` for wide. Core writes it from the size chosen ("Large" is 1024px), so a full-width image was downloaded at 1024px and stretched. Lazy-loaded images still get core's `auto, ` first.
-
-Matter also hides from the inserter the core blocks it replaces (gallery, accordion and tabs), and what its integrations replace (`gravityforms/form`). Add to the list with `matter_hidden_blocks`.
+**Entries aren't pages.** The post type is viewable (the editor offers Preview only for those), but it can't be listed: a front-end request for it that isn't an entry's own address (`/?post_type=matter_archive`, its feed, `?p=<ID>` of an entry that isn't published) is a 404, an entry's own address goes to its archive, and entries are left out of the core sitemap. The REST API (`/wp/v2/matter_archive`) serves them only to users who can edit them. SEO plugins that index only public post types leave entries out without an integration: Yoast SEO (checked with 28.8) has no indexables, sitemap or SEO box for them.
 
 ## Filters
 
@@ -667,7 +626,7 @@ Parameters follow one convention, for every source:
 | A choice | `filter_{name}=a,b` (comma-separated values), with `filter_{name}_match=all` when every value must match (else any) |
 | A range | `filter_{name}_min`, `filter_{name}_max` |
 
-`{name}` is short and readable, not a taxonomy's slug. A post's and a product's category can share `category`, because a source applies only to queries for its own post types. `matter_filter_param_name` (`$name, $taxonomy`) renames a taxonomy's filter.
+`{name}` is short and readable, not a taxonomy's slug. A post's and a product's category can share `category`, because a source applies only to queries for its own post types. `matter_filters_param_name` (`$name, $taxonomy`) renames a taxonomy's filter.
 
 | Source (`source`) | Parameters | From |
 | --- | --- | --- |
@@ -687,7 +646,7 @@ A query block with filters inside gets `enhancedPagination: true` (Product Colle
 - **Nested query blocks** (a template's list inside a group) get it too. WordPress builds a nested block, reading its attributes, before filtering its data, and doesn't read them again. So Matter sets the attributes from the top-level block, before anything inside it is built.
 - **Client navigation:** every block inside the query block must support it (`supports.interactivity.clientNavigation`), as Matter's do, or core turns navigation off.
 
-**Counts.** A core filter's counts are the listing's results per term, with the other filters applied (and its own too when its operator is `and`); a parent term counts its children's. They're counted in one grouped query over the listing's SQL, and cached until a post or term changes. `matter_pre_filter_counts` (`$counts, $taxonomy, $query_vars`) answers first when it returns term ID => count (Seek, from Meilisearch). Product filters' counts are WooCommerce's own, which Seek already answers.
+**Counts.** A core filter's counts are the listing's results per term, with the other filters applied (and its own too when its operator is `and`); a parent term counts its children's. They're counted in one grouped query over the listing's SQL, and cached until a post or term changes. `matter_filters_pre_counts` (`$counts, $taxonomy, $query_vars`) answers first when it returns term ID => count (Seek, from Meilisearch). Product filters' counts are WooCommerce's own, which Seek already answers.
 
 **Prices of their own.** WooCommerce filters (`min_price`, `max_price`) and sorts (`orderby=price`) by its own prices. A shopper with prices of their own, such as a trade customer's group prices, would get a list that disagrees with what they're shown. So when a pricing plugin says a shopper has them (`matter_own_prices`), and a price filter or price sort is active, the WooCommerce integration:
 1. finds every product the listing matches without its price filter;
@@ -734,11 +693,11 @@ A provider that adds placeholders a page didn't render calls `Live\Live::expect(
 
 | Hook | Value |
 | --- | --- |
-| `matter_filter_sources` (action) | Given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key. A source can also have `ordered()` (ratings: stars, "& up"), `default_display()`, `icon()` (its filter's icon in the editor: `category`, `tag`, `brand`, `color`, `attribute`, `currency-pound`, `currency-euro`, `currency-dollar`, `price`, `stock` or `rating`) and `examples()` (options to preview its filter with in the editor). |
-| `matter_filterable_query_blocks` | Query blocks that can be filtered, and the attributes that make them navigate. |
-| `matter_pre_filter_counts` | Counts from elsewhere (Seek). |
+| `matter_filters_sources` (action) | Given the `Filters\Sources` registry: `register()` a `Filters\Source`, or replace one by key. A source can also have `ordered()` (ratings: stars, "& up"), `default_display()`, `icon()` (its filter's icon in the editor: `category`, `tag`, `brand`, `color`, `attribute`, `currency-pound`, `currency-euro`, `currency-dollar`, `price`, `stock` or `rating`) and `examples()` (options to preview its filter with in the editor). |
+| `matter_filters_query_blocks` | Query blocks that can be filtered, and the attributes that make them navigate. |
+| `matter_filters_pre_counts` | Counts from elsewhere (Seek). |
 | `matter_filters_noindex` | `$noindex`: whether a filtered listing is hidden from search engines (`noindex, follow`; default true). |
-| `matter_filter_swatch` | `$swatch, $term`: a term's swatch, for the swatches display: any CSS background (a colour, or an image as `url(…) center / cover`). The WooCommerce integration gives attributes' colour and image swatches (WooCommerce 10.9's visual attributes), and a filter for one of those shows swatches at first. |
+| `matter_filters_swatch` | `$swatch, $term`: a term's swatch, for the swatches display: any CSS background (a colour, or an image as `url(…) center / cover`). The WooCommerce integration gives attributes' colour and image swatches (WooCommerce 10.9's visual attributes), and a filter for one of those shows swatches at first. |
 | `matter_filters_listing` (action) | A listing's query block has rendered (`$listing`). |
 | `matter_filters_base_query_vars` | `$vars, $listing, $block`: a listing's query vars without filters, for query blocks that build theirs differently (the WooCommerce integration's Product Collection). |
 | `matter_filters_page_param` | `$param, $listing`: the parameter that pages a listing. |
@@ -808,7 +767,7 @@ $item = Prerendered::render( $post_id ); // Null if the item isn't public, or th
 - the theme's pattern;
 - Matter's and the theme's versions;
 - which blocks are live;
-- whatever `matter_prerendered_loop_item_version` adds (WooCommerce's version, from the [WooCommerce integration](#integrations)).
+- whatever `matter_prerender_loop_item_version` adds (WooCommerce's version, from the [WooCommerce integration](#integrations)).
 
 A loop item with another version than `Prerendered::version()` gives today is stale, and whatever stores loop items renders it again (Seek does this by itself). Other changes to blocks' code aren't detected.
 
@@ -816,33 +775,9 @@ A loop item with another version than `Prerendered::version()` gives today is st
 
 | Hook | Value |
 | --- | --- |
-| `matter_prerendered_loop_item` (filter) | The loop item (`$item, $post`), e.g. without classes or state that belong to the page. |
-| `matter_prerendered_loop_item_version` (filter) | What a type's version is made from (`$parts, $post_type`). Add a plugin's version for its blocks. |
+| `matter_prerender_loop_item` (filter) | The loop item (`$item, $post`), e.g. without classes or state that belong to the page. |
+| `matter_prerender_loop_item_version` (filter) | What a type's version is made from (`$parts, $post_type`). Add a plugin's version for its blocks. |
 | `matter_prerender_loop_item_start`, `matter_prerender_loop_item_end` (actions) | Around a loop item's render (`$post`), to hide something of the visitor's that a block reads, such as a shop's cart. |
-
-## Integrations
-
-Matter's PHP never calls another plugin outside an integration. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads. One part of an integration sits with Matter's blocks: the Gravity Form block's source is `src/blocks/gravity-form/` and the block registry lists its folder (`INTEGRATION_BLOCKS`), so it builds like the other blocks, but it registers only when the integration turns it on.
-
-| Integration | Boots when | Adds |
-| --- | --- | --- |
-| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Prerendered loop items](#prerendered-loop-items) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of their version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. Price filters and sorting by the shopper's own prices (`Integrations\WooCommerce\OwnPrices`), when a pricing plugin says they have them. |
-| Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
-
-The hooks they use are open to a project's own code, or its own integration:
-
-| Filter | Value |
-| --- | --- |
-| `matter_integrations` | Integration classes (implementing `Eighteen73\Matter\Integrations\Integration`: `can_boot()` and `boot()`). A project can add its own. |
-| `matter_query_blocks` | Query block name => the displays it can be shown as (`carousel`, `accordion`, `tabs`). Core's: `core/query` (all three) and `core/terms-query` (carousel). |
-| `matter_query_loops` | Loop template block name => `post` or `term`. Core's: `core/post-template`, `core/term-template`. Every loop template's list gets the class `matter-query-list`. |
-| `matter_query_display_post_types` | The post types a posts carousel, accordion or tabs can list. |
-| `matter_archive_post_type_title` | A post type archive's title (null to work it out). |
-| `matter_archive_term_image_id` | A term archive's image, an attachment ID (core terms have none). |
-| `matter_hidden_blocks` | Blocks hidden from the inserter because Matter replaces them. |
-| `matter_register_block` | `$register, $name, $folder`: whether one of Matter's blocks registers. Blocks for another plugin's content (`matter/gravity-form`) start off. |
-
-In the editor, an integration's script loads after Matter's (`matter-editor` is its dependency) and adds to it with these `wp.hooks` filters: `matter.queryDisplay.carouselTemplate` (a new carousel of a query block's items), `matter.queryDisplay.displayAttributes` (the attributes that mark a displayed query as Matter's) and `matter.carousel.queryOptions` (the carousel picker's query options). `window.matterEditor.queryDisplay` has the helpers they need (`ATTRIBUTE`, `ITEMS`, `isPostEditor()`, `queryExample()`).
 
 ## CSS conventions
 
@@ -890,6 +825,68 @@ Themes restyle Matter with plain class selectors, wherever their stylesheet load
   - **runtime values**: set inline by JavaScript or PHP for one instance (submenu offsets, carousel progress, the crop a client picked).
 - Private helpers a block computes for itself are `--_{block}-{name}` (`--_gallery-columns`). Themes don't set these.
 - A value used once is written as a property, not a variable.
+
+## Without JavaScript
+
+Content is reachable without JavaScript, and when a block's script fails or is blocked. Nothing is hidden or made `inert` by the server: hiding waits for the script. A small script in the page's head adds `matter-js` to `<html>` (JavaScript is running) and, four seconds after the page is parsed (or at once, if it runs after that), `matter-late`. A block's script adds `is-enhanced` to the block when it starts (to an accordion, its items; to tabs, their panels; to a modal, drawer or collapsible, the block itself; to a panel, its toggles too; never to a block nested in it), and `matter-ready-{type}` (`accordion`, `tabs`, `menu`, `panel`, `overlay`, `carousel`, `gallery`, `filters`) to `<html>`. The CSS that hides content applies to a block that is `is-enhanced`, or is about to be: `matter-js` and either not yet `matter-late` or `matter-ready-{type}` (that type's script has run on this page, so a block of it inserted later, by client-side navigation or Live results, is about to start too). The mark is the element's own: an enhanced block around it never counts, so a nested accordion or tabs whose script didn't start isn't hidden by the running block it sits in, and a theme's own `.is-enhanced` wrapper changes nothing. So an enhanced page doesn't flash its content before a script starts, and a block type whose script never starts shows its content after four seconds, whatever the other types do. `matter.ready()` and the other scripting are in [JavaScript API](#javascript-api); the classes are for CSS:
+
+```css
+/* Something that should look different until the script has started. */
+.my-block:not(.is-enhanced) { … }
+html:not(.matter-js) .my-block { … } /* Only where there is no JavaScript. */
+```
+
+Per block, with no JavaScript:
+
+- **Accordion:** every answer shows. An item the accordion opens by default says so (`is-open`, `aria-expanded="true"`); the others say nothing about their state, since their answer isn't collapsed. The headings have no caret, since they do nothing.
+- **Collapsible:** the content shows.
+- **Modal and drawer:** a closed `<dialog>` is closed by the browser, so nothing shows until it is linked to. The trigger area's first link is rendered as a real link to the dialog (`href="#{id}"`): a link with no URL, or the `#` placeholder (a button block with no URL renders an `<a>` with neither a role nor an `href`), gets `#{id}`. Following the link shows the dialog in the page, where it is, as ordinary content (`.wp-block-matter-modal:not(.is-enhanced):target`, and the drawer's), without its close and group buttons, only where there is no JavaScript or the script didn't start within the four seconds (`html:not(.matter-js)`, or `matter-late` without `matter-ready-overlay`); while the script is about to start, a link to the dialog (`/page#offer`) leaves it closed and the script opens it as a modal. A trigger area with no link or button is only a button once the script runs. Dialogs that open on load, on scroll or from a URL parameter aren't shown.
+- **Tabs:** every panel shows, each under its tab's name (`.wp-block-matter-tab__label`, a heading at level 3, or the level the `matter_tab_label_level` filter returns (2 to 6); the script hides it); the tab list, and the dropdown button, aren't shown, since they can't switch anything. The panels aren't `role="tabpanel"`, and have no `tabindex` or `aria-labelledby`, until the script adds them: with no tab list there is nothing for them to be panels of. The server marks the active panel `is-active`, as the script does.
+- **Menus:** every link is reachable and on screen. Parent links show and the toggles, "View all" headers and back buttons (which need the script) don't, except that a dropdown parent that is only a label (no link) shows its toggle in the label's place, as a button that takes focus, so its submenu can be reached from the keyboard. A dropdown opens as its item is hovered or has focus inside it (`:hover`, `:focus-within`), so a keyboard user tabs into a submenu and never loses sight of what has focus; accordion and drill-down menus are nested lists, all open. Nothing is `inert` (once the script starts, a closed submenu is).
+- **Panels:** inline at every width, as above the panel's breakpoint: no off-canvas styles, no backdrop or close button, no toggle, and `is-panel-only` content doesn't show. Filters in a panel are the form with its Apply button, inline.
+- **Carousel:** the slides scroll natively.
+- **Filters:** a form with an Apply button, which the server filters.
+
+**Closed panels** (an accordion item, a collapsible's content, an inactive tab's panel) are `hidden="until-found"` once the script has started: the browser's find-in-page, a text fragment (`#:~:text=`) or a link to something inside opens the item or selects the tab (`beforematch`; with `deepLink`, the tab updates the address as a click would), in the browsers that support it (Chrome, Firefox and Safari today; the tests run on Chromium 158, Firefox 159 and WebKit 27.2, which all do). Elsewhere the panel is plainly hidden and opens with its button. A panel is closed with `grid-template-rows: 0fr` and, unless it is `until-found`, `visibility: hidden`, which keeps what is in it out of the tab order and the accessibility tree; a theme that restyles the open and closed states does the same for both. A closed collapsible's content and an inactive tab's panel have their margin, padding, border width and minimum height zeroed (`content-visibility: hidden` skips only what is inside it, so a theme's padding or border would show on it); a theme that sets these with more specificity does the same for `[hidden="until-found"]`. The server renders no `inert` or `hidden`.
+
+## JavaScript API
+
+Every interactive block can be driven from theme scripts. `matter.{block}( target )` returns a block's instance, where `target` is an element ID (usually the block's HTML anchor, set under Advanced; `'#faq'` works too) or an element. It resolves to that block when it is one, else the first one of its type inside it (in page order), else the one around it. Instances exist once a block has started, so wait with `matter.ready( target )`, which resolves with the target block itself when it is one (not a block nested inside it), else the first block inside it, else the one around it. Once the page has loaded, `ready()` resolves with `null` if the target isn't, or isn't in or around, a block (a typo, or a block that isn't on this page), so a script that waits never hangs; a block that is there but hasn't started is still waited for, until it is removed from the page (then `null`). A block that is not on the page yet, because client-side navigation inserts it later, gets `null` as well: listen for `matter-{block}-ready` for those.
+
+`window.matter` exists from the page's `<head>` (a small inline stub), so theme scripts can call `matter.ready()` before Matter's modules load, and `matter.carousel()` and the others return `null` rather than throwing on pages without the block.
+
+```js
+matter.ready( 'faq' ).then( ( faq ) => faq?.open( 0 ) );
+
+const hero = matter.carousel( 'hero' );
+hero?.goTo( 2 );
+
+document.addEventListener( 'matter-tabs-change', ( event ) => {
+	console.log( event.detail.id, event.detail.index );
+} );
+```
+
+| Block | `matter.…( target )` | Methods | Read-only state | Events (`matter-…`) |
+|---|---|---|---|---|
+| Carousel | `carousel` | `goTo( index, instant )`, `goToSlide( slide, instant )`, `next( instant )`, `prev( instant )`, `play()`, `pause()` (holds until `play()`) | `index`, `count` (scroll positions), `slides`, `selectedSlides`, `progress`, `isPlaying`, `canPrev`, `canNext` | `carousel-select` (`index`, `count`, `slides`), `carousel-settle`, `carousel-play`, `carousel-pause` |
+| Tabs | `tabs` | `select( tab )` (index or panel ID), `next()`, `prev()` | `tabs` and `active` (`{ index, id, label }`) | `tabs-change` (`index`, `tabId`, `previous`) |
+| Accordion | `accordion` | `open( item )`, `close( item )`, `toggle( item )` (index or item ID), `openAll()`, `closeAll()`, `isOpen( item )` | `items` (`{ index, id, title, isOpen }`) | `accordion-open`, `accordion-close` (`itemId`, `index`) |
+| Gallery | `gallery` | `open( index )`, `close()`, `next()`, `prev()` (the lightbox) | `isOpen`, `index`, `count` | `gallery-open`, `gallery-change`, `gallery-close` (`index`) |
+| Modal, drawer, collapsible | `overlay` | `open()`, `close()`, `toggle()`, `next()`, `prev()` (grouped modals), `closeAll()` (every overlay on the page) | `id`, `isOpen` | `overlay-open`, `overlay-close` |
+| Panel | `panel` | `open()`, `close()`, `toggle()` (`open()` and `toggle()` do nothing while the panel is inline, above its breakpoint: it is always showing, and would be left half open when the screen narrows) | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
+| Filters | `filters` | `set( filterId, values )`, `clear()` | `id` (the listing's `queryId`), `selection` (each filter's `values`, `min`, `max`, `operator`) | `filters-change` (`url`) |
+
+Every instance also has `element` and `id`, and every block dispatches `matter-{block}-ready` when it starts. Events bubble from the block's element, and every one has `detail.id` (the element's ID, or `null`) and `detail.instance` (the block's instance; `null` only before it has started), plus the details in the table. A dialog's `overlay-open` fires once it is shown (including an open from the URL hash on load), and `overlay-close` once it is closed; a collapsible's when it opens and closes. Panels and overlays dispatch like every other block.
+
+**Not part of the API:**
+- The carousel's Embla instance (`embla`) and `reInit( options )` are available for now but may change with the carousel library.
+- Anything else on `window.matter` that isn't in the tables above. Matter's own state (the stub's queue, the shared registry of instances) is kept under `window.matter[ Symbol.for( 'matter' ) ]`, so nothing on `window.matter` itself starts with an underscore, and a theme that enumerates it sees only the API.
+- The other globals, which are for Matter's editor and admin screens: `window.matterEditor` (only `queryDisplay` is for integrations, see [Integrations](#integrations)), `window.matterSettings`, `window.matterGravityForm` and `window.matterActiveTabContext`.
+- The script modules Matter registers for its own blocks to share (`matter/focus-trap`, `matter/inert`, and the others loaded by their blocks): one copy each per page, so a modal can tell an open panel to let go of the page. A theme script shouldn't import them. (`matter/filters`' `registerProvider()` and `matter/live` are documented with their features.)
+
+Scripts built with the Interactivity API can use the stores instead: `store( 'matter/carousel' ).actions.goTo( 'hero', 2 )` (and `reInit( target, options )`), and likewise `matter/tabs` (`select`, `next`, `prev`), `matter/accordion` (`open`, `close`, `toggle`, `openAll`, `closeAll`), `matter/gallery` (`open`, `close`, `next`, `prev`) and `matter/overlay` (`open`, `close`, `toggle`, `next`, `prev`, `closeAll`), each taking the target (an ID or element) first. (The carousel store's `reInit( target, options )` is as unstable as the method.)
+
+Blocks clean up when removed (e.g. by the Interactivity API's client-side navigation): carousels destroy their Embla instance, and listeners outside the block are removed.
 
 ## CSS classes
 
@@ -969,16 +966,6 @@ Inline on galleries and image carousels, from the aspect ratio the client picks 
 
 The editor also sets `--button-icon` and `--image-focal-point` on blocks in the canvas, for its button icon and focal point previews.
 
-## Breakpoints
-
-Breakpoints are owned by the theme:
-
-```php
-add_filter( 'matter_breakpoints', fn() => [ 'sm' => '640px', 'md' => '768px', 'lg' => '1024px' ] );
-```
-
-`config/breakpoints.json` is the fallback. Widths may be in `px`, `em` or `rem` (or `0`) and keep their unit in the media queries, so an `em` breakpoint follows the visitor's text size; they're ordered by their size in px (an em is 16px), and equal widths keep the order given. Any other unit is ignored with a `_doing_it_wrong` notice. Use one unit for the whole map: mixing `px` with `em` or `rem` is unsupported and reported once with a `_doing_it_wrong` notice, because an `em` query follows the visitor's text size while a `px` one doesn't, so with a text size other than 16px the ranges overlap or leave gaps (`0` is fine beside any unit). A responsive value map (a menu's `type`) with no base entry starts at its first entry's value: `[ 'lg' => 'dropdown', 'xl' => 'accordion' ]` is a dropdown below `xl`, not nothing below `lg`.
-
 ## Hooks
 
 Every hook Matter fires, with its arguments, except the [Filters](#filters), [Live blocks](#live-blocks) and [Prerendered loop items](#prerendered-loop-items) hooks, which are listed with their features. Names follow `matter_{area}_{thing}`: the area is the feature or block (`menu`, `archive`, `settings`, `icon`, `loop_item`…). Filters return the (possibly changed) first argument; the arguments after it are context. A hook not listed here is internal and may change in any release.
@@ -1057,6 +1044,30 @@ Every hook Matter fires, with its arguments, except the [Filters](#filters), [Li
 | `matter.queryDisplay.carouselTemplate` | `?array $template, string $name, string $style`: the blocks of a new carousel of a query block's items. |
 | `matter.queryDisplay.displayAttributes` | `object $changes, string $name, object $attributes, object $display`: attributes that mark a displayed query as Matter's. |
 | `matter.carousel.queryOptions` | `array $options, object $theme`: query blocks the carousel picker offers (`{ name, title, description }`). |
+
+## Integrations
+
+Matter's PHP never calls another plugin outside an integration. What it does with WooCommerce and Gravity Forms lives in an integration (`includes/classes/Integrations/`), which boots on `plugins_loaded` only when that plugin is active, and adds to Matter through the filters below. Without the plugin, nothing of it loads. One part of an integration sits with Matter's blocks: the Gravity Form block's source is `src/blocks/gravity-form/` and the block registry lists its folder (`INTEGRATION_BLOCKS`), so it builds like the other blocks, but it registers only when the integration turns it on.
+
+| Integration | Boots when | Adds |
+| --- | --- | --- |
+| WooCommerce (`Integrations\WooCommerce\WooCommerce`) | `class_exists( 'WooCommerce' )` | The Product Collection as a query block shown as a carousel, and its product template as a loop template (so products get `loop-item-product`). Products out of the posts displays' choices. The shop page's title for the products archive, and a product category's thumbnail as its archive image. An editor script (`build/integrations/woocommerce/editor.js`): the "Products carousel" collection, the carousel picker's Products option, and the attributes that mark a products carousel as Matter's. [Filters](#filters) for products: the Product Collection as a filterable listing, and sources for product categories, tags, brands and attributes, price, stock and rating, with WooCommerce's parameters and counts; WooCommerce's own filter blocks are hidden. [Prerendered loop items](#prerendered-loop-items) for products: rendered without the shopper's cart, and kept without the cart's state or the `first`, `last` and `sale` classes, with the product's data for its Add to Cart button (without prices); WooCommerce's version is part of their version. A Product Collection's query vars without filters (`matter_filters_base_query_vars`), as WooCommerce's filter blocks read them. Price filters and sorting by the shopper's own prices (`Integrations\WooCommerce\OwnPrices`), when a pricing plugin says they have them. |
+| Gravity Forms (`Integrations\GravityForms\GravityForms`) | `class_exists( 'GFAPI' )` | Registers `matter/gravity-form`, hides `gravityforms/form`, gives the block's editor its forms, and keeps forms out of Interactivity API hydration (`data-wp-ignore`). |
+
+The hooks they use are open to a project's own code, or its own integration:
+
+| Filter | Value |
+| --- | --- |
+| `matter_integrations` | Integration classes (implementing `Eighteen73\Matter\Integrations\Integration`: `can_boot()` and `boot()`). A project can add its own. |
+| `matter_query_blocks` | Query block name => the displays it can be shown as (`carousel`, `accordion`, `tabs`). Core's: `core/query` (all three) and `core/terms-query` (carousel). |
+| `matter_query_loops` | Loop template block name => `post` or `term`. Core's: `core/post-template`, `core/term-template`. Every loop template's list gets the class `matter-query-list`. |
+| `matter_query_display_post_types` | The post types a posts carousel, accordion or tabs can list. |
+| `matter_archive_post_type_title` | A post type archive's title (null to work it out). |
+| `matter_archive_term_image_id` | A term archive's image, an attachment ID (core terms have none). |
+| `matter_hidden_blocks` | Blocks hidden from the inserter because Matter replaces them. |
+| `matter_register_block` | `$register, $name, $folder`: whether one of Matter's blocks registers. Blocks for another plugin's content (`matter/gravity-form`) start off. |
+
+In the editor, an integration's script loads after Matter's (`matter-editor` is its dependency) and adds to it with these `wp.hooks` filters: `matter.queryDisplay.carouselTemplate` (a new carousel of a query block's items), `matter.queryDisplay.displayAttributes` (the attributes that mark a displayed query as Matter's) and `matter.carousel.queryOptions` (the carousel picker's query options). `window.matterEditor.queryDisplay` has the helpers they need (`ATTRIBUTE`, `ITEMS`, `isPostEditor()`, `queryExample()`).
 
 ## Theme contract
 

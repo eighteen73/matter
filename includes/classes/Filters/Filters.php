@@ -90,7 +90,7 @@ final class Filters {
 		 *
 		 * @param array<string, array<string, mixed>> $blocks Block name => attributes.
 		 */
-		return (array) apply_filters( 'matter_filterable_query_blocks', self::QUERY_BLOCKS );
+		return (array) apply_filters( 'matter_filters_query_blocks', self::QUERY_BLOCKS );
 	}
 
 	/**

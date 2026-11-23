@@ -295,9 +295,9 @@ class FiltersTest extends TestCase {
 		$this->assertSame( 1, $counts[ $this->terms['events'] ], 'The workshop counts for its parent.' );
 		$this->assertSame( 1, $counts[ $this->terms['workshop'] ] );
 
-		add_filter( 'matter_pre_filter_counts', $short = fn() => [ 7 => 3 ] );
+		add_filter( 'matter_filters_pre_counts', $short = fn() => [ 7 => 3 ] );
 		$this->assertSame( [ 7 => 3 ], Counts::terms( [ 'post_type' => 'post' ], 'category' ) );
-		remove_filter( 'matter_pre_filter_counts', $short );
+		remove_filter( 'matter_filters_pre_counts', $short );
 	}
 
 	/**
@@ -336,6 +336,11 @@ class FiltersTest extends TestCase {
 
 		$this->assertCount( 2, $query['tax_query'], 'Added to the query\'s own.' );
 		$this->assertSame( 'AND', $query['tax_query'][1]['operator'] );
+
+		// A selection without an operator (from another source's code) is
+		// "any of them", not a warning.
+		$query = $source->apply( [], [ 'values' => [ 'news' ] ] );
+		$this->assertSame( 'IN', $query['tax_query'][0]['operator'] );
 		$this->assertContains( 'taxonomy:category', array_keys( Sources::all() ) );
 		$this->assertContains( 'taxonomy:post_tag', array_keys( Sources::all() ) );
 		$this->assertNotContains( 'taxonomy:post_format', array_keys( Sources::all() ) );

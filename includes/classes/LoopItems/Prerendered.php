@@ -116,7 +116,7 @@ final class Prerendered {
 		 * @param array   $item The loop item: `html`, `classes`, `data` and `version`.
 		 * @param WP_Post $post The item.
 		 */
-		$item = apply_filters( 'matter_prerendered_loop_item', $item, $post );
+		$item = apply_filters( 'matter_prerender_loop_item', $item, $post );
 
 		return is_array( $item ) ? $item : null;
 	}
@@ -127,7 +127,7 @@ final class Prerendered {
 	 * loop item with another version is stale. Null when the theme has no loop
 	 * item pattern for the type.
 	 *
-	 * Blocks' own code isn't covered, beyond what `matter_prerendered_loop_item_version` adds
+	 * Blocks' own code isn't covered, beyond what `matter_prerender_loop_item_version` adds
 	 * (WooCommerce's version, by Matter's WooCommerce integration).
 	 *
 	 * @param string $post_type Post type.
@@ -164,7 +164,7 @@ final class Prerendered {
 		 * @param array  $parts     Name => value.
 		 * @param string $post_type Post type.
 		 */
-		$parts = (array) apply_filters( 'matter_prerendered_loop_item_version', $parts, $post_type );
+		$parts = (array) apply_filters( 'matter_prerender_loop_item_version', $parts, $post_type );
 
 		self::$versions[ $post_type ] = substr( md5( (string) wp_json_encode( $parts ) ), 0, 12 );
 

@@ -7,7 +7,7 @@
  * grouped query, so no list of IDs passes through PHP. A parent term counts
  * the results of its children too, as a term archive lists them.
  *
- * `matter_pre_filter_counts` answers first when it returns an array (Seek,
+ * `matter_filters_pre_counts` answers first when it returns an array (Seek,
  * from Meilisearch facets). Results are kept in the object cache until a post
  * or term changes.
  *
@@ -47,7 +47,7 @@ final class Counts {
 		 * @param array                $query_vars The listing's WP_Query vars, with
 		 *                                         the other filters applied.
 		 */
-		$counts = apply_filters( 'matter_pre_filter_counts', null, $taxonomy, $query_vars );
+		$counts = apply_filters( 'matter_filters_pre_counts', null, $taxonomy, $query_vars );
 
 		if ( is_array( $counts ) ) {
 			return array_map( 'intval', $counts );

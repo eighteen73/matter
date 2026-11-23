@@ -51,8 +51,8 @@ class PrerenderedTest extends TestCase {
 	 */
 	public function tear_down(): void {
 		remove_all_filters( 'matter_live_blocks' );
-		remove_all_filters( 'matter_prerendered_loop_item' );
-		remove_all_filters( 'matter_prerendered_loop_item_version' );
+		remove_all_filters( 'matter_prerender_loop_item' );
+		remove_all_filters( 'matter_prerender_loop_item_version' );
 		remove_all_filters( 'matter_loop_item_pattern' );
 		foreach ( $this->renders as $render ) {
 			remove_filter( 'render_block', $render );
@@ -172,12 +172,12 @@ class PrerenderedTest extends TestCase {
 		$version = Prerendered::version( 'post' );
 
 		Prerendered::reset();
-		add_filter( 'matter_prerendered_loop_item_version', fn( $parts ) => [ ...$parts, 'plugin' => '2.0' ] );
+		add_filter( 'matter_prerender_loop_item_version', fn( $parts ) => [ ...$parts, 'plugin' => '2.0' ] );
 
 		$this->assertNotSame( $version, Prerendered::version( 'post' ) );
 
 		Prerendered::reset();
-		remove_all_filters( 'matter_prerendered_loop_item_version' );
+		remove_all_filters( 'matter_prerender_loop_item_version' );
 		remove_all_filters( 'matter_live_blocks' );
 
 		$this->assertNotSame( $version, Prerendered::version( 'post' ), 'Live blocks changed.' );
@@ -190,7 +190,7 @@ class PrerenderedTest extends TestCase {
 	 */
 	public function test_filter(): void {
 		add_filter(
-			'matter_prerendered_loop_item',
+			'matter_prerender_loop_item',
 			function ( $item ) {
 				$item['classes'][] = 'is-filtered';
 

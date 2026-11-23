@@ -164,11 +164,11 @@ final class WooCommerce implements Integration {
 		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor' ] );
 
 		// Filters.
-		add_filter( 'matter_filterable_query_blocks', [ $this, 'filterable_query_blocks' ] );
-		add_action( 'matter_filter_sources', [ $this, 'filter_sources' ], 20 );
+		add_filter( 'matter_filters_query_blocks', [ $this, 'filterable_query_blocks' ] );
+		add_action( 'matter_filters_sources', [ $this, 'filter_sources' ], 20 );
 		add_filter( 'matter_hidden_blocks', [ $this, 'hide_filter_blocks' ] );
 		add_filter( 'matter_filters_base_query_vars', [ $this, 'base_query_vars' ], 10, 3 );
-		add_filter( 'matter_filter_swatch', [ $this, 'swatch' ], 10, 2 );
+		add_filter( 'matter_filters_swatch', [ $this, 'swatch' ], 10, 2 );
 
 		// Product loop items for everyone, without the shopper's cart.
 		( new LoopItems() )->setup();
