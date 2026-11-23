@@ -14,8 +14,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# A pull request from this repository's next branch skips its jobs: the push to
+# next has already run them on the same commit. A skipped required check counts
+# as passed.
 jobs:
   lint:
+    if: github.event_name != 'pull_request' || github.head_ref != 'next' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,6 +32,7 @@ jobs:
 
   tests:
     name: Unit tests and PHPUnit (wp-env)
+    if: github.event_name != 'pull_request' || github.head_ref != 'next' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -81,6 +86,7 @@ jobs:
   # specs, on their own wp-env site (.wp-env.tests.nowc.json).
   without-plugins:
     name: PHPUnit and browser smoke tests without WooCommerce
+    if: github.event_name != 'pull_request' || github.head_ref != 'next' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
