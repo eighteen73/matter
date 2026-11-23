@@ -132,10 +132,25 @@ final class Render {
 		$params   = $source->params();
 
 		if ( 'range' === $display ) {
-			$listing->note_filter( $id, [], $block );
-			self::state( $listing, $id, [], [] );
+			// A slider's ends are state, not context: the router replaces a
+			// filter's state with the next page's, but keeps its element's
+			// context.
+			$slider = ! empty( $attributes['slider'] ) && null !== ( $options['min'] ?? null ) && null !== ( $options['max'] ?? null ) && $options['max'] > $options['min'];
 
-			$body = self::range( $listing, $id, $params, $options, $selected, $label, ! empty( $attributes['slider'] ) );
+			$listing->note_filter( $id, [], $block );
+			self::state(
+				$listing,
+				$id,
+				[],
+				[],
+				false,
+				$slider ? [
+					'min' => (float) $options['min'],
+					'max' => (float) $options['max'],
+				] : null
+			);
+
+			$body = self::range( $listing, $id, $params, $options, $selected, $label, $slider );
 		} else {
 			$counts = [];
 			$labels = [];
@@ -307,9 +322,10 @@ final class Render {
 	 * @param array   $counts  Value => count.
 	 * @param array   $labels  Value => name.
 	 * @param bool    $at_least Whether each option includes those above it.
+	 * @param array   $bounds   A slider's ends (`min`, `max`), or null.
 	 * @return void
 	 */
-	private static function state( Listing $listing, string $id, array $counts, array $labels, bool $at_least = false ): void {
+	private static function state( Listing $listing, string $id, array $counts, array $labels, bool $at_least = false, ?array $bounds = null ): void {
 		$state = wp_interactivity_state( Filters::STORE );
 		$known = (array) ( $state['listings'][ $listing->key() ]['filters'][ $id ]['labels'] ?? [] );
 
@@ -325,6 +341,7 @@ final class Render {
 								// "& up" names its options and chip itself.
 								'labels'  => (object) ( $at_least ? array_replace( $known, $labels ) : array_replace( $labels, $known ) ),
 								'atLeast' => $at_least,
+								'bounds'  => $bounds,
 							],
 						],
 					],
@@ -545,11 +562,8 @@ final class Render {
 					[
 						'listing' => $listing->key(),
 						'filter'  => $id,
-						// A slider's ends, and where its thumbs are while dragged.
-						'bounds'  => $slider ? [
-							'min' => (float) $bounds['min'],
-							'max' => (float) $bounds['max'],
-						] : null,
+						// Where a slider's thumbs are while dragged (its ends
+						// are the filter's state).
 						'draft'   => $slider ? [
 							'min' => null,
 							'max' => null,
@@ -575,7 +589,7 @@ final class Render {
 	 */
 	private static function slider( string $label ): string {
 		$thumb = fn( string $bound, string $name ) => sprintf(
-			'<input type="range" class="wp-block-matter-filter__thumb is-%1$s" aria-label="%2$s" step="1" data-wp-context=\'{"bound":"%1$s"}\' data-wp-bind--min="context.bounds.min" data-wp-bind--max="context.bounds.max" data-wp-bind--value="state.sliderValue" data-wp-bind--aria-valuetext="state.sliderText" data-wp-on--input="actions.slide" data-wp-on--change="actions.setRange" />',
+			'<input type="range" class="wp-block-matter-filter__thumb is-%1$s" aria-label="%2$s" step="1" data-wp-context=\'{"bound":"%1$s"}\' data-wp-bind--min="state.sliderMin" data-wp-bind--max="state.sliderMax" data-wp-bind--value="state.sliderValue" data-wp-bind--aria-valuetext="state.sliderText" data-wp-on--input="actions.slide" data-wp-on--change="actions.setRange" />',
 			esc_attr( $bound ),
 			esc_attr( sprintf( '%1$s: %2$s', $label, $name ) )
 		);

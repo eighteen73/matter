@@ -62,6 +62,9 @@ final class State {
 
 				return (string) self::bound( $context, (string) ( $context['bound'] ?? '' ) );
 			},
+			// A slider's ends.
+			'sliderMin'     => fn() => (string) ( self::filter( wp_interactivity_get_context() )['bounds']['min'] ?? '' ),
+			'sliderMax'     => fn() => (string) ( self::filter( wp_interactivity_get_context() )['bounds']['max'] ?? '' ),
 			'sliderText'    => function () {
 				$context = wp_interactivity_get_context();
 
@@ -69,8 +72,9 @@ final class State {
 			},
 			'sliderStyle'   => function () {
 				$context = wp_interactivity_get_context();
-				$min     = $context['bounds']['min'] ?? null;
-				$max     = $context['bounds']['max'] ?? null;
+				$bounds  = (array) ( self::filter( $context )['bounds'] ?? [] );
+				$min     = $bounds['min'] ?? null;
+				$max     = $bounds['max'] ?? null;
 
 				if ( null === $min || null === $max || $max <= $min ) {
 					return '';
@@ -142,7 +146,8 @@ final class State {
 	 * @return float|null
 	 */
 	private static function bound( array $context, string $bound ): ?float {
-		$value = $context['draft'][ $bound ] ?? self::filter( $context )[ $bound ] ?? $context['bounds'][ $bound ] ?? null;
+		$filter = self::filter( $context );
+		$value  = $context['draft'][ $bound ] ?? $filter[ $bound ] ?? $filter['bounds'][ $bound ] ?? null;
 
 		return null === $value ? null : (float) $value;
 	}

@@ -9,6 +9,8 @@
 namespace Eighteen73\Matter\Tests;
 
 use Eighteen73\Matter\Filters\Counts;
+use Eighteen73\Matter\Filters\Listing;
+use Eighteen73\Matter\Filters\Source;
 use Eighteen73\Matter\Filters\Query;
 use Eighteen73\Matter\Filters\Request;
 use Eighteen73\Matter\Filters\Sources;
@@ -157,6 +159,90 @@ class FiltersTest extends TestCase {
 		$html = $this->render( '<!-- wp:group --><div class="wp-block-group">' . $this->markup() . '</div><!-- /wp:group -->' );
 
 		$this->assertStringContainsString( 'data-wp-router-region="query-3"', $html );
+	}
+
+	/**
+	 * A range's slider: its ends are the filter's state, which the router
+	 * replaces with each page's, not its element's context, which the router
+	 * keeps; each filter is keyed, so the router matches filters by what they
+	 * are, not where they are.
+	 *
+	 * @return void
+	 */
+	public function test_slider_ends_are_state(): void {
+		$range = new class() implements Source {
+			// phpcs:disable Squiz.Commenting.FunctionComment.Missing -- A stand-in.
+			public function key(): string {
+				return 'test-range';
+			}
+
+			public function label(): string {
+				return 'Size';
+			}
+
+			public function kind(): string {
+				return 'range';
+			}
+
+			public function post_types(): array {
+				return [ 'post' ];
+			}
+
+			public function params(): array {
+				return [
+					'min' => 'filter_size_min',
+					'max' => 'filter_size_max',
+				];
+			}
+
+			public function selected( array $request ): array {
+				return [
+					'min' => null,
+					'max' => null,
+				];
+			}
+
+			public function apply( array $query_vars, array $selected ): array {
+				return $query_vars;
+			}
+
+			public function options( Listing $listing, \WP_Block $block, array $settings ): array {
+				return [
+					'min' => 10.0,
+					'max' => 50.0,
+				];
+			}
+
+			public function chips( array $selected ): array {
+				return [];
+			}
+			// phpcs:enable
+		};
+		$add   = fn( Sources $sources ) => $sources->register( $range );
+
+		add_action( 'matter_filters_sources', $add );
+		Sources::flush();
+
+		$html = $this->listing( '<!-- wp:matter/filter {"source":"test-range","slider":true} /-->' );
+
+		remove_action( 'matter_filters_sources', $add );
+		Sources::flush();
+
+		$filter = wp_interactivity_state( 'matter/filters' )['listings']['3']['filters']['test-range'] ?? [];
+
+		$this->assertSame(
+			[
+				'min' => 10.0,
+				'max' => 50.0,
+			],
+			$filter['bounds'] ?? null
+		);
+		$this->assertStringContainsString( 'data-wp-bind--min="state.sliderMin"', $html );
+		$this->assertMatchesRegularExpression( '/<input [^>]*\bmin="10"[^>]*type="range"/', $html, 'Its lowest end, from the state.' );
+		$this->assertMatchesRegularExpression( '/<input [^>]*\bmax="50"[^>]*type="range"/', $html, 'Its highest end, from the state.' );
+		$this->assertStringNotContainsString( 'bounds', (string) preg_replace( '/<script.*?<\/script>/s', '', $html ), 'Not in a context.' );
+		$this->assertStringContainsString( 'data-wp-key="matter-filter-3-test-range"', $html );
+		$this->assertStringContainsString( 'data-wp-key="matter-filter-3-taxonomy-category"', $html );
 	}
 
 	/**

@@ -115,7 +115,7 @@ function amountOf(labels, value) {
  * Where a range's bound is: its slider's draft while dragged, else the
  * filter's, else the slider's end.
  *
- * @param {Object} context Context (`draft`, `bounds`).
+ * @param {Object} context Context (`draft`).
  * @param {Object} filter  Filter state.
  * @param {string} bound   `min` or `max`.
  * @return {number|null} Value.
@@ -124,7 +124,7 @@ function boundOf(context, filter, bound) {
 	return (
 		context.draft?.[bound] ??
 		filter?.[bound] ??
-		context.bounds?.[bound] ??
+		filter?.bounds?.[bound] ??
 		null
 	);
 }
@@ -440,6 +440,14 @@ const { state, actions } = store('matter/filters', {
 
 			return isSet(value) ? String(value) : '';
 		},
+		// A slider's ends: the filter's state, which the router replaces
+		// with each page's (it keeps an element's context).
+		get sliderMin() {
+			return String(filterOf(getContext())?.bounds?.min ?? '');
+		},
+		get sliderMax() {
+			return String(filterOf(getContext())?.bounds?.max ?? '');
+		},
 		get sliderValue() {
 			const context = getContext();
 
@@ -458,7 +466,7 @@ const { state, actions } = store('matter/filters', {
 		},
 		get sliderStyle() {
 			const context = getContext();
-			const { min, max } = context.bounds ?? {};
+			const { min, max } = filterOf(context)?.bounds ?? {};
 
 			if (!isSet(min) || !isSet(max) || max <= min) {
 				return '';
@@ -626,7 +634,7 @@ const { state, actions } = store('matter/filters', {
 			let next = value === '' ? null : Number(value);
 
 			// A slider's thumb at its end of the track is no bound.
-			if (next !== null && next === context.bounds?.[context.bound]) {
+			if (next !== null && next === filter.bounds?.[context.bound]) {
 				next = null;
 			}
 
@@ -703,7 +711,7 @@ const { state, actions } = store('matter/filters', {
 		slide(event) {
 			const context = getContext();
 
-			if (!context.draft || !context.bounds) {
+			if (!context.draft || !filterOf(context)?.bounds) {
 				return;
 			}
 
