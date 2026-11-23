@@ -1128,7 +1128,7 @@ npm run env:stop           # both
 npm run test:unit    # JavaScript unit tests
 npm run test:php     # PHPUnit, including contract snapshots (or composer test)
 npm run test:php:update   # PHPUnit, writing the contract snapshots afresh
-npm run test:e2e     # browser tests with Playwright and axe (npx playwright install chromium first)
+npm run test:e2e     # browser tests with Playwright and axe (npx playwright install chromium firefox webkit first)
 npm run env:start:tests:nowc   # the test site without WooCommerce (see below)
 npm run test:php:nowc          # PHPUnit on that site, with no Gravity Forms stub
 npm run test:e2e:nowc          # the browser smoke specs on that site

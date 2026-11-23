@@ -61,8 +61,8 @@ jobs:
       - name: Run PHPUnit
         run: npm run test:php
 
-      - name: Install Playwright's Chromium
-        run: npx playwright install --with-deps --only-shell chromium
+      - name: Install Playwright's browsers
+        run: npx playwright install --with-deps --only-shell chromium firefox webkit
 
       # Keyboard, overlay, menu and editor behaviour, plus axe (WCAG 2.2 AA).
       - name: Run browser tests
@@ -110,8 +110,8 @@ jobs:
       - name: Run PHPUnit
         run: npm run test:php:nowc
 
-      - name: Install Playwright's Chromium
-        run: npx playwright install --with-deps --only-shell chromium
+      - name: Install Playwright's browsers
+        run: npx playwright install --with-deps --only-shell chromium firefox webkit
 
       - name: Run browser smoke tests
         run: npm run test:e2e:nowc

@@ -57,8 +57,8 @@ jobs:
       - name: Run PHPUnit
         run: npm run test:php
 
-      - name: Install Playwright's Chromium
-        run: npx playwright install --with-deps --only-shell chromium
+      - name: Install Playwright's browsers
+        run: npx playwright install --with-deps --only-shell chromium firefox webkit
 
       - name: Run browser tests
         run: npm run test:e2e
