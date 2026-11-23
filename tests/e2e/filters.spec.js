@@ -9,6 +9,7 @@ const DESKTOP = { width: 1280, height: 900 };
 const MOBILE = { width: 390, height: 800 };
 
 let listing;
+let shifting;
 
 // What the tests made, removed afterwards: other tests list the site's newest
 // posts.
@@ -55,17 +56,22 @@ test.beforeAll(async ({ requestUtils }) => {
 	const news = await term(requestUtils, 'categories', 'Filter news');
 	const events = await term(requestUtils, 'categories', 'Filter events');
 	const listed = await term(requestUtils, 'tags', 'Filter listed');
+	const featured = await term(requestUtils, 'tags', 'Filter featured');
 
-	for (const [title, categories] of [
-		['First story', [news]],
-		['Second story', [news]],
-		['Open day', [events]],
+	for (const [title, categories, tags] of [
+		['First story', [news], [listed]],
+		['Second story', [news], [listed]],
+		['Open day', [events], [listed]],
+		// For the listing whose filters come and go (found by "Zebrafilter").
+		['Zebrafilter news one', [news], []],
+		['Zebrafilter news two', [news], []],
+		['Zebrafilter event', [events], [featured]],
 	]) {
 		const { id } = await requestUtils.createPost({
 			title,
 			status: 'publish',
 			categories,
-			tags: [listed],
+			tags,
 		});
 
 		made.posts.push(id);
@@ -75,6 +81,15 @@ test.beforeAll(async ({ requestUtils }) => {
 		requestUtils,
 		'Filtered posts',
 		`<!-- wp:query {"queryId":5,"query":{"perPage":10,"postType":"post","order":"asc","orderBy":"title","taxQuery":{"post_tag":[${listed}]},"inherit":false}} --><div class="wp-block-query"><!-- wp:matter/filters-toggle /--><!-- wp:matter/filters --><!-- wp:matter/filter {"source":"taxonomy:category"} /--><!-- /wp:matter/filters --><!-- wp:matter/active-filters /--><!-- wp:matter/results-count /--><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --></div><!-- /wp:query -->`
+	);
+
+	// The tag filter, first, has nothing to choose among the news, so it
+	// isn't shown there: the category dropdown takes its place in the form,
+	// as a product archive's price range took a colour filter's.
+	shifting = await createPage(
+		requestUtils,
+		'Filters that come and go',
+		`<!-- wp:query {"queryId":6,"query":{"perPage":10,"postType":"post","order":"asc","orderBy":"title","search":"Zebrafilter","inherit":false}} --><div class="wp-block-query"><!-- wp:matter/filters --><!-- wp:matter/filter {"source":"taxonomy:post_tag","label":"Tags"} /--><!-- wp:matter/filter {"source":"taxonomy:category","display":"dropdown"} /--><!-- /wp:matter/filters --><!-- wp:matter/results-count /--><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --></div><!-- /wp:query -->`
 	);
 });
 
@@ -94,11 +109,13 @@ test.afterAll(async ({ requestUtils }) => {
 				params: { force: true },
 			})
 		),
-		requestUtils.rest({
-			path: `/wp/v2/pages/${listing.id}`,
-			method: 'DELETE',
-			params: { force: true },
-		}),
+		...[listing, shifting].map(({ id }) =>
+			requestUtils.rest({
+				path: `/wp/v2/pages/${id}`,
+				method: 'DELETE',
+				params: { force: true },
+			})
+		),
 	]);
 });
 
@@ -166,6 +183,43 @@ test.describe('filters', () => {
 		await expect(
 			page.getByRole('checkbox', { name: /Filter events/ })
 		).toBeChecked();
+	});
+
+	test('a filter that comes back has its options', async ({ page }) => {
+		const news = (
+			await page.request.get(
+				`${new URL(listing.link).origin}/?rest_route=/wp/v2/categories&search=Filter%20news`
+			)
+		).json();
+		const { slug } = (await news)[0];
+
+		// Loaded with the news chosen: the tags have nothing to choose.
+		await page.goto(
+			`${shifting.link}${shifting.link.includes('?') ? '&' : '?'}filter_category=${slug}`
+		);
+		await expect(page.getByRole('group', { name: 'Tags' })).toHaveCount(0);
+
+		await page
+			.getByRole('combobox', { name: 'Category' })
+			.selectOption({ index: 0 });
+		await expect(page.locator('.wp-block-matter-results-count')).toHaveText(
+			'3 results'
+		);
+
+		const tags = page.getByRole('group', { name: 'Tags' });
+
+		await expect(
+			tags.getByRole('checkbox', { name: /Filter featured/ })
+		).toBeVisible();
+		await expect(
+			tags.getByRole('checkbox', { name: /Filter featured/ })
+		).toHaveAccessibleName(/1/);
+
+		// And it works: choosing it filters.
+		await tags.getByRole('checkbox', { name: /Filter featured/ }).check();
+		await expect(page.locator('.wp-block-matter-results-count')).toHaveText(
+			'1 result'
+		);
 	});
 });
 

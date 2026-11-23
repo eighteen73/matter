@@ -177,7 +177,12 @@ final class Render {
 
 		return sprintf(
 			'<div %1$s>%2$s</div>',
-			get_block_wrapper_attributes( [ 'class' => 'is-display-' . $display ] ),
+			get_block_wrapper_attributes(
+				[
+					'class'       => 'is-display-' . $display,
+					'data-wp-key' => 'matter-filter-' . $listing->key() . '-' . $id,
+				]
+			),
 			$body
 		);
 	}
