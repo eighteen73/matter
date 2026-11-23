@@ -52,6 +52,50 @@ final class Counts {
 	}
 
 	/**
+	 * Query vars without the clauses WooCommerce adds to a shop's main query
+	 * for its own filter parameters: the chosen attributes (`filter_{name}`)
+	 * and the rating (`rating_filter`). A listing that inherits the main
+	 * query (a product archive) would otherwise keep them in its base, so a
+	 * results provider could never widen the list again.
+	 *
+	 * @param array $query_vars Query vars.
+	 * @param array $chosen     WooCommerce's chosen attributes: taxonomy =>
+	 *                          `[ 'terms' => string[], 'query_type' => string ]`.
+	 * @return array
+	 */
+	public static function without_shop_filters( array $query_vars, array $chosen ): array {
+		if ( empty( $query_vars['tax_query'] ) || ! is_array( $query_vars['tax_query'] ) ) {
+			return $query_vars;
+		}
+
+		$tax_query = [];
+
+		foreach ( $query_vars['tax_query'] as $key => $clause ) {
+			$taxonomy = is_array( $clause ) ? (string) ( $clause['taxonomy'] ?? '' ) : '';
+			$added    = is_array( $clause ) && (
+				! empty( $clause['rating_filter'] )
+				|| ( isset( $chosen[ $taxonomy ]['terms'] ) && array_values( (array) ( $clause['terms'] ?? [] ) ) === array_values( (array) $chosen[ $taxonomy ]['terms'] ) )
+			);
+
+			if ( ! $added ) {
+				$tax_query[ $key ] = $clause;
+			}
+		}
+
+		// Renumbered, as WP_Query would: `relation` keeps its key.
+		$relation  = $tax_query['relation'] ?? null;
+		$tax_query = array_values( array_filter( $tax_query, 'is_array' ) );
+
+		if ( null !== $relation ) {
+			$tax_query = array_merge( [ 'relation' => $relation ], $tax_query );
+		}
+
+		$query_vars['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Removing clauses.
+
+		return $query_vars;
+	}
+
+	/**
 	 * A query vars' clause list without clauses matching a key and value.
 	 *
 	 * @param array  $queries A tax_query or meta_query.

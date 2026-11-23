@@ -235,8 +235,10 @@ final class WooCommerce implements Integration {
 	}
 
 	/**
-	 * A Product Collection's query vars without filters: as WooCommerce's
-	 * filter blocks read them, without any filter's parameters.
+	 * A listing's query vars without filters. A Product Collection's are as
+	 * WooCommerce's filter blocks read them, without any filter's parameters.
+	 * Either kind, inheriting a shop's main query, also leaves out the
+	 * clauses WooCommerce added to it for the request's own filters.
 	 *
 	 * @param mixed     $vars    Query vars.
 	 * @param mixed     $listing Listing.
@@ -244,11 +246,17 @@ final class WooCommerce implements Integration {
 	 * @return array
 	 */
 	public function base_query_vars( $vars, $listing, $block ): array {
-		if ( ! $listing instanceof \Eighteen73\Matter\Filters\Listing || self::PRODUCT_COLLECTION !== $listing->block_name || ! $block instanceof \WP_Block ) {
+		if ( ! $listing instanceof \Eighteen73\Matter\Filters\Listing || ! $block instanceof \WP_Block ) {
 			return (array) $vars;
 		}
 
-		return FilterCounts::query_vars( $block, Sources::query_param_names() );
+		if ( self::PRODUCT_COLLECTION === $listing->block_name ) {
+			$vars = FilterCounts::query_vars( $block, Sources::query_param_names() );
+		}
+
+		return $listing->inherit
+			? FilterCounts::without_shop_filters( (array) $vars, \WC_Query::get_layered_nav_chosen_attributes() )
+			: (array) $vars;
 	}
 
 	/**
