@@ -7,8 +7,11 @@
  * @package MatterTestTheme
  */
 
+// Padded so the page's top-left corner isn't a menu link: headless Chromium
+// on Linux (CI) starts the pointer there, which would hover the first
+// dropdown open before a test begins.
 ?>
-<header class="test-header">
+<header class="test-header" style="padding: 24px;">
 	<?php
 	Eighteen73\Matter\panel_toggle( 'test-nav', [ 'collapse_below' => 'lg' ] );
 	Eighteen73\Matter\panel(
