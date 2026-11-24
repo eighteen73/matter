@@ -27,6 +27,8 @@
 
 namespace Eighteen73\Matter\Integrations\WooCommerce;
 
+use Automattic\WooCommerce\Blocks\BlockTypesController;
+use Automattic\WooCommerce\Blocks\Package;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -99,11 +101,36 @@ final class LoopItems {
 	 * @return void
 	 */
 	public function setup(): void {
+		add_action( 'matter_prerender_loop_item_start', [ $this, 'register_blocks' ], 5 );
 		add_action( 'matter_prerender_loop_item_start', [ $this, 'hide_cart' ] );
 		add_action( 'matter_prerender_loop_item_start', [ $this, 'load_product' ], 20 );
 		add_action( 'matter_prerender_loop_item_end', [ $this, 'restore_cart' ] );
 		add_filter( 'matter_prerender_loop_item', [ $this, 'item' ], 10, 2 );
 		add_filter( 'matter_prerender_loop_item_version', [ $this, 'version' ] );
+	}
+
+	/**
+	 * Register WooCommerce's block types, when this request skipped them.
+	 *
+	 * WooCommerce doesn't register its blocks on requests it expects to render
+	 * none (cron, AJAX, its REST routes; see its BlockRegistrationContext), and
+	 * registers them on demand for what does (a description, an email). A loop
+	 * item is prerendered on just such a request (a search index syncing in the
+	 * background), and its product blocks would render empty: register them
+	 * as WooCommerce does for an email.
+	 *
+	 * @return void
+	 */
+	public function register_blocks(): void {
+		if ( ! class_exists( Package::class ) || ! method_exists( BlockTypesController::class, 'register_blocks_has_run' ) ) {
+			return;
+		}
+
+		$blocks = Package::container()->get( BlockTypesController::class );
+
+		if ( ! $blocks->register_blocks_has_run() ) {
+			$blocks->register_blocks();
+		}
 	}
 
 	/**

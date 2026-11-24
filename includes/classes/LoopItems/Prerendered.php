@@ -82,6 +82,12 @@ final class Prerendered {
 		do_action( 'matter_prerender_loop_item_start', $post );
 
 		try {
+			// A block that isn't registered here would be missing from the
+			// copy, and the copy is shown in place of the item: render none.
+			if ( [] !== LoopItem::unregistered_blocks( $post->post_type ) ) {
+				return null;
+			}
+
 			$html    = Live::with_placeholders( fn() => LoopItem::render( $post->ID ) );
 			$classes = get_post_class( '', $post );
 			$data    = $GLOBALS['wp_interactivity']->filter_script_module_interactivity_data( [] );
