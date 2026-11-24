@@ -431,13 +431,22 @@ final class Render {
 		$html = '';
 
 		foreach ( array_values( $options ) as $index => $option ) {
-			$value = (string) $option['value'];
-			$kids  = '' !== $value ? ( $children[ $value ] ?? [] ) : [];
+			$value   = (string) $option['value'];
+			$kids    = '' !== $value ? ( $children[ $value ] ?? [] ) : [];
+			$context = [ 'value' => $value ];
+
+			// A parent's options (subcategories) are shown when it's opened, or
+			// while one of them is chosen (State's childrenOpen). Its own key,
+			// so a parent inside an open one doesn't open with it.
+			if ( $kids ) {
+				$context['within']     = self::values_within( $value, $children );
+				$context['branchOpen'] = null;
+			}
 
 			$html .= sprintf(
-				'<li class="%1$s" %2$s data-wp-bind--hidden="state.isHidden"><label class="wp-block-matter-filter__choice"><input type="%3$s" name="%4$s" value="%5$s" data-wp-bind--checked="state.isChecked" data-wp-on--change="%6$s" data-wp-on--pointerenter="actions.prefetch" data-wp-on--focus="actions.prefetch" />%7$s%8$s%9$s</label>%10$s</li>',
-				esc_attr( implode( ' ', array_filter( [ 'wp-block-matter-filter__option', $limit > 0 && $index >= $limit ? 'is-more' : '' ] ) ) ),
-				wp_interactivity_data_wp_context( [ 'value' => $value ] ),
+				'<li class="%1$s" %2$s data-wp-bind--hidden="state.isHidden"><label class="wp-block-matter-filter__choice"><input type="%3$s" name="%4$s" value="%5$s" data-wp-bind--checked="state.isChecked" data-wp-on--change="%6$s" data-wp-on--pointerenter="actions.prefetch" data-wp-on--focus="actions.prefetch" />%7$s<span class="wp-block-matter-filter__text">%8$s%9$s</span></label>%10$s</li>',
+				esc_attr( implode( ' ', array_filter( [ 'wp-block-matter-filter__option', $limit > 0 && $index >= $limit ? 'is-more' : '', $kids ? 'has-children' : '' ] ) ) ),
+				wp_interactivity_data_wp_context( $context ),
 				$radio ? 'radio' : 'checkbox',
 				esc_attr( $radio ? $params['value'] : $params['value'] . '[]' ),
 				esc_attr( $value ),
@@ -445,11 +454,54 @@ final class Render {
 				! empty( $option['swatch'] ) ? sprintf( '<span class="wp-block-matter-filter__swatch" style="%s" aria-hidden="true"></span>', esc_attr( '--swatch:' . $option['swatch'] ) ) : '',
 				self::option_name( $option, $display, $at_least ),
 				$counts && '' !== $value ? sprintf( ' <span class="wp-block-matter-filter__count" data-wp-text="state.count">%d</span>', (int) $option['count'] ) : '',
-				$kids ? sprintf( '<ul class="wp-block-matter-filter__children">%s</ul>', self::option_list( $kids, $children, $params, $radio, $counts, 0, $display, $at_least ) ) : ''
+				$kids ? self::children( $option, $kids, $children, $params, $radio, $counts, $display, $at_least ) : ''
 			);
 		}
 
 		return $html;
+	}
+
+	/**
+	 * A parent option's options, with the button that shows and hides them.
+	 *
+	 * @param array  $option   The parent option.
+	 * @param array  $kids     Its options.
+	 * @param array  $children Options by their parent's value.
+	 * @param array  $params   The source's parameters.
+	 * @param bool   $radio    Radio buttons (one choice).
+	 * @param bool   $counts   Show counts.
+	 * @param string $display  Display.
+	 * @param bool   $at_least Whether each option includes those above it.
+	 * @return string
+	 */
+	private static function children( array $option, array $kids, array $children, array $params, bool $radio, bool $counts, string $display, bool $at_least ): string {
+		$id = wp_unique_id( 'matter-filter-children-' );
+
+		return sprintf(
+			'<button type="button" class="wp-block-matter-filter__expand" aria-controls="%1$s" aria-expanded="false" data-wp-bind--aria-expanded="state.childrenOpen" data-wp-on--click="actions.toggleChildren"><span class="screen-reader-text">%2$s</span></button><ul class="wp-block-matter-filter__children" id="%1$s" data-wp-bind--hidden="!state.childrenOpen">%3$s</ul>',
+			esc_attr( $id ),
+			/* translators: %s: an option's name, such as a category. */
+			esc_html( sprintf( __( 'Options in %s', 'matter' ), wp_strip_all_tags( (string) $option['label'] ) ) ),
+			self::option_list( $kids, $children, $params, $radio, $counts, 0, $display, $at_least )
+		);
+	}
+
+	/**
+	 * Every option below an option, at any depth.
+	 *
+	 * @param string $value    The option's value.
+	 * @param array  $children Options by their parent's value.
+	 * @return string[]
+	 */
+	private static function values_within( string $value, array $children ): array {
+		$values = [];
+
+		foreach ( $children[ $value ] ?? [] as $child ) {
+			$values[] = (string) $child['value'];
+			$values   = array_merge( $values, self::values_within( (string) $child['value'], $children ) );
+		}
+
+		return $values;
 	}
 
 	/**

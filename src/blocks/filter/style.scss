@@ -43,6 +43,52 @@
 	content: ")";
 }
 
+// A parent option (a category with subcategories): its name, the button
+// that shows its options, then them, hidden until it's opened or one of
+// them is chosen.
+:where(.wp-block-matter-filter__option.has-children) {
+	align-items: center;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+:where(.wp-block-matter-filter__option.has-children > .wp-block-matter-filter__children) {
+	grid-column: 1 / -1;
+}
+
+:where(.wp-block-matter-filter__children[hidden]) {
+	display: none;
+}
+
+:where(.wp-block-matter-filter__expand) {
+	align-items: center;
+	background: transparent;
+	block-size: 1.5rem;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	inline-size: 1.5rem;
+	justify-content: center;
+	padding: 0;
+}
+
+// A chevron, pointing down while closed and up while open.
+:where(.wp-block-matter-filter__expand)::before {
+	block-size: 0.4em;
+	border-block-end: 2px solid;
+	border-inline-end: 2px solid;
+	content: "";
+	inline-size: 0.4em;
+	rotate: 45deg;
+	translate: 0 -0.15em;
+}
+
+:where(.wp-block-matter-filter__expand[aria-expanded="true"])::before {
+	rotate: 225deg;
+	translate: 0 0.15em;
+}
+
 // "Show more": options past the first few, until it's clicked.
 :where(.wp-block-matter-filter__options.is-collapsed) > .is-more,
 :where(.wp-block-matter-filter__option[hidden]) {
