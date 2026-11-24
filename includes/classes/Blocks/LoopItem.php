@@ -41,6 +41,7 @@ namespace Eighteen73\Matter\Blocks;
 
 use Eighteen73\Matter\Archives\Archives;
 use Eighteen73\Matter\Live\Live;
+use Eighteen73\Matter\LoopItems\Prerendered;
 use Eighteen73\Matter\Singleton;
 use WP_Block;
 use WP_Block_Patterns_Registry;
@@ -76,6 +77,15 @@ final class LoopItem {
 	 * @var array<string, true>
 	 */
 	private static array $rendering = [];
+
+	/**
+	 * Loop item patterns rendered this request, by slug: once one has, its
+	 * blocks' styles, scripts and stores are loaded, so later items can be
+	 * prerendered copies (see from_prerendered()).
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $rendered = [];
 
 	/**
 	 * Setup hooks.
@@ -301,6 +311,16 @@ final class LoopItem {
 
 		// Some blocks (e.g. WooCommerce's) read the global post or product
 		// rather than context, so make sure it's this item.
+		// In a plain loop, a copy prerendered ahead (a search index's), when a
+		// plugin has one.
+		if ( '' === $block ) {
+			$prerendered = self::from_prerendered( $post, $slug );
+
+			if ( null !== $prerendered ) {
+				return $prerendered;
+			}
+		}
+
 		$previous_post = $GLOBALS['post'] ?? null;
 		$is_other_post = ! $previous_post instanceof \WP_Post || $previous_post->ID !== $post->ID;
 
@@ -315,12 +335,74 @@ final class LoopItem {
 			? Live::item( $post->ID, fn() => self::render_pattern( $slug, $context, $key ) )
 			: self::render_pattern( $slug, $context, $key );
 
+		self::$rendered[ $slug ] = true;
+
 		if ( $is_other_post ) {
 			$GLOBALS['post'] = $previous_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restoring.
 
 			if ( $previous_post instanceof \WP_Post ) {
 				setup_postdata( $previous_post );
 			}
+		}
+
+		return $html;
+	}
+
+	/**
+	 * A post's loop item from a copy prerendered ahead (LoopItems\Prerendered),
+	 * when a plugin offers one (`matter_loop_item_prerendered`; Seek, from the
+	 * search result's document), instead of rendering its pattern: its live
+	 * blocks (a price) are filled in, rendered now for this visitor (or left
+	 * as placeholders, see Live::placeholders_on_pages()), and the state its
+	 * blocks set is added to the page's. Rendering only those is most of the
+	 * work of a listing saved.
+	 *
+	 * Not when the copy is older than the pattern (its version differs), not
+	 * while prerendering or capturing, and not for the first item of each
+	 * pattern on a page, which renders so its blocks' styles, scripts and
+	 * stores load.
+	 *
+	 * @param \WP_Post $post Post.
+	 * @param string   $slug Its loop item pattern.
+	 * @return string|null
+	 */
+	private static function from_prerendered( \WP_Post $post, string $slug ): ?string {
+		if ( 'render' !== Live::mode() || ! isset( self::$rendered[ $slug ] ) ) {
+			return null;
+		}
+
+		/**
+		 * Filters a post's prerendered loop item, to show in place of rendering
+		 * it: as Prerendered::render() returns it (`html`, `data` and
+		 * `version`), or null to render it.
+		 *
+		 * @param array|null $item Prerendered loop item.
+		 * @param \WP_Post   $post Post.
+		 */
+		$item = apply_filters( 'matter_loop_item_prerendered', null, $post );
+
+		if ( ! is_array( $item ) || ! is_string( $item['html'] ?? null ) || ( $item['version'] ?? '' ) !== Prerendered::version( $post->post_type ) ) {
+			return null;
+		}
+
+		$html = $item['html'];
+
+		if ( Live::placeholders_on_pages() ) {
+			Live::expect();
+		} else {
+			$html = Live::fill( $post->ID, $html );
+
+			if ( null === $html ) {
+				return null;
+			}
+		}
+
+		foreach ( (array) ( $item['data']['state'] ?? [] ) as $namespace => $state ) {
+			wp_interactivity_state( (string) $namespace, (array) $state );
+		}
+
+		foreach ( (array) ( $item['data']['config'] ?? [] ) as $namespace => $config ) {
+			wp_interactivity_config( (string) $namespace, (array) $config );
 		}
 
 		return $html;
