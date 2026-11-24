@@ -566,6 +566,41 @@ final class LoopItem {
 	}
 
 	/**
+	 * Block types a post type's loop item pattern uses that aren't
+	 * registered in this request. Such a block renders only its saved inner
+	 * markup, so an item rendered now would be missing it (a plugin that skips
+	 * registering its blocks on some requests, e.g. WooCommerce on cron).
+	 *
+	 * @param string $post_type Post type.
+	 * @return string[] Block names.
+	 */
+	public static function unregistered_blocks( string $post_type ): array {
+		$slug = self::pattern( $post_type );
+
+		if ( null === $slug ) {
+			return [];
+		}
+
+		$names    = [];
+		$registry = \WP_Block_Type_Registry::get_instance();
+		$walk     = function ( array $blocks ) use ( &$walk, &$names, $registry ): void {
+			foreach ( $blocks as $block ) {
+				$name = (string) ( $block['blockName'] ?? '' );
+
+				if ( '' !== $name && ! $registry->is_registered( $name ) ) {
+					$names[ $name ] = $name;
+				}
+
+				$walk( (array) ( $block['innerBlocks'] ?? [] ) );
+			}
+		};
+
+		$walk( self::blocks( $slug ) );
+
+		return array_values( $names );
+	}
+
+	/**
 	 * Whether a parsed block, or any block inside it, is one of these.
 	 *
 	 * @param array    $parsed Parsed block.
