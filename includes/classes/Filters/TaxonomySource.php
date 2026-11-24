@@ -176,7 +176,8 @@ class TaxonomySource implements Source {
 
 	/**
 	 * The taxonomy's terms (with results anywhere), each with its count in
-	 * the listing, parents before their children.
+	 * the listing, parents before their children. On an archive of one of
+	 * the taxonomy's terms, only the terms below it (see within()).
 	 *
 	 * @param Listing   $listing  The listing.
 	 * @param \WP_Block $block    The filter block.
@@ -184,13 +185,19 @@ class TaxonomySource implements Source {
 	 * @return array<int, array{value: string, label: string, count: int, parent: string, swatch: string}>
 	 */
 	public function options( Listing $listing, \WP_Block $block, array $settings ): array {
-		$terms = get_terms(
-			[
-				'taxonomy'   => $this->taxonomy,
-				'hide_empty' => true,
-				'orderby'    => 'name',
-			]
-		);
+		$args = [
+			'taxonomy'   => $this->taxonomy,
+			'hide_empty' => true,
+			'orderby'    => 'name',
+		];
+
+		$within = $this->within( $listing );
+
+		if ( null !== $within ) {
+			$args['child_of'] = $within;
+		}
+
+		$terms = get_terms( $args );
 
 		if ( ! is_array( $terms ) || ! $terms ) {
 			return [];
@@ -216,6 +223,40 @@ class TaxonomySource implements Source {
 			],
 			$terms
 		);
+	}
+
+	/**
+	 * The term whose archive the listing is, when the filter should offer only
+	 * the terms below it: on a hierarchical taxonomy's term archive, listed
+	 * by the archive's own query, a choice outside the term would only ever
+	 * narrow the listing to nothing (or to the odd post filed under both).
+	 * So the Electrical archive's category filter offers Electrical's
+	 * subcategories, not the whole tree; a term with none offers nothing, and
+	 * the filter is hidden.
+	 *
+	 * @param Listing $listing The listing.
+	 * @return int|null Term ID, or null for every term.
+	 */
+	protected function within( Listing $listing ): ?int {
+		if ( ! $listing->inherit || ! is_taxonomy_hierarchical( $this->taxonomy ) || ( ! is_tax( $this->taxonomy ) && ! ( 'category' === $this->taxonomy && is_category() ) ) ) {
+			return null;
+		}
+
+		$term = get_queried_object();
+
+		if ( ! $term instanceof WP_Term || $term->taxonomy !== $this->taxonomy ) {
+			return null;
+		}
+
+		/**
+		 * Filters whether a taxonomy filter on one of its own term archives
+		 * offers only the terms below the archive's term.
+		 *
+		 * @param bool    $within  Whether to (default true).
+		 * @param WP_Term $term    The archive's term.
+		 * @param Listing $listing The listing.
+		 */
+		return apply_filters( 'matter_filters_terms_within_archive', true, $term, $listing ) ? $term->term_id : null;
 	}
 
 	/**
