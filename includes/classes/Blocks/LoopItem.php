@@ -327,6 +327,184 @@ final class LoopItem {
 	}
 
 	/**
+	 * Render only a post's loop item's live blocks (Live\Live), as render()
+	 * would: in the same order, with the context and global post they'd have,
+	 * so they're captured and numbered as the item's placeholders are. The
+	 * rest of the item (images, titles, buttons, the groups around them) isn't
+	 * rendered, which is most of the work of rendering it.
+	 *
+	 * A block whose output can hold blocks its parsed tree doesn't show (a
+	 * pattern, a template part) is rendered whole, so any live blocks it adds
+	 * are captured in order; see sources().
+	 *
+	 * @param int $post_id Post ID.
+	 * @return void
+	 */
+	public static function render_live( int $post_id ): void {
+		$post = get_post( $post_id );
+		$slug = $post ? self::pattern( $post->post_type ) : null;
+
+		if ( null === $slug ) {
+			return;
+		}
+
+		$key = "{$slug}:post:{$post->ID}";
+
+		if ( isset( self::$rendering[ $key ] ) ) {
+			return;
+		}
+
+		$context = [
+			'postId'   => $post->ID,
+			'postType' => $post->post_type,
+		];
+		$live    = Live::blocks();
+
+		$previous_post = $GLOBALS['post'] ?? null;
+		$is_other_post = ! $previous_post instanceof \WP_Post || $previous_post->ID !== $post->ID;
+
+		if ( $is_other_post ) {
+			$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restored below.
+			setup_postdata( $post );
+		}
+
+		self::$rendering[ $key ] = true;
+
+		try {
+			Live::item(
+				$post->ID,
+				function () use ( $slug, $context, $live ) {
+					foreach ( self::blocks( $slug ) as $parsed ) {
+						// As render_pattern() renders them: no render filters before.
+						$block = new WP_Block( $parsed, $context );
+
+						if ( self::renders_for_live( $block, $live ) ) {
+							$block->render();
+						} else {
+							self::live_inside( $block, $live );
+						}
+					}
+				}
+			);
+		} finally {
+			unset( self::$rendering[ $key ] );
+
+			if ( $is_other_post ) {
+				$GLOBALS['post'] = $previous_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restoring.
+
+				if ( $previous_post instanceof \WP_Post ) {
+					setup_postdata( $previous_post );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Render the live blocks inside a block that isn't rendered itself, each
+	 * through the filters WP_Block::render() runs on an inner block.
+	 *
+	 * @param WP_Block $parent_block Block.
+	 * @param string[] $live         Live block names.
+	 * @return void
+	 */
+	private static function live_inside( WP_Block $parent_block, array $live ): void {
+		// Nothing inside that renders, or could add, a live block.
+		if ( ! self::contains( $parent_block->parsed_block, array_merge( $live, self::sources() ) ) ) {
+			return;
+		}
+
+		foreach ( $parent_block->inner_blocks as $inner ) {
+			if ( ! self::renders_for_live( $inner, $live ) ) {
+				self::live_inside( $inner, $live );
+				continue;
+			}
+
+			/** This filter is documented in wp-includes/blocks.php */
+			if ( null !== apply_filters( 'pre_render_block', null, $inner->parsed_block, $parent_block ) ) {
+				continue;
+			}
+
+			$source  = $inner->parsed_block;
+			$context = $inner->context;
+
+			/** This filter is documented in wp-includes/blocks.php */
+			$inner->parsed_block = apply_filters( 'render_block_data', $inner->parsed_block, $source, $parent_block );
+			/** This filter is documented in wp-includes/blocks.php */
+			$inner->context = apply_filters( 'render_block_context', $inner->context, $inner->parsed_block, $parent_block );
+
+			if ( $inner->context !== $context ) {
+				$inner->refresh_context_dependents();
+			} elseif ( $inner->parsed_block !== $source ) {
+				$inner->refresh_parsed_block_dependents();
+			}
+
+			$inner->render();
+		}
+	}
+
+	/**
+	 * Whether a block is rendered when only live blocks are: a live block,
+	 * or one whose output can hold live blocks the walk can't see.
+	 *
+	 * @param WP_Block $block Block.
+	 * @param string[] $live  Live block names.
+	 * @return bool
+	 */
+	private static function renders_for_live( WP_Block $block, array $live ): bool {
+		if ( in_array( $block->name, $live, true ) ) {
+			return true;
+		}
+
+		// It renders its inner blocks itself, so they can't be walked.
+		if ( ! empty( $block->block_type->skip_inner_blocks ) && self::contains( $block->parsed_block, array_merge( $live, self::sources() ) ) ) {
+			return true;
+		}
+
+		return in_array( $block->name, self::sources(), true );
+	}
+
+	/**
+	 * Blocks whose output can hold blocks that aren't in their parsed tree.
+	 *
+	 * @return string[]
+	 */
+	private static function sources(): array {
+		/**
+		 * Filters the blocks whose output can hold blocks their parsed tree
+		 * doesn't show (rendering a pattern, a template part or a post's
+		 * content), which are rendered whole when a loop item's live blocks are
+		 * rendered on their own.
+		 *
+		 * @param string[] $names Block names.
+		 */
+		return (array) apply_filters(
+			'matter_live_block_sources',
+			[ 'core/block', 'core/pattern', 'core/template-part', 'core/post-content', 'matter/template-part', 'matter/loop-item' ]
+		);
+	}
+
+	/**
+	 * Whether a parsed block, or any block inside it, is one of these.
+	 *
+	 * @param array    $parsed Parsed block.
+	 * @param string[] $names  Block names.
+	 * @return bool
+	 */
+	private static function contains( array $parsed, array $names ): bool {
+		if ( in_array( $parsed['blockName'] ?? '', $names, true ) ) {
+			return true;
+		}
+
+		foreach ( (array) ( $parsed['innerBlocks'] ?? [] ) as $inner ) {
+			if ( self::contains( $inner, $names ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * The rendered loop item for a term.
 	 *
 	 * @param int    $term_id  Term ID.
