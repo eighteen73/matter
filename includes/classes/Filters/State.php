@@ -50,6 +50,25 @@ final class State {
 
 				return '' !== $value && ! self::is_checked( $filter, $value ) && 0 === self::count( $filter, $value );
 			},
+			// A parent option's options show once it's opened, or while one of
+			// them is chosen.
+			'childrenOpen'  => function () {
+				$context = wp_interactivity_get_context();
+
+				if ( is_bool( $context['branchOpen'] ?? null ) ) {
+					return $context['branchOpen'];
+				}
+
+				$filter = self::filter( $context );
+
+				foreach ( (array) ( $context['within'] ?? [] ) as $value ) {
+					if ( self::is_checked( $filter, (string) $value ) ) {
+						return true;
+					}
+				}
+
+				return false;
+			},
 			// A range's fields and slider (see the store's).
 			'boundValue'    => function () {
 				$context = wp_interactivity_get_context();

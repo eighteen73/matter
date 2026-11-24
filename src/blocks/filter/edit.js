@@ -186,19 +186,21 @@ function OptionList({ options, display, radio, atLeast, showCounts, limit }) {
 						aria-hidden="true"
 					/>
 				)}
-				<OptionName
-					option={option}
-					stars={display === 'stars'}
-					atLeast={atLeast}
-				/>
-				{showCounts && option.count > 0 && (
-					<>
-						{' '}
-						<span className="wp-block-matter-filter__count">
-							{option.count}
-						</span>
-					</>
-				)}
+				<span className="wp-block-matter-filter__text">
+					<OptionName
+						option={option}
+						stars={display === 'stars'}
+						atLeast={atLeast}
+					/>
+					{showCounts && option.count > 0 && (
+						<>
+							{' '}
+							<span className="wp-block-matter-filter__count">
+								{option.count}
+							</span>
+						</>
+					)}
+				</span>
 			</span>
 			{option.children?.length > 0 && (
 				<ul className="wp-block-matter-filter__children">
