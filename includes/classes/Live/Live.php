@@ -201,7 +201,8 @@ final class Live {
 
 	/**
 	 * A loop item's live blocks, rendered as the current visitor, in the
-	 * order its placeholders are numbered.
+	 * order its placeholders are numbered. Only they are rendered, not the
+	 * rest of the item (see LoopItem::render_live()).
 	 *
 	 * @param int $post_id Post ID.
 	 * @return string[]
@@ -209,7 +210,7 @@ final class Live {
 	public static function capture( int $post_id ): array {
 		unset( self::$captured[ $post_id ] );
 
-		self::in_mode( 'capture', fn() => LoopItem::render( $post_id ) );
+		self::in_mode( 'capture', fn() => LoopItem::render_live( $post_id ) );
 
 		return self::$captured[ $post_id ] ?? [];
 	}
@@ -404,8 +405,21 @@ final class Live {
 		}
 
 		$items = [];
+		$ids   = array_values( array_unique( array_map( 'intval', (array) $request['ids'] ) ) );
 
-		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
+		// Load every item's post, meta and terms in a few queries, not a few
+		// per item, as a page's query would have.
+		_prime_post_caches( $ids, true, true );
+
+		/**
+		 * Fires before the live blocks of these posts render, so a plugin can
+		 * load what they show for all of them at once (Abacus: their prices).
+		 *
+		 * @param int[] $ids Post IDs.
+		 */
+		do_action( 'matter_live_items', $ids );
+
+		foreach ( $ids as $id ) {
 			if ( self::visible( $id ) ) {
 				$items[ (string) $id ] = array_values( self::capture( $id ) );
 			}
