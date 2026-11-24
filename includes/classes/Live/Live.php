@@ -216,6 +216,38 @@ final class Live {
 	}
 
 	/**
+	 * What live blocks do now: `render`, `placeholder` (prerendering an item
+	 * to share) or `capture` (rendering them for the endpoint).
+	 *
+	 * @return string
+	 */
+	public static function mode(): string {
+		return self::$mode;
+	}
+
+	/**
+	 * Fill a prerendered loop item's placeholders with its live blocks,
+	 * rendered now as the current visitor. Null when they don't match what
+	 * the item renders (a placeholder too many or too few), so the caller
+	 * renders the item instead.
+	 *
+	 * @param int    $post_id Item's post ID.
+	 * @param string $html    The item, with placeholders.
+	 * @return string|null
+	 */
+	public static function fill( int $post_id, string $html ): ?string {
+		$pattern = '#<div\b[^>]*\bdata-matter-live="' . $post_id . ':(\d+)"[^>]*>\s*</div>#';
+		$count   = preg_match_all( $pattern, $html );
+		$blocks  = self::capture( $post_id );
+
+		if ( count( $blocks ) !== $count ) {
+			return null;
+		}
+
+		return preg_replace_callback( $pattern, static fn( array $found ): string => $blocks[ (int) $found[1] ] ?? '', $html );
+	}
+
+	/**
 	 * A live block in a loop item: a placeholder, or captured.
 	 *
 	 * @param string $content Rendered block.
