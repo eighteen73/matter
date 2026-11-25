@@ -122,7 +122,9 @@ class FiltersTest extends TestCase {
 	 * @return int|null Null when the option isn't there.
 	 */
 	private function option_count( string $html, string $value ): ?int {
-		if ( ! preg_match( '#value="' . preg_quote( $value, '#' ) . '"[^>]*/><span class="wp-block-matter-filter__name">[^<]*</span> <span class="wp-block-matter-filter__count"[^>]*>(\d+)</span>#', $html, $match ) ) {
+		// The count follows the option's input within its label (after a
+		// swatch or stars, and inside the name and count's __text wrapper).
+		if ( ! preg_match( '#value="' . preg_quote( $value, '#' ) . '"[^>]*/>(?:(?!</label>).)*?<span class="wp-block-matter-filter__count"[^>]*>(\d+)</span>#s', $html, $match ) ) {
 			return null;
 		}
 
