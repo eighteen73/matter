@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+### Changed
+
+- **Product listings no longer load their products twice.** When a listing shows a product's prerendered loop item, its product (the data its Add to Cart button reads) now goes into WooCommerce's products store too, as the Product Collection would load it, and fires `matter_loop_item_from_prerendered`. Before, the Product Collection then loaded every product it listed through the Store API, whole (descriptions, images, prices), and added it to the page. On a 96-product archive the page's render fell from about 1.1s to 0.6s, its HTML from about 1.6MB to 0.9MB, and its queries from 214 to 118. WooCommerce's store has no way in for this, so its private property is set; if that changes, products load as before.
+
 ## 1.1.0
 
 ### Added
