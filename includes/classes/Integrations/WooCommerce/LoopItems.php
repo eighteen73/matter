@@ -19,6 +19,14 @@
  * a guest, with only what a listing's blocks use: without its prices (which
  * are live), images or descriptions.
  *
+ * When a listing shows a prerendered loop item, that product is put in
+ * WooCommerce's products store too, as the Product Collection would load it.
+ * Otherwise the Product Collection loads every product it lists through the
+ * Store API, whole (descriptions, images, prices), and adds it to the page:
+ * on a page of 96 products, over half a second and 860KB the page's blocks
+ * never read. The store has no way in for this, so its own property is set;
+ * if it ever changes, products load as before.
+ *
  * WooCommerce's version is part of the loop item version, since its blocks
  * render loop items.
  *
@@ -107,6 +115,7 @@ final class LoopItems {
 		add_action( 'matter_prerender_loop_item_end', [ $this, 'restore_cart' ] );
 		add_filter( 'matter_prerender_loop_item', [ $this, 'item' ], 10, 2 );
 		add_filter( 'matter_prerender_loop_item_version', [ $this, 'version' ] );
+		add_action( 'matter_loop_item_from_prerendered', [ $this, 'share_product' ], 10, 2 );
 	}
 
 	/**
@@ -205,6 +214,82 @@ final class LoopItems {
 		unset( $this->products[ $id ] );
 
 		return $item;
+	}
+
+	/**
+	 * A prerendered loop item's product, for WooCommerce's products store, so
+	 * the Product Collection doesn't load it again whole.
+	 *
+	 * @param mixed $post The item.
+	 * @param mixed $item Prerendered loop item.
+	 * @return void
+	 */
+	public function share_product( $post, $item ): void {
+		if ( ! $post instanceof WP_Post || 'product' !== $post->post_type || ! is_array( $item ) ) {
+			return;
+		}
+
+		$product = $item['data']['state'][ self::PRODUCTS ]['products'][ $post->ID ] ?? null;
+
+		if ( is_array( $product ) && (int) ( $product['id'] ?? 0 ) === $post->ID ) {
+			self::store_product( $post->ID, $product );
+		}
+	}
+
+	/**
+	 * Put a product in WooCommerce's products store, unless it's there, as
+	 * the store's load_product() would: its getters registered, the product
+	 * kept so loading it returns it. Done through the store's private
+	 * properties, which may change; if they do, nothing is put there and the
+	 * product loads as before.
+	 *
+	 * @param int   $id      Product ID.
+	 * @param array $product Its data.
+	 * @return bool Whether it was put there.
+	 */
+	public static function store_product( int $id, array $product ): bool {
+		static $store = null;
+
+		if ( false === $store ) {
+			return false;
+		}
+
+		try {
+			if ( null === $store ) {
+				$class = 'Automattic\\WooCommerce\\Blocks\\SharedStores\\ProductsStore';
+				$store = false;
+
+				if ( ! class_exists( $class ) ) {
+					return false;
+				}
+
+				$products = new \ReflectionProperty( $class, 'products' );
+				$getters  = new \ReflectionMethod( $class, 'register_getters' );
+
+				if ( ! $products->isStatic() || ! $getters->isStatic() || ! is_array( $products->getValue() ) ) {
+					return false;
+				}
+
+				$store = [ $products, $getters ];
+			}
+
+			[ $products, $getters ] = $store;
+			$loaded                 = (array) $products->getValue();
+
+			if ( isset( $loaded[ $id ] ) ) {
+				return false;
+			}
+
+			$loaded[ $id ] = $product;
+			$products->setValue( null, $loaded );
+			$getters->invoke( null );
+		} catch ( \Throwable $e ) {
+			$store = false;
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
