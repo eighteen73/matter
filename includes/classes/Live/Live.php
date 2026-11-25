@@ -201,7 +201,8 @@ final class Live {
 
 	/**
 	 * A loop item's live blocks, rendered as the current visitor, in the
-	 * order its placeholders are numbered.
+	 * order its placeholders are numbered. Only they are rendered, not the
+	 * rest of the item (see LoopItem::render_live()).
 	 *
 	 * @param int $post_id Post ID.
 	 * @return string[]
@@ -209,9 +210,41 @@ final class Live {
 	public static function capture( int $post_id ): array {
 		unset( self::$captured[ $post_id ] );
 
-		self::in_mode( 'capture', fn() => LoopItem::render( $post_id ) );
+		self::in_mode( 'capture', fn() => LoopItem::render_live( $post_id ) );
 
 		return self::$captured[ $post_id ] ?? [];
+	}
+
+	/**
+	 * What live blocks do now: `render`, `placeholder` (prerendering an item
+	 * to share) or `capture` (rendering them for the endpoint).
+	 *
+	 * @return string
+	 */
+	public static function mode(): string {
+		return self::$mode;
+	}
+
+	/**
+	 * Fill a prerendered loop item's placeholders with its live blocks,
+	 * rendered now as the current visitor. Null when they don't match what
+	 * the item renders (a placeholder too many or too few), so the caller
+	 * renders the item instead.
+	 *
+	 * @param int    $post_id Item's post ID.
+	 * @param string $html    The item, with placeholders.
+	 * @return string|null
+	 */
+	public static function fill( int $post_id, string $html ): ?string {
+		$pattern = '#<div\b[^>]*\bdata-matter-live="' . $post_id . ':(\d+)"[^>]*>\s*</div>#';
+		$count   = preg_match_all( $pattern, $html );
+		$blocks  = self::capture( $post_id );
+
+		if ( count( $blocks ) !== $count ) {
+			return null;
+		}
+
+		return preg_replace_callback( $pattern, static fn( array $found ): string => $blocks[ (int) $found[1] ] ?? '', $html );
 	}
 
 	/**
@@ -404,8 +437,21 @@ final class Live {
 		}
 
 		$items = [];
+		$ids   = array_values( array_unique( array_map( 'intval', (array) $request['ids'] ) ) );
 
-		foreach ( array_unique( array_map( 'intval', (array) $request['ids'] ) ) as $id ) {
+		// Load every item's post, meta and terms in a few queries, not a few
+		// per item, as a page's query would have.
+		_prime_post_caches( $ids, true, true );
+
+		/**
+		 * Fires before the live blocks of these posts render, so a plugin can
+		 * load what they show for all of them at once (Abacus: their prices).
+		 *
+		 * @param int[] $ids Post IDs.
+		 */
+		do_action( 'matter_live_items', $ids );
+
+		foreach ( $ids as $id ) {
 			if ( self::visible( $id ) ) {
 				$items[ (string) $id ] = array_values( self::capture( $id ) );
 			}
