@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Filters:** a long list of options can scroll in a pane of its own: a theme sets `--matter-filter-options-max-size` (see Filters, "Long lists", in the README).
+- **WooCommerce:** a filter's options no longer get the space WooCommerce's block theme styles put under every label on its pages (`.woocommerce-page label`), which spaced them unevenly and set a parent option's button off its name. The rule (`.woocommerce-page .wp-block-matter-filter__choice`) is added to the filter block's styles only with WooCommerce.
+
+### Visual changes
+
+- A filter option's checkbox or radio sits on the first line of a name that wraps (`align-items: baseline`), not beside the middle of the name; its name and count (`__text`) fill the row, so a count follows the name's last word; a count isn't broken across lines.
+- A parent option's button (subcategories) sits beside the first line of its name, centred on it (`1lh`, where supported), and stays a 24px target: on a shorter line it's nudged up (`translate`) rather than pushing the options apart.
+- A filter's options list (`__options`) has `overflow-y: auto` and 0.25rem of padding, taken back by a negative margin, so it scrolls when a theme sets a maximum size and nothing moves when it doesn't. A theme that sets a margin on the list keeps the padding.
+
 ## 1.0.0
 
 A rework that moves design decisions out of the editor and into the theme. Not compatible with 0.x content; keep existing sites on 0.x. The README's theme contract lists what themes and saved content can rely on within 1.x.
