@@ -162,6 +162,7 @@ final class WooCommerce implements Integration {
 		add_filter( 'matter_archive_post_type_title', [ $this, 'shop_title' ], 10, 2 );
 		add_filter( 'matter_archive_term_image_id', [ $this, 'term_thumbnail' ], 10, 2 );
 		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor' ] );
+		add_action( 'wp_enqueue_scripts', [ $this, 'filter_style' ] );
 
 		// Filters.
 		add_filter( 'matter_filters_query_blocks', [ $this, 'filterable_query_blocks' ] );
@@ -361,6 +362,19 @@ final class WooCommerce implements Integration {
 		}
 
 		return (int) get_term_meta( $term->term_id, 'thumbnail_id', true );
+	}
+
+	/**
+	 * Undo WooCommerce's space under every label on its pages for a filter's
+	 * options (`.woocommerce-page label`, in its block theme styles), which
+	 * spaces the options unevenly and sets a parent option's button off its
+	 * name. Two classes, to outrank WooCommerce's rule; a theme spacing the
+	 * options needs as much.
+	 *
+	 * @return void
+	 */
+	public function filter_style(): void {
+		wp_add_inline_style( 'matter-filter-style', '.woocommerce-page .wp-block-matter-filter__choice{margin-block-end:0}' );
 	}
 
 	/**

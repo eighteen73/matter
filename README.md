@@ -615,6 +615,8 @@ Filters for a listing, replacing FacetWP. A listing is a Query Loop (or, with th
 
 Pagination is core's Query Pagination, which works inside the router region.
 
+**Long lists.** A theme sets `--matter-filter-options-max-size` (`18rem`, say) on a filter or a display (`.is-display-checkboxes`), and a list of options longer than that scrolls in a pane of its own, with room kept for the options' focus outlines. Unset, a list is as long as its options.
+
 **The URL is the state.** Each source owns its parameters, so a filtered listing is a plain URL the server renders the same way however it's reached: a click, a reload, a shared link, or the form submitted without JavaScript (its Apply button shows only then; checkboxes arrive as `filter_x[]=…` and are joined into the comma form before WordPress reads the request). Changing a filter goes back to the first page.
 
 **Search engines.** A filtered listing is `noindex, follow` (through core's `wp_robots`, which Yoast SEO keeps): every combination of filters is a URL of its own, each a copy of part of the listing, but its links are followed. The unfiltered listing is left alone. `matter_filters_noindex` (default true) lets a project index filtered listings.
