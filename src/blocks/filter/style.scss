@@ -20,13 +20,28 @@
 	padding: 0;
 }
 
+// A long list can scroll in a pane of its own, rather than the page: a theme
+// sets --matter-filter-options-max-size (18rem, say) and as many options as
+// fit show, then a scrollbar. Unset, the list is as long as its options. The
+// pane keeps room around them for their focus outlines, which it would
+// otherwise clip; the room is taken back with a margin, so nothing moves.
+:where(.wp-block-matter-filter__options) {
+	margin: -0.25rem;
+	max-block-size: var(--matter-filter-options-max-size, none);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 0.25rem;
+}
+
 :where(.wp-block-matter-filter__children) {
 	margin-block-start: 0.25rem;
 	padding-inline-start: 1.5rem;
 }
 
+// The control sits on the first line of a name that wraps (baseline), not
+// beside the middle of the name.
 :where(.wp-block-matter-filter__choice) {
-	align-items: center;
+	align-items: baseline;
 	cursor: pointer;
 	display: flex;
 	gap: 0.5rem;
@@ -35,12 +50,76 @@
 	min-block-size: 1.5rem;
 }
 
+// An option's name and count together: a count after a name that wraps
+// follows its last word. Kept whole, so "(12)" never breaks.
+:where(.wp-block-matter-filter__text) {
+	flex: 1;
+	min-inline-size: 0;
+}
+
+:where(.wp-block-matter-filter__count) {
+	white-space: nowrap;
+}
+
 :where(.wp-block-matter-filter__count)::before {
 	content: "(";
 }
 
 :where(.wp-block-matter-filter__count)::after {
 	content: ")";
+}
+
+// A parent option (a category with subcategories): its name, the button
+// that shows its options, then them, hidden until it's opened or one of
+// them is chosen.
+// The button sits beside the first line of the name, even when it wraps.
+:where(.wp-block-matter-filter__option.has-children) {
+	align-items: start;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+:where(.wp-block-matter-filter__option.has-children > .wp-block-matter-filter__children) {
+	grid-column: 1 / -1;
+}
+
+:where(.wp-block-matter-filter__children[hidden]) {
+	display: none;
+}
+
+// Centred on the name's first line (1lh, where supported). It stays a 24px
+// target when the line is shorter, nudged up to centre on the line (a
+// translate, which themes' button resets leave alone, and which doesn't push
+// the options apart).
+:where(.wp-block-matter-filter__expand) {
+	align-items: center;
+	background: transparent;
+	block-size: 1.5rem;
+	block-size: max(1.5rem, 1lh);
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	inline-size: 1.5rem;
+	justify-content: center;
+	padding: 0;
+	translate: 0 min(0px, calc((1lh - 1.5rem) / 2));
+}
+
+// A chevron, pointing down while closed and up while open.
+:where(.wp-block-matter-filter__expand)::before {
+	block-size: 0.4em;
+	border-block-end: 2px solid;
+	border-inline-end: 2px solid;
+	content: "";
+	inline-size: 0.4em;
+	rotate: 45deg;
+	translate: 0 -0.15em;
+}
+
+:where(.wp-block-matter-filter__expand[aria-expanded="true"])::before {
+	rotate: 225deg;
+	translate: 0 0.15em;
 }
 
 // "Show more": options past the first few, until it's clicked.

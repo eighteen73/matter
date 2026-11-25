@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.1.0
+
+### Added
+
+**Filters**
+
+- A category filter on a category's own archive offers only the categories below it (nested as before), rather than every category in the shop; a category with none offers nothing and the filter hides. It applies to any hierarchical taxonomy when the listing is the archive's own query. `matter_filters_terms_within_archive` turns it off. Besides a shorter list, it keeps a listing within what a results provider can answer in the browser.
+- A parent option (a category with subcategories) has a button beside it that shows and hides its options: hidden until it's opened, or while one of them is chosen (`childrenOpen`, worked out on the server and in the browser, so it holds when a results provider rebuilds the filters). Each parent keeps its own open state. The editor preview matches.
+- An option's name and count are wrapped together (`__text`), so a count after a name that wraps follows its last word.
+- A long list of options can scroll in a pane of its own: a theme sets `--matter-filter-options-max-size` (see Filters, "Long lists", in the README).
+
+**Loop items and live blocks**
+
+- **Prerendered copies:** a plugin holding a loop item's prerendered copy (Seek: from the search hit's document) can offer it through `matter_loop_item_prerendered`. When it's current (its version is the pattern's), `LoopItem::render()` shows it instead of rendering the pattern, with its live blocks rendered now for the visitor (`Live::fill()`) and their state added to the page's. Not while prerendering or capturing, not when its placeholders don't match what the item renders, and not for the first item of each pattern on a page, which renders so its blocks' styles, scripts and stores load. A product archive's HTML, Interactivity API state and assets are unchanged; its render time fell from about 830ms to 400ms.
+- **Live blocks only:** `matter/v1/live` renders just a loop item's live blocks (`LoopItem::render_live()`), in the same order and with the same context, rather than the whole item. Blocks that can add blocks the tree doesn't show (a pattern or template part, `matter_live_block_sources`) render whole. The endpoint primes its items' posts, meta and terms together, and fires `matter_live_items` with their IDs so a plugin can batch what the live blocks show (Abacus: prices). A 100-item request fell from 1.9s to 0.24s with Abacus.
+
+### Fixed
+
+- **Prerendering in the background:** WooCommerce doesn't register its block types on requests it expects to render none (cron, AJAX, its REST routes), so a loop item prerendered there (a search index syncing through Action Scheduler) lost its product image and add-to-cart button. The WooCommerce integration now registers them as a prerender starts, and `Prerendered::render()` returns nothing while any block type in the pattern is unregistered (`LoopItem::unregistered_blocks()`), whichever plugin skipped it.
+- **WooCommerce label spacing:** a filter's options no longer get the space WooCommerce's block theme styles put under every label on its pages (`.woocommerce-page label`), which spaced them unevenly and set a parent option's button off its name. The rule (`.woocommerce-page .wp-block-matter-filter__choice`) is added to the filter block's styles only with WooCommerce.
+- **Builds:** a browserslist config, so building Matter inside a site no longer picks up the site's own (one listing browsers without `import()` broke the script module build).
+
+### Visual changes
+
+- A parent option is laid out as its name, then its button (a chevron turned by `aria-expanded`), then its options.
+- A filter option's checkbox or radio sits on the first line of a name that wraps (`align-items: baseline`), not beside the middle of the name; its name and count (`__text`) fill the row, so a count follows the name's last word; a count isn't broken across lines.
+- A parent option's button sits beside the first line of its name, centred on it (`1lh`, where supported), and stays a 24px target: on a shorter line it's nudged up (`translate`) rather than pushing the options apart.
+- A filter's options list (`__options`) has `overflow-y: auto` and 0.25rem of padding, taken back by a negative margin, so it scrolls when a theme sets a maximum size and nothing moves when it doesn't. A theme that sets a margin on the list keeps the padding.
+
 ## 1.0.0
 
 A rework that moves design decisions out of the editor and into the theme. Not compatible with 0.x content; keep existing sites on 0.x. The README's theme contract lists what themes and saved content can rely on within 1.x.

@@ -427,6 +427,21 @@ const { state, actions } = store('matter/filters', {
 
 			return !state.isChecked && !state.count && context.value !== '';
 		},
+		// A parent option's options show once it's opened, or while one of
+		// them is chosen.
+		get childrenOpen() {
+			const context = getContext();
+
+			if (typeof context.branchOpen === 'boolean') {
+				return context.branchOpen;
+			}
+
+			const filter = filterOf(context);
+
+			return (context.within ?? []).some((value) =>
+				isChosen(filter, value)
+			);
+		},
 		get chips() {
 			return chipsOf(state.listings[getContext().listing]);
 		},
@@ -742,6 +757,11 @@ const { state, actions } = store('matter/filters', {
 
 		showMore() {
 			getContext().expanded = true;
+		},
+
+		// Show or hide a parent option's options.
+		toggleChildren() {
+			getContext().branchOpen = !state.childrenOpen;
 		},
 	},
 	callbacks: {
