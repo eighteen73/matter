@@ -7,6 +7,7 @@
 
 namespace Eighteen73\Matter\Tests;
 
+use Automattic\WooCommerce\Blocks\SharedStores\ProductsStore;
 use Eighteen73\Matter\LoopItems\Prerendered;
 use Eighteen73\Matter\Integrations\WooCommerce\LoopItems as WooCommerceLoopItems;
 
@@ -228,43 +229,49 @@ class PrerenderedTest extends TestCase {
 	}
 
 	/**
-	 * A prerendered product's data goes in WooCommerce's products store, so
-	 * the Product Collection doesn't load the product again, whole.
+	 * A prerendered product's data goes in WooCommerce's products store, as
+	 * the store's own load_product() would put it there, so the Product
+	 * Collection doesn't load the product again, whole. PHPUnit runs without
+	 * WooCommerce, so its store is a fixture shaped like WooCommerce 11.3's.
 	 *
 	 * @return void
 	 */
 	public function test_woocommerce_product_shared_with_its_store(): void {
-		if ( ! class_exists( \WC_Product_Simple::class ) || ! function_exists( 'wc_interactivity_api_load_product' ) ) {
-			$this->markTestSkipped( 'WooCommerce is not active.' );
+		if ( ! class_exists( ProductsStore::class ) ) {
+			require_once dirname( __DIR__ ) . '/fixtures/woocommerce-products-store/ProductsStore.php';
 		}
 
-		$consent = 'I acknowledge that using experimental APIs means my theme or plugin will inevitably break in the next version of WooCommerce';
-		$ids     = [];
+		$ids = [];
 
-		foreach ( [ 'Shared kettle', 'Loaded kettle', 'Mismatched kettle' ] as $name ) {
-			$product = new \WC_Product_Simple();
-			$product->set_name( $name );
-			$product->set_regular_price( '10' );
-			$product->set_description( 'A long description no listing reads.' );
-			$ids[ $name ] = $product->save();
+		foreach ( [ 'shared', 'loaded', 'mismatched' ] as $name ) {
+			$ids[ $name ] = self::factory()->post->create(
+				[
+					'post_type'  => 'product',
+					'post_title' => ucfirst( $name ) . ' kettle',
+				]
+			);
 		}
 
 		$shared = [
-			'id'   => $ids['Shared kettle'],
+			'id'   => $ids['shared'],
 			'type' => 'simple',
 		];
 		$item   = static fn( int $id, array $product ) => [ 'data' => [ 'state' => [ 'woocommerce/products' => [ 'products' => [ $id => $product ] ] ] ] ];
 
 		$loop_items = new WooCommerceLoopItems();
-		$loop_items->share_product( get_post( $ids['Shared kettle'] ), $item( $ids['Shared kettle'], $shared ) );
-		// A product that isn't the post's is left alone.
-		$loop_items->share_product( get_post( $ids['Mismatched kettle'] ), $item( $ids['Mismatched kettle'], $shared ) );
+		$loop_items->share_product( get_post( $ids['shared'] ), $item( $ids['shared'], $shared ) );
+		// A product that isn't the post's is left alone, and so is a post that isn't a product.
+		$loop_items->share_product( get_post( $ids['mismatched'] ), $item( $ids['mismatched'], $shared ) );
+		$loop_items->share_product( get_post( $this->post ), $item( $this->post, [ 'id' => $this->post ] ) );
 
-		$this->assertSame( $shared, wc_interactivity_api_load_product( $consent, $ids['Shared kettle'] ) );
-		$this->assertArrayHasKey( 'description', wc_interactivity_api_load_product( $consent, $ids['Loaded kettle'] ) );
-		$this->assertArrayHasKey( 'description', wc_interactivity_api_load_product( $consent, $ids['Mismatched kettle'] ) );
+		$this->assertSame( $shared, ProductsStore::load_product( '', $ids['shared'] ) );
+		$this->assertTrue( ProductsStore::getters_registered(), 'Its getters are registered, as load_product() would.' );
+		$this->assertArrayHasKey( 'description', ProductsStore::load_product( '', $ids['loaded'] ) );
+		$this->assertArrayHasKey( 'description', ProductsStore::load_product( '', $ids['mismatched'] ) );
+		$this->assertArrayHasKey( 'description', ProductsStore::load_product( '', $this->post ) );
 
 		// One already in the store stays as it is.
-		$this->assertFalse( WooCommerceLoopItems::store_product( $ids['Loaded kettle'], $shared ) );
+		$this->assertFalse( WooCommerceLoopItems::store_product( $ids['loaded'], $shared ) );
+		$this->assertArrayHasKey( 'description', ProductsStore::load_product( '', $ids['loaded'] ) );
 	}
 }

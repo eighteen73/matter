@@ -257,11 +257,14 @@ final class LoopItems {
 		try {
 			if ( null === $store ) {
 				$class = 'Automattic\\WooCommerce\\Blocks\\SharedStores\\ProductsStore';
-				$store = false;
 
+				// Not there (yet): asked again next time.
 				if ( ! class_exists( $class ) ) {
 					return false;
 				}
+
+				// A store unlike the one this was written for isn't used this request.
+				$store = false;
 
 				$products = new \ReflectionProperty( $class, 'products' );
 				$getters  = new \ReflectionMethod( $class, 'register_getters' );
