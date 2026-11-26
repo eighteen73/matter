@@ -405,6 +405,16 @@ final class LoopItem {
 			wp_interactivity_config( (string) $namespace, (array) $config );
 		}
 
+		/**
+		 * Fires when a post's prerendered loop item is shown, its state added to
+		 * the page's (WooCommerce: its product, so the Product Collection
+		 * doesn't load it again).
+		 *
+		 * @param \WP_Post $post Post.
+		 * @param array    $item Prerendered loop item.
+		 */
+		do_action( 'matter_loop_item_from_prerendered', $post, $item );
+
 		return $html;
 	}
 
