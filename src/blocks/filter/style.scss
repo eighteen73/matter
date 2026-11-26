@@ -346,9 +346,11 @@
 
 .wp-block-matter-filter__popover {
 	background: transparent;
+	block-size: auto;
 	border: 0;
 	color: inherit;
 	display: block;
+	inline-size: auto;
 	inset: auto;
 	margin: 0;
 	overflow: visible;

@@ -341,6 +341,11 @@ final class Filters {
 				'counts'   => (object) [],
 			];
 
+			// A sort's default, left out of the URL.
+			if ( method_exists( $source, 'default_value' ) ) {
+				$filters[ $id ]['default'] = (string) $source->default_value();
+			}
+
 			// A range's chip worded in the browser (a provider's results).
 			if ( 'range' === $source->kind() && method_exists( $source, 'range_labels' ) ) {
 				$filters[ $id ]['rangeLabels'] = $source->range_labels();
