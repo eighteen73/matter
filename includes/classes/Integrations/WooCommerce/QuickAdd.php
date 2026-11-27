@@ -193,9 +193,25 @@ final class QuickAdd {
 
 		self::$modal = true;
 
+		// The modal's and quick add's styles and script modules, now: a block
+		// theme renders the template (this button) before the head, which
+		// prints the import map. Enqueued only in the footer, the Modal's
+		// module would load without its dependencies in the import map
+		// (`matter/inert`) and fail, on a page with no other overlay.
+		foreach ( [ 'matter/modal', 'matter/slot', self::BLOCK ] as $name ) {
+			$type = $registry->get_registered( $name );
+
+			foreach ( $type ? $type->style_handles : [] as $handle ) {
+				wp_enqueue_style( $handle );
+			}
+
+			foreach ( $type ? $type->view_script_module_ids : [] as $module ) {
+				wp_enqueue_script_module( $module );
+			}
+		}
+
 		// Rendered in the footer, outside the loop the button is in (a modal in
-		// a Query Loop is the post's own, one of a group). Its styles and
-		// script modules are printed with the footer's.
+		// a Query Loop is the post's own, one of a group).
 		add_action(
 			'wp_footer',
 			static function () {

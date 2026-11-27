@@ -216,11 +216,14 @@ const { state } = store('matter/quick-add', {
 			const api = internals();
 			const region = api?.routerRegions.get(REGION);
 			const modal = config().modal;
+			const overlays = store('matter/overlay');
 
+			// The Modal block's script must have loaded (its store's actions).
 			if (
 				!api ||
 				!region ||
 				!modal ||
+				typeof overlays?.actions?.open !== 'function' ||
 				!document.querySelector(
 					`[data-wp-router-region="${REGION}"]`
 				) ||
@@ -238,7 +241,6 @@ const { state } = store('matter/quick-add', {
 
 			const { ref } = getElement();
 			const url = contentUrl(ref.href, config().param);
-			const overlays = store('matter/overlay');
 			const token = ++opening;
 
 			window.clearTimeout(intent);
@@ -269,7 +271,13 @@ const { state } = store('matter/quick-add', {
 				}
 
 				state.isLoading = false;
-				overlays.actions.close(modal);
+
+				try {
+					overlays.actions.close(modal);
+				} catch {
+					// The link below leaves the page anyway.
+				}
+
 				// eslint-disable-next-line no-console
 				console.warn(error);
 				window.location.assign(ref.href);
