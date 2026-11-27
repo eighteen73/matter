@@ -1,0 +1,23 @@
+// Quick add: only what's needed to use it. The theme styles the button and
+// the modal (the Modal block's styles), and lays out what it shows in its
+// `quick-add-product` pattern.
+
+:where(.wp-block-matter-quick-add__button) {
+	cursor: pointer;
+	display: inline-block;
+	text-decoration: none;
+}
+
+// While a product loads: its status, and room for the content so the modal
+// doesn't open as a sliver.
+:where(.wp-block-matter-quick-add__status) {
+	margin: 0;
+}
+
+:where(.wp-block-matter-quick-add__status[hidden]) {
+	display: none;
+}
+
+:where(.wp-block-matter-quick-add__content:empty) {
+	min-block-size: 8rem;
+}

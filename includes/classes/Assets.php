@@ -49,6 +49,8 @@ class Assets {
 		'matter/live'       => 'live/view.js',
 		// Tells other scripts when a list's loop items change (a filter, a page).
 		'matter/loop-items' => 'loop-items/view.js',
+		// Quick add's modal: loads a product's content into it.
+		'matter/quick-add'  => 'quick-add/view.js',
 	];
 
 	/**
