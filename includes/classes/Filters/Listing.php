@@ -210,8 +210,18 @@ final class Listing {
 		 */
 		$vars = (array) apply_filters( 'matter_filters_base_query_vars', $vars, $this, $block );
 
-		// Every source's parameters (some arrive as query vars), and paging.
-		foreach ( array_merge( Sources::params(), Sources::query_param_names(), [ 'paged', 'page', 'offset' ] ) as $param ) {
+		// Every source's parameters (some arrive as query vars), and paging,
+		// but not a sort's: its parameter (WooCommerce's `orderby`) is the
+		// query's own order, which the listing keeps.
+		$sorts = [];
+
+		foreach ( Sources::all() as $source ) {
+			if ( 'sort' === $source->kind() ) {
+				$sorts = array_merge( $sorts, array_values( $source->params() ) );
+			}
+		}
+
+		foreach ( array_diff( array_merge( Sources::params(), Sources::query_param_names(), [ 'paged', 'page', 'offset' ] ), $sorts ) as $param ) {
 			unset( $vars[ $param ] );
 		}
 

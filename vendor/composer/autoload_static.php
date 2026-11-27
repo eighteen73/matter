@@ -63,6 +63,7 @@ class ComposerStaticInitb08fec4d1e37be68974a74c387e1ec50
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\PriceSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/PriceSource.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\ProductTaxonomySource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/ProductTaxonomySource.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\RatingSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/RatingSource.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\SortSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/SortSource.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\StockSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/StockSource.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\LoopItems' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/LoopItems.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\OwnPrices' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/OwnPrices.php',

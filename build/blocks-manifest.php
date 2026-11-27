@@ -856,6 +856,7 @@ return array(
 			)
 		),
 		'textdomain' => 'matter',
+		'viewScriptModule' => 'matter/loop-items',
 		'editorScript' => 'file:./index.js',
 		'render' => 'file:./render.php'
 	),

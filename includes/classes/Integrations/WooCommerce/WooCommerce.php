@@ -36,6 +36,7 @@ use Eighteen73\Matter\Integrations\WooCommerce\Filters\Counts as FilterCounts;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\PriceSource;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\ProductTaxonomySource;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\RatingSource;
+use Eighteen73\Matter\Integrations\WooCommerce\Filters\SortSource;
 use Eighteen73\Matter\Integrations\WooCommerce\Filters\StockSource;
 use WP_Term;
 
@@ -286,6 +287,7 @@ final class WooCommerce implements Integration {
 		$sources->register( new PriceSource() );
 		$sources->register( new StockSource() );
 		$sources->register( new RatingSource() );
+		$sources->register( new SortSource() );
 	}
 
 	/**

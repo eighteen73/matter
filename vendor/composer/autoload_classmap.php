@@ -48,6 +48,7 @@ return array(
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\PriceSource' => $baseDir . '/includes/classes/Integrations/WooCommerce/Filters/PriceSource.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\ProductTaxonomySource' => $baseDir . '/includes/classes/Integrations/WooCommerce/Filters/ProductTaxonomySource.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\RatingSource' => $baseDir . '/includes/classes/Integrations/WooCommerce/Filters/RatingSource.php',
+    'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\SortSource' => $baseDir . '/includes/classes/Integrations/WooCommerce/Filters/SortSource.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\StockSource' => $baseDir . '/includes/classes/Integrations/WooCommerce/Filters/StockSource.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\LoopItems' => $baseDir . '/includes/classes/Integrations/WooCommerce/LoopItems.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\OwnPrices' => $baseDir . '/includes/classes/Integrations/WooCommerce/OwnPrices.php',
