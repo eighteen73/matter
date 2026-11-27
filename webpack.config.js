@@ -47,6 +47,7 @@ const moduleEntries = {
 	'filters/view': src('filters/view.js'),
 	'live/view': src('live/view.js'),
 	'loop-items/view': src('loop-items/view.js'),
+	'quick-add/view': src('quick-add/view.js'),
 };
 
 /**

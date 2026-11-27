@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+### Added
+
+- **Quick add** (WooCommerce): a product's button (`matter/quick-add`) that opens its options and add to basket in a modal, loaded only when it's clicked (or fetched ahead when the pointer rests on it). The modal shows the theme's `quick-add-product` pattern, rendered for the product as the visitor inside WooCommerce's Single Product block, with WooCommerce's block-based add to basket form adding in place. Without JavaScript, or for a product it doesn't show, the button is a link to the product. Hooks: `matter_quick_add_product`, `matter_quick_add_pattern`, `matter_quick_add_classic_hooks`, `matter_quick_add_render`. See "Quick add" in the README.
+
 ## 1.2.0
 
 ### Added

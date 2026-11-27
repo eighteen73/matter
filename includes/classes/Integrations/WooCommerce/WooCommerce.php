@@ -22,6 +22,8 @@
  *   (LoopItems).
  * - Price filters and sorting by the shopper's own prices, when a pricing
  *   plugin says they have them (OwnPrices).
+ * - The Quick add block: a product's options and add to basket in a modal,
+ *   loaded when it's clicked (QuickAdd).
  *
  * @package Eighteen73\Matter
  */
@@ -177,6 +179,9 @@ final class WooCommerce implements Integration {
 
 		// Price filters and sorting by the shopper's own prices.
 		( new OwnPrices() )->setup();
+
+		// Quick add: a product's options and add to basket in a modal.
+		( new QuickAdd() )->setup();
 	}
 
 	/**
