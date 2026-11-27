@@ -449,6 +449,28 @@ Every loop shows the same design for a post type: the shop, a category, related 
 
 The theme's pattern files are cached when `WP_DEVELOPMENT_MODE` isn't `theme`; clear the cache after adding a new loop item pattern (`wp eval 'wp_get_theme()->delete_pattern_cache();'`).
 
+### When loop items change
+
+A list's loop items can change without a page load: a filter, pagination, Back, or a results provider's HTML (Seek). Scripts that add to items (review stars, tracking, a quick view) set them up on load, so they also need to know when that happens. `matter-loop-items-update` bubbles from the list (the `<ul>` around the items) once per change, from Matter's `matter/loop-items` module, which every loop item loads:
+
+| `detail` | |
+| --- | --- |
+| `items` | The list's loop items now (`.wp-block-matter-loop-item`), in order. An item's position is its index here, plus the page's offset. |
+| `added` | Those new to the page (or moved), to set up. The router keeps items that were already showing, so this can be fewer than `items`. |
+| `filled` | A promise that settles once the items' [live blocks](#live-blocks) (prices) are filled: `true`, or `false` if they weren't after 10 seconds. |
+
+It's sent when items are only removed, too (`added` empty), as positions change. Items already in the page when it loads don't send it: set them up on load as before.
+
+```js
+document.addEventListener( 'matter-loop-items-update', ( event ) => {
+	event.detail.added.forEach( setUpStars );
+
+	event.detail.filled.then( () => reportImpressions( event.detail.items ) );
+} );
+```
+
+Anything a script adds should go inside the loop item, not beside it in the list item: a results provider (Seek) shows items from their stored copies and won't build a list whose items hold anything else.
+
 ## Core block extensions
 
 - **Button icon.** An icon from the icon registry on `core/button` (attribute `matterIcon`), rendered as `.wp-block-button__icon` inside a `.has-icon` link. Chosen from a library modal like core's Icon block. Limit the collections offered (for button and tab icons) with `matter_icon_collections`.
@@ -877,6 +899,7 @@ document.addEventListener( 'matter-tabs-change', ( event ) => {
 | Modal, drawer, collapsible | `overlay` | `open()`, `close()`, `toggle()`, `next()`, `prev()` (grouped modals), `closeAll()` (every overlay on the page) | `id`, `isOpen` | `overlay-open`, `overlay-close` |
 | Panel | `panel` | `open()`, `close()`, `toggle()` (`open()` and `toggle()` do nothing while the panel is inline, above its breakpoint: it is always showing, and would be left half open when the screen narrows) | `id`, `isOpen`, `isCollapsed` | `panel-open`, `panel-close` |
 | Filters | `filters` | `set( filterId, values )`, `clear()` | `id` (the listing's `queryId`), `selection` (each filter's `values`, `min`, `max`, `operator`) | `filters-change` (`url`) |
+| Loop items | | | | `loop-items-update` (`items`, `added`, `filled`), from the list: see [When loop items change](#when-loop-items-change) |
 
 Every instance also has `element` and `id`, and every block dispatches `matter-{block}-ready` when it starts. Events bubble from the block's element, and every one has `detail.id` (the element's ID, or `null`) and `detail.instance` (the block's instance; `null` only before it has started), plus the details in the table. A dialog's `overlay-open` fires once it is shown (including an open from the URL hash on load), and `overlay-close` once it is closed; a collapsible's when it opens and closes. Panels and overlays dispatch like every other block.
 

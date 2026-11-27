@@ -47,6 +47,10 @@ final class Render {
 
 		if ( 'bar' === $panel['layout'] ) {
 			self::bar_styles( $listing, $panel );
+			// Where the bar's dropdowns show, so the store keeps collapsible
+			// filters open in them: a media query, `all` when they always show,
+			// none when the filters are always a drawer.
+			wp_interactivity_state( Filters::STORE, [ 'listings' => [ $listing->key() => [ 'barQuery' => self::bar_query( $listing, $panel ) ] ] ] );
 		}
 		$kept = '';
 
@@ -120,7 +124,10 @@ final class Render {
 		$settings = [ 'operator' => 'and' === ( $attributes['operator'] ?? '' ) ? 'and' : 'or' ];
 		$display  = (string) ( $attributes['display'] ?? 'checkboxes' );
 		$display  = 'range' === $source->kind() ? 'range' : ( in_array( $display, self::CHOICES, true ) ? $display : 'checkboxes' );
-		$options  = $source->options( $listing, $block, $settings );
+		// A sort is one choice that's always made: radio buttons, no counts.
+		$sort    = 'sort' === $source->kind();
+		$display = $sort ? 'radio' : $display;
+		$options = $source->options( $listing, $block, $settings );
 		// A source with ordered values (ratings) can show stars, and options
 		// that include the ones above them ("4 & up").
 		$ordered  = method_exists( $source, 'ordered' ) && $source->ordered();
@@ -181,13 +188,18 @@ final class Render {
 
 			$body = 'dropdown' === $display
 				? self::dropdown( $id, $params, $options, $label, ! empty( $attributes['showCounts'] ) )
-				: self::choices( $id, $display, $params, $options, $label, $attributes, $at_least );
+				: self::choices( $id, $display, $params, $options, $label, $sort ? [ 'showCounts' => false ] + $attributes : $attributes, $at_least, ! $sort );
+		}
+
+		// Collapsible: a disclosure. In a bar it's in the filter's dropdown, and
+		// collapses only where the filters are a drawer (always open in the
+		// dropdown, which opens and closes itself).
+		if ( ! empty( $attributes['collapsible'] ) ) {
+			$body = self::collapsible( $listing, $id, $label, $body, ! isset( $attributes['open'] ) || ! empty( $attributes['open'] ) );
 		}
 
 		if ( 'bar' === ( $listing->panel['layout'] ?? '' ) ) {
 			$body = self::dropdown_panel( $listing, $id, $label, $body );
-		} elseif ( ! empty( $attributes['collapsible'] ) ) {
-			$body = self::collapsible( $listing, $id, $label, $body, ! isset( $attributes['open'] ) || ! empty( $attributes['open'] ) );
 		}
 
 		return sprintf(
@@ -269,6 +281,25 @@ final class Render {
 			'matter-filters-bar',
 			\Eighteen73\Matter\Breakpoints::scope_stylesheet( \Eighteen73\Matter\Assets::path( 'filters/bar.css' ), 'is-expanded', $settings['class'], $settings['expanded'] )
 		);
+	}
+
+	/**
+	 * The media query from which the bar's dropdowns show (Render::bar_styles()'s).
+	 *
+	 * @param Listing $listing Listing.
+	 * @param array   $panel   Its panel (Filters::panel()).
+	 * @return string|null
+	 */
+	private static function bar_query( Listing $listing, array $panel ): ?string {
+		if ( '' === $panel['collapse_below'] ) {
+			return null;
+		}
+
+		if ( null === $panel['collapse_below'] ) {
+			return 'all';
+		}
+
+		return (string) \Eighteen73\Matter\Overlays\Panel::settings( $listing->panel_id(), $panel['collapse_below'] )['expanded'];
 	}
 
 	/**
@@ -361,14 +392,15 @@ final class Render {
 	 * @param string $label      Legend.
 	 * @param array  $attributes Block attributes.
 	 * @param bool   $at_least   Whether each option includes those above it (radio buttons).
+	 * @param bool   $any        Whether radio buttons start with "Any" (not for a sort, which is always one of its choices).
 	 * @return string
 	 */
-	private static function choices( string $id, string $display, array $params, array $options, string $label, array $attributes, bool $at_least = false ): string {
+	private static function choices( string $id, string $display, array $params, array $options, string $label, array $attributes, bool $at_least = false, bool $any = true ): string {
 		$radio  = 'radio' === $display || $at_least;
 		$limit  = max( 0, (int) ( $attributes['limit'] ?? 0 ) );
 		$counts = ! empty( $attributes['showCounts'] );
 
-		if ( $radio ) {
+		if ( $radio && $any ) {
 			array_unshift(
 				$options,
 				[

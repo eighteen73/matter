@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.2.0
+
+### Added
+
+**Filters**
+
+- **Sort:** with WooCommerce, a `sort` source offers WooCommerce's own orders (`woocommerce_catalog_orderby`) and its default (`woocommerce_default_catalog_orderby`), with Relevance first on a search. Add it as a filter block (`{"source":"sort"}`) in place of WooCommerce's Catalog Sorting block. It sets WooCommerce's `orderby`, renders as radios without "Any" or counts, never shows a chip or counts as an active filter, and is left out of the URL while it's the default. Clear all keeps it. Any source can be a sort: its `kind()` is `sort`.
+- **Collapsible filters in a bar:** a collapsible filter's section sits inside its dropdown, where it stays open and its summary is hidden; where the filters are a drawer it collapses as set. The listing's state has the bar's media query (`barQuery`) for the script.
+
+**Loop items**
+
+- **`matter-loop-items-update`:** sent from a list when its loop items change without a page load (a filter, pagination, Back, a results provider), with `items`, `added`, and `filled` (a promise that settles once their live blocks are filled), so scripts that add to items (review stars, tracking) can set up new ones. From the new `matter/loop-items` module, which the loop item block loads. See "When loop items change" in the README.
+
+### Fixed
+
+- **A results provider's order:** a listing's base query (`Listing::base_query_vars()`) left out every filter's parameters, a sort's `orderby` included, so a provider (Seek) ordered results by date rather than as the page did. A sort's parameters now stay.
+
+### Visual changes
+
+- In the drawer (a bar's filters below its breakpoint), a filter's options fill the drawer's width. Its in-place popover reset WordPress's `[popover]` styles but kept the browser's `width: fit-content`; it now resets the size too (`inline-size` and `block-size: auto`). The bar's open dropdowns keep sizing to their content (`fit-content`).
+
 ## 1.1.1
 
 ### Changed

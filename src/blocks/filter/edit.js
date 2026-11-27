@@ -683,7 +683,8 @@ export default function Edit({
 							/>
 						</ToolsPanelItem>
 					)}
-					{!isBar && (
+					{/* In a bar it collapses only in the drawer (its dropdown opens and closes itself). */}
+					{
 						<ToolsPanelItem
 							label={__('Collapsible', 'matter')}
 							hasValue={() => !!collapsible}
@@ -698,14 +699,22 @@ export default function Edit({
 							<ToggleControl
 								__nextHasNoMarginBottom
 								label={__('Collapsible', 'matter')}
+								help={
+									isBar
+										? __(
+												'Where the filters are a drawer, its options open and close under its name.',
+												'matter'
+											)
+										: undefined
+								}
 								checked={!!collapsible}
 								onChange={(value) =>
 									setAttributes({ collapsible: value })
 								}
 							/>
 						</ToolsPanelItem>
-					)}
-					{!isBar && collapsible && (
+					}
+					{collapsible && (
 						<ToolsPanelItem
 							label={__('Open by default', 'matter')}
 							hasValue={() => open === false}

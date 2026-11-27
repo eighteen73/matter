@@ -46,6 +46,7 @@ const moduleEntries = {
 	'panel/view': src('panel/view.js'),
 	'filters/view': src('filters/view.js'),
 	'live/view': src('live/view.js'),
+	'loop-items/view': src('loop-items/view.js'),
 };
 
 /**

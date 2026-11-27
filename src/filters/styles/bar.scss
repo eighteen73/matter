@@ -26,6 +26,8 @@
 	// Open: the browser's popover (in the top layer, centred), until anchor
 	// positioning puts it below its button.
 	:where(.is-expanded) .wp-block-matter-filter__popover:popover-open {
+		block-size: fit-content;
+		inline-size: fit-content;
 		inset: 0;
 		margin: auto;
 		max-block-size: min(28rem, 80dvh);
@@ -49,6 +51,14 @@
 			position-area: block-end span-inline-end;
 			position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
 		}
+	}
+
+	// A collapsible filter in a dropdown: the dropdown opens and closes, so its
+	// disclosure stays open (the store's isOpen) and its summary is hidden. It
+	// collapses where the filters are a drawer. Without JavaScript the summary
+	// stays, so the options can still be opened.
+	:where(.matter-js) :where(.is-expanded) .wp-block-matter-filter__popover .wp-block-matter-filter__summary {
+		display: none;
 	}
 
 	// The button names the options; their group keeps its name for screen

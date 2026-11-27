@@ -4,7 +4,7 @@
  * Plugin URI:        https://eighteen73.co.uk
  * Update URI:        https://eighteen73.co.uk
  * Description:       Blocks, sections, menus and site settings for eighteen73 WordPress builds.
- * Version:           1.1.1
+ * Version:           1.2.0
  * Requires at least: 7.1
  * Requires PHP:      8.3
  * Requires Plugins:
@@ -68,7 +68,7 @@ foreach ( $matter_requirements as $matter_name => [ $matter_have, $matter_need, 
 unset( $matter_requirements, $matter_name, $matter_have, $matter_need, $matter_ok );
 
 // Useful global constants.
-define( 'MATTER_VERSION', '1.1.1' );
+define( 'MATTER_VERSION', '1.2.0' );
 define( 'MATTER_URL', plugin_dir_url( __FILE__ ) );
 define( 'MATTER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MATTER_INC', MATTER_PATH . 'includes/' );

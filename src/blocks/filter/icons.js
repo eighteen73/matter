@@ -18,6 +18,7 @@ import {
 	payment,
 	postTerms,
 	starHalf,
+	arrowDown,
 	store,
 	tag,
 } from '@wordpress/icons';
@@ -34,6 +35,7 @@ const ICONS = {
 	price: payment,
 	stock: box,
 	rating: starHalf,
+	sort: arrowDown,
 };
 
 /**

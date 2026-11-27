@@ -32,6 +32,7 @@ import {
 	getElement,
 	getServerState,
 	store,
+	withScope,
 	withSyncEvent,
 } from '@wordpress/interactivity';
 
@@ -212,6 +213,11 @@ export function chipsOf(listing) {
 	Object.entries(listing?.filters ?? {}).forEach(([id, filter]) => {
 		const labels = filter.labels ?? {};
 
+		// A sort orders the listing; it isn't an active filter.
+		if (filter.kind === 'sort') {
+			return;
+		}
+
 		if (filter.kind === 'range') {
 			if (isSet(filter.min) || isSet(filter.max)) {
 				chips.push(
@@ -336,6 +342,14 @@ export function urlFor(listing) {
 			return;
 		}
 
+		// A sort's default is the listing's own order: no parameter.
+		if (
+			filter.kind === 'sort' &&
+			(filter.values ?? []).every((value) => value === filter.default)
+		) {
+			return;
+		}
+
 		if (params.value && filter.values?.length) {
 			url.searchParams.set(params.value, filter.values.join(','));
 
@@ -404,8 +418,17 @@ const elements = new Map();
 // out of the store, so syncing with the server doesn't watch them.
 const opened = new Map();
 
+/**
+ * Whether each listing's filters show as a bar of dropdowns: listing => its
+ * media query, kept apart from the listing's state, which the router replaces.
+ */
+const bars = new Map();
+
 const { state, actions } = store('matter/filters', {
 	state: {
+		// Listing => whether its filters are a bar of dropdowns now (its
+		// `barQuery` matches), not a drawer.
+		bars: {},
 		// The filter form's Apply button is for browsers without JavaScript.
 		get isInteractive() {
 			return true;
@@ -516,8 +539,14 @@ const { state, actions } = store('matter/filters', {
 				);
 		},
 		// A collapsible filter: open, and how many of its options are chosen.
+		// In a bar's dropdown it's always open: the dropdown opens and closes.
 		get isOpen() {
-			return filterOf(getContext())?.open !== false;
+			const context = getContext();
+
+			return (
+				state.bars[context.listing] === true ||
+				filterOf(context)?.open !== false
+			);
 		},
 		get chosenCount() {
 			const context = getContext();
@@ -690,6 +719,11 @@ const { state, actions } = store('matter/filters', {
 
 			Object.values(state.listings[listing]?.filters ?? {}).forEach(
 				(filter) => {
+					// A sort isn't a filter: clearing the filters keeps the order.
+					if (filter.kind === 'sort') {
+						return;
+					}
+
 					filter.values = [];
 					filter.min = null;
 					filter.max = null;
@@ -745,6 +779,11 @@ const { state, actions } = store('matter/filters', {
 
 		// A collapsible filter opened or closed: remembered, so it stays so.
 		toggleOpen(event) {
+			// Opened by a bar's dropdown, not the shopper: not remembered.
+			if (state.bars[getContext().listing] === true) {
+				return;
+			}
+
 			const filter = filterOf(getContext());
 
 			if (filter) {
@@ -793,6 +832,22 @@ const { state, actions } = store('matter/filters', {
 
 			enhance('filters', ref);
 			elements.set(ref, listing);
+
+			// Whether the filters are a bar of dropdowns, as the viewport changes.
+			const query = state.listings[listing]?.barQuery;
+
+			if (query && !bars.has(listing)) {
+				const media = window.matchMedia(query);
+
+				bars.set(listing, media);
+				state.bars[listing] = media.matches;
+				media.addEventListener(
+					'change',
+					withScope(() => {
+						state.bars[listing] = media.matches;
+					})
+				);
+			}
 
 			registerInstance('filters', ref, {
 				element: ref,
