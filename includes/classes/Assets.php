@@ -47,6 +47,8 @@ class Assets {
 		'matter/filters'    => 'filters/view.js',
 		// Fills live blocks' placeholders (a price) with the visitor's own.
 		'matter/live'       => 'live/view.js',
+		// Tells other scripts when a list's loop items change (a filter, a page).
+		'matter/loop-items' => 'loop-items/view.js',
 	];
 
 	/**

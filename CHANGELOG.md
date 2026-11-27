@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+**Filters**
+
+- **Sort:** a `sort` source (with WooCommerce) offers WooCommerce's own orders (`woocommerce_catalog_orderby`), its default (`woocommerce_default_catalog_orderby`), and Relevance first on a search. It sets `orderby`, renders as radios without "Any" or counts, never shows a chip or counts as an active filter, and is left out of the URL while it's the default. Clear all keeps it.
+- **Collapsible filters in a bar:** a collapsible filter's section sits inside its dropdown, where it stays open; below the bar's breakpoint (the drawer) it collapses as set. The listing's state has the bar's media query (`barQuery`).
+
+**Loop items**
+
+- **`matter-loop-items-update`:** sent from a list when its loop items change without a page load (a filter, pagination, Back, a results provider), with `items`, `added` and `filled` (a promise that settles once their live blocks are filled), so scripts that add to items can set up new ones. From the new `matter/loop-items` module, which the loop item block loads. See "When loop items change" in the README.
+
+### Fixed
+
+- **A results provider's order:** a listing's base query (`Listing::base_query_vars()`) kept every filter's parameters out, a sort's `orderby` included, so a provider (Seek) ordered the listing differently from the page. A sort's parameters now stay.
+- **Full-width options in the drawer:** a filter's in-place popover reset WordPress's `[popover]` styles but kept the browser's `width: fit-content`, so options in the drawer didn't fill its width.
+
 ## 1.1.1
 
 ### Changed
