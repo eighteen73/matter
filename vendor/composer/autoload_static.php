@@ -67,6 +67,7 @@ class ComposerStaticInitb08fec4d1e37be68974a74c387e1ec50
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\StockSource' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/Filters/StockSource.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\LoopItems' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/LoopItems.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\OwnPrices' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/OwnPrices.php',
+        'Eighteen73\\Matter\\Integrations\\WooCommerce\\QuickAdd' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/QuickAdd.php',
         'Eighteen73\\Matter\\Integrations\\WooCommerce\\WooCommerce' => __DIR__ . '/../..' . '/includes/classes/Integrations/WooCommerce/WooCommerce.php',
         'Eighteen73\\Matter\\Live\\Live' => __DIR__ . '/../..' . '/includes/classes/Live/Live.php',
         'Eighteen73\\Matter\\LoopItems\\Prerendered' => __DIR__ . '/../..' . '/includes/classes/LoopItems/Prerendered.php',

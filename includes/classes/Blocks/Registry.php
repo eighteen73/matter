@@ -46,6 +46,7 @@ class Registry {
 	 */
 	private const INTEGRATION_BLOCKS = [
 		'gravity-form',
+		'quick-add',
 	];
 
 	/**

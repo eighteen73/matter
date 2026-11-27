@@ -959,6 +959,45 @@ return array(
 			'postId'
 		)
 	),
+	'quick-add' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'matter/quick-add',
+		'version' => '1.0.0',
+		'title' => 'Quick add',
+		'category' => 'woocommerce',
+		'description' => 'Opens the product\'s options and add to basket in a modal, loaded when it\'s clicked. A link to the product without JavaScript, or for a product it can\'t show.',
+		'keywords' => array(
+			'quick view',
+			'add to cart',
+			'basket',
+			'product'
+		),
+		'usesContext' => array(
+			'postId',
+			'postType'
+		),
+		'attributes' => array(
+			'label' => array(
+				'type' => 'string',
+				'default' => '',
+				'role' => 'content'
+			)
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'renaming' => false,
+			'interactivity' => array(
+				'clientNavigation' => true
+			)
+		),
+		'textdomain' => 'matter',
+		'editorScript' => 'file:./index.js',
+		'style' => 'file:./style-index.css',
+		'viewScriptModule' => 'matter/quick-add',
+		'render' => 'file:./render.php'
+	),
 	'results-count' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,

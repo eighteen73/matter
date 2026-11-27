@@ -52,6 +52,7 @@ return array(
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\Filters\\StockSource' => $baseDir . '/includes/classes/Integrations/WooCommerce/Filters/StockSource.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\LoopItems' => $baseDir . '/includes/classes/Integrations/WooCommerce/LoopItems.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\OwnPrices' => $baseDir . '/includes/classes/Integrations/WooCommerce/OwnPrices.php',
+    'Eighteen73\\Matter\\Integrations\\WooCommerce\\QuickAdd' => $baseDir . '/includes/classes/Integrations/WooCommerce/QuickAdd.php',
     'Eighteen73\\Matter\\Integrations\\WooCommerce\\WooCommerce' => $baseDir . '/includes/classes/Integrations/WooCommerce/WooCommerce.php',
     'Eighteen73\\Matter\\Live\\Live' => $baseDir . '/includes/classes/Live/Live.php',
     'Eighteen73\\Matter\\LoopItems\\Prerendered' => $baseDir . '/includes/classes/LoopItems/Prerendered.php',
