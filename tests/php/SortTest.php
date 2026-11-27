@@ -83,7 +83,7 @@ class SortTest extends TestCase {
 		$attributes = $class_name ? ' {"className":"' . $class_name . '"}' : '';
 
 		return $this->render(
-			'<!-- wp:query {"queryId":3,"query":{"perPage":10,"postType":"product","inherit":false}} --><div class="wp-block-query">'
+			'<!-- wp:query {"queryId":3,"query":{"perPage":10,"postType":"product","orderBy":"title","order":"asc","inherit":false}} --><div class="wp-block-query">'
 			. '<!-- wp:matter/filters' . $attributes . ' -->' . $filters . '<!-- /wp:matter/filters -->'
 			. '<!-- wp:matter/active-filters /-->'
 			. '<!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template -->'
@@ -168,6 +168,26 @@ class SortTest extends TestCase {
 		$this->assertMatchesRegularExpression( '#<input[^>]*value="menu_order"[^>]*checked#', $html );
 		$this->assertDoesNotMatchRegularExpression( '#<input[^>]*type="radio"[^>]*value=""#', $html, 'No "Any".' );
 		$this->assertStringNotContainsString( 'wp-block-matter-filter__count', $html );
+	}
+
+	/**
+	 * A listing's query without filters keeps its order: the sort's parameter
+	 * (`orderby`) is also the query's own, so a results provider sorts as the
+	 * page does.
+	 *
+	 * @return void
+	 */
+	public function test_base_query_keeps_the_order(): void {
+		$vars = null;
+		$hook = function ( $listing ) use ( &$vars ) {
+			$vars = $listing->base_query_vars();
+		};
+
+		add_action( 'matter_filters_listing', $hook );
+		$this->listing( '<!-- wp:matter/filter {"source":"sort"} /-->' );
+		remove_action( 'matter_filters_listing', $hook );
+
+		$this->assertSame( 'title', $vars['orderby'] ?? null );
 	}
 
 	/**
