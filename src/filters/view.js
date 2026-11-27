@@ -719,6 +719,11 @@ const { state, actions } = store('matter/filters', {
 
 			Object.values(state.listings[listing]?.filters ?? {}).forEach(
 				(filter) => {
+					// A sort isn't a filter: clearing the filters keeps the order.
+					if (filter.kind === 'sort') {
+						return;
+					}
+
 					filter.values = [];
 					filter.min = null;
 					filter.max = null;
